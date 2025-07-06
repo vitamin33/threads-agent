@@ -16,4 +16,4 @@ jobs:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         run: |
           # branch name is available as GH env
-          python scripts/linear_mark_done.py "$GITHUB_HEAD_REF"
+          python scripts/ci/linear_mark_done.py "$GITHUB_HEAD_REF"
