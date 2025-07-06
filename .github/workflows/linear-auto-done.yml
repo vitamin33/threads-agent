@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4 # gives us the branch name
+      - uses: actions/checkout@v4
       - name: Mark Linear ticket as Done
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
