@@ -1,10 +1,10 @@
-# scripts/linear_mark_done.py
-
+# scripts/ci/linear_mark_done.py
 """
-Mark a Linear issue as “Done” after the PR that references it is merged.
+Move a Linear issue to the team's “Completed” state after the PR that
+references it has been merged.
 
 Usage (from GitHub Actions):
-    python scripts/linear_mark_done.py "$BRANCH_NAME"
+    python scripts/ci/linear_mark_done.py "$BRANCH_NAME"
 """
 
 from __future__ import annotations
@@ -12,62 +12,100 @@ from __future__ import annotations
 import os
 import re
 import sys
+from typing import Any
 
 import requests
 
-ISSUE_RE = re.compile(r"\b([A-Z]{2,8}-\d+)\b")  # e.g. CRA-27
-branch = sys.argv[1]
+BRANCH = sys.argv[1]
 
-m = ISSUE_RE.search(branch)
+# Match both CRA-186 and cra-186-something-else
+m = re.search(r"\b([A-Za-z]{2,8})-(\d+)\b", BRANCH, re.I)
 if not m:
-    print("::warning:: no Linear issue key found in branch name")
+    print("::warning:: no Linear key found in branch name")
     sys.exit(0)
 
-issue_key = m.group(1)
-api_key = os.environ["LINEAR_API_KEY"]
+TEAM_PREFIX, NUM = m.group(1).upper(), int(m.group(2))
 
-# 1️⃣ look up the issue + its current workflow state IDs
-qry = """
-query($key:String!){
-  issue(key:$key){ id state{ id } team{ key } }
+API_KEY = os.getenv("LINEAR_API_KEY")
+if not API_KEY:
+    print("::error:: env LINEAR_API_KEY not set")
+    sys.exit(1)
+
+HEADERS = {
+    "Authorization": API_KEY,
+    "Content-Type": "application/json",
 }
-"""
-resp = requests.post(
-    "https://api.linear.app/graphql",
-    json={"query": qry, "variables": {"key": issue_key}},
-    headers={"Authorization": api_key},
-    timeout=20,
-).json()
 
-issue_id = resp["data"]["issue"]["id"]
-team_key = resp["data"]["issue"]["team"]["key"]
 
-# 2️⃣ lookup the team’s “Done” state once
-state_qry = """
-query($team:String!){
-  workflowStates(filter:{team:{key:{eq:$team}}}){ nodes{id name type} }
-}
-"""
-states = requests.post(
-    "https://api.linear.app/graphql",
-    json={"query": state_qry, "variables": {"team": team_key}},
-    headers={"Authorization": api_key},
-    timeout=20,
-).json()["data"]["workflowStates"]["nodes"]
+def gql(query: str, variables: dict[str, Any]) -> dict[str, Any]:
+    """Tiny wrapper that exits with ::error:: if Linear returns GraphQL errors."""
+    res = requests.post(
+        "https://api.linear.app/graphql",
+        json={"query": query, "variables": variables},
+        headers=HEADERS,
+        timeout=20,
+    ).json()
 
-done_id = next(s["id"] for s in states if s["type"] == "completed")
+    if "errors" in res:
+        print(f"::error:: Linear errors: {res['errors']}")
+        sys.exit(1)
+    return res["data"]
 
-# 3️⃣ patch the issue
-mut = """
-mutation($id:String!,$st:String!){
-  issueUpdate(id:$id,input:{stateId:$st}){ success }
-}
-"""
-requests.post(
-    "https://api.linear.app/graphql",
-    json={"query": mut, "variables": {"id": issue_id, "st": done_id}},
-    headers={"Authorization": api_key},
-    timeout=20,
-).raise_for_status()
 
-print(f"✅ {issue_key} moved to Done")
+# 1️⃣  Find the issue by team-key + number
+data = gql(
+    """
+    query($team:String!,$nr:Float!){
+      issues(
+        filter:{
+          team:{key:{eq:$team}}
+          number:{eq:$nr}
+        }
+      ){
+        nodes{
+          id
+          state{ id type }
+          team{ id key }
+        }
+      }
+    }
+    """,
+    {"team": TEAM_PREFIX, "nr": float(NUM)},  # Float to satisfy schema
+)
+
+nodes = data["issues"]["nodes"]
+if not nodes:
+    print(f"::warning:: issue {TEAM_PREFIX}-{NUM} not found in Linear")
+    sys.exit(0)
+
+issue_id = nodes[0]["id"]
+team_key = nodes[0]["team"]["key"]
+
+# 2️⃣  Fetch that team’s “completed” workflow-state
+states = gql(
+    """
+    query($team:String!){
+      workflowStates(
+        filter:{ team:{key:{eq:$team}} }
+      ){ nodes{ id type } }
+    }
+    """,
+    {"team": team_key},
+)["workflowStates"]["nodes"]
+
+done_state = next((s["id"] for s in states if s["type"] == "completed"), None)
+if not done_state:
+    print(f"::error:: completed state not found for team {team_key}")
+    sys.exit(1)
+
+# 3️⃣  Update the issue
+gql(
+    """
+    mutation($id:String!,$st:String!){
+      issueUpdate(id:$id,input:{stateId:$st}){ success }
+    }
+    """,
+    {"id": issue_id, "st": done_state},
+)
+
+print(f"✅ {TEAM_PREFIX}-{NUM} marked Done")
