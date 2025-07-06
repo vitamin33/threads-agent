@@ -15,7 +15,7 @@ import sys
 
 import requests
 
-ISSUE_RE = re.compile(r"\b([A-Za-z]{2,8}-\d+)\b", re.I) # e.g. CRA-27
+ISSUE_RE = re.compile(r"\b([A-Z]{2,8}-\d+)\b")  # e.g. CRA-27
 branch = sys.argv[1]
 
 m = ISSUE_RE.search(branch)
