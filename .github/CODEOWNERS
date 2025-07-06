@@ -1,0 +1,13 @@
+# core services - must Senior
+services/*               @vitamin33
+
+# Infra (Helm, Terraform, GitHub Actions)
+infra/**                 @vitamin33
+.github/workflows/*      @vitamin33
+
+# Tests and documentation - can approve Junior
+tests/**                 @denxgreen
+docs/**                  @denxgreen
+
+# Fallback: everything else is also Senior
+*                        @vitamin33
