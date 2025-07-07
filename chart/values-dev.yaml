@@ -1,0 +1,16 @@
+# /chart/values-dev.yaml
+# ---------- image ----------
+image:
+  repository: ghcr.io/threads-agent-stack/orchestrator
+  tag: "0.1.0"
+
+# ---------- basic scaling ----------
+replicaCount: 1
+
+# ---------- service  ----------
+service:
+  type: ClusterIP        # <= dev-only, simpler than LB
+  port: 8080             # internal port your container listens on
+
+# ---------- resources (keep empty for now) ----------
+resources: {}

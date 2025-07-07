@@ -7,10 +7,12 @@ set dotenv-load
 bootstrap:          # spin local k3d
     ./scripts/dev-up.sh
 
-deploy-dev:         # helm install into k3d
+helm-cfg := "$HOME/.kube/k3d-dev.yaml"
+
+deploy-fast:          # 60 s rollout + logs
     helm upgrade --install threads ./chart \
-         -f chart/values-dev.yaml \
-         --wait --timeout 120s
+         -f chart/values-dev.yaml --wait --timeout 60s
+    kubectl logs -l app=orchestrator -f --tail=100
 
 k3d-stop-all:
 	k3d cluster stop --all
@@ -21,8 +23,22 @@ k3d-nuke-all:
 test:               # run unit + e2e
     pytest -q
 
-logs:               # follow all pod logs
-    kubectl logs -l app=threads -f --tail=100
+logs:               # follow pod logs
+    kubectl logs -l app=orchestrator -f --tail=100
+
+test-watch SERVICE="":
+	@echo "🔁  watching tests…"
+	@if [ "$(SERVICE)" != "" ]; then \
+	    pt="services/$(SERVICE)"; \
+	else \
+	    pt="."; \
+	fi; \
+	pytest $$pt --maxfail=1 -q -f
+
+scaffold SERVICE:
+	mkdir -p services/{{SERVICE}}
+	cp -r templates/service-template/* services/{{SERVICE}}/
+	sed -i '' "s/TEMPLATE_NAME/{{SERVICE}}/g" services/{{SERVICE}}/main.py
 
 # ---------- Lint / Type-check / Tests ----------
 lint:
@@ -57,4 +73,4 @@ ship MESSAGE NO_PR="false":
 jaeger-ui:          # open Jaeger in browser (mac)
     open http://localhost:16686 || true
 
-default: deploy-dev
+default: deploy-fast
