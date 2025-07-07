@@ -1,0 +1,15 @@
+# /chart/values-prod.yaml
+replicaCount: 2
+service:
+  type: LoadBalancer
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: gp3

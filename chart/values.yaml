@@ -1,0 +1,13 @@
+# /chart/values.yaml
+nameOverride: ""           # Helm uses chart name
+fullnameOverride: ""       # Helm uses <release>-<chart>
+
+image:
+  repository: ghcr.io/threads-agent-stack/orchestrator
+  tag: "0.1.0"
+
+replicaCount: 1
+service:
+  type: ClusterIP
+  port: 8080
+resources: {}

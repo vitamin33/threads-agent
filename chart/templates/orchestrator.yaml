@@ -1,0 +1,50 @@
+# chart/templates/orchestrator.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      # uncomment if you later add a GHCR pull secret
+      # imagePullSecrets:
+      # - name: ghcr-creds
+      containers:
+        - name: orchestrator
+          image: {{ include "threads.image" . }}
+          imagePullPolicy: IfNotPresent   # use the image you imported with k3d
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+{{- with .Values.resources }}
+          resources:
+{{ toYaml . | nindent 12 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestrator
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    app: orchestrator
+  ports:
+    - name: http
+      port: {{ .Values.service.port | default 8080 }}
+      targetPort: 8080
