@@ -49,7 +49,7 @@ def gql(query: str, variables: dict[str, Any]) -> dict[str, Any]:
     if "errors" in res:
         print(f"::error:: Linear errors: {res['errors']}")
         sys.exit(1)
-    return res["data"]
+    return res["data"]  # type: ignore[no-any-return]
 
 
 # 1️⃣  Find the issue by team-key + number
