@@ -36,9 +36,14 @@ test-watch SERVICE="":
 	pytest $$pt --maxfail=1 -q -f
 
 scaffold SERVICE:
-	mkdir -p services/{{SERVICE}}
-	cp -r templates/service-template/* services/{{SERVICE}}/
-	sed -i '' "s/TEMPLATE_NAME/{{SERVICE}}/g" services/{{SERVICE}}/main.py
+    mkdir -p services/{{SERVICE}}
+    cp -r templates/service-template/* services/{{SERVICE}}/
+
+    # replace in main.py
+    sed -i '' "s/TEMPLATE_NAME/{{SERVICE}}/g" services/{{SERVICE}}/main.py
+
+    # replace in test
+    sed -i '' "s/TEMPLATE_NAME/{{SERVICE}}/g" services/{{SERVICE}}/tests/test_health.py
 
 # ---------- Lint / Type-check / Tests ----------
 lint:

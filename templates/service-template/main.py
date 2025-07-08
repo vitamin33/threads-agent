@@ -1,3 +1,4 @@
+# /templates/service-template/main.py
 from fastapi import FastAPI
 
 app = FastAPI(title="TEMPLATE_NAME")

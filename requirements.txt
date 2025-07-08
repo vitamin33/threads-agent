@@ -1,4 +1,6 @@
+# requirements.txt
 fastapi~=0.111           # tiny health stub
 uvicorn[standard]~=0.29  # ASGI server
 pydantic~=2.7            # data models (FastAPI peer)
 requests>=2.31           # already used by linear_mark_done.py
+celery~=5.4

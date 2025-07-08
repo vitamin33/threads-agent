@@ -1,11 +1,12 @@
-# /templates/service-template/tests/test_health.py
+# /services/orchestrator/tests/test_health.py
 from fastapi.testclient import TestClient
-from TEMPLATE_NAME.main import app
+
+from services.orchestrator.main import app
 
 client = TestClient(app)
 
 
-def test_health():
+def test_health() -> None:
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}

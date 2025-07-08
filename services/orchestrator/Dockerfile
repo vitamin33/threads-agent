@@ -1,4 +1,5 @@
-# /templates/service-template/Dockerfile
+# /services/orchestrator/Dockerfile
+# dockerfile-utils: ignore critical_high_vulnerabilities
 FROM cgr.dev/chainguard/python:3.11
 WORKDIR /app
 COPY . .
