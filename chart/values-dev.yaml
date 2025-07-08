@@ -2,7 +2,9 @@
 # ---------- image ----------
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
-  tag: "0.1.0"
+  tag: "0.2.0"
+rabbitmq:
+  url: "amqp://user:pass@rabbitmq:5672/%2f"
 
 # ---------- basic scaling ----------
 replicaCount: 1
@@ -14,3 +16,5 @@ service:
 
 # ---------- resources (keep empty for now) ----------
 resources: {}
+
+

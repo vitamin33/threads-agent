@@ -3,5 +3,5 @@ apiVersion: v2
 name: threads
 description: Mono-chart for Threads-Agent micro-services
 type: application
-version: 0.1.0        # chart version
-appVersion: "0.0.0"   # image tag placeholder
+version: 0.2.0        # chart version
+appVersion: "0.2.0"   # image tag placeholder

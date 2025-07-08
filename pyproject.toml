@@ -1,0 +1,17 @@
+# pyproject.toml  (put at repo root)
+[project]
+name            = "threads-agent"
+version         = "0.2.0"
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-env", "httpx"]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# ---- tell setuptools what to package ----
+[tool.setuptools.packages.find]
+where   = ["services"]
+include = ["services*"]

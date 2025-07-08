@@ -1,0 +1,22 @@
+# chart/templates/celery-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-worker
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: ghcr.io/threads-agent-stack/celery-worker:{{ .Values.image.tag }}
+          env:
+            - name: RABBITMQ_URL
+              value: {{ .Values.rabbitmq.url }}
+          resources: {}

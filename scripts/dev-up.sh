@@ -3,7 +3,7 @@
 set -euo pipefail
 
 CLUSTER="dev"
-IMAGE="ghcr.io/threads-agent-stack/orchestrator:0.1.0"
+IMAGE="ghcr.io/threads-agent-stack/orchestrator:0.2.0"
 
 LB_PORT=8080          # HTTP entry-point you’ll curl
 API_PORT=6445         # k3s API exposed on localhost
