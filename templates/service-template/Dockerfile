@@ -1,5 +1,5 @@
 # /templates/service-template/Dockerfile
-FROM cgr.dev/chainguard/python:3.11
+FROM python:3.12-slim-bookworm
 WORKDIR /app
 COPY . .
 RUN pip install fastapi uvicorn[standard]

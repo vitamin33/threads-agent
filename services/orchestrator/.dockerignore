@@ -1,0 +1,16 @@
+# Virtualenv / editors
+.venv
+__pycache__/
+*.py[cod]
+*.swp
+.vscode/
+.idea/
+
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# CI & docs
+tests/
+*.md
