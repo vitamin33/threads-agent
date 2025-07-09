@@ -1,0 +1,35 @@
+# chart/templates/fake-threads.yaml
+{{- if .Values.fakeThreads }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-threads
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: fake-threads }
+  template:
+    metadata:
+      labels: { app: fake-threads }
+    spec:
+    {{- if .Values.fakeThreads.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.fakeThreads.pullSecret }}
+    {{- end }}
+      containers:
+        - name: fake-threads
+          image: "{{ .Values.fakeThreads.image.repository }}:{{ .Values.fakeThreads.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.fakeThreads.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-threads
+spec:
+  selector:
+    app: fake-threads
+  ports:
+    - port: {{ .Values.fakeThreads.port }}
+{{- end }}

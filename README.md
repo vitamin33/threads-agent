@@ -99,6 +99,26 @@ _(Live backlog & task breakdown lives in Linear → link in repo description.)_
 3. Open PR → automatic reviewer assignment via CODEOWNERS
 4. At least one ✔ review + passing **CI (dev)** ➜ merge
 
+### Port-forward stubs
+
+```bash
+# Postgres → localhost:5432
+kubectl port-forward svc/postgres 5432:5432
+
+# Fake Threads → localhost:9009
+kubectl port-forward svc/fake-threads 9009:9009
+curl localhost:9009/ping  # → {"pong":true}
+```
+
+## 6. Verify
+
+```bash
+just dev-up          # your k3d helper
+helm upgrade --install threads ./chart -f chart/values-dev.yaml --wait
+kubectl get pods     # postgres & fake-threads Ready
+curl fake-threads:9009/ping         # inside cluster
+```
+
 ---
 
 ## 📝 License

@@ -1,0 +1,89 @@
+# chart/templates/postgres.yaml
+{{- /* ----------------------------------------------------------------
+      Postgres (dev only)
+      Renders only when .Values.postgres.enabled == true
+------------------------------------------------------------------- */}}
+
+{{- if .Values.postgres.enabled }}
+
+# 1️⃣  password secret – keep it simple in dev
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pg-secret
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "changeme"
+
+---
+
+# 2️⃣  statefulset
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      serviceAccountName: postgres-sa
+      containers:
+        - name: postgres
+          image: bitnami/postgresql:16
+          ports:
+            - containerPort: 5432
+          env:
+            # either var works – we set both to silence warning logs
+            - name: POSTGRESQL_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: pgdata
+              mountPath: /bitnami/postgresql
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        storageClassName: local-path     # <— works out-of-the-box with k3d
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+
+# 3️⃣  Cluster-IP service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+
+# 4️⃣  minimal service-account (Bitnami image wants one)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgres-sa
+
+{{- end }}
