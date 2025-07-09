@@ -1,0 +1,30 @@
+# File: chart/templates/persona-runtime.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: persona-runtime
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: persona-runtime }
+  template:
+    metadata:
+      labels: { app: persona-runtime }
+    spec:
+      containers:
+        - name: persona-runtime
+          image: ghcr.io/threads-agent-stack/persona-runtime:{{ .Values.personaRuntime.image.tag }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: persona-runtime
+spec:
+  selector: { app: persona-runtime }
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

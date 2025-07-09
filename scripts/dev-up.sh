@@ -3,7 +3,11 @@
 set -euo pipefail
 
 CLUSTER="dev"
-IMAGE="ghcr.io/threads-agent-stack/orchestrator:0.2.0"
+IMAGES=(
+  "ghcr.io/threads-agent-stack/orchestrator:$TAG"
+  "ghcr.io/threads-agent-stack/celery-worker:$TAG"
+  "ghcr.io/threads-agent-stack/persona-runtime:$TAG"
+)
 
 LB_PORT=8080          # HTTP entry-point you’ll curl
 API_PORT=6445         # k3s API exposed on localhost
@@ -37,7 +41,9 @@ kubectl config use-context "k3d-${CLUSTER}" &>/dev/null
 
 # ── best-effort: preload the dev image into the cluster cache ─────────
 echo "📦 importing dev image (best effort)…"
-k3d image import "$IMAGE" -c "$CLUSTER" || echo "ℹ︎  image not present locally"
+for IMAGE in "${IMAGES[@]}"; do
+  k3d image import "$IMAGE" -c "$CLUSTER" || echo "ℹ︎  image not present locally"
+done
 
 # ── wait (≤15 s) for /readyz so that subsequent kubectl/helm are instant
 printf "⏳ waiting for kube-api"

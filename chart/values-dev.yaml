@@ -2,9 +2,19 @@
 # ---------- image ----------
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
-  tag: "0.2.0"
+  tag: "0.3.5"
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
+
+celeryWorker:
+  image:
+    repository: ghcr.io/threads-agent-stack/celery-worker
+    tag: "0.3.5"
+
+personaRuntime:
+  image:
+    repository: ghcr.io/threads-agent-stack/persona-runtime
+    tag: "0.3.5"
 
 # ---------- basic scaling ----------
 replicaCount: 1

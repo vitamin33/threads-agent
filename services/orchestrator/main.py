@@ -1,19 +1,24 @@
-# /services/orchestrator/main.py
 from __future__ import annotations
 
 import os
+from typing import Any, TypedDict
 
+import httpx
+from celery import Celery
 from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel, Field
 
-from services.celery_worker.main import app as celery_app
-
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
+PERSONA_RUNTIME_URL = os.getenv("PERSONA_RUNTIME_URL", "http://persona-runtime:8080")
 
-api = FastAPI(title="orchestrator")  # 🟢 keep the clearer name
-app = api  # 👈 public alias for tests & uvicorn
+# ── fastapi ─────────────────────────────────────────────────────────
+app = FastAPI(title="orchestrator")  # single public symbol
+
+# ── Celery app *local to this service* ──────────────────────────────
+celery_app = Celery("orchestrator", broker=BROKER_URL)
 
 
+# ---------- pydantic -----------------
 class CreateTaskRequest(BaseModel):
     persona_id: str = Field(..., examples=["ai-jesus"])
     task_type: str = Field(..., examples=["create_post", "create_reply"])
@@ -21,8 +26,13 @@ class CreateTaskRequest(BaseModel):
     trend_snippet: str | None = None
 
 
-@api.post("/task")
-async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> dict[str, str]:
+class Status(TypedDict):
+    status: str
+
+
+# ---------- routes -------------------
+@app.post("/task")
+async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> Status:
     bg.add_task(
         celery_app.send_task,
         "tasks.queue_post",
@@ -31,6 +41,16 @@ async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> dict[str, 
     return {"status": "queued"}
 
 
-@api.get("/health")
-async def health() -> dict[str, str]:
+@celery_app.task(name="tasks.run_persona")  # type: ignore[misc]
+def run_persona(cfg: dict[str, Any], user_input: str) -> None:
+    """Fire-and-forget call to persona-runtime."""
+    httpx.post(
+        f"{PERSONA_RUNTIME_URL}/run",
+        json={"persona_id": cfg["id"], "input": user_input},
+        timeout=10,
+    )
+
+
+@app.get("/health")
+async def health() -> Status:
     return {"status": "ok"}

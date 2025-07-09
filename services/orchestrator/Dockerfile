@@ -6,12 +6,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 WORKDIR /app
 
-# 1️⃣  Install deps
-COPY requirements.txt .
+# 1️⃣ install only orchestrator deps
+COPY services/orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2️⃣  Copy only the service code (not the whole repo)
+# 2️⃣ copy the service code
 COPY services/orchestrator ./services/orchestrator
+COPY services/celery_worker ./services/celery_worker
 
 EXPOSE 8080
 CMD ["uvicorn", "services.orchestrator.main:app", "--host", "0.0.0.0", "--port", "8080"]
