@@ -1,10 +1,18 @@
 # /chart/values.yaml
 nameOverride: ""           # Helm uses chart name
-fullnameOverride: ""       # Helm uses <release>-<chart>
+fullnameOverride: ""
 
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
   tag: "0.2.0"
+
+personaRuntime:
+  image:
+    repository: ghcr.io/threads-agent-stack/persona-runtime
+    tag: "0.3.0"
+
+rabbitmq:
+  url: "amqp://user:pass@rabbitmq:5672/%2f"
 
 replicaCount: 1
 service:

@@ -79,3 +79,13 @@ jaeger-ui:          # open Jaeger in browser (mac)
     open http://localhost:16686 || true
 
 default: deploy-fast
+
+
+build-runtime:
+    docker build -f services/persona_runtime/Dockerfile \
+      -t ghcr.io/threads-agent-stack/persona-runtime:${TAG:-0.3.0} .
+
+push-runtime:
+    docker push ghcr.io/threads-agent-stack/persona-runtime:${TAG:-0.3.0}
+
+dev-runtime: build-runtime push-runtime

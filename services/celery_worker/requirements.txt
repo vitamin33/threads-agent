@@ -1,0 +1,3 @@
+# services/celery_worker/requirements.txt
+celery==5.4.*
+httpx==0.23.*
