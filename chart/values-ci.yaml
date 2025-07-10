@@ -19,5 +19,9 @@ fakeThreads:
     tag: "local"
   port: 9009
 
+threadsService:
+  name: fake-threads
+  port: 9009
+
 postgres:
   enabled: true

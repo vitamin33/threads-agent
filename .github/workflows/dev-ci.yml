@@ -4,8 +4,9 @@ name: dev-ci
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [cra-*] # dev branches keep feedback loop tight
+#   #dev branches keep feedback loop tight
+#   push:
+#     branches: [cra-*]
 
 jobs:
   test:
