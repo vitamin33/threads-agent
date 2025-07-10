@@ -1,0 +1,27 @@
+# chart/values-ci.yaml
+image:
+  repository: ghcr.io/threads-agent-stack/orchestrator
+  tag: "local"
+
+celeryWorker:
+  image:
+    repository: ghcr.io/threads-agent-stack/celery-worker
+    tag: "local"
+
+personaRuntime:
+  image:
+    repository: ghcr.io/threads-agent-stack/persona-runtime
+    tag: "local"
+
+fakeThreads:
+  image:
+    repository: ghcr.io/threads-agent-stack/fake-threads
+    tag: "local"
+  port: 9009
+
+threadsService:
+  name: fake-threads
+  port: 9009
+
+postgres:
+  enabled: true
