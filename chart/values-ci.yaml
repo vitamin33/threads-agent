@@ -1,3 +1,4 @@
+# chart/values-ci.yaml
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
   tag: "local"
@@ -17,4 +18,6 @@ fakeThreads:
     repository: ghcr.io/threads-agent-stack/fake-threads
     tag: "local"
   port: 9009
-# leave the rest (postgres, rabbitmq url, service type, …) exactly as in values-dev
+
+postgres:
+  enabled: true

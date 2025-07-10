@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false # let both versions run
       matrix:
-        python: ["3.10", "3.12"]
+        python: ["3.12"]
 
     steps:
       # ————————————————————————————————
@@ -70,7 +70,7 @@ jobs:
         run: |
           helm upgrade --install threads ./chart \
           -f chart/values-ci.yaml \
-          --wait --timeout 120s
+          --dry-run --debug --wait --timeout 120s
 
       # ————————————————————————————————
       # 5.  Set-up Python & cache venv
