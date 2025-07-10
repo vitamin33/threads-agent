@@ -123,6 +123,7 @@ jobs:
       # ————————————————————————————————
       - name: pytest (unit + e2e)
         run: |
+          export PYTHONPATH=$PWD:$PYTHONPATH
           pytest -q
 
       # ————————————————————————————————
