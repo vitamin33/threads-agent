@@ -44,10 +44,10 @@ jobs:
       # 2.  Spin local k3d cluster
       # ————————————————————————————————
       - name: Create k3d cluster
-        uses: superbrothers/k3d-action@v1
+        uses: AbsaOSS/k3d-action@v2
         with:
           cluster-name: dev
-          wait: true
+          #args: --wait
 
       # ————————————————————————————————
       # 3.  Build & load images into k3d
@@ -107,8 +107,8 @@ jobs:
       # ————————————————————————————————
       # 7.  (Optional) upload infra.svg
       # ————————————————————————————————
-      # - name: Upload infra diagram
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: infra-svg
-      #     path: docs/infra.svg
+      - name: Upload infra diagram
+        uses: actions/upload-artifact@v4
+        with:
+          name: infra-svg
+          path: docs/infra.svg
