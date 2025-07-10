@@ -28,13 +28,12 @@ jobs:
           fetch-depth: 0 # for proper cache keys
 
       # ————————————————————————————————
-      # 1.  Cache Docker layers (buildx)
+      # 1.  BuildKit + cache
       # ————————————————————————————————
-      # ✅  new cache-aware Buildx section
       - name: Set up BuildX
         uses: docker/setup-buildx-action@v3
         with:
-          buildkitd-flags: --debug # helpful logs
+          buildkitd-flags: --debug # optional: verbose logs
 
       - name: Prepare buildx cache
         id: buildx-cache
@@ -45,18 +44,36 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
+      # ————————————————————————————————
+      # 2.  Spin local k3d cluster ⬅️ must be *before* image import
+      # ————————————————————————————————
+      - name: Create k3d cluster
+        uses: AbsaOSS/k3d-action@v2
+        with:
+          cluster-name: dev # => kubectl context "k3d-dev"
+          # args: --wait                    # uncomment if you want hard blocking
+
+      # ————————————————————————————————
+      # 3.  Build & load images (cache-aware)
+      # ————————————————————————————————
       - name: Build & load images
         run: |
-          CACHE="--cache-from=type=local,src=/tmp/.buildx-cache \
-                --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max"
+          CACHE_OPTS="--cache-from=type=local,src=/tmp/.buildx-cache \
+                      --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max"
 
-          docker build $CACHE -f services/orchestrator/Dockerfile    -t orchestrator:local .
-          docker build $CACHE -f services/celery_worker/Dockerfile   -t celery-worker:local .
-          docker build $CACHE -f services/persona_runtime/Dockerfile -t persona-runtime:local .
-          docker build $CACHE -f services/fake_threads/Dockerfile    -t fake-threads:local .
+          for svc in orchestrator celery_worker persona_runtime fake_threads; do
+            docker buildx build \
+              --builder default \            # the builder created above
+              --load \                       # puts the result into the local Docker engine
+              $CACHE_OPTS \
+              -f services/${svc//_/-}/Dockerfile \
+              -t ${svc//_/-}:local .
+          done
 
-          k3d image import orchestrator:local celery-worker:local \
-                        persona-runtime:local fake-threads:local -c dev
+          # make the images visible inside the k3d cluster
+          k3d image import \
+            orchestrator:local celery-worker:local \
+            persona-runtime:local fake-threads:local -c dev
 
       - name: Save buildx cache
         if: steps.buildx-cache.outputs.cache-hit != 'true'
@@ -65,22 +82,13 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       # ————————————————————————————————
-      # 2.  Spin local k3d cluster
-      # ————————————————————————————————
-      - name: Create k3d cluster
-        uses: AbsaOSS/k3d-action@v2
-        with:
-          cluster-name: dev
-          #args: --wait
-
-      # ————————————————————————————————
-      # 3.  Helm install with dev values
+      # 4.  Helm install with CI values
       # ————————————————————————————————
       - name: Helm upgrade (dev cluster)
         run: |
           helm upgrade --install threads ./chart \
-          -f chart/values-ci.yaml \
-          --dry-run --debug --wait --timeout 120s
+            -f chart/values-ci.yaml \
+            --dry-run --debug --wait --timeout 120s
 
       # ————————————————————————————————
       # 4.  Set-up Python & cache venv
