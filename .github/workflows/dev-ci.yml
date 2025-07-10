@@ -62,15 +62,11 @@ jobs:
                       --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max"
 
           for svc in orchestrator celery_worker persona_runtime fake_threads; do
-            docker buildx build \
-              --builder default \          # builder created by setup-buildx-action
-              --load \                     # puts the image into the local Docker engine
-              $CACHE_OPTS \
+            docker buildx build --builder default --load $CACHE_OPTS \
               -f services/${svc}/Dockerfile \
               -t ${svc//_/-}:local .
           done
 
-          # make the images visible inside the k3d cluster
           k3d image import \
             orchestrator:local celery-worker:local \
             persona-runtime:local fake-threads:local -c dev
