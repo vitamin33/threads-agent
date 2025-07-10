@@ -121,9 +121,9 @@ jobs:
       # ————————————————————————————————
       # 5.  Run unit + e2e suites
       # ————————————————————————————————
-      - name: pytest (unit & e2e)
+      - name: pytest (unit + e2e)
         run: |
-          just test -q
+          pytest -q
 
       # ————————————————————————————————
       # 6.  (Optional) upload infra.svg
