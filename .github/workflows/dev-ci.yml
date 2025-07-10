@@ -31,9 +31,11 @@ jobs:
       # 1.  BuildKit + cache
       # ————————————————————————————————
       - name: Set up BuildX
+        id: buildx #  ← we’ll need the builder name later
         uses: docker/setup-buildx-action@v3
         with:
-          buildkitd-flags: --debug # optional: verbose logs
+          driver: docker-container
+          buildkitd-flags: --debug
 
       - name: Prepare buildx cache
         id: buildx-cache
@@ -61,8 +63,13 @@ jobs:
           CACHE_OPTS="--cache-from=type=local,src=/tmp/.buildx-cache \
                       --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max"
 
+          BUILDER="${{ steps.buildx.outputs.name }}"   # <— builder set above
+
           for svc in orchestrator celery_worker persona_runtime fake_threads; do
-            docker buildx build --builder default --load $CACHE_OPTS \
+            docker buildx build \
+              --builder "$BUILDER" \
+              --load \
+              $CACHE_OPTS \
               -f services/${svc}/Dockerfile \
               -t ${svc//_/-}:local .
           done
