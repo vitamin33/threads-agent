@@ -63,10 +63,10 @@ jobs:
 
           for svc in orchestrator celery_worker persona_runtime fake_threads; do
             docker buildx build \
-              --builder default \            # the builder created above
-              --load \                       # puts the result into the local Docker engine
+              --builder default \          # builder created by setup-buildx-action
+              --load \                     # puts the image into the local Docker engine
               $CACHE_OPTS \
-              -f services/${svc//_/-}/Dockerfile \
+              -f services/${svc}/Dockerfile \
               -t ${svc//_/-}:local .
           done
 
