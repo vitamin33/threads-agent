@@ -1,0 +1,114 @@
+# .github/workflows/dev-ci.yml
+name: dev-ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [cra-*] # dev branches keep feedback loop tight
+
+jobs:
+  test:
+    name: py${{ matrix.python }} • k3d
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15 # fail-fast guard
+    strategy:
+      fail-fast: false # let both versions run
+      matrix:
+        python: ["3.10", "3.12"]
+
+    steps:
+      # ————————————————————————————————
+      # 0.  Checkout code
+      # ————————————————————————————————
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # for proper cache keys
+
+      # ————————————————————————————————
+      # 1.  Cache Docker layers (buildx)
+      # ————————————————————————————————
+      - name: Set up Docker BuildX
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # ————————————————————————————————
+      # 2.  Spin local k3d cluster
+      # ————————————————————————————————
+      - name: Create k3d cluster
+        uses: superbrothers/k3d-action@v1
+        with:
+          cluster-name: dev
+          wait: true
+
+      # ————————————————————————————————
+      # 3.  Build & load images into k3d
+      #     (multi-stage; we only build what Helm needs)
+      # ————————————————————————————————
+      - name: Build micro-service images
+        run: |
+          docker build -f services/orchestrator/Dockerfile   -t orchestrator:local .
+          docker build -f services/celery_worker/Dockerfile  -t celery-worker:local .
+          docker build -f services/persona_runtime/Dockerfile -t persona-runtime:local .
+          docker build -f services/fake_threads/Dockerfile   -t fake-threads:local .
+          # Load them into the cluster’s registry
+          k3d image import orchestrator:local celery-worker:local \
+                         persona-runtime:local fake-threads:local -c dev
+
+      # ————————————————————————————————
+      # 4.  Helm install with dev values
+      # ————————————————————————————————
+      - name: Helm upgrade (dev cluster)
+        run: |
+          helm upgrade --install threads ./chart \
+          -f chart/values-ci.yaml \
+          --wait --timeout 120s
+
+      # ————————————————————————————————
+      # 5.  Set-up Python & cache venv
+      # ————————————————————————————————
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -r services/orchestrator/requirements.txt
+          pip install -r services/celery_worker/requirements.txt
+          pip install -r services/persona_runtime/requirements.txt
+          pip install -r services/fake_threads/requirements.txt
+          pip install -r tests/requirements.txt
+
+      # ————————————————————————————————
+      # 6.  Run unit + e2e suites
+      # ————————————————————————————————
+      - name: pytest (unit & e2e)
+        run: |
+          just test -q           # or simply `pytest -q` if you prefer
+
+      # ————————————————————————————————
+      # 7.  (Optional) upload infra.svg
+      # ————————————————————————————————
+      # - name: Upload infra diagram
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: infra-svg
+      #     path: docs/infra.svg
