@@ -1,45 +1,41 @@
-# /chart/values-dev.yaml
+# ────────────────────────────────────────────────────────
+#  values-dev.yaml  – local k3d overrides
+# ────────────────────────────────────────────────────────
+tag: local
+
 image:
-  repository: ghcr.io/threads-agent-stack/orchestrator
-  tag: "0.3.5"          # ✔ orchestrator image
+  repository: orchestrator
+  tag: local
+
+celeryWorker:
+  image:
+    repository: celery-worker
+    tag: local
+
+personaRuntime:
+  image:
+    repository: persona-runtime
+    tag: local
+
+fakeThreads:
+  image:
+    repository: fake-threads
+    tag: local
+  port: 9009
+  # pullSecret *not* needed for local images
+
+postgres:
+  enabled: true
+
+threadsService:
+  name: fake-threads
+  port: 9009
 
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
 
-celeryWorker:
-  image:
-    repository: ghcr.io/threads-agent-stack/celery-worker
-    tag: "0.3.5"        # ✔ matches orchestrator tag
-
-personaRuntime:
-  image:
-    repository: ghcr.io/threads-agent-stack/persona-runtime
-    tag: "0.3.5"        # ✔
-
-# NEW ----------------------------------------------------------------
-postgres:
-  enabled: true         # ✔ turns on the PG sub-chart / template
-  # (if your template expects more – e.g. storage size or user/pass – add them here)
-
-fakeThreads:
-  image:
-    repository: ghcr.io/threads-agent-stack/fake-threads
-    tag: "0.1.0"
-  port: 9009
-  pullSecret: ghcr-creds
-
-
-threadsService:
-  name: fake-threads      # ← must match metadata.name in fake-threads Service
-  port: 9009
-# --------------------------------------------------------------------
-
 replicaCount: 1
-
 service:
   type: ClusterIP
   port: 8080
-
 resources: {}
-
-
