@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: persona-runtime
-          image: ghcr.io/threads-agent-stack/persona-runtime:{{ .Values.personaRuntime.image.tag }}
+          image: "{{ tpl .Values.personaRuntime.image.repository $ }}:{{ tpl .Values.personaRuntime.image.tag $ }}"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
