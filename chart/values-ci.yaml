@@ -1,22 +1,24 @@
-# /chart/values-ci.yaml
+# chart/values-ci.yaml
+# ─────────────────── CI overrides (local images) ───────────────────
+
 image:
-  repository: ghcr.io/threads-agent-stack/orchestrator
+  repository: orchestrator   # <— matches docker build tag
   tag: "local"
 
 celeryWorker:
   image:
-    repository: ghcr.io/threads-agent-stack/celery-worker
+    repository: celery-worker
     tag: "local"
 
 personaRuntime:
   image:
-    repository: ghcr.io/threads-agent-stack/persona-runtime
+    repository: persona-runtime
     tag: "local"
 
 fakeThreads:
   enabled: true
   image:
-    repository: ghcr.io/threads-agent-stack/fake-threads
+    repository: fake-threads
     tag: "local"
   port: 9009
 
@@ -24,11 +26,13 @@ threadsService:
   name: fake-threads
   port: 9009
 
+# stub Postgres for e2e
 postgres:
   enabled: true
-  storage: 1Gi        # k3d’s default LocalPath provisioner
+  storage: 1Gi   # k3d’s default LocalPath provisioner
 
-minio:                # 🟡 not needed for e2e yet – keep OFF
+# MinIO not needed in CI yet
+minio:
   enabled: false
 
 service:
