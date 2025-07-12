@@ -1,45 +1,48 @@
 # /chart/values-dev.yaml
+# ───────── service images built locally (v0.3.5) ─────────
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
-  tag: "0.3.5"          # ✔ orchestrator image
-
-rabbitmq:
-  url: "amqp://user:pass@rabbitmq:5672/%2f"
+  tag: "0.3.5"
 
 celeryWorker:
   image:
     repository: ghcr.io/threads-agent-stack/celery-worker
-    tag: "0.3.5"        # ✔ matches orchestrator tag
+    tag: "0.3.5"
 
 personaRuntime:
   image:
     repository: ghcr.io/threads-agent-stack/persona-runtime
-    tag: "0.3.5"        # ✔
+    tag: "0.3.5"
 
-# NEW ----------------------------------------------------------------
+rabbitmq:
+  url: "amqp://user:pass@rabbitmq:5672/%2f"
+
+# ───────── enable stub-stack services ─────────
 postgres:
-  enabled: true         # ✔ turns on the PG sub-chart / template
-  # (if your template expects more – e.g. storage size or user/pass – add them here)
+  enabled: true
+  storage: 1Gi       # matches pvc spec
+
+minio:
+  enabled: true
+  accessKey: "minio"
+  secretKey: "minio123"
+  storage: 1Gi       # small local disk
 
 fakeThreads:
+  enabled: true
   image:
     repository: ghcr.io/threads-agent-stack/fake-threads
     tag: "0.1.0"
   port: 9009
-  pullSecret: ghcr-creds
-
+  pullSecret: ghcr-creds   # ← your personal GHCR PAT docker-login secret
 
 threadsService:
-  name: fake-threads      # ← must match metadata.name in fake-threads Service
+  name: fake-threads
   port: 9009
-# --------------------------------------------------------------------
 
+# ───────── misc ─────────
 replicaCount: 1
-
 service:
   type: ClusterIP
   port: 8080
-
 resources: {}
-
-

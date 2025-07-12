@@ -23,8 +23,11 @@ k3d-nuke-all:
 test:               # run unit + e2e
     pytest -q
 
-logs:               # follow pod logs
+logs:
     kubectl logs -l app=orchestrator -f --tail=100
+
+logs-celery:
+	kubectl logs -f deploy/celery-worker
 
 test-watch SERVICE="":
 	@echo "🔁  watching tests…"

@@ -1,4 +1,9 @@
 # chart/templates/fake-threads.yaml
+{{- /*
+      fake-threads FastAPI mock
+      — renders only when .Values.fakeThreads is truthy
+*/}}
+
 {{- if .Values.fakeThreads }}
 apiVersion: apps/v1
 kind: Deployment
@@ -12,16 +17,29 @@ spec:
     metadata:
       labels: { app: fake-threads }
     spec:
-    {{- if .Values.fakeThreads.pullSecret }}
+      serviceAccountName: fake-threads-sa
+{{- if .Values.fakeThreads.pullSecret }}
       imagePullSecrets:
         - name: {{ .Values.fakeThreads.pullSecret }}
-    {{- end }}
+{{- end }}
       containers:
         - name: fake-threads
           image: "{{ .Values.fakeThreads.image.repository }}:{{ .Values.fakeThreads.image.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ .Values.fakeThreads.port }}
+          readinessProbe:                      # ——— health checks ———
+            httpGet:
+              path: /ping
+              port: {{ .Values.fakeThreads.port }}
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.fakeThreads.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
@@ -32,4 +50,10 @@ spec:
     app: fake-threads
   ports:
     - port: {{ .Values.fakeThreads.port }}
+      targetPort: {{ .Values.fakeThreads.port }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fake-threads-sa
 {{- end }}

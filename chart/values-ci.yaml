@@ -1,4 +1,4 @@
-# chart/values-ci.yaml
+# /chart/values-ci.yaml
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
   tag: "local"
@@ -14,6 +14,7 @@ personaRuntime:
     tag: "local"
 
 fakeThreads:
+  enabled: true
   image:
     repository: ghcr.io/threads-agent-stack/fake-threads
     tag: "local"
@@ -25,3 +26,11 @@ threadsService:
 
 postgres:
   enabled: true
+  storage: 1Gi        # k3d’s default LocalPath provisioner
+
+minio:                # 🟡 not needed for e2e yet – keep OFF
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 8080

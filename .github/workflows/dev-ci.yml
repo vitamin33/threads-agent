@@ -127,7 +127,15 @@ jobs:
           pytest -q
 
       # ————————————————————————————————
-      # 6.  (Optional) upload infra.svg
+      # 6.  Render Mermaid diagram
+      # ————————————————————————————————
+      - name: Render infra diagram
+        run: |
+          npm install -g @mermaid-js/mermaid-cli@^10
+          mmdc -i docs/infra.mmd -o docs/infra.svg
+
+      # ————————————————————————————————
+      # 7.  Upload infra.svg artifact
       # ————————————————————————————————
       - name: Upload infra diagram
         uses: actions/upload-artifact@v4
