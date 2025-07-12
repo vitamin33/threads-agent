@@ -39,6 +39,12 @@ threadsService:                    # orchestrator ↔︎ fake-threads alias
   name: fake-threads
   port: 9009
 
+celeryWorker:
+  enabled: true
+  image:
+    repository: ghcr.io/threads-agent-stack/celery-worker
+    tag: "0.2.0"
+
 # ───────── generic chart knobs ─────────
 replicaCount: 1
 

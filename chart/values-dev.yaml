@@ -1,10 +1,10 @@
-# ────────────────────────────────────────────────────────
-#  values-dev.yaml  – local k3d overrides
-# ────────────────────────────────────────────────────────
-tag: local
+# ────────────────────────────────────────────────
+# values-dev.yaml  – local k3d overrides
+# ────────────────────────────────────────────────
+replicaCount: 1
 
 image:
-  repository: orchestrator
+  repository: orchestrator            # ← local images, no GHCR prefix
   tag: local
 
 celeryWorker:
@@ -20,16 +20,19 @@ personaRuntime:
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
 
-# ───────── enable stub-stack services ─────────
+# ───────── stub-stack services ─────────
 postgres:
   enabled: true
-  storage: 1Gi       # matches pvc spec
+  storage: 1Gi                         # pvc size used in pvc.yaml / template
 
 minio:
   enabled: true
-  accessKey: "minio"
-  secretKey: "minio123"
-  storage: 1Gi       # small local disk
+  image:
+    repository: bitnami/minio             # one place to change if you ever use a mirror
+    tag: "2024"                           # dev-friendly multi-arch tag
+  accessKey: minio
+  secretKey: minio123
+  storage: 1Gi
 
 fakeThreads:
   enabled: true
@@ -37,21 +40,15 @@ fakeThreads:
     repository: fake-threads
     tag: local
   port: 9009
-  pullSecret: ghcr-creds   # ← your personal GHCR PAT docker-login secret
+  pullSecret: ghcr-creds               # docker login secret (GHCR PAT)
 
-postgres:
-  enabled: true
-
-threadsService:
+threadsService:                        # used by orchestrator & worker envs
   name: fake-threads
   port: 9009
 
-rabbitmq:
-  url: "amqp://user:pass@rabbitmq:5672/%2f"
-
-# ───────── misc ─────────
-replicaCount: 1
+# ───────── service for orchestrator itself ─────────
 service:
   type: ClusterIP
   port: 8080
+
 resources: {}
