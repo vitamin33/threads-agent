@@ -15,8 +15,12 @@ spec:
     spec:
       containers:
         - name: celery-worker
-          image: ghcr.io/threads-agent-stack/celery-worker:{{ .Values.image.tag }}
+          image: "{{ tpl .Values.celeryWorker.image.repository $ }}:{{ tpl .Values.celeryWorker.image.tag $ }}"
           env:
             - name: RABBITMQ_URL
               value: {{ .Values.rabbitmq.url }}
+            - name: CELERY_BROKER_URL
+              value: {{ .Values.rabbitmq.url }}
+            - name: THREADS_BASE_URL
+              value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
           resources: {}

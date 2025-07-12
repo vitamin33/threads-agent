@@ -20,10 +20,12 @@ spec:
       # - name: ghcr-creds
       containers:
         - name: orchestrator
-          image: {{ include "threads.image" . }}
+          image: "{{ tpl .Values.image.repository $ }}:{{ tpl .Values.image.tag $ }}"
           imagePullPolicy: IfNotPresent
           env:
             - name: RABBITMQ_URL
+              value: {{ .Values.rabbitmq.url }}
+            - name: CELERY_BROKER_URL
               value: {{ .Values.rabbitmq.url }}
             - name: THREADS_BASE_URL
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"

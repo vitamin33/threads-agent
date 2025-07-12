@@ -24,7 +24,7 @@ spec:
 {{- end }}
       containers:
         - name: fake-threads
-          image: "{{ .Values.fakeThreads.image.repository }}:{{ .Values.fakeThreads.image.tag }}"
+          image: "{{ tpl .Values.fakeThreads.image.repository $ }}:{{ tpl .Values.fakeThreads.image.tag $ }}"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ .Values.fakeThreads.port }}

@@ -7,12 +7,32 @@ set dotenv-load
 bootstrap:          # spin local k3d
     ./scripts/dev-up.sh
 
-helm-cfg := "$HOME/.kube/k3d-dev.yaml"
 
-deploy-fast:          # 60 s rollout + logs
+# -----------------------------------------------------------------
+# single helper that builds + pre-pulls all images, then loads
+# everything (including Postgres & RabbitMQ) into the k3d cluster
+# -----------------------------------------------------------------
+images:
+	@echo "🐳  building dev images …"
+
+	for svc in orchestrator celery_worker persona_runtime fake_threads; do \
+		docker build -f services/${svc}/Dockerfile -t ${svc//_/-}:local .; \
+	done
+
+	docker pull bitnami/postgresql:16
+	docker pull rabbitmq:3.13-management-alpine
+
+	for img in orchestrator celery-worker persona-runtime fake-threads; do \
+		k3d image import ${img}:local -c dev; \
+	done
+
+	@echo "🔍  images inside k3d nodes:"
+	docker exec k3d-dev-agent-0 crictl images | grep -E 'orchestrator|celery|persona|fake'
+
+deploy-fast TIMEOUT="360s":
     helm upgrade --install threads ./chart \
-         -f chart/values-dev.yaml --wait --timeout 60s
-    kubectl logs -l app=orchestrator -f --tail=100
+         -f chart/values-dev.yaml \
+         --wait --timeout {{TIMEOUT}}
 
 k3d-stop-all:
 	k3d cluster stop --all
@@ -20,8 +40,18 @@ k3d-stop-all:
 k3d-nuke-all:
 	k3d cluster delete --all
 
-test:               # run unit + e2e
-    pytest -q
+# ---------- Local e2e run ----------
+e2e-prepare:
+    just bootstrap
+    just images
+    just deploy-fast
+
+e2e:
+    pytest -s -m e2e
+
+# ---------- Unit-only test run ----------
+unit:
+    pytest -q -m "not e2e"
 
 logs:
     kubectl logs -l app=orchestrator -f --tail=100
@@ -81,9 +111,6 @@ ship MESSAGE NO_PR="false":
 jaeger-ui:          # open Jaeger in browser (mac)
     open http://localhost:16686 || true
 
-default: deploy-fast
-
-
 build-runtime:
     docker build -f services/persona_runtime/Dockerfile \
       -t ghcr.io/threads-agent-stack/persona-runtime:${TAG:-0.3.0} .
@@ -92,3 +119,5 @@ push-runtime:
     docker push ghcr.io/threads-agent-stack/persona-runtime:${TAG:-0.3.0}
 
 dev-runtime: build-runtime push-runtime
+
+default: unit

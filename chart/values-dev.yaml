@@ -1,18 +1,21 @@
-# /chart/values-dev.yaml
-# ───────── service images built locally (v0.3.5) ─────────
+# ────────────────────────────────────────────────────────
+#  values-dev.yaml  – local k3d overrides
+# ────────────────────────────────────────────────────────
+tag: local
+
 image:
-  repository: ghcr.io/threads-agent-stack/orchestrator
-  tag: "0.3.5"
+  repository: orchestrator
+  tag: local
 
 celeryWorker:
   image:
-    repository: ghcr.io/threads-agent-stack/celery-worker
-    tag: "0.3.5"
+    repository: celery-worker
+    tag: local
 
 personaRuntime:
   image:
-    repository: ghcr.io/threads-agent-stack/persona-runtime
-    tag: "0.3.5"
+    repository: persona-runtime
+    tag: local
 
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
@@ -31,14 +34,20 @@ minio:
 fakeThreads:
   enabled: true
   image:
-    repository: ghcr.io/threads-agent-stack/fake-threads
-    tag: "0.1.0"
+    repository: fake-threads
+    tag: local
   port: 9009
   pullSecret: ghcr-creds   # ← your personal GHCR PAT docker-login secret
+
+postgres:
+  enabled: true
 
 threadsService:
   name: fake-threads
   port: 9009
+
+rabbitmq:
+  url: "amqp://user:pass@rabbitmq:5672/%2f"
 
 # ───────── misc ─────────
 replicaCount: 1
