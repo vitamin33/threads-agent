@@ -88,10 +88,28 @@ jobs:
       # 4.  Helm install with CI values
       # ————————————————————————————————
       - name: Helm upgrade (dev cluster)
+        id: helm
+        continue-on-error: true
         run: |
           helm upgrade --install threads ./chart \
             -f chart/values-ci.yaml \
-            --wait --timeout 300s
+            --wait --timeout 300s --debug
+
+      # ─── If Helm failed, dump cluster state ──────────────────────────────
+      - name: Dump pod list + events if Helm failed
+        if: steps.helm.outcome == 'failure'
+        run: |
+          echo "❌ Helm release did not become ready. Dumping diagnostics …"
+          kubectl get pods -A -o wide
+          kubectl get events --sort-by='.lastTimestamp' -A | tail -n 40
+          # Show logs of pods stuck in Pending / CrashLoop
+          for p in $(kubectl get pods --no-headers | awk '$3!="Running"{print $1}'); do
+            echo "──── logs: $p ────"
+            kubectl logs "$p" --tail=100 || true
+          done
+          # Fail the step explicitly so the job still turns red
+          exit 1
+
       - name: Wait for orchestrator pod
         run: |
           kubectl rollout status deploy/orchestrator --timeout=120s
