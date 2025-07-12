@@ -53,8 +53,11 @@ e2e:
 unit:
     pytest -q -m "not e2e"
 
-logs:               # follow pod logs
+logs:
     kubectl logs -l app=orchestrator -f --tail=100
+
+logs-celery:
+	kubectl logs -f deploy/celery-worker
 
 test-watch SERVICE="":
 	@echo "🔁  watching tests…"

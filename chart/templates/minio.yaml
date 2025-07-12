@@ -1,0 +1,97 @@
+# chart/templates/minio.yaml
+{{- if .Values.minio.enabled }}
+
+############################################
+# 1️⃣  Access keys → Secret
+############################################
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secret
+type: Opaque
+stringData:
+  MINIO_ROOT_USER:     "{{ .Values.minio.accessKey }}"
+  MINIO_ROOT_PASSWORD: "{{ .Values.minio.secretKey }}"
+
+---
+
+############################################
+# 2️⃣  StatefulSet (official image)
+############################################
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+spec:
+  serviceName: minio
+  replicas: 1
+  selector:
+    matchLabels: { app: minio }
+  template:
+    metadata:
+      labels: { app: minio }
+    spec:
+      serviceAccountName: minio-sa
+      containers:
+        - name: minio
+          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
+          args:
+            - minio
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          envFrom:
+            - secretRef: { name: minio-secret }
+          ports:
+            - containerPort: 9000   # S3
+            - containerPort: 9001   # UI
+          readinessProbe:
+            httpGet: { path: /minio/health/ready, port: 9000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /minio/health/live,  port: 9000 }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        storageClassName: local-path        # default k3d RWX-capable class
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests: { storage: {{ .Values.minio.storage }} }
+
+---
+
+############################################
+# 3️⃣  Cluster-IP Service
+############################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+spec:
+  selector: { app: minio }
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+
+---
+
+############################################
+# 4️⃣  ServiceAccount
+############################################
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: minio-sa
+
+{{- end }}

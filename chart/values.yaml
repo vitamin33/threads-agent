@@ -1,7 +1,8 @@
 # /chart/values.yaml
-nameOverride: ""           # Helm uses chart name
+nameOverride: ""
 fullnameOverride: ""
 
+# ───────── core service images ─────────
 image:
   repository: ghcr.io/threads-agent-stack/orchestrator
   tag: "0.2.0"
@@ -11,11 +12,44 @@ personaRuntime:
     repository: ghcr.io/threads-agent-stack/persona-runtime
     tag: "0.3.0"
 
+# RabbitMQ broker DSN used by orchestrator / Celery
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
 
+# ───────── new stub-stack toggles (all OFF by default) ─────────
+postgres:
+  enabled: false                   # turn ON in dev/ci values
+  storage: 1Gi                     # PVC size; template uses .Values.postgres.storage
+
+minio:
+  enabled: false                   # turn ON in dev values
+  accessKey: "minio"               # overridden in env Secret
+  secretKey: "minio123"
+  storage: 1Gi
+
+fakeThreads:
+  enabled: false                   # turn ON in dev/ci values
+  image:
+    repository: ghcr.io/threads-agent-stack/fake-threads
+    tag: "0.1.0"
+  port: 9009
+  pullSecret: ""                   # leave blank unless you push to a private registry
+
+threadsService:                    # orchestrator ↔︎ fake-threads alias
+  name: fake-threads
+  port: 9009
+
+celeryWorker:
+  enabled: true
+  image:
+    repository: ghcr.io/threads-agent-stack/celery-worker
+    tag: "0.2.0"
+
+# ───────── generic chart knobs ─────────
 replicaCount: 1
+
 service:
   type: ClusterIP
   port: 8080
+
 resources: {}
