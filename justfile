@@ -40,6 +40,15 @@ k3d-stop-all:
 k3d-nuke-all:
 	k3d cluster delete --all
 
+docker-cache-clear:
+    @echo "🧹  pruning buildx cache …"
+    docker builder prune -af
+
+# full reset: cluster + cache
+reset-hard:
+    just k3d-nuke-all
+    just docker-cache-clear
+
 # ---------- Local e2e run ----------
 e2e-prepare:
     just bootstrap

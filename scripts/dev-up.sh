@@ -2,6 +2,8 @@
 # scripts/dev-up.sh ── spin a fresh local “dev” k3d cluster + preload image
 set -euo pipefail
 
+TAG=${TAG:-local}
+
 CLUSTER="dev"
 IMAGES=(
   "ghcr.io/threads-agent-stack/orchestrator:$TAG"

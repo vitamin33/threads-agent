@@ -1,0 +1,2 @@
+# /chart/templates/_include-migrations.yaml
+{{ include "threads.migrations" . | nindent 0 }}

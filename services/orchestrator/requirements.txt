@@ -4,3 +4,7 @@ uvicorn[standard]==0.30.*
 celery==5.4.*
 httpx==0.27.*
 psycopg2-binary==2.9.*
+
+# migrations
+SQLAlchemy~=2.0.30
+alembic~=1.13

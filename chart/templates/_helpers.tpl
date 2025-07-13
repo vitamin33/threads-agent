@@ -27,3 +27,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "threads.image" -}}
 {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
+
+{{/* Auto-render migrations Job, if on in stub-Postgres */}}
+{{- define "threads.migrations" -}}
+{{- if .Values.postgres.enabled }}
+{{- include (print $.Template.BasePath "/templates/migrations-job.yaml") . }}
+{{- end }}
+{{- end }}

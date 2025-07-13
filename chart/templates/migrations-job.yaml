@@ -1,0 +1,49 @@
+# chart/templates/migrations-job.yaml
+{{- if .Values.postgres.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrations
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+
+      # 1️⃣  Wait until the super-user works
+      initContainers:
+      - name: wait-pg
+        image: bitnami/postgresql:16
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-postgresql   # ← threads-postgresql at runtime
+              key: postgres-password
+        command: ["sh","-ec",
+          "echo '⏳ waiting for Postgres super-user …'; \
+           for i in $(seq 1 60); do \
+             PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h postgres -U postgres -c 'select 1' >/dev/null 2>&1 && exit 0; \
+             sleep 2; \
+           done; \
+           echo '💥 postgres still locked'; exit 1"]
+
+      # 2️⃣  Run Alembic
+      containers:
+      - name: alembic
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-postgresql   # same secret
+              key: postgres-password
+        - name: POSTGRES_DSN
+          value: >-
+            postgresql+psycopg2://postgres:$(POSTGRES_PASSWORD)@postgres:5432/postgres
+        command: ["alembic","-c",
+                  "/app/services/orchestrator/db/alembic.ini",
+                  "upgrade","head"]
+{{- end }}
