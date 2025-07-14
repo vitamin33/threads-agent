@@ -20,8 +20,8 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-postgresql   # ← threads-postgresql at runtime
-              key: postgres-password
+              name: {{ .Release.Name }}-postgresql
+              key: POSTGRES_PASSWORD
         command: ["sh","-ec",
           "echo '⏳ waiting for Postgres super-user …'; \
            for i in $(seq 1 60); do \
@@ -34,16 +34,12 @@ spec:
       containers:
       - name: alembic
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-        env:
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}-postgresql   # same secret
-              key: postgres-password
-        - name: POSTGRES_DSN
-          value: >-
-            postgresql+psycopg2://postgres:$(POSTGRES_PASSWORD)@postgres:5432/postgres
-        command: ["alembic","-c",
-                  "/app/services/orchestrator/db/alembic.ini",
-                  "upgrade","head"]
+        envFrom:                       # lift pw directly into env
+          - secretRef: { name: {{ .Release.Name }}-postgresql }
+        command:
+          - /bin/sh
+          - -c
+          - |
+              export POSTGRES_DSN="postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+              alembic -c /app/services/orchestrator/db/alembic.ini upgrade head
 {{- end }}

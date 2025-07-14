@@ -10,10 +10,10 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: pg-secret
+  name: threads-postgresql
 type: Opaque
 stringData:
-  POSTGRES_PASSWORD: "changeme"
+  POSTGRES_PASSWORD: "{{ .Values.postgres.auth.postgresPassword }}"
 
 ---
 
@@ -42,15 +42,9 @@ spec:
           env:
             # either var works – we set both to silence warning logs
             - name: POSTGRESQL_POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: pg-secret
-                  key: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
             - name: POSTGRESQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: pg-secret
-                  key: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
           volumeMounts:
             - name: pgdata
               mountPath: /bitnami/postgresql
