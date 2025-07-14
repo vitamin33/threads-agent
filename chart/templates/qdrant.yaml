@@ -1,9 +1,33 @@
 # /chart/templates/qdrant.yaml
 {{- if .Values.qdrant.enabled }}
+################################################################################
+# Headless Service – required for StatefulSet DNS (qdrant, qdrant-0.qdrant)
+################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  labels: { app: qdrant }
+spec:
+  clusterIP: None
+  selector:
+    app: qdrant
+  ports:
+    - name: http
+      port: 6333
+      targetPort: 6333
+    - name: grpc
+      port: 6334
+      targetPort: 6334
+---
+################################################################################
+# StatefulSet – the Qdrant node
+################################################################################
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: qdrant
+  labels: { app: qdrant }
 spec:
   serviceName: qdrant
   replicas: 1
