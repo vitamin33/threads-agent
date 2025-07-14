@@ -23,6 +23,8 @@ rabbitmq:
 # ───────── stub-stack services ─────────
 postgres:
   enabled: true
+  auth:
+    postgresPassword: pass
   storage: 1Gi                         # pvc size used in pvc.yaml / template
 
 minio:

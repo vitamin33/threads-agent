@@ -29,7 +29,15 @@ threadsService:
 # stub Postgres for e2e
 postgres:
   enabled: true
-  storage: 1Gi   # k3d’s default LocalPath provisioner
+  storage: 1Gi
+  auth:
+    # This password is written into the Bitnami-generated Secret
+    #   Name:  <release>-postgresql
+    #   Key :  postgres-password
+    #
+    # The migrations Job reads that same key, so *any* value works,
+    # as long as it is present.
+    postgresPassword: ci-pass
 
 # MinIO not needed in CI yet
 minio:

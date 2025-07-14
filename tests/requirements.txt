@@ -1,5 +1,5 @@
 # tests/requirements.txt
-pytest==8.2.*
+pytest==8.4.*                 # ≥ 8.3.3 to satisfy pytest-env
 pytest-cov==4.*
 httpx==0.28.*
-pytest-asyncio==0.23.*
+pytest-asyncio==0.24.*        # 0.24 adds official support for pytest ≥ 8.3
