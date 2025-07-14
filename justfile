@@ -22,6 +22,10 @@ images:
 	docker pull bitnami/postgresql:16
 	docker pull rabbitmq:3.13-management-alpine
 
+	# ---------- Qdrant ----------
+	docker pull qdrant/qdrant:v1.9.4
+	k3d image import qdrant/qdrant:v1.9.4 -c dev
+
 	for img in orchestrator celery-worker persona-runtime fake-threads; do \
 		k3d image import ${img}:local -c dev; \
 	done
@@ -97,7 +101,7 @@ lint:
 
 check: lint
 	@echo "🔍  mypy type-check"
-	mypy services scripts
+	mypy --config-file mypy.ini .
 	@echo "🧪  pytest suite"
 	pytest -q
 	@echo "✅  all green"

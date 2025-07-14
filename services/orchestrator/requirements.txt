@@ -8,3 +8,6 @@ psycopg2-binary==2.9.*
 # migrations
 SQLAlchemy~=2.0.30
 alembic~=1.13
+
+# vector db
+qdrant-client>=1.9

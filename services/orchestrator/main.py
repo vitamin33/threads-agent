@@ -8,6 +8,9 @@ from celery import Celery
 from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel, Field
 
+# ── qdrant bootstrap
+from services.orchestrator.vector import ensure_posts_collection
+
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
 PERSONA_RUNTIME_URL = os.getenv("PERSONA_RUNTIME_URL", "http://persona-runtime:8080")
 
@@ -16,6 +19,13 @@ app = FastAPI(title="orchestrator")  # single public symbol
 
 # ── Celery app *local to this service* ──────────────────────────────
 celery_app = Celery("orchestrator", broker=BROKER_URL)
+
+
+# This runs exactly once when Uvicorn imports the module,
+# before any Celery task can hit the DB / vector store.
+@app.on_event("startup")
+async def _init_qdrant() -> None:
+    ensure_posts_collection()
 
 
 # ---------- pydantic -----------------
