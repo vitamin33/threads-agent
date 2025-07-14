@@ -27,6 +27,13 @@ postgres:
     postgresPassword: pass
   storage: 1Gi                         # pvc size used in pvc.yaml / template
 
+qdrant:
+  enabled: true
+  storage: 1Gi
+  image:
+    repository: qdrant/qdrant
+    tag: v1.9.4
+
 minio:
   enabled: true
   image:
@@ -52,5 +59,8 @@ threadsService:                        # used by orchestrator & worker envs
 service:
   type: ClusterIP
   port: 8080
+
+global:
+  storageClass: local-path
 
 resources: {}

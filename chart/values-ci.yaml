@@ -39,9 +39,19 @@ postgres:
     # as long as it is present.
     postgresPassword: ci-pass
 
+qdrant:
+  enabled: true
+  storage: 1Gi
+  image:
+    repository: qdrant/qdrant
+    tag: v1.9.4
+
 # MinIO not needed in CI yet
 minio:
   enabled: false
+
+global:
+  storageClass: local-path
 
 service:
   type: ClusterIP

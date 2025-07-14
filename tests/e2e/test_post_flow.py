@@ -6,7 +6,7 @@ import time
 from typing import Iterator
 
 import httpx
-import pytest  # type: ignore[import-not-found]
+import pytest
 
 pytestmark = pytest.mark.e2e
 
@@ -23,7 +23,7 @@ def _port_forward(svc: str, local: int, remote: int) -> subprocess.Popen[bytes]:
     )
 
 
-@pytest.fixture(autouse=True)  # type: ignore[misc]
+@pytest.fixture(autouse=True)
 def port_forwards() -> Iterator[None]:
     """Establish local forwards to the orchestrator and fake-threads services."""
     pf1 = _port_forward("orchestrator", ORCH_PORT, 8080)
