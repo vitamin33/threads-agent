@@ -155,8 +155,18 @@ jobs:
       # ————————————————————————————————
       - name: pytest (unit + e2e)
         run: |
+          # ➊ start port-forward in the background
+          kubectl port-forward deploy/orchestrator 18080:8080 &
+          PF_PID=$!
+          # give the tunnel a moment
+          sleep 5
+
+          # ➋ run the test suite (tests already hit localhost:18080)
           export PYTHONPATH=$PWD:$PYTHONPATH
           pytest -q
+
+          # ➌ tidy up
+          kill $PF_PID
 
       # ————————————————————————————————
       # 6.  Render Mermaid diagram
