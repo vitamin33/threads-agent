@@ -1,7 +1,8 @@
 # services/persona_runtime/main.py
 from __future__ import annotations
 
-from typing import AsyncIterator
+import json
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -22,26 +23,39 @@ class RunRequest(BaseModel):
 async def run(req: RunRequest) -> EventSourceResponse:
     dag = build_dag_from_persona(req.persona_id)
     if dag is None:
-        raise HTTPException(404, f"persona {req.persona_id!r} not found")
+        raise HTTPException(
+            status_code=404, detail=f"persona {req.persona_id!r} not found"
+        )
 
-    # `compile()` in runtime.py gives us a *CompiledStateGraph* that has `.astream`
     async def streamer() -> AsyncIterator[str]:
-        async def _extract_text(s: object) -> str | None:  # helper
-            if isinstance(s, dict):
-                # prefer the formatted-node output first
-                if (
-                    "format" in s
-                    and isinstance(s["format"], dict)
-                    and "text" in s["format"]
-                ):
-                    return str(s["format"]["text"])
-                # then the final global state
-                if "text" in s:
-                    return str(s["text"])
+        """Relay LangGraph state updates as SSE lines."""
+
+        def _extract_json(state: Any) -> str | None:
+            """
+            Return a JSON string once the **final** draft (hook + body) is present.
+
+            Depending on how LangGraph merges node outputs the `draft`
+            object can appear either:
+            • at the root of the global state, *or*
+            • inside the result of the `"format"` node.
+            """
+            if not isinstance(state, dict):
+                return None
+
+            # root-level check
+            draft: Any = state.get("draft")
+            if isinstance(draft, dict) and set(draft) == {"hook", "body"}:
+                return json.dumps({"draft": draft})
+
+            # nested under `"format"` node
+            nested = state.get("format", {}).get("draft")
+            if isinstance(nested, dict) and set(nested) == {"hook", "body"}:
+                return json.dumps({"draft": nested})
+
             return None
 
-        async for state in dag.astream({"text": req.input}):
-            if (msg := await _extract_text(state)) is not None:
+        async for st in dag.astream({"text": req.input}):
+            if (msg := _extract_json(st)) is not None:
                 yield f"data:{msg}\n\n"
 
     return EventSourceResponse(streamer())
