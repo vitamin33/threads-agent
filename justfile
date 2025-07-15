@@ -33,7 +33,7 @@ images:
 	@echo "🔍  images inside k3d nodes:"
 	docker exec k3d-dev-agent-0 crictl images | grep -E 'orchestrator|celery|persona|fake'
 
-deploy-fast TIMEOUT="360s":
+deploy-dev TIMEOUT="360s":
 	@bash -ceu 'extra=""; [ -f chart/values-dev.local.yaml ] && extra="-f chart/values-dev.local.yaml"; \
 	            helm upgrade --install threads ./chart -f chart/values-dev.yaml $extra \
 	            --wait --timeout {{TIMEOUT}}'

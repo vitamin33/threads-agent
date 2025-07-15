@@ -12,6 +12,9 @@ def test_run_flow() -> None:
         json={"persona_id": "ai-jesus", "input": "Love everyone"},
         headers={"accept": "text/event-stream"},
     )
-    # should stream; grab first chunk
+    # first non-empty SSE line → `data:{"draft":{…}}\n\n`
     chunk = next(res.iter_lines())
-    assert "LOVE EVERYONE" in chunk
+
+    assert chunk.startswith("data:")
+    # quick sanity: make sure both parts are present in the JSON
+    assert '"hook"' in chunk and '"body"' in chunk

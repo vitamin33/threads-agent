@@ -11,6 +11,7 @@ personaRuntime:
   image:
     repository: ghcr.io/threads-agent-stack/persona-runtime
     tag: "0.3.0"
+  env: []
 
 # RabbitMQ broker DSN used by orchestrator / Celery
 rabbitmq:

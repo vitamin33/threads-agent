@@ -1,4 +1,5 @@
 # File: chart/templates/persona-runtime.yaml
+# chart/templates/persona-runtime.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,27 +7,48 @@ metadata:
 spec:
   replicas: 1
   selector:
-    matchLabels: { app: persona-runtime }
+    matchLabels:
+      app: persona-runtime
   template:
     metadata:
-      labels: { app: persona-runtime }
+      labels:
+        app: persona-runtime
     spec:
       containers:
         - name: persona-runtime
           image: "{{ tpl .Values.personaRuntime.image.repository $ }}:{{ tpl .Values.personaRuntime.image.tag $ }}"
           imagePullPolicy: IfNotPresent
+
+          # ───── ports ─────
           ports:
             - containerPort: 8080
-          envFrom:
+
+          # ─── env vars ───
+          envFrom:                         # OpenAI secret
             - secretRef:
                 name: openai-secret
+
+          {{- with .Values.personaRuntime.env | default list }}
+          env:
+{{ toYaml . | nindent 12 }}
+          {{- end }}
+
+          # ─── optional LoRA volume ───
+          volumeMounts:
+            - name: lora
+              mountPath: /models
+      volumes:
+        - name: lora
+          emptyDir: {}
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: persona-runtime
 spec:
-  selector: { app: persona-runtime }
+  selector:
+    app: persona-runtime
   ports:
     - port: 8080
       targetPort: 8080

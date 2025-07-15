@@ -16,6 +16,14 @@ personaRuntime:
   image:
     repository: persona-runtime
     tag: local
+  env:
+    - name: HOOK_MODEL
+      value: gpt-4o
+    - name: BODY_MODEL
+      value: gpt-3.5-turbo-0125
+    # optional LoRA location
+    - name: LORA_PATH
+      value: /models/lora.safetensors
 
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
