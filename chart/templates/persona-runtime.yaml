@@ -17,6 +17,9 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: openai-secret
 ---
 apiVersion: v1
 kind: Service

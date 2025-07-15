@@ -11,3 +11,4 @@ mypy>=1.10
 pre-commit>=3.7
 types-requests>=2.32
 pre-commit>=3.7
+fakeredis>=2.23

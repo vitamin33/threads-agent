@@ -4,3 +4,8 @@ uvicorn[standard]==0.30.0
 langgraph==0.5.1
 python-dotenv>=1.0
 sse-starlette>=1.6
+
+openai>=1.14
+redis>=5.0
+tenacity>=8.2
+

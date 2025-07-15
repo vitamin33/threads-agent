@@ -43,4 +43,7 @@ repos:
           - "sqlalchemy>=2.0"
           - greenlet>=3.0
           - pytest>=8.4
+          - openai>=1.14
+          - redis>=5.0
+          - tenacity>=8.2
 

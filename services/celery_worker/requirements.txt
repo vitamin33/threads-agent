@@ -1,3 +1,6 @@
 # services/celery_worker/requirements.txt
 celery==5.4.*
-httpx==0.23.*
+httpx==0.28.*
+openai>=1.14
+redis>=5.0
+tenacity>=8.2

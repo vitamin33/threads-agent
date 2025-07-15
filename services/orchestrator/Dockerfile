@@ -6,11 +6,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 WORKDIR /app
 
-# 1️⃣ install only orchestrator deps
 COPY services/orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 2️⃣ copy the service code
+COPY services/common ./services/common
 COPY services/orchestrator ./services/orchestrator
 COPY services/celery_worker ./services/celery_worker
 COPY services/orchestrator/db ./services/orchestrator/db

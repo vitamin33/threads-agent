@@ -1,0 +1,4 @@
+# services/common/requirements.txt
+openai>=1.14
+redis>=5.0
+tenacity>=8.2

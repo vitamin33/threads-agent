@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 from typing import Any, TypedDict
 
 import httpx
+import tenacity
 from celery import Celery
 from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel, Field
@@ -20,12 +23,29 @@ app = FastAPI(title="orchestrator")  # single public symbol
 # ── Celery app *local to this service* ──────────────────────────────
 celery_app = Celery("orchestrator", broker=BROKER_URL)
 
+# ── logging ─────────────────────────────────────────────────────────
+logger = logging.getLogger(__name__)
 
-# This runs exactly once when Uvicorn imports the module,
-# before any Celery task can hit the DB / vector store.
+
+# ---------------------------------------------------------------------------
+# Qdrant bootstrap with retry/back-off
+# ---------------------------------------------------------------------------
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=0.5, max=8),
+    stop=tenacity.stop_after_delay(30),  # 30-second total budget
+    reraise=True,
+    before_sleep=lambda r: logger.info("Qdrant not ready, retrying…"),
+)
+def _ensure_store() -> None:
+    """Blocking helper that guarantees the posts collection exists."""
+    ensure_posts_collection()
+
+
 @app.on_event("startup")
 async def _init_qdrant() -> None:
-    ensure_posts_collection()
+    """Run once at app startup – off-loads the blocking call to a thread."""
+    loop = asyncio.get_running_loop()  # modern API (Py 3.12+)
+    await loop.run_in_executor(None, _ensure_store)
 
 
 # ---------- pydantic -----------------
