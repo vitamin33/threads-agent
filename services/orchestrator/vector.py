@@ -5,6 +5,7 @@ import os
 from typing import List
 
 import qdrant_client
+from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.models import (
     CollectionDescription,
     CollectionStatus,
@@ -28,7 +29,11 @@ def _new_client() -> qdrant_client.QdrantClient:
     url = os.getenv("QDRANT_URL", "http://qdrant:6333")
     if url == ":memory:":
         return qdrant_client.QdrantClient(":memory:")
-    return qdrant_client.QdrantClient(url=url, prefer_grpc=False)
+    return qdrant_client.QdrantClient(
+        url=url,
+        prefer_grpc=False,
+        check_compatibility=False,
+    )
 
 
 def get_client() -> qdrant_client.QdrantClient:
@@ -47,17 +52,22 @@ def _names(cols: List[CollectionDescription]) -> list[str]:  # mypy helper
 
 
 def ensure_posts_collection(dim: int = 128) -> None:
-    """Create the ``posts_ai-jesus`` collection if it does not exist."""
     client = get_client()
 
-    if _POSTS in _names(client.get_collections().collections):
-        # runtime attr exists; missing only in type stubs
-        status = client.collection_info(_POSTS).status  # type: ignore[attr-defined]
-        if status != CollectionStatus.GREEN:
-            raise RuntimeError(f"Collection {_POSTS!r} not ready: {status}")
+    # 1️⃣ does it exist already?
+    if client.collection_exists(_POSTS):
+        info = client.get_collection(_POSTS)
+        if info.status != CollectionStatus.GREEN:
+            raise RuntimeError(f"Collection {_POSTS!r} not ready: {info.status}")
         return
 
-    client.create_collection(
-        collection_name=_POSTS,
-        vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-    )
+    # 2️⃣ create it (idempotent)
+    try:
+        client.create_collection(
+            collection_name=_POSTS,
+            vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+        )
+    except UnexpectedResponse as e:
+        # another pod created it a split-second earlier → ignore
+        if "already exists" not in str(e):
+            raise

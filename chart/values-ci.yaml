@@ -50,6 +50,10 @@ qdrant:
 minio:
   enabled: false
 
+openai:
+  enabled: true
+  apiKey: "REPLACE_IN_RUNTIME"
+
 global:
   storageClass: local-path
 

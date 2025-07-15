@@ -2,7 +2,7 @@
 fastapi==0.111.*
 uvicorn[standard]==0.30.*
 celery==5.4.*
-httpx==0.27.*
+httpx==0.28.*
 psycopg2-binary==2.9.*
 
 # migrations
@@ -10,4 +10,8 @@ SQLAlchemy~=2.0.30
 alembic~=1.13
 
 # vector db
-qdrant-client>=1.9
+qdrant-client>=1.14,<2.0
+
+openai>=1.14
+redis>=5.0
+tenacity>=8.2

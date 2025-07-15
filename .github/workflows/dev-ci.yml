@@ -98,9 +98,12 @@ jobs:
       - name: Helm upgrade (dev cluster)
         id: helm
         continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           helm upgrade --install threads ./chart \
             -f chart/values-ci.yaml \
+            --set openai.apiKey="$OPENAI_API_KEY" \
             --wait --timeout 300s --debug
 
       # ─── If Helm failed, dump cluster state ──────────────────────────────

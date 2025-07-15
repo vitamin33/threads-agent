@@ -215,6 +215,7 @@ __marimo__/
 # Packaged charts and release locks
 *.tgz
 .chart/Chart.lock
+chart/values-dev.local.yaml
 
 # K3d / Kube artefacts & local PV data
 .k3d/

@@ -23,4 +23,7 @@ spec:
               value: {{ .Values.rabbitmq.url }}
             - name: THREADS_BASE_URL
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+          envFrom:
+            - secretRef:
+                name: openai-secret
           resources: {}

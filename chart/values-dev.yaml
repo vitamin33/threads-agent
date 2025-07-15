@@ -55,6 +55,10 @@ threadsService:                        # used by orchestrator & worker envs
   name: fake-threads
   port: 9009
 
+openai:
+  enabled: true
+  apiKey: "REPLACE_IN_RUNTIME"
+
 # ───────── service for orchestrator itself ─────────
 service:
   type: ClusterIP
