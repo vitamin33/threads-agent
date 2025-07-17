@@ -155,9 +155,9 @@ jobs:
       # ————————————————————————————————
       - name: pytest (unit + e2e)
         run: |
-          # ➊ start port-forward in the background
-          kubectl port-forward deploy/orchestrator 18080:8080 &
-          PF_PID=$!
+          # ➊ start port-forwards in the background
+          kubectl port-forward svc/orchestrator 8080:8080   & PF_ORCH=$!
+          kubectl port-forward svc/fake-threads 9009:9009   & PF_THREADS=$!
           # give the tunnel a moment
           sleep 5
 
@@ -166,7 +166,7 @@ jobs:
           pytest -q
 
           # ➌ tidy up
-          kill $PF_PID
+          kill $PF_ORCH $PF_THREADS
 
       # ————————————————————————————————
       # 6.  Render Mermaid diagram
