@@ -1,14 +1,13 @@
 # services/persona_runtime/runtime.py
 # mypy: disable-error-code="import-not-found,attr-defined"
-
 """
 LangGraph DAG factory – v2: real LLM + guard-rail + optional LoRA.
 
 Extras for unit/CI
 ──────────────────
-* Builds an OpenAI client even if OPENAI_API_KEY is missing.
-  The dummy key `"test"` marks “offline” mode so tests never hit the network.
-* `_llm` and `_moderate` short-circuit in offline mode for deterministic output.
+* If `OPENAI_API_KEY` is missing, empty, or literally ``"test"``,
+  the code runs in **offline mode**: no network calls, deterministic stubs.
+* `_llm` and `_moderate` short-circuit in offline mode.
 """
 
 from __future__ import annotations
@@ -20,7 +19,6 @@ from typing import Any, NotRequired, TypedDict
 
 import openai
 from langgraph.graph import END, START, StateGraph
-from openai import OpenAIError
 
 # ───────────────────────── optional PEFT support ──────────────────────────
 PeftModel: Any  # forward declaration for static checkers
@@ -40,6 +38,7 @@ def _maybe_load_lora() -> None:
         return
     try:
         PeftModel.from_pretrained(os.getenv("HOOK_MODEL", "gpt-4o"), path)
+        print("[LoRA] adapter loaded from", path)
     except Exception:
         # Harmless on CPU-only runners
         pass
@@ -48,12 +47,15 @@ def _maybe_load_lora() -> None:
 _maybe_load_lora()
 
 # ───────────────────────── constants / config ──────────────────────────
-try:
-    openai_client = openai.AsyncOpenAI()  # real key present
-except OpenAIError:  # no OPENAI_API_KEY → offline
-    openai_client = openai.AsyncOpenAI(api_key="test")
+OFFLINE_MARKER = "test"
+_RAW_KEY = os.getenv("OPENAI_API_KEY", "")
 
-_OFFLINE = openai_client.api_key == "test"  # unit-test marker
+# Treat “no key”, empty key, or the literal string “test” as offline
+_OFFLINE = _RAW_KEY in {"", OFFLINE_MARKER}
+
+# Even in offline mode we must pass *some* non-empty key, otherwise the
+# OpenAI Python SDK throws on import.  `"test"` is our sentinel.
+openai_client = openai.AsyncOpenAI(api_key=OFFLINE_MARKER if _OFFLINE else _RAW_KEY)
 
 HOOK_MODEL = os.getenv("HOOK_MODEL", "gpt-4o")
 BODY_MODEL = os.getenv("BODY_MODEL", "gpt-3.5-turbo-0125")
@@ -78,11 +80,13 @@ async def _llm(model: str, prompt: str) -> str:
     if _OFFLINE:
         return f"stub-{model}"
 
+    print(">> calling openai", model)
     resp = await openai_client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
+        timeout=30,  # seconds – prevent hung requests
     )
-    # `content` is str | None
+    print("<< got openai response")
     return (resp.choices[0].message.content or "").strip()
 
 
@@ -93,9 +97,11 @@ async def _moderate(content: str) -> bool:
 
     if GUARD_REGEX.search(content):
         return False
+
     mod = await openai_client.moderations.create(
         model="omni-moderation-latest",
         input=content,
+        timeout=30,
     )
     cats: dict[str, bool] = mod.results[
         0
@@ -128,7 +134,7 @@ def build_dag_from_persona(persona_id: str) -> Any | None:
 
     # 4️⃣ guard-rail
     async def guardrail(state: FlowState) -> FlowState:
-        bad: list[str] = [
+        bad = [
             part
             for part, txt in state.get("draft", {}).items()
             if not await _moderate(txt)

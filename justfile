@@ -57,7 +57,7 @@ reset-hard:
 e2e-prepare:
     just bootstrap
     just images
-    just deploy-fast
+    just deploy-dev
 
 e2e:
     pytest -s -m e2e

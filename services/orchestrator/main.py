@@ -1,8 +1,10 @@
+# /services/orchestrator/main.py
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
+import uuid
 from typing import Any, TypedDict
 
 import httpx
@@ -63,11 +65,8 @@ class Status(TypedDict):
 # ---------- routes -------------------
 @app.post("/task")
 async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> Status:
-    bg.add_task(
-        celery_app.send_task,
-        "tasks.queue_post",
-        args=[req.model_dump(exclude_none=True)],
-    )
+    payload = req.model_dump(exclude_none=True) | {"task_id": str(uuid.uuid4())}
+    bg.add_task(celery_app.send_task, "tasks.queue_post", args=[payload])
     return {"status": "queued"}
 
 

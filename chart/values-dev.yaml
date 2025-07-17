@@ -24,6 +24,8 @@ personaRuntime:
     # optional LoRA location
     - name: LORA_PATH
       value: /models/lora.safetensors
+    - name: OPENAI_API_KEY   # forces stub even if the Secret still exists
+      value: "test"
 
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"
@@ -64,7 +66,7 @@ threadsService:                        # used by orchestrator & worker envs
   port: 9009
 
 openai:
-  enabled: true
+  enabled: false
   apiKey: "REPLACE_IN_RUNTIME"
 
 # ───────── service for orchestrator itself ─────────
