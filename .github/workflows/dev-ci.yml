@@ -120,10 +120,14 @@ jobs:
           done
           # Fail the step explicitly so the job still turns red
           exit 1
-
-      - name: Wait for orchestrator pod
+      - name: Wait for core pods
         run: |
-          kubectl rollout status deploy/orchestrator --timeout=120s
+          # deployments
+          kubectl rollout status deploy/orchestrator     --timeout=120s
+          kubectl rollout status deploy/celery-worker    --timeout=120s
+          kubectl rollout status deploy/fake-threads     --timeout=120s
+          kubectl rollout status deploy/persona-runtime  --timeout=120s
+          kubectl rollout status sts/qdrant              --timeout=120s
 
       # ————————————————————————————————
       # 4.  Set-up Python & cache venv
@@ -154,6 +158,7 @@ jobs:
       # 5.  Run unit + e2e suites
       # ————————————————————————————————
       - name: pytest (unit + e2e)
+        id: tests
         run: |
           # ➊ start port-forwards in the background
           kubectl port-forward svc/orchestrator 8080:8080   & PF_ORCH=$!
@@ -161,12 +166,19 @@ jobs:
           # give the tunnel a moment
           sleep 5
 
-          # ➋ run the test suite (tests already hit localhost:18080)
+          # ➋ run the test suite (tests already hit localhost:8080)
           export PYTHONPATH=$PWD:$PYTHONPATH
           pytest -q
 
           # ➌ tidy up
           kill $PF_ORCH $PF_THREADS
+
+      # ─── EXTRA: show Celery-worker logs if the tests failed ──────────────
+      - name: Dump worker logs if pytest failed
+        if: failure()
+        run: |
+          echo "⚠️  pytest failed, printing celery-worker logs…"
+          kubectl logs deploy/celery-worker --tail=150 || true
 
       # ————————————————————————————————
       # 6.  Render Mermaid diagram
