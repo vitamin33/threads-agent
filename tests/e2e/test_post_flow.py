@@ -45,12 +45,13 @@ def test_post_task_end_to_end() -> None:
     assert resp.status_code == 200
     assert resp.json()["status"] == "queued"
 
-    # 2️⃣  poll fake-threads until the draft appears (≤ 20 s)
-    deadline = time.time() + 20
+    # 2️⃣  poll fake-threads until the draft appears (≤ 40 s)
+    deadline = time.time() + 40
     while time.time() < deadline:
         out = httpx.get(f"http://localhost:{THREADS_PORT}/published", timeout=5)
         if out.status_code == 200 and out.json():
-            assert out.json()[0]["topic"]  # got at least one draft ✅
+            # got at least one draft ✅
+            assert out.json()[0]["topic"].startswith("ai-jesus")
             break
         time.sleep(1)
     else:

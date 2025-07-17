@@ -56,7 +56,8 @@ async def run(req: RunRequest) -> EventSourceResponse:
 
         async for st in dag.astream({"text": req.input}):
             if (msg := _extract_json(st)) is not None:
-                yield f"data:{msg}\n\n"
+                # no manual ‘data: ’ – EventSourceResponse does that
+                yield msg
 
     return EventSourceResponse(streamer())
 

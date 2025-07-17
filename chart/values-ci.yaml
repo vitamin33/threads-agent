@@ -45,7 +45,7 @@ postgres:
     #
     # The migrations Job reads that same key, so *any* value works,
     # as long as it is present.
-    postgresPassword: ci-pass
+    postgresPassword: pass
 
 qdrant:
   enabled: true

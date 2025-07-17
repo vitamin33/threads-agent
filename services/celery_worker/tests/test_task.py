@@ -1,4 +1,6 @@
 # services/celery_worker/tests/test_task.py
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -9,12 +11,24 @@ client = TestClient(app)
 
 
 def test_post_task() -> None:
-    payload = {"persona_id": "ai-jesus", "task_type": "create_post"}
+    """Route should enqueue exactly one Celery job with a generated task_id."""
 
+    base_payload = {"persona_id": "ai-jesus", "task_type": "create_post"}
+
+    # patch out the real Celery call so we don't touch AMQP
     with patch("services.orchestrator.main.celery_app.send_task") as stub:
-        stub.return_value = None  # don't actually hit AMQP
-        res = client.post("/task", json=payload)
+        stub.return_value = None
+        res = client.post("/task", json=base_payload)
 
-    stub.assert_called_once_with("tasks.queue_post", args=[payload])
+    # 1️⃣ called exactly once …
+    stub.assert_called_once()
+
+    # 2️⃣ …with our payload *plus* an auto-injected UUID
+    sent_payload = stub.call_args.kwargs["args"][0]  # first (and only) arg
+    assert sent_payload["persona_id"] == "ai-jesus"
+    assert sent_payload["task_type"] == "create_post"
+    assert "task_id" in sent_payload and sent_payload["task_id"]
+
+    # 3️⃣ HTTP response is still the simple queue-ack
     assert res.status_code == 200
     assert res.json() == {"status": "queued"}

@@ -10,6 +10,7 @@ IMAGES=(
   "ghcr.io/threads-agent-stack/celery-worker:$TAG"
   "ghcr.io/threads-agent-stack/persona-runtime:$TAG"
 )
+IMAGES+=("qdrant/qdrant:v1.9.4")
 
 LB_PORT=8080          # HTTP entry-point you’ll curl
 API_PORT=6445         # k3s API exposed on localhost
