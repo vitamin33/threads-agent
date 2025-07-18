@@ -4,6 +4,11 @@ WORKDIR /app
 
 COPY services/celery_worker/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY services/common/requirements.txt services/common/requirements.txt
+RUN pip install --no-cache-dir -r services/common/requirements.txt
+
 COPY services/common ./services/common
 COPY services/celery_worker ./services/celery_worker
+
 CMD ["celery", "-A", "services.celery_worker.main", "worker", "-l", "info"]

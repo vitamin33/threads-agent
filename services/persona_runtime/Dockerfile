@@ -7,6 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 COPY services/persona_runtime/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY services/common/requirements.txt services/common/requirements.txt
+RUN pip install --no-cache-dir -r services/common/requirements.txt
+
 COPY services/common ./services/common
 COPY services/persona_runtime ./services/persona_runtime
 

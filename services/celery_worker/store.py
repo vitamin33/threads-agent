@@ -6,11 +6,9 @@ from typing import Any, Dict, List
 
 import psycopg2
 from qdrant_client import QdrantClient
-from qdrant_client.models import (  # ← import models here
-    Distance,
-    PointStruct,
-    VectorParams,
-)
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from services.common.metrics import record_latency
 
 # ─────────────────────────────── env / globals ───────────────────────────────
 _POSTGRES_DSN = os.getenv(
@@ -54,16 +52,23 @@ def save_post(row: Dict[str, Any]) -> int:
     Raises RuntimeError if the INSERT somehow returns no row
     (satisfies the Pylance Optional warning).
     """
-    with _pg().cursor() as cur:
-        cur.execute(
-            """
+    # DB round-trip is what we measure
+    with record_latency("persist"):
+        with _pg().cursor() as cur:
+            cur.execute(
+                """
             INSERT INTO posts (persona_id, hook, body, tokens_used)
             VALUES (%s, %s, %s, %s) RETURNING id;
             """,
-            (row["persona_id"], row["hook"], row["body"], row.get("tokens_used", 0)),
-        )
-        rec = cur.fetchone()
-        if rec is None:  # <- fixes “Object of type 'None' is not subscriptable”
+                (
+                    row["persona_id"],
+                    row["hook"],
+                    row["body"],
+                    row.get("tokens_used", 0),
+                ),
+            )
+            rec = cur.fetchone()
+        if rec is None:
             raise RuntimeError("Post-insert fetch returned no row")
         return int(rec[0])
 
@@ -75,10 +80,11 @@ def upsert_vector(pid: str, vid: int, vector: List[float]) -> None:
     The direct `PointStruct` import fixes the “models is not a known attribute”
     message in strict type-checkers / Pylance.
     """
-    _qd().upsert(
-        collection_name=_COLLECTION,
-        points=[PointStruct(id=vid, vector=vector, payload={"persona": pid})],
-    )
+    with record_latency("persist"):
+        _qd().upsert(
+            collection_name=_COLLECTION,
+            points=[PointStruct(id=vid, vector=vector, payload={"persona": pid})],
+        )
 
 
 __all__ = [

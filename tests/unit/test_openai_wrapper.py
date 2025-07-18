@@ -29,3 +29,13 @@ async def test_track_cost_pushes_row(monkeypatch: pytest.MonkeyPatch) -> None:
     await wrapped()
 
     assert fake_redis.llen("llm_costs") == 1
+
+
+def test_wrapper_cache_hits() -> None:
+    ow._chat_call_uncached.cache_clear()
+
+    text1 = ow.chat("gpt-3.5-turbo", "hello")
+    text2 = ow.chat("gpt-3.5-turbo", "hello")  # identical → cached
+
+    assert text1 == text2
+    assert ow._chat_call_uncached.cache_info().hits == 1

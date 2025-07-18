@@ -10,6 +10,9 @@ from celery import Celery, Task, shared_task
 
 from services.celery_worker.sse import run_persona
 from services.celery_worker.store import save_post, upsert_vector
+from services.common.metrics import maybe_start_metrics_server
+
+maybe_start_metrics_server()
 
 # ─────────────────────────────── env / globals ───────────────────────────────
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")

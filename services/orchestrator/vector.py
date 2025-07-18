@@ -13,6 +13,8 @@ from qdrant_client.models import (
     VectorParams,
 )
 
+from services.common.metrics import record_latency
+
 _POSTS = "posts_ai-jesus"  # single collection we care about
 _client: qdrant_client.QdrantClient | None = None
 
@@ -63,10 +65,11 @@ def ensure_posts_collection(dim: int = 128) -> None:
 
     # 2️⃣ create it (idempotent)
     try:
-        client.create_collection(
-            collection_name=_POSTS,
-            vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-        )
+        with record_latency("persist"):
+            client.create_collection(
+                collection_name=_POSTS,
+                vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+            )
     except UnexpectedResponse as e:
         # another pod created it a split-second earlier → ignore
         if "already exists" not in str(e):

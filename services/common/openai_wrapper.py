@@ -1,16 +1,20 @@
 # /services/common/openai_wrapper.py
 from __future__ import annotations
 
+import functools
 import json
 import os
 import time
 from functools import wraps
-from typing import Awaitable, Callable, ParamSpec, Protocol, TypeVar, cast
+from types import SimpleNamespace
+from typing import Awaitable, Callable, ParamSpec, Protocol, Tuple, TypeVar, cast
 
 import openai
 import redis
 import tenacity
-from openai.types import CompletionUsage  # only the tiny usage model – always available
+from openai.types import CompletionUsage  # tiny model always present
+
+from services.common.metrics import LLM_TOKENS_TOTAL, record_latency  # NEW
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -22,29 +26,68 @@ T = TypeVar("T")
 # ---------------------------------------------------------------------------
 class _OpenAIRespLike(Protocol):
     model: str
-    usage: CompletionUsage | None  # runtime can legitimately be None
+    usage: CompletionUsage | None  # runtime may legitimately be None
 
 
 # ---------------------------------------------------------------------------
 #  Lazy singletons
 # ---------------------------------------------------------------------------
-_ai: openai.AsyncOpenAI | None = None
+_ai: openai.OpenAI | None = None  # sync client for convenience
+_ai_async: openai.AsyncOpenAI | None = None
 _rd: redis.Redis | None = None
+_OFFLINE = os.getenv("OPENAI_API_KEY", "") in {"", "test"}  # NEW
+
+# ---------------------------------------------------------------------------
+#  Very small stub client (sync) for offline mode
+# ---------------------------------------------------------------------------
+if _OFFLINE:
+
+    class _StubResp:
+        def __init__(self, model: str):
+            self.choices = [
+                SimpleNamespace(message=SimpleNamespace(content=f"stub-{model}"))
+            ]
+            self.usage = CompletionUsage(
+                prompt_tokens=0, completion_tokens=0, total_tokens=0
+            )
+            self.model = model  # for consistency
+
+    class _StubChatComp:
+        @staticmethod
+        def create(model: str, messages: object) -> "_StubResp":  # noqa: ANN401
+            return _StubResp(model)
+
+    class _StubChat:
+        completions = _StubChatComp()
+
+    class _StubOpenAI:
+        chat = _StubChat()
+
+    _STUB_CLIENT: openai.OpenAI = cast(openai.OpenAI, _StubOpenAI())
 
 
-def ai() -> openai.AsyncOpenAI:
-    """Process-wide AsyncOpenAI client (lazy singleton)."""
+def _sync_ai() -> openai.OpenAI:
     global _ai
     if _ai is None:
-        _ai = openai.AsyncOpenAI(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            timeout=30,
-        )
+        if _OFFLINE:
+            _ai = _STUB_CLIENT
+            return _ai
+        _ai = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=30)
     return _ai
 
 
+def ai() -> openai.AsyncOpenAI:
+    """Process-wide async client (kept for existing async callers)."""
+    global _ai_async
+    if _ai_async is None:
+        _ai_async = openai.AsyncOpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            timeout=30,
+        )
+    return _ai_async
+
+
 def _redis() -> redis.Redis:
-    """Redis connection for cost rows."""
     global _rd
     if _rd is None:
         _rd = cast(
@@ -55,7 +98,7 @@ def _redis() -> redis.Redis:
 
 
 # ---------------------------------------------------------------------------
-#  Retry policy (HTTP 429 or overload)
+#  Retry policy (HTTP 429 / overload)
 # ---------------------------------------------------------------------------
 _retry = tenacity.retry(
     retry=tenacity.retry_if_exception_type(openai.RateLimitError),
@@ -66,7 +109,7 @@ _retry = tenacity.retry(
 
 
 # ---------------------------------------------------------------------------
-#  Very-rough USD estimator (update numbers quarterly)
+#  Very rough USD estimator (update quarterly)
 # ---------------------------------------------------------------------------
 def _usd(model: str, pt: int, ct: int) -> float:
     prm, cmp = {
@@ -78,7 +121,44 @@ def _usd(model: str, pt: int, ct: int) -> float:
 
 
 # ---------------------------------------------------------------------------
-#  Decorator
+#  Sync **cached** wrapper for simple chat-completions
+# ---------------------------------------------------------------------------
+@functools.lru_cache(maxsize=512)
+def _chat_call_uncached(model: str, prompt: str) -> Tuple[str, int]:
+    """
+    Low-level chat request with 512-entry LRU cache.
+
+    Returns:
+        tuple of (text, total_tokens)
+    """
+    # measure the OpenAI round-trip – labels it as “llm” latency
+    with record_latency("llm"):
+        resp = _retry(_sync_ai().chat.completions.create)(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+    usage = resp.usage or CompletionUsage(
+        prompt_tokens=0, completion_tokens=0, total_tokens=0
+    )
+    text = (resp.choices[0].message.content or "").strip()
+    return text, usage.total_tokens
+
+
+def chat(model: str, prompt: str) -> str:
+    """
+    High-level helper used by synchronous callers.
+
+    * hits the LRU cache
+    * records token usage in Prometheus
+    """
+    text, tokens = _chat_call_uncached(model, prompt)
+    LLM_TOKENS_TOTAL.labels(model=model).inc(tokens)
+    return text
+
+
+# ---------------------------------------------------------------------------
+#  Decorator (unchanged) – tracks cost for **async** calls
 # ---------------------------------------------------------------------------
 def track_cost(
     *,
@@ -86,7 +166,7 @@ def track_cost(
     task: str,
 ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
     """
-    Wrap an async function that returns an OpenAI response (or look-alike).
+    Wrap an **async** function that returns an OpenAI response (or look-alike).
     On success → push cost / latency row into Redis list ``llm_costs``.
     """
 
@@ -98,7 +178,6 @@ def track_cost(
             raw_resp = await _retry(fn)(*a, **kw)
             elapsed_ms = int((time.perf_counter() - start) * 1000)
 
-            # Mypy-friendly view of what we need
             resp = cast(_OpenAIRespLike, raw_resp)
             usage = resp.usage or CompletionUsage(
                 prompt_tokens=0, completion_tokens=0, total_tokens=0
@@ -116,7 +195,9 @@ def track_cost(
             }
             _redis().rpush("llm_costs", json.dumps(row))
 
-            return raw_resp  # unchanged return type
+            # push metrics for async callers, too
+            LLM_TOKENS_TOTAL.labels(model=resp.model).inc(usage.total_tokens)
+            return raw_resp
 
         return _wrap
 
