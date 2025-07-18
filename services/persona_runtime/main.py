@@ -8,7 +8,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
+from services.common.metrics import maybe_start_metrics_server
+
 from .runtime import build_dag_from_persona
+
+maybe_start_metrics_server()
 
 api = FastAPI(title="persona-runtime")
 app = api

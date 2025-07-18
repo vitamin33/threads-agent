@@ -2,3 +2,4 @@
 openai>=1.14
 redis>=5.0
 tenacity>=8.2
+prometheus-client>=0.22.1

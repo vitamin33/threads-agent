@@ -9,6 +9,9 @@ WORKDIR /app
 COPY services/orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY services/common/requirements.txt services/common/requirements.txt
+RUN pip install --no-cache-dir -r services/common/requirements.txt
+
 # 2️⃣ copy the service code
 COPY services/common ./services/common
 COPY services/orchestrator ./services/orchestrator

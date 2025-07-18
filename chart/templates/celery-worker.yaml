@@ -30,4 +30,9 @@ spec:
           envFrom:
             - secretRef:
                 name: openai-secret
+
+          ports:
+            - name: metrics
+              containerPort: 9090
+
           resources: {}

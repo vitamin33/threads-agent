@@ -20,6 +20,8 @@ from typing import Any, NotRequired, TypedDict
 import openai
 from langgraph.graph import END, START, StateGraph
 
+from services.common.metrics import LLM_TOKENS_TOTAL, record_latency
+
 # ───────────────────────── optional PEFT support ──────────────────────────
 PeftModel: Any  # forward declaration for static checkers
 try:
@@ -81,11 +83,17 @@ async def _llm(model: str, prompt: str) -> str:
         return f"stub-{model}"
 
     print(">> calling openai", model)
-    resp = await openai_client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        timeout=30,  # seconds – prevent hung requests
-    )
+
+    # measure the call itself
+    with record_latency("llm"):
+        resp = await openai_client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+    # count total tokens (guard -- usage can be None in tests)
+    if resp.usage:
+        LLM_TOKENS_TOTAL.labels(model=model).inc(resp.usage.total_tokens)
     print("<< got openai response")
     return (resp.choices[0].message.content or "").strip()
 
