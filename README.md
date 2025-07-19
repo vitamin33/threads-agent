@@ -121,6 +121,20 @@ curl fake-threads:9009/ping         # inside cluster
 
 ---
 
+## 🤖 AI-Assisted Development
+
+This project uses Claude Code with MCP servers for intelligent development assistance.
+
+**📖 Complete Guide**: See [CLAUDE_CODE_GUIDE.md](./CLAUDE_CODE_GUIDE.md) for comprehensive workflows, commands, and best practices.
+
+**🚀 Quick Start**:
+
+```bash
+session    # Start development session
+next       # Get immediate next action
+sprint     # Current sprint status
+```
+
 ## 📝 License
 
 MIT © 2025 Threads-Agent Stack Contributors

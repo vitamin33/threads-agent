@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__linear__linear_searchIssues",
+      "mcp__linear__linear_getIssues"
+    ],
+    "deny": []
+  }
+}
