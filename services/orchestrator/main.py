@@ -80,7 +80,7 @@ def run_persona(cfg: dict[str, Any], user_input: str) -> None:
     httpx.post(
         f"{PERSONA_RUNTIME_URL}/run",
         json={"persona_id": cfg["id"], "input": user_input},
-        timeout=10,
+        timeout=60,
     )
 
 

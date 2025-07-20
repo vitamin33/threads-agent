@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "mcp__linear__linear_searchIssues",
-      "mcp__linear__linear_getIssues"
+      "mcp__linear__linear_getIssues",
+      "Bash(find:*)",
+      "mcp__linear__linear_getViewer",
+      "mcp__linear__linear_getTeams",
+      "Bash(kubectl get:*)",
+      "Bash(helm list:*)",
+      "mcp__filesystem__read_multiple_files",
+      "mcp__filesystem__read_file"
     ],
     "deny": []
   }

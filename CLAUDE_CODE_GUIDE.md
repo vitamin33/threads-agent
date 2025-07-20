@@ -10,7 +10,7 @@
 - [🎯 Epic-Specific Development](#-epic-specific-development)
 - [📊 Sprint Planning & Task Management](#-sprint-planning--task-management)
 - [🏗️ Architecture & Code Generation](#️-architecture--code-generation)
-- [🚀 Deployment & Operations](#-deployment--operations)
+- [🔧 Infrastructure & Operations](#-infrastructure--operations)
 - [💡 Token-Efficient Usage Patterns](#-token-efficient-usage-patterns)
 - [📖 Complete Alias Reference](#-complete-alias-reference)
 - [🔧 Best Practices](#-best-practices)
@@ -30,6 +30,9 @@ code "FastAPI health check endpoint"
 
 # Create Linear tasks for current sprint
 task
+
+# Generate PM agent JSON for epic planning
+pm-epic "E2 Core MVP"
 ```
 
 ## 🛠️ Setup Overview
@@ -45,25 +48,22 @@ task
 
 ### Core Scripts
 
-| Script                     | Purpose                         | Key Commands                                  |
-| -------------------------- | ------------------------------- | --------------------------------------------- |
-| `scripts/efficient-dev.sh` | Core development commands       | `next`, `code`, `fix`, `task`, `review`       |
-| `scripts/batch-queries.sh` | Token-saving batch operations   | `sprint-prep`, `deploy-prep`, `debug-batch`   |
-| `scripts/smart-queries.sh` | Context-aware queries using MCP | `schema-code`, `test-current`, `deploy-check` |
+| Script                     | Purpose                         | Key Commands                                             |
+| -------------------------- | ------------------------------- | -------------------------------------------------------- |
+| `scripts/efficient-dev.sh` | Core development commands       | `next`, `code`, `fix`, `task`, `review`                  |
+| `scripts/batch-queries.sh` | Token-saving batch operations   | `sprint-prep`, `deploy-prep`, `debug-batch`              |
+| `scripts/smart-queries.sh` | Context-aware queries using MCP | `schema-code`, `test-current`, `deploy-check`, `pm-epic` |
 
 ### Validation
 
 ```bash
-# Verify your setup
-validate
-
 # Check MCP servers
 claude mcp list
 ```
 
 ## 📅 Daily Workflows
 
-### 🌅 Morning Startup Routine
+### 🌅 Startup Routine
 
 ```bash
 # 1. Start development session (sets up port forwards, environment)
@@ -74,6 +74,9 @@ next
 
 # 3. Review current sprint status
 sprint
+
+# 4. Check Linear project priority
+linear-focus
 ```
 
 ### 🔄 Active Development Cycle
@@ -90,6 +93,9 @@ test-now
 
 # Debug specific issues
 fix "celery worker memory leak"
+
+# Check infrastructure status
+infra-status
 ```
 
 ### 🌆 End-of-Day Review
@@ -103,6 +109,9 @@ ready
 
 # Quick status update
 git-status
+
+# Check infrastructure health
+helm-check
 ```
 
 ## 🎯 Epic-Specific Development
@@ -114,6 +123,9 @@ git-status
 ```bash
 # Get current E2 priorities
 linear-focus
+
+# Generate PM agent JSON for E2 planning
+pm-epic "E2 Core MVP - Orchestrator API + Persona Runtime"
 
 # Generate orchestrator endpoints using database schema
 schema-api "orchestrator task queue endpoints"
@@ -134,7 +146,7 @@ review
 **Key E2 Development Pattern:**
 
 ```bash
-linear-focus → schema-api → code → test-now → review
+linear-focus → pm-epic → schema-api → code → test-now → review
 ```
 
 ### E3 Threads Adaptor Development
@@ -144,6 +156,9 @@ linear-focus → schema-api → code → test-now → review
 ```bash
 # Check current E3 focus
 next
+
+# Generate PM agent JSON for E3
+pm-epic "E3 Threads Adaptor + A/B Testing"
 
 # Generate Threads API client with retry logic
 code "threads API client with token bucket rate limiting"
@@ -158,7 +173,7 @@ debug-batch "threads API rate limiting errors"
 ready
 ```
 
-### E4+ Observability & Advanced Features
+### E4+ Infrastructure & Advanced Features
 
 > **Focus**: Monitoring, FinOps, and production readiness
 
@@ -168,6 +183,9 @@ code "Prometheus metrics collection for content generation"
 
 # Create FinOps cost tracking
 api-code "FinOps cost tracking endpoints with token usage"
+
+# Check infrastructure configuration
+helm-check
 
 # Batch deployment preparation
 deploy
@@ -187,6 +205,9 @@ sprint
 # Generate specific Linear tasks for current epic
 task
 
+# Generate PM agent JSON for epic breakdown
+pm-epic "Epic Name"
+
 # Break down complex features based on existing models
 api-model "User"  # Analyze User model and suggest related tasks
 ```
@@ -195,36 +216,40 @@ api-model "User"  # Analyze User model and suggest related tasks
 
 ```mermaid
 graph LR
-    A[linear-focus] --> B[task]
-    B --> C[code 'specific requirement']
-    C --> D[test-now]
-    D --> E[review]
-    E --> F[ready]
+    A[linear-focus] --> B[pm-epic]
+    B --> C[task]
+    C --> D[code 'requirement']
+    D --> E[test-now]
+    E --> F[review]
+    F --> G[ready]
 ```
 
 **Step-by-step workflow:**
 
 1. **Identify focus**: `linear-focus`
-2. **Generate tasks**: `task`
-3. **Implement**: `code "specific requirement"`
-4. **Test**: `test-now`
-5. **Review**: `review`
-6. **Validate**: `ready`
+2. **Epic planning**: `pm-epic "Epic Name"`
+3. **Generate tasks**: `task`
+4. **Implement**: `code "specific requirement"`
+5. **Test**: `test-now`
+6. **Review**: `review`
+7. **Validate**: `ready`
 
-### 🎯 Task Creation Patterns
+### 🎯 PM Agent Integration
 
 ```bash
-# Generate tasks for current Linear project
-task
+# Generate PM agent JSON for any epic
+pm-epic "E2 Core MVP - Orchestrator API + Persona Runtime" > e2-epic.json
 
-# Create specific implementation tasks
-code "FastAPI health check with database validation"
+# Validate JSON structure
+cat e2-epic.json | jq '.'
 
-# Generate testing tasks
-test-now
+# Check epic details
+cat e2-epic.json | jq '.title, .tasks | length'
 
-# Create deployment preparation tasks
-deploy
+# Send to PM agent service (if available)
+curl -X POST http://your-pm-agent/create-epic \
+  -H "Content-Type: application/json" \
+  -d @e2-epic.json
 ```
 
 ## 🏗️ Architecture & Code Generation
@@ -267,18 +292,35 @@ ready
 debug-batch "end-to-end content generation pipeline failure"
 ```
 
-## 🚀 Deployment & Operations
+## 🔧 Infrastructure & Operations
 
-### 📦 Pre-Deployment Workflow
+### 📦 Infrastructure Management
+
+```bash
+# Check overall infrastructure status
+infra-status
+
+# Analyze Helm configuration
+helm-check
+
+# Debug infrastructure issues
+k8s-debug "pods not starting properly"
+
+# Check deployment readiness
+ready
+```
+
+### 🐳 Deployment Workflow
 
 ```mermaid
 graph TB
     A[review] --> B[ready]
-    B --> C[deploy]
-    C --> D{All Clear?}
-    D -->|Yes| E[Deploy]
-    D -->|No| F[fix 'issue']
-    F --> A
+    B --> C[helm-check]
+    C --> D[deploy]
+    D --> E{All Clear?}
+    E -->|Yes| F[Deploy]
+    E -->|No| G[fix 'issue']
+    G --> A
 ```
 
 ```bash
@@ -288,11 +330,17 @@ review
 # 2. Quick deployment validation
 ready
 
-# 3. Batch deployment preparation
+# 3. Check Helm configuration
+helm-check
+
+# 4. Batch deployment preparation
 deploy
 
-# 4. Fix any identified issues
+# 5. Fix any identified issues
 fix "specific deployment issue"
+
+# 6. Monitor infrastructure after deployment
+infra-status
 ```
 
 ### 🔍 Production Support
@@ -303,6 +351,9 @@ fix "high latency in orchestrator service"
 
 # Comprehensive production debugging
 debug-batch "celery queue backlog causing delays"
+
+# Infrastructure troubleshooting
+k8s-debug "database connection issues"
 
 # Quick system health check
 c-quick "Are all services healthy and responding normally?"
@@ -322,6 +373,7 @@ git-status
 | **Model-Based Development**  | `api-model "User"`                                    | Uses existing patterns         |
 | **Targeted Debugging**       | `fix "PostgreSQL connection timeout in orchestrator"` | Focused problem-solving        |
 | **Batch Planning**           | `sprint`                                              | Multiple insights in one query |
+| **PM Agent Integration**     | `pm-epic "E2 Core MVP"`                               | Structured project planning    |
 
 ### ❌ Token Waste to Avoid
 
@@ -351,6 +403,7 @@ debug-batch "specific complex issue"  # Full debugging context
 
 | Alias    | Full Command                        | Purpose                   | Usage Example            |
 | -------- | ----------------------------------- | ------------------------- | ------------------------ |
+| `c`      | `claude`                            | Basic Claude access       | `c "quick question"`     |
 | `next`   | `./scripts/efficient-dev.sh next`   | Get immediate next action | `next`                   |
 | `code`   | `./scripts/efficient-dev.sh code`   | Generate specific code    | `code "health endpoint"` |
 | `fix`    | `./scripts/efficient-dev.sh fix`    | Debug specific issue      | `fix "database timeout"` |
@@ -373,6 +426,7 @@ debug-batch "specific complex issue"  # Full debugging context
 | `api-model`  | `./scripts/smart-queries.sh api-from-model` | Generate CRUD from model          | `api-model "Post"`            |
 | `test-now`   | `./scripts/smart-queries.sh test-current`   | Generate tests for recent changes | `test-now`                    |
 | `ready`      | `./scripts/smart-queries.sh deploy-check`   | Quick deployment check            | `ready`                       |
+| `pm-epic`    | `./scripts/smart-queries.sh pm-epic`        | Generate PM agent JSON for epic   | `pm-epic "E2 Core MVP"`       |
 
 ### 🎯 Targeted Queries
 
@@ -390,6 +444,14 @@ debug-batch "specific complex issue"  # Full debugging context
 | `api-code`     | `claude "Following my existing FastAPI patterns, create:"` | Use API patterns     | `api-code "CRUD endpoints"` |
 | `linear-focus` | `claude "Current Linear project priority..."`              | Get Linear focus     | `linear-focus`              |
 | `git-status`   | `claude "Recent commits summary..."`                       | Get git summary      | `git-status`                |
+
+### 🏗️ Infrastructure Commands
+
+| Alias          | Full Command                                    | Purpose                     | Usage Example             |
+| -------------- | ----------------------------------------------- | --------------------------- | ------------------------- |
+| `infra-status` | `./scripts/smart-queries.sh infra-status`       | Analyze infrastructure      | `infra-status`            |
+| `helm-check`   | `./scripts/smart-queries.sh helm-analyze`       | Analyze Helm configuration  | `helm-check`              |
+| `k8s-debug`    | `./scripts/smart-queries.sh infra-troubleshoot` | Debug infrastructure issues | `k8s-debug "pod failing"` |
 
 ### 🛠️ Session Management
 
@@ -442,6 +504,19 @@ code "specific requirement"   # Level 2: Targeted implementation
 debug-batch "complex issue"   # Level 3: Full context when stuck
 ```
 
+### 📋 PM Agent Integration Best Practices
+
+```bash
+# Generate epic JSON with full context
+pm-epic "E2 Core MVP - Orchestrator API + Persona Runtime"
+
+# Always validate JSON before using
+pm-epic "Epic Name" | jq '.'
+
+# Save for PM agent consumption
+pm-epic "Epic Name" > epic.json
+```
+
 ## 🛠️ Troubleshooting
 
 ### 🔌 MCP Server Issues
@@ -481,6 +556,18 @@ fix "specific issue"           # Targeted debugging
 debug-batch "complex problem"  # Comprehensive analysis
 ```
 
+### 🏗️ Infrastructure Issues
+
+```bash
+# Infrastructure problems
+infra-status  # Check overall system health
+helm-check    # Validate Helm configuration
+k8s-debug "issue description"  # Debug specific problems
+
+# Service connectivity issues
+session       # Restart port forwards and environment
+```
+
 ### 🚨 Common Error Patterns
 
 | Error                       | Likely Cause           | Solution                |
@@ -488,6 +575,59 @@ debug-batch "complex problem"  # Comprehensive analysis
 | `Script not found`          | Scripts not executable | `chmod +x scripts/*.sh` |
 | `MCP server not responding` | Port forward down      | `session`               |
 | `Alias not found`           | Shell not reloaded     | `source ~/.zshrc`       |
+| `Permission denied`         | Script permissions     | `chmod +x scripts/*.sh` |
+
+## 🚀 Advanced Workflows
+
+### 🎯 Complete Epic Development Cycle
+
+```bash
+# 1. Epic Planning
+linear-focus                           # Check current priority
+pm-epic "Epic Name" > epic.json        # Generate PM agent JSON
+cat epic.json | jq '.tasks[].title'    # Review generated tasks
+
+# 2. Sprint Planning
+sprint                                 # Batch sprint preparation
+task                                   # Generate specific Linear tasks
+
+# 3. Implementation
+code "specific requirement"             # Generate implementation
+test-now                               # Generate tests
+fix "any issues"                       # Fix problems
+
+# 4. Review and Deploy
+review                                 # Review changes
+ready                                  # Check deployment readiness
+helm-check                             # Validate infrastructure
+deploy                                 # Deployment preparation
+
+# 5. Infrastructure Monitoring
+infra-status                           # Monitor post-deployment
+```
+
+### 🔄 Daily Development Routine
+
+```bash
+# Morning (5 minutes)
+session && linear-focus && next
+
+# Active Development (throughout day)
+code → test-now → fix → review
+
+# End of Day (5 minutes)
+git-status && ready && infra-status
+```
+
+### 📊 Weekly Planning Session
+
+```bash
+# Weekly planning (15 minutes)
+sprint                                 # Current sprint status
+pm-epic "Next Epic" > next-epic.json  # Plan upcoming work
+helm-check                             # Infrastructure review
+git-status                             # Overall progress
+```
 
 ---
 
@@ -496,10 +636,12 @@ debug-batch "complex problem"  # Comprehensive analysis
 - **Project Documentation**: See `CLAUDE.md` for complete project context
 - **Setup Guide**: See main `README.md` for initial setup instructions
 - **Epic Planning**: See Linear workspace for current priorities
+- **PM Agent Integration**: Use generated JSON with your PM agent service
 
-> **💡 Pro Tip**: This workflow maximizes development velocity while minimizing token usage through intelligent context leverage and progressive complexity patterns.
+> **💡 Pro Tip**: This workflow maximizes development velocity while minimizing token usage through intelligent context leverage, progressive complexity patterns, and infrastructure awareness.
 
 ---
 
 **Last Updated**: 2025-07-19
+**Version**: 2.0 (Updated with PM Agent Integration & Infrastructure Management)
 **Maintained by**: Threads-Agent Stack Development Team
