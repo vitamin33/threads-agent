@@ -9,7 +9,20 @@
       "Bash(kubectl get:*)",
       "Bash(helm list:*)",
       "mcp__filesystem__read_multiple_files",
-      "mcp__filesystem__read_file"
+      "mcp__filesystem__read_file",
+      "mcp__linear__linear_getIssueById",
+      "Bash(mkdir:*)",
+      "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py -v)",
+      "Bash(python3 -m pytest services/threads_adaptor/tests/unit/test_limiter.py -v)",
+      "Bash(ls:*)",
+      "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestTokenBucketLimiter::test_acquire_nowait_failure -xvs)",
+      "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestHighVolumeRateLimiting::test_25_calls_inserts_pauses -xvs)",
+      "Bash(python3:*)",
+      "Bash(timeout 10s python -m pytest:*)",
+      "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestHighVolumeRateLimiting::test_25_calls_inserts_pauses -xvs --timeout=10)",
+      "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestHighVolumeRateLimiting::test_burst_then_steady_rate -xvs)",
+      "Bash(mypy:*)",
+      "Bash(just ship:*)"
     ],
     "deny": []
   }
