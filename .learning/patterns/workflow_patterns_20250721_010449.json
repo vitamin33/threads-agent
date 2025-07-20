@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-07-21T01:04:49+03:00",
+  "successful_workflows": [
+    {"workflow": "ci-pipeline", "count": 1},
+  ],
+  "failed_workflows": [
+    {"workflow": "", "count": 0},
+  ],
+  "avg_successful_duration": 45.8,
+  "patterns": [
+    "Most reliable workflow: ci-pipeline (success rate analysis needed)"
+  ]
+}

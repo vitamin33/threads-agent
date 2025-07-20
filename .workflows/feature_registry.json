@@ -1,0 +1,32 @@
+{
+  "features": [
+    {
+      "id": "feat_1753050686_89130",
+      "name": "Architecture Design",
+      "epic": "epic_1753050686",
+      "status": "in_progress",
+      "created": "2025-07-21T01:31:26+03:00"
+    },
+    {
+      "id": "feat_1753050686_89130",
+      "name": "Core Implementation",
+      "epic": "epic_1753050686",
+      "status": "in_progress",
+      "created": "2025-07-21T01:31:26+03:00"
+    },
+    {
+      "id": "feat_1753050686_89130",
+      "name": "Testing Suite",
+      "epic": "epic_1753050686",
+      "status": "in_progress",
+      "created": "2025-07-21T01:31:26+03:00"
+    },
+    {
+      "id": "feat_1753050686_89130",
+      "name": "Documentation",
+      "epic": "epic_1753050686",
+      "status": "in_progress",
+      "created": "2025-07-21T01:31:26+03:00"
+    }
+  ]
+}

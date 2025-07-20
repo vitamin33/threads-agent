@@ -1,0 +1,59 @@
+name: "Documentation"
+epic: "epic_1753050686"
+type: "feature"
+priority: "low"
+estimated_effort: "small"
+lifecycle_stage: "in_progress"
+
+tasks:
+  - name: "Design and planning"
+    type: "planning"
+    checklist:
+      - "Define requirements and scope"
+      - "Create technical design"
+      - "Identify dependencies"
+      - "Review with stakeholders"
+    
+  - name: "Implementation"
+    type: "development"
+    checklist:
+      - "Set up development environment"
+      - "Implement core functionality"
+      - "Write unit tests"
+      - "Handle edge cases"
+    
+  - name: "Testing and validation"
+    type: "testing"
+    checklist:
+      - "Run unit tests"
+      - "Integration testing"
+      - "Performance validation"
+      - "User acceptance testing"
+    
+  - name: "Documentation"
+    type: "documentation"
+    checklist:
+      - "API documentation"
+      - "User guide"
+      - "Deployment notes"
+      - "Changelog update"
+
+automation:
+  branch_naming: "feat/{epic_key}-{feature_key}"
+  pr_template: "standard"
+  quality_gates: ["lint", "test", "security"]
+  deployment: "staging"
+
+# Feature Metadata
+id: "feat_1753050686_89130"
+description: "User and API documentation"
+created: "2025-07-21T01:31:26+03:00"
+assigned_to: "unassigned"
+dependencies: []
+
+# Lifecycle Events
+lifecycle:
+  created: "2025-07-21T01:31:26+03:00"
+  events: []
+    - action: "start"
+      timestamp: "2025-07-21T01:32:17+03:00"
