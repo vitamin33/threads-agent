@@ -3,14 +3,154 @@
 
 # Smart queries that leverage existing MCP context
 
+# Context management system
+CONTEXT_DIR="$HOME/.threads-agent/context"
+CURRENT_SESSION="$CONTEXT_DIR/current.ctx"
+
+# Ensure context directory exists
+mkdir -p "$CONTEXT_DIR"
+
+# Context management functions
+save_context() {
+    local name="$1"
+    if [ -z "$name" ]; then
+        echo "Usage: save_context <name>"
+        return 1
+    fi
+    
+    local ctx_file="$CONTEXT_DIR/${name}.ctx"
+    
+    # Save current working state
+    {
+        echo "# Threads-Agent Context: $name"
+        echo "# Saved: $(date)"
+        echo "TIMESTAMP=$(date +%s)"
+        echo "PWD=$(pwd)"
+        echo "BRANCH=$(git branch --show-current 2>/dev/null || echo 'unknown')"
+        echo ""
+        echo "# Git status"
+        git status --porcelain 2>/dev/null | head -20 || echo "No git repo"
+        echo ""
+        echo "# Recent commits"
+        git log --oneline -5 2>/dev/null || echo "No commits"
+        echo ""
+        echo "# Current Kubernetes context"
+        kubectl config current-context 2>/dev/null || echo "No k8s context"
+        echo ""
+        echo "# Active pods"
+        kubectl get pods --no-headers 2>/dev/null | head -10 || echo "No pods"
+    } > "$ctx_file"
+    
+    # Set as current session
+    cp "$ctx_file" "$CURRENT_SESSION"
+    echo "Context saved: $name"
+}
+
+load_context() {
+    local name="$1"
+    if [ -z "$name" ]; then
+        echo "Usage: load_context <name>"
+        echo "Available contexts:"
+        ls -1 "$CONTEXT_DIR"/*.ctx 2>/dev/null | xargs -n1 basename | sed 's/\.ctx$//' || echo "No saved contexts"
+        return 1
+    fi
+    
+    local ctx_file="$CONTEXT_DIR/${name}.ctx"
+    if [ ! -f "$ctx_file" ]; then
+        echo "Context not found: $name"
+        return 1
+    fi
+    
+    # Load and display context
+    echo "Loading context: $name"
+    echo "===================="
+    cat "$ctx_file"
+    echo "===================="
+    
+    # Set as current session
+    cp "$ctx_file" "$CURRENT_SESSION"
+    echo "Context loaded. Use 'show_context' to reference in queries."
+}
+
+show_context() {
+    if [ ! -f "$CURRENT_SESSION" ]; then
+        echo "No active context. Use 'save_context <name>' to create one."
+        return 1
+    fi
+    
+    echo "Current session context:"
+    echo "========================"
+    cat "$CURRENT_SESSION"
+    echo "========================"
+}
+
+clean_context() {
+    local days="${1:-7}"
+    echo "Cleaning contexts older than $days days..."
+    find "$CONTEXT_DIR" -name "*.ctx" -type f -mtime +$days -delete
+    echo "Cleanup complete."
+}
+
+list_contexts() {
+    echo "Saved contexts:"
+    if [ -d "$CONTEXT_DIR" ]; then
+        for ctx in "$CONTEXT_DIR"/*.ctx; do
+            if [ -f "$ctx" ]; then
+                local name=$(basename "$ctx" .ctx)
+                local date=$(grep "# Saved:" "$ctx" | cut -d: -f2- | xargs)
+                echo "  $name ($date)"
+            fi
+        done
+    else
+        echo "  No contexts found"
+    fi
+}
+
+# Context management commands
+case "$1" in
+    "save-ctx")
+        if [ -z "$2" ]; then
+            echo "Usage: $0 save-ctx <name>"
+            exit 1
+        fi
+        save_context "$2"
+        exit 0
+        ;;
+    "load-ctx")
+        if [ -z "$2" ]; then
+            load_context
+            exit 1
+        fi
+        load_context "$2"
+        exit 0
+        ;;
+    "show-ctx")
+        show_context
+        exit 0
+        ;;
+    "list-ctx")
+        list_contexts
+        exit 0
+        ;;
+    "clean-ctx")
+        clean_context "$2"
+        exit 0
+        ;;
+esac
+
+# Enhanced queries with context integration
 case "$1" in
     "schema-code")
         if [ -z "$2" ]; then
             echo "Usage: $0 schema-code 'endpoint description'"
             exit 1
         fi
-        # Use database context efficiently
-        claude "Based on my PostgreSQL schema, generate FastAPI endpoint: $2. Return implementation only."
+        # Use database context efficiently with session context
+        local context_info=""
+        if [ -f "$CURRENT_SESSION" ]; then
+            context_info="Session context: $(head -10 "$CURRENT_SESSION" | tr '\n' ' ')"
+        fi
+        claude "Based on my PostgreSQL schema, generate FastAPI endpoint: $2. $context_info Return implementation only."
         ;;
     "api-from-model")
         if [ -z "$2" ]; then
@@ -112,8 +252,15 @@ case "$1" in
         Provide specific troubleshooting steps."
         ;;
     *)
-        echo "Smart context queries:"
-        echo "  schema-code 'desc'     - Generate code using DB schema"
+        echo "Context Management:"
+        echo "  save-ctx <name>        - Save current session context"
+        echo "  load-ctx <name>        - Load saved context"
+        echo "  show-ctx               - Show current session context"
+        echo "  list-ctx               - List all saved contexts"
+        echo "  clean-ctx [days]       - Clean contexts older than N days (default: 7)"
+        echo ""
+        echo "Smart Context Queries:"
+        echo "  schema-code 'desc'     - Generate code using DB schema + context"
         echo "  api-from-model 'name'  - Create API from existing model"
         echo "  test-current           - Test recent changes"
         echo "  deploy-check           - Quick deployment check"

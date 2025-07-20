@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-07-21T01:03:22+03:00",
+  "analysis_period": "last_1000_commands",
+  "summary": {
+    "total_commands":        2,
+    "failed_commands":        1,
+    "failure_rate_percent": 50.00,
+    "avg_duration_seconds": 8.85
+  },
+  "top_commands": [
+    {"command": "just", "count": 1},
+    {"command": "just", "count": 1},
+  ],
+  "insights": [
+    "High failure rate detected - consider workflow optimization",
+
+    "Analysis complete"
+  ]
+}

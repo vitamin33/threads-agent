@@ -1,0 +1,76 @@
+#!/bin/bash
+# Threads-Agent Development Context Aliases
+# Source this file: source .dev-aliases
+
+# Context management shortcuts
+alias ctx-save='just ctx-save'
+alias ctx-load='just ctx-load' 
+alias ctx-show='just ctx-show'
+alias ctx-list='just ctx-list'
+alias ctx-clean='just ctx-clean'
+
+# Session continuity shortcuts  
+alias save='just save'
+alias load='just load'
+alias context='just context'
+
+# Development workflow with context
+alias dev-save='function _dev_save() { just save "${1:-$(date +%Y%m%d-%H%M)}"; }; _dev_save'
+alias dev-load='just load'
+alias dev-context='just context'
+
+# Quick context snapshots
+alias snap='function _snap() { just save "snap-${1:-$(date +%H%M)}"; echo "Context saved as snap-${1:-$(date +%H%M)}"; }; _snap'
+alias snaps='just ctx-list | grep snap'
+
+# Working session management
+alias work-start='function _work_start() { just save "work-${1:-start}-$(date +%Y%m%d)"; echo "Work session: ${1:-start} saved"; }; _work_start'
+alias work-end='function _work_end() { just save "work-end-$(date +%Y%m%d-%H%M)"; echo "Work session ended and saved"; }; _work_end'
+alias work-sessions='just ctx-list | grep work'
+
+# Feature branch context
+alias feature-start='function _feature_start() { git checkout -b "${1}" && just save "feature-${1}-start"; }; _feature_start'
+alias feature-save='function _feature_save() { just save "feature-$(git branch --show-current)"; }; _feature_save'
+alias feature-load='function _feature_load() { just load "feature-${1}"; }; _feature_load'
+
+# Debug context preservation  
+alias debug-save='function _debug_save() { just save "debug-${1:-$(date +%H%M)}"; echo "Debug context saved"; }; _debug_save'
+alias debug-load='just load'
+alias debug-list='just ctx-list | grep debug'
+
+# Integration with existing workflow
+alias ship-with-context='function _ship_context() { just save "pre-ship-$(date +%Y%m%d-%H%M)" && just ship "${1}"; }; _ship_context'
+alias reset-with-context='function _reset_context() { just save "pre-reset-$(date +%Y%m%d-%H%M)" && just reset-hard; }; _reset_context'
+
+# Predictive development shortcuts
+alias health='just health'
+alias predict='just predict'
+alias smart='just smart'
+alias dev-status='just dev-status'
+
+# Enhanced development workflow
+alias morning='just smart && echo "🌅 Ready for focused development!"'
+alias evening='function _evening() { just save "eod-$(date +%Y%m%d)" && just predict | tail -5; }; _evening'
+
+# Context-aware shortcuts
+alias threads-dev='cd /Users/vitaliiserbyn/development/threads-agent && just smart'
+alias ta='threads-dev'  # short alias for threads-agent
+
+# Smart query shortcuts with context
+alias q-schema='./scripts/smart-queries.sh schema-code'
+alias q-api='./scripts/smart-queries.sh api-from-model'
+alias q-test='./scripts/smart-queries.sh test-current' 
+alias q-deploy='./scripts/smart-queries.sh deploy-check'
+alias q-infra='./scripts/smart-queries.sh infra-status'
+
+# Batch operations
+alias sprint='./scripts/batch-queries.sh sprint-prep'
+alias deploy-prep='./scripts/batch-queries.sh deploy-prep'
+alias debug-batch='./scripts/batch-queries.sh debug-batch'
+
+# Context cleanup automation
+alias daily-cleanup='just ctx-clean 1'   # clean contexts older than 1 day
+alias weekly-cleanup='just ctx-clean 7'  # clean contexts older than 1 week
+
+echo "🧠 Threads-Agent context aliases loaded!"
+echo "Usage: save <name>, load <name>, context, snap [name], work-start [name]"

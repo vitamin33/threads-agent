@@ -4,6 +4,7 @@ pytest-cov==4.*
 httpx==0.28.*
 pytest-asyncio==0.24.*        # 0.24 adds official support for pytest ≥ 8.3
 qdrant-client>=1.9
+psycopg2-binary==2.9.*         # For direct database access in e2e tests
 fakeredis>=2.23
 prometheus-client>=0.22.1
 

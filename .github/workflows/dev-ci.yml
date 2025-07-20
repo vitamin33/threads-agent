@@ -163,6 +163,8 @@ jobs:
           # ➊ start port-forwards in the background
           kubectl port-forward svc/orchestrator 8080:8080   & PF_ORCH=$!
           kubectl port-forward svc/fake-threads 9009:9009   & PF_THREADS=$!
+          kubectl port-forward svc/qdrant 6333:6333         & PF_QDRANT=$!
+          kubectl port-forward svc/postgres 15432:5432      & PF_POSTGRES=$!
           # give the tunnel a moment
           sleep 5
 
@@ -171,7 +173,7 @@ jobs:
           pytest -q
 
           # ➌ tidy up
-          kill $PF_ORCH $PF_THREADS
+          kill $PF_ORCH $PF_THREADS $PF_QDRANT $PF_POSTGRES
 
       # ─── EXTRA: show Celery-worker logs if the tests failed ──────────────
       - name: Dump worker logs if pytest failed

@@ -1,0 +1,15 @@
+id: "epic_1753049599"
+name: "AI-Powered Content Moderation"
+description: "Implement intelligent content moderation with LLM-based filtering and safety checks"
+complexity: "medium"
+created: "2025-07-21T01:13:19+03:00"
+status: "planning"
+lifecycle_stage: "inception"
+
+# Epic Analysis
+estimated_effort: 2-4 weeks
+risk_level: low
+dependencies: []
+
+# Feature Breakdown
+features:
