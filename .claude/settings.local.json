@@ -22,7 +22,8 @@
       "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestHighVolumeRateLimiting::test_25_calls_inserts_pauses -xvs --timeout=10)",
       "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestHighVolumeRateLimiting::test_burst_then_steady_rate -xvs)",
       "Bash(mypy:*)",
-      "Bash(just ship:*)"
+      "Bash(just ship:*)",
+      "Bash(python -m pytest services/threads_adaptor/tests/unit/test_limiter.py::TestTokenBucketLimiter::test_token_refill -xvs)"
     ],
     "deny": []
   }

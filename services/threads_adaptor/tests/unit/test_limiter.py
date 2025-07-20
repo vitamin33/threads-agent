@@ -69,12 +69,19 @@ class TestTokenBucketLimiter:
 
         # Consume all tokens
         limiter.tokens = 0.0
-        initial_time = time.time()
-        limiter.last_refill = initial_time
 
-        # Simulate 2 seconds passing
-        limiter.last_refill = initial_time - 2.0
-        limiter._refill_tokens()
+        # Use fixed timestamps to avoid floating-point precision issues
+        fixed_time = 1000.0
+        limiter.last_refill = fixed_time
+
+        # Simulate 2 seconds passing by setting last_refill to 2 seconds ago
+        limiter.last_refill = fixed_time - 2.0
+
+        # Mock time.time() to return the current fixed time
+        with patch(
+            "services.threads_adaptor.limiter.time.time", return_value=fixed_time
+        ):
+            limiter._refill_tokens()
 
         # Should have refilled 2 tokens
         assert limiter.tokens == 2.0
