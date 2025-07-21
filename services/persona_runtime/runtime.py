@@ -51,8 +51,9 @@ _maybe_load_lora()
 # ───────────────────────── constants / config ──────────────────────────
 OFFLINE_MARKER = "test"
 _RAW_KEY = os.getenv("OPENAI_API_KEY", "")
+_MOCK_MODE = os.getenv("OPENAI_MOCK", "0") == "1"
 
-# Treat “no key”, empty key, or the literal string “test” as offline
+# Treat "no key", empty key, or the literal string "test" as offline
 _OFFLINE = _RAW_KEY in {"", OFFLINE_MARKER}
 
 # Even in offline mode we must pass *some* non-empty key, otherwise the
@@ -79,6 +80,8 @@ class FlowState(TypedDict, total=False):
 # ─────────────────────────── helper funcs ──────────────────────────────
 async def _llm(model: str, prompt: str) -> str:
     """One-shot OpenAI call (returns stub when offline)."""
+    if _MOCK_MODE:
+        return "MOCK"
     if _OFFLINE:
         return f"stub-{model}"
 
@@ -100,7 +103,7 @@ async def _llm(model: str, prompt: str) -> str:
 
 async def _moderate(content: str) -> bool:
     """Return **True** if content passes moderation (always true offline)."""
-    if _OFFLINE:
+    if _MOCK_MODE or _OFFLINE:
         return True
 
     if GUARD_REGEX.search(content):

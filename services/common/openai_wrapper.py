@@ -36,6 +36,36 @@ _ai: openai.OpenAI | None = None  # sync client for convenience
 _ai_async: openai.AsyncOpenAI | None = None
 _rd: redis.Redis | None = None
 _OFFLINE = os.getenv("OPENAI_API_KEY", "") in {"", "test"}  # NEW
+_MOCK_MODE = os.getenv("OPENAI_MOCK", "0") == "1"  # NEW - Fast CI mocking
+
+
+# ---------------------------------------------------------------------------
+#  Mock response for fast CI (OPENAI_MOCK=1)
+# ---------------------------------------------------------------------------
+class _MockResp:
+    def __init__(self, model: str):
+        self.choices = [SimpleNamespace(message=SimpleNamespace(content="MOCK"))]
+        self.usage = CompletionUsage(
+            prompt_tokens=10, completion_tokens=10, total_tokens=20
+        )
+        self.model = model
+
+
+class _MockChatComp:
+    @staticmethod
+    def create(model: str, messages: object) -> "_MockResp":  # noqa: ANN401
+        return _MockResp(model)
+
+
+class _MockChat:
+    completions = _MockChatComp()
+
+
+class _MockOpenAI:
+    chat = _MockChat()
+
+
+_MOCK_CLIENT: openai.OpenAI = cast(openai.OpenAI, _MockOpenAI())
 
 # ---------------------------------------------------------------------------
 #  Very small stub client (sync) for offline mode
@@ -69,6 +99,9 @@ if _OFFLINE:
 def _sync_ai() -> openai.OpenAI:
     global _ai
     if _ai is None:
+        if _MOCK_MODE:
+            _ai = _MOCK_CLIENT
+            return _ai
         if _OFFLINE:
             _ai = _STUB_CLIENT
             return _ai
@@ -112,6 +145,8 @@ _retry = tenacity.retry(
 #  Very rough USD estimator (update quarterly)
 # ---------------------------------------------------------------------------
 def _usd(model: str, pt: int, ct: int) -> float:
+    if _MOCK_MODE:
+        return 0.0  # Mock mode costs nothing
     prm, cmp = {
         "gpt-4o-mini": (0.0005, 0.0015),
         "gpt-3.5-turbo-0125": (0.0005, 0.0015),
