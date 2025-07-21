@@ -1,0 +1,20 @@
+{
+  "feature": "Content Moderation System",
+  "timestamp": "2025-07-21T09:39:03Z",
+  "assumptions": {
+    "user_acquisition_boost": 2,
+    "retention_boost": 8,
+    "price_elasticity": "medium",
+    "implementation_weeks": 2,
+    "avg_revenue_per_user": 10
+  },
+  "projections": [{"month":1,"users":20,"mrr":200.0},{"month":2,"users":41,"mrr":410.0},{"month":3,"users":62,"mrr":620.0},{"month":4,"users":84,"mrr":840.0},{"month":5,"users":107,"mrr":1070.0},{"month":6,"users":130,"mrr":1300.0},{"month":7,"users":154,"mrr":1540.0},{"month":8,"users":179,"mrr":1790.0},{"month":9,"users":204,"mrr":2040.0},{"month":10,"users":230,"mrr":2300.0},{"month":11,"users":257,"mrr":2570.0},{"month":12,"users":285,"mrr":2850.0}],
+  "summary": {
+    "year_end_mrr": 2850.0,
+    "total_revenue_year1": 17530,
+    "growth_rate": "285000.00%",
+    "months_to_mrr_target": >12,
+    "customer_validation_score": 50
+  },
+  "confidence_level": "MEDIUM - Reasonable validation or very quick to implement"
+}

@@ -59,7 +59,18 @@
       "mcp__linear__linear_getProjects",
       "mcp__linear__linear_createProject",
       "mcp__linear__linear_createIssue",
-      "mcp__linear__linear_updateIssue"
+      "mcp__linear__linear_updateIssue",
+      "Bash(jq:*)",
+      "Bash(cat:*)",
+      "Bash(./scripts/command-center.sh generate:*)",
+      "Bash(rm:*)",
+      "Bash(./debug-cc.sh:*)",
+      "Bash(quality_data='{\"\"\"\"quality_score\"\"\"\": 88}')",
+      "Bash(echo \"$quality_data\")",
+      "Bash(./scripts/command-center-simple.sh generate:*)",
+      "Bash(./scripts/cc-working.sh generate:*)",
+      "Bash(./scripts/cc-final.sh:*)",
+      "Bash(./test-cc.sh:*)"
     ],
     "deny": []
   }

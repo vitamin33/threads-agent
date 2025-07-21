@@ -1,0 +1,20 @@
+{
+  "business": {
+    "name": "Threads Agent Stack",
+    "type": "saas",
+    "stage": "mvp",
+    "launched": false
+  },
+  "financials": {
+    "mrr_target": 20000,
+    "cost_per_follow_target": 0.01,
+    "engagement_rate_target": 0.06,
+    "runway_months": 6,
+    "burn_rate": 0
+  },
+  "market": {
+    "target_audience": "content_creators",
+    "market_size": 1000000,
+    "competition_level": "medium"
+  }
+}

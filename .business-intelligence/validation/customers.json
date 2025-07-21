@@ -1,0 +1,29 @@
+{
+  "interviews": [],
+  "feedback": [
+    {
+      "feature": "A/B Testing",
+      "timestamp": "2025-07-21T10:02:40Z",
+      "customer_segment": "content_creators",
+      "sentiment": "positive",
+      "feedback": "This would save me hours of guessing what works",
+      "willingness_to_pay": 15
+    },
+    {
+      "feature": "Trend Detection",
+      "timestamp": "2025-07-21T10:02:47Z",
+      "customer_segment": "marketing_agencies",
+      "sentiment": "positive",
+      "feedback": "Would pay extra for automated trend insights",
+      "willingness_to_pay": 25
+    },
+    {
+      "feature": "Content Moderation",
+      "timestamp": "2025-07-21T10:02:52Z",
+      "customer_segment": "enterprise",
+      "sentiment": "neutral",
+      "feedback": "Nice to have but not urgent",
+      "willingness_to_pay": 5
+    }
+  ]
+}

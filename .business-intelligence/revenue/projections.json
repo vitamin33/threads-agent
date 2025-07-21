@@ -1,0 +1,24 @@
+{
+  "scenarios": [
+    {
+      "name": "E4 - Bandit A/B",
+      "file": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/revenue/prediction_E4_-_Bandit_A_B_20250721_122737.json"
+    },
+    {
+      "name": "E5 - Trend & Pain",
+      "file": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/revenue/prediction_E5_-_Trend_&_Pain_20250721_122743.json"
+    },
+    {
+      "name": "E4 + E5 Combined",
+      "file": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/revenue/prediction_E4_+_E5_Combined_20250721_123507.json"
+    },
+    {
+      "name": "Observability System",
+      "file": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/revenue/prediction_Observability_System_20250721_123858.json"
+    },
+    {
+      "name": "Content Moderation System",
+      "file": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/revenue/prediction_Content_Moderation_System_20250721_123903.json"
+    }
+  ]
+}
