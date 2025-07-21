@@ -1,0 +1,14 @@
+{
+  "feature": "A/B testing features",
+  "timestamp": "2025-07-21T09:37:13Z",
+  "market_conditions": {
+    "trend": "growing",
+    "competition": "none",
+    "seasonal": "peak",
+    "current_quarter": "Q3",
+    "launch_month_quality": "Standard launch month"
+  },
+  "timing_score": 95,
+  "recommendation": "EXCELLENT TIMING - Launch as soon as ready",
+  "optimal_launch_window": "Next 2-4 weeks"
+}

@@ -1,0 +1,130 @@
+{
+  "reviews": [
+    {
+      "timestamp": "2025-07-21T10:26:58Z",
+      "review_period": {
+        "start": "2025-07-14",
+        "end": "2025-07-21",
+        "focus": "comprehensive"
+      },
+      "business_health": {
+        "overall_score": 72,
+        "customer_metrics": {
+          "pmf_score": 50.00,
+          "total_sessions": 3,
+          "churn_risk": 0.667
+        },
+        "business_metrics": {
+          "mrr": 0,
+          "runway_months": 6,
+          "burn_rate": 0
+        },
+        "development_metrics": {
+          "features_shipped": 2,
+          "bugs_fixed": 1,
+          "tech_debt_score": 3
+        }
+      },
+      "weekly_analysis": {
+        "growth_trends": [
+          {
+            "metric": "user_growth",
+            "trend": "stable",
+            "change": "+5%"
+          },
+          {
+            "metric": "engagement",
+            "trend": "improving",
+            "change": "+12%"
+          }
+        ],
+        "pmf_progression": {
+          "current_score": 50.00,
+          "trend": "stable",
+          "target": 60
+        },
+        "retention_trends": [
+          {
+            "period": "week",
+            "retention_rate": 0.65,
+            "trend": "stable"
+          }
+        ],
+        "competitive_movements": [
+          {
+            "competitor": "BufferBot",
+            "movement": "pricing_change",
+            "impact": "medium"
+          }
+        ]
+      },
+      "strategic_insights": [
+        {
+          "insight": "User retention is the top priority based on current metrics",
+          "confidence": "high",
+          "category": "retention"
+        },
+        {
+          "insight": "PMF score indicates product readiness for growth",
+          "confidence": "medium",
+          "category": "growth"
+        }
+      ],
+      "opportunities": [
+        {
+          "title": "Retention Optimization",
+          "description": "Focus on reducing churn through improved onboarding",
+          "priority": "high",
+          "impact": "high"
+        },
+        {
+          "title": "Feature Expansion",
+          "description": "Add advanced features for power users",
+          "priority": "medium",
+          "impact": "medium"
+        }
+      ],
+      "next_week_priorities": [
+        {
+          "priority": 1,
+          "title": "Implement retention improvements",
+          "timeline": "3 days"
+        },
+        {
+          "priority": 2,
+          "title": "Conduct user interviews",
+          "timeline": "2 days"
+        },
+        {
+          "priority": 3,
+          "title": "Analyze competitive positioning",
+          "timeline": "1 day"
+        }
+      ],
+      "risk_assessment": [
+        {
+          "risk": "Competitive pricing pressure",
+          "probability": "medium",
+          "impact": "high"
+        },
+        {
+          "risk": "User churn increase",
+          "probability": "high",
+          "impact": "critical"
+        }
+      ],
+      "recommendations": [
+        {
+          "recommendation": "Focus on user retention as top priority",
+          "rationale": "High churn risk detected",
+          "timeline": "immediate"
+        },
+        {
+          "recommendation": "Conduct pricing analysis",
+          "rationale": "Competitive pressure increasing",
+          "timeline": "this_week"
+        }
+      ]
+    }
+  ]
+}

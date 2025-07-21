@@ -1,0 +1,27 @@
+{
+  "comparison": {
+    "feature1": "E5 - Trend & Pain",
+    "feature2": "E4 + E5 Combined",
+    "timestamp": "2025-07-21T09:35:18Z"
+  },
+  "metrics": {
+    "E5 - Trend & Pain": {
+      "roi_monthly": 55.00,
+      "investment": 27000,
+      "risk": "high",
+      "year_end_mrr": "64559.0"
+    },
+    "E4 + E5 Combined": {
+      "roi_monthly": 66.00,
+      "investment": 45000,
+      "risk": "high",
+      "year_end_mrr": "208912.0"
+    }
+  },
+  "recommendation": "FAVOR Feature 2 - Higher ROI with similar risk",
+  "analysis": {
+    "roi_winner": "E4 + E5 Combined",
+    "cost_winner": "E5 - Trend & Pain",
+    "risk_winner": "TIE"
+  }
+}

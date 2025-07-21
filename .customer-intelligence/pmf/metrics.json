@@ -1,0 +1,36 @@
+{
+  "scores": [
+    {
+      "timestamp": "2025-07-21T09:48:24Z",
+      "pmf_score": 100.00,
+      "nps_score": 0,
+      "status": "Strong PMF"
+    },
+    {
+      "timestamp": "2025-07-21T09:48:38Z",
+      "pmf_score": 50.00,
+      "nps_score": 0,
+      "status": "Strong PMF"
+    }
+  ],
+  "surveys": [
+    {
+      "user_id": "user001",
+      "timestamp": "2025-07-21T09:48:24Z",
+      "disappointed_score": 4,
+      "recommendation_score": 8,
+      "primary_benefit": "easy automation",
+      "improvement_suggestion": "mobile app needed",
+      "month": "2025-07"
+    },
+    {
+      "user_id": "user002",
+      "timestamp": "2025-07-21T09:48:38Z",
+      "disappointed_score": 3,
+      "recommendation_score": 7,
+      "primary_benefit": "saves time",
+      "improvement_suggestion": "better analytics needed",
+      "month": "2025-07"
+    }
+  ]
+}

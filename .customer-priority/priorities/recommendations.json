@@ -1,0 +1,295 @@
+{
+  "recommendations": [
+    {
+      "timestamp": "2025-07-21T10:25:57Z",
+      "focus_area": "all",
+      "business_context": {
+        "pmf_score": 50.00,
+        "user_activity_trend": "stable",
+        "churn_risk": 0.667,
+        "competitive_threat": "medium"
+      },
+      "top_priority": {
+        "action": "enhance_retention",
+        "priority_score": 90,
+        "category": "retention",
+        "urgency": "critical",
+        "description": "Implement features to reduce churn and increase engagement",
+        "estimated_impact": "high",
+        "time_investment": "1-3 weeks"
+      },
+      "all_priorities": [
+        {
+          "action": "enhance_retention",
+          "priority_score": 90,
+          "category": "retention",
+          "urgency": "critical",
+          "description": "Implement features to reduce churn and increase engagement",
+          "estimated_impact": "high",
+          "time_investment": "1-3 weeks"
+        },
+        {
+          "action": "improve_pmf",
+          "priority_score": 75,
+          "category": "product",
+          "urgency": "high",
+          "description": "Focus on core value proposition and user feedback",
+          "estimated_impact": "high",
+          "time_investment": "2-4 weeks"
+        },
+        {
+          "action": "competitive_response",
+          "priority_score": 65,
+          "category": "competitive",
+          "urgency": "high",
+          "description": "Address competitive threats and market positioning",
+          "estimated_impact": "medium",
+          "time_investment": "1-3 weeks"
+        },
+        {
+          "action": "optimize_revenue",
+          "priority_score": 60,
+          "category": "monetization",
+          "urgency": "high",
+          "description": "Focus on pricing and monetization improvements",
+          "estimated_impact": "high",
+          "time_investment": "1-2 weeks"
+        },
+        {
+          "action": "optimize_acquisition",
+          "priority_score": 50,
+          "category": "growth",
+          "urgency": "medium",
+          "description": "Improve onboarding and user acquisition channels",
+          "estimated_impact": "medium",
+          "time_investment": "2-5 weeks"
+        }
+      ],
+      "specific_recommendations": [
+        "Implement user onboarding improvements",
+        "Add engagement tracking to key features",
+        "Create re-activation email sequence"
+      ],
+      "next_actions": [
+        {
+          "action": "Identify users at churn risk",
+          "timeline": "Today"
+        },
+        {
+          "action": "Implement retention features",
+          "timeline": "This week"
+        },
+        {
+          "action": "Launch re-engagement campaign",
+          "timeline": "Next week"
+        }
+      ],
+      "success_metrics": [
+        {
+          "metric": "Churn rate",
+          "target": "<15%",
+          "timeline": "8 weeks"
+        },
+        {
+          "metric": "DAU/MAU ratio",
+          "target": ">30%",
+          "timeline": "6 weeks"
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-07-21T10:26:53Z",
+      "focus_area": "evening_review",
+      "business_context": {
+        "pmf_score": 50.00,
+        "user_activity_trend": "stable",
+        "churn_risk": 0.667,
+        "competitive_threat": "medium"
+      },
+      "top_priority": {
+        "action": "enhance_retention",
+        "priority_score": 90,
+        "category": "retention",
+        "urgency": "critical",
+        "description": "Implement features to reduce churn and increase engagement",
+        "estimated_impact": "high",
+        "time_investment": "1-3 weeks"
+      },
+      "all_priorities": [
+        {
+          "action": "enhance_retention",
+          "priority_score": 90,
+          "category": "retention",
+          "urgency": "critical",
+          "description": "Implement features to reduce churn and increase engagement",
+          "estimated_impact": "high",
+          "time_investment": "1-3 weeks"
+        },
+        {
+          "action": "improve_pmf",
+          "priority_score": 75,
+          "category": "product",
+          "urgency": "high",
+          "description": "Focus on core value proposition and user feedback",
+          "estimated_impact": "high",
+          "time_investment": "2-4 weeks"
+        },
+        {
+          "action": "competitive_response",
+          "priority_score": 65,
+          "category": "competitive",
+          "urgency": "high",
+          "description": "Address competitive threats and market positioning",
+          "estimated_impact": "medium",
+          "time_investment": "1-3 weeks"
+        },
+        {
+          "action": "optimize_revenue",
+          "priority_score": 60,
+          "category": "monetization",
+          "urgency": "high",
+          "description": "Focus on pricing and monetization improvements",
+          "estimated_impact": "high",
+          "time_investment": "1-2 weeks"
+        },
+        {
+          "action": "optimize_acquisition",
+          "priority_score": 50,
+          "category": "growth",
+          "urgency": "medium",
+          "description": "Improve onboarding and user acquisition channels",
+          "estimated_impact": "medium",
+          "time_investment": "2-5 weeks"
+        }
+      ],
+      "specific_recommendations": [
+        "Implement user onboarding improvements",
+        "Add engagement tracking to key features",
+        "Create re-activation email sequence"
+      ],
+      "next_actions": [
+        {
+          "action": "Identify users at churn risk",
+          "timeline": "Today"
+        },
+        {
+          "action": "Implement retention features",
+          "timeline": "This week"
+        },
+        {
+          "action": "Launch re-engagement campaign",
+          "timeline": "Next week"
+        }
+      ],
+      "success_metrics": [
+        {
+          "metric": "Churn rate",
+          "target": "<15%",
+          "timeline": "8 weeks"
+        },
+        {
+          "metric": "DAU/MAU ratio",
+          "target": ">30%",
+          "timeline": "6 weeks"
+        }
+      ]
+    },
+    {
+      "timestamp": "2025-07-21T15:17:55Z",
+      "focus_area": "all",
+      "business_context": {
+        "pmf_score": 50.00,
+        "user_activity_trend": "stable",
+        "churn_risk": 0.667,
+        "competitive_threat": "medium"
+      },
+      "top_priority": {
+        "action": "enhance_retention",
+        "priority_score": 90,
+        "category": "retention",
+        "urgency": "critical",
+        "description": "Implement features to reduce churn and increase engagement",
+        "estimated_impact": "high",
+        "time_investment": "1-3 weeks"
+      },
+      "all_priorities": [
+        {
+          "action": "enhance_retention",
+          "priority_score": 90,
+          "category": "retention",
+          "urgency": "critical",
+          "description": "Implement features to reduce churn and increase engagement",
+          "estimated_impact": "high",
+          "time_investment": "1-3 weeks"
+        },
+        {
+          "action": "improve_pmf",
+          "priority_score": 75,
+          "category": "product",
+          "urgency": "high",
+          "description": "Focus on core value proposition and user feedback",
+          "estimated_impact": "high",
+          "time_investment": "2-4 weeks"
+        },
+        {
+          "action": "competitive_response",
+          "priority_score": 65,
+          "category": "competitive",
+          "urgency": "high",
+          "description": "Address competitive threats and market positioning",
+          "estimated_impact": "medium",
+          "time_investment": "1-3 weeks"
+        },
+        {
+          "action": "optimize_revenue",
+          "priority_score": 60,
+          "category": "monetization",
+          "urgency": "high",
+          "description": "Focus on pricing and monetization improvements",
+          "estimated_impact": "high",
+          "time_investment": "1-2 weeks"
+        },
+        {
+          "action": "optimize_acquisition",
+          "priority_score": 50,
+          "category": "growth",
+          "urgency": "medium",
+          "description": "Improve onboarding and user acquisition channels",
+          "estimated_impact": "medium",
+          "time_investment": "2-5 weeks"
+        }
+      ],
+      "specific_recommendations": [
+        "Implement user onboarding improvements",
+        "Add engagement tracking to key features",
+        "Create re-activation email sequence"
+      ],
+      "next_actions": [
+        {
+          "action": "Identify users at churn risk",
+          "timeline": "Today"
+        },
+        {
+          "action": "Implement retention features",
+          "timeline": "This week"
+        },
+        {
+          "action": "Launch re-engagement campaign",
+          "timeline": "Next week"
+        }
+      ],
+      "success_metrics": [
+        {
+          "metric": "Churn rate",
+          "target": "<15%",
+          "timeline": "8 weeks"
+        },
+        {
+          "metric": "DAU/MAU ratio",
+          "target": ">30%",
+          "timeline": "6 weeks"
+        }
+      ]
+    }
+  ]
+}

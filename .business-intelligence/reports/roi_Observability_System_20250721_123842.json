@@ -1,0 +1,24 @@
+{
+  "feature": "Observability System",
+  "timestamp": "2025-07-21T09:38:42Z",
+  "investment": {
+    "dev_hours": 60,
+    "hourly_rate": 150,
+    "dev_cost": 9000,
+    "opportunity_cost": 4500,
+    "total_cost": 13500
+  },
+  "returns": {
+    "expected_monthly": 1000,
+    "adjusted_monthly": 1500.0,
+    "customer_impact": "medium",
+    "revenue_multiplier": 1.5
+  },
+  "roi": {
+    "monthly_percentage": -22.00,
+    "annual_percentage": 33.00,
+    "payback_months": 9.0,
+    "risk_level": "medium"
+  },
+  "recommendation": "NOT RECOMMENDED - Negative ROI expected"
+}

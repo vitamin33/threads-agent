@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-07-21T01:55:25+03:00",
+  "project_type": "microservices_k8s",
+  "architecture_style": "microservices",
+  "services": [{"name":"__pycache__","type":"lambda_function","endpoints":[],"dependencies":[]},{"name":"celery_worker","type":"fastapi_service","endpoints":[],"dependencies":["celery","httpx","openai","redis","tenacity","psycopg2-binary","qdrant-client","sseclient-py"]},{"name":"common","type":"lambda_function","endpoints":[],"dependencies":["openai","redis","tenacity","prometheus-client"]},{"name":"fake_threads","type":"fastapi_service","endpoints":services/fake_threads/main.py:@app.get("/ping")
+services/fake_threads/main.py:@app.get("/health")
+services/fake_threads/main.py:@app.post("/publish")
+services/fake_threads/main.py:@app.get("/published")
+[{"method":"get","path":"/ping"},{"method":"get","path":"/health"},{"method":"post","path":"/publish"},{"method":"get","path":"/published"}],"dependencies":["fastapi","uvicorn[standard]"]},{"name":"orchestrator","type":"fastapi_service","endpoints":services/orchestrator/main.py:@app.post("/task")
+services/orchestrator/main.py:@app.get("/metrics")
+services/orchestrator/main.py:@app.get("/health")
+[{"method":"post","path":"/task"},{"method":"get","path":"/metrics"},{"method":"get","path":"/health"}],"dependencies":["fastapi","uvicorn[standard]","celery","httpx","psycopg2-binary","SQLAlchemy~","alembic~","qdrant-client","openai","redis","tenacity"]},{"name":"persona_runtime","type":"fastapi_service","endpoints":[],"dependencies":["fastapi","uvicorn[standard]","langgraph","python-dotenv","sse-starlette","regex","openai","redis","tenacity"]},{"name":"threads_adaptor","type":"lambda_function","endpoints":[],"dependencies":[]},{"name":"threads_agent.egg-info","type":"lambda_function","endpoints":[],"dependencies":[]}],
+  "layers": {"services":       36,"tests":        5,"scripts":        9,"documentation":        0,"infrastructure":       17},
+  "modules": [],
+  "entry_points": [],
+  "configuration": {"env_files":        2,"yaml_configs":       30,"json_configs":       10,"ini_configs":        8},
+  "infrastructure": {"docker_compose": false,"kubernetes": true,"github_actions": true}
+}
