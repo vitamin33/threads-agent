@@ -1,0 +1,27 @@
+{
+  "comparison": {
+    "feature1": "Observability System",
+    "feature2": "Content Moderation System",
+    "timestamp": "2025-07-21T09:38:50Z"
+  },
+  "metrics": {
+    "Observability System": {
+      "roi_monthly": -22.00,
+      "investment": 13500,
+      "risk": "medium",
+      "year_end_mrr": "N/A"
+    },
+    "Content Moderation System": {
+      "roi_monthly": -16.00,
+      "investment": 9000,
+      "risk": "medium",
+      "year_end_mrr": "N/A"
+    }
+  },
+  "recommendation": "FAVOR Feature 2 - Higher ROI with similar risk",
+  "analysis": {
+    "roi_winner": "Content Moderation System",
+    "cost_winner": "Content Moderation System",
+    "risk_winner": "TIE"
+  }
+}

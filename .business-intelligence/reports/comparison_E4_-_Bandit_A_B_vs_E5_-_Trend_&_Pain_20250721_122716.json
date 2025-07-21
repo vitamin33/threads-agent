@@ -1,0 +1,27 @@
+{
+  "comparison": {
+    "feature1": "E4 - Bandit A/B",
+    "feature2": "E5 - Trend & Pain",
+    "timestamp": "2025-07-21T09:27:16Z"
+  },
+  "metrics": {
+    "E4 - Bandit A/B": {
+      "roi_monthly": 22.00,
+      "investment": 18000,
+      "risk": "medium",
+      "year_end_mrr": "N/A"
+    },
+    "E5 - Trend & Pain": {
+      "roi_monthly": 55.00,
+      "investment": 27000,
+      "risk": "high",
+      "year_end_mrr": "N/A"
+    }
+  },
+  "recommendation": "STRONGLY FAVOR Feature 2 - Significantly higher ROI",
+  "analysis": {
+    "roi_winner": "E5 - Trend & Pain",
+    "cost_winner": "E4 - Bandit A/B",
+    "risk_winner": "E4 - Bandit A/B"
+  }
+}

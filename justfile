@@ -165,6 +165,140 @@ workflow-dashboard: # show workflow automation dashboard
 workflow-report: # generate workflow automation report
 	./scripts/workflow-automation.sh report
 
+# ---------- Solopreneur Morning Routine ----------
+business-morning: # comprehensive morning briefing for solopreneurs
+	@echo "🌅 Good Morning! Starting your business briefing..."
+	@echo "==============================================="
+	@echo ""
+	@echo "📊 CUSTOMER INTELLIGENCE OVERVIEW"
+	@echo "-----------------------------------"
+	@just ci-dashboard
+	@echo ""
+	@echo "💰 BUSINESS INTELLIGENCE SUMMARY" 
+	@echo "--------------------------------"
+	@just bi-dashboard
+	@echo ""
+	@echo "🧠 DEVELOPMENT INSIGHTS"
+	@echo "----------------------"
+	@just learning-dashboard
+	@echo ""
+	@echo "📈 DAILY ACTION ITEMS"
+	@echo "--------------------"
+	@just daily-insights
+	@echo ""
+	@echo "✨ Morning briefing complete! Have a productive day! ✨"
+
+business-evening: # enhanced customer-focused end-of-day review
+	./scripts/customer-priority.sh enhanced-evening customer_centric
+
+# Level 8A Customer Priority Commands
+next-customer-priority FOCUS="all": # AI-powered next customer priority recommendation
+	./scripts/customer-priority.sh next-priority {{FOCUS}}
+
+code-for-retention FOCUS="engagement": # analyze retention-focused development opportunities
+	./scripts/customer-priority.sh code-for-retention {{FOCUS}}
+
+weekly-strategic-review FOCUS="comprehensive": # generate comprehensive weekly strategic review
+	./scripts/customer-priority.sh weekly-strategic-review {{FOCUS}}
+
+business-weekly: # enhanced weekly business review with strategic analysis
+	./scripts/customer-priority.sh weekly-strategic-review comprehensive
+
+# ---------- Customer Intelligence System ----------
+ci ACTION="dashboard": # solopreneur customer intelligence system
+	./scripts/customer-intelligence.sh {{ACTION}}
+
+track-behavior USER ACTION PAGE="home" DURATION="0": # track user behavior event
+	./scripts/customer-intelligence.sh track-behavior {{USER}} {{ACTION}} {{PAGE}} {{DURATION}}
+
+pmf-survey USER DISAPPOINTED NPS BENEFIT IMPROVEMENT: # record PMF survey response
+	./scripts/customer-intelligence.sh pmf-survey {{USER}} {{DISAPPOINTED}} {{NPS}} "{{BENEFIT}}" "{{IMPROVEMENT}}"
+
+add-competitor NAME WEBSITE="" SOCIAL="" FOCUS="general": # add competitor to monitoring
+	./scripts/customer-intelligence.sh add-competitor "{{NAME}}" "{{WEBSITE}}" "{{SOCIAL}}" {{FOCUS}}
+
+competitor-update NAME TYPE DESCRIPTION IMPACT="medium" SOURCE="manual": # track competitor update
+	./scripts/customer-intelligence.sh competitor-update "{{NAME}}" {{TYPE}} "{{DESCRIPTION}}" {{IMPACT}} {{SOURCE}}
+
+ci-dashboard: # show customer intelligence dashboard
+	./scripts/customer-intelligence.sh dashboard
+
+ci-report TYPE="weekly": # generate customer intelligence report
+	./scripts/customer-intelligence.sh report {{TYPE}}
+
+daily-insights: # generate automated daily insights
+	./scripts/customer-intelligence.sh daily-insights
+
+setup-ci-automation: # configure automated CI tasks
+	./scripts/customer-intelligence.sh setup-automation
+
+# ---------- Business Intelligence System ----------
+bi ACTION="dashboard": # solopreneur business intelligence system
+	./scripts/business-intelligence.sh {{ACTION}}
+
+roi-calculator FEATURE HOURS="40" RATE="150" REVENUE="0" IMPACT="medium": # calculate feature ROI
+	./scripts/business-intelligence.sh roi "{{FEATURE}}" {{HOURS}} {{RATE}} {{REVENUE}} {{IMPACT}}
+
+market-timing FEATURE TREND="stable" COMPETITION="none" SEASONAL="neutral": # analyze market timing
+	./scripts/business-intelligence.sh market "{{FEATURE}}" {{TREND}} {{COMPETITION}} {{SEASONAL}}
+
+revenue-predictor FEATURE ACQUISITION="10" RETENTION="5" ELASTICITY="medium" WEEKS="4": # predict revenue impact
+	./scripts/business-intelligence.sh revenue "{{FEATURE}}" {{ACQUISITION}} {{RETENTION}} {{ELASTICITY}} {{WEEKS}}
+
+compare-features FEATURE1 FEATURE2: # compare two features for ROI and impact
+	./scripts/business-intelligence.sh compare "{{FEATURE1}}" "{{FEATURE2}}"
+
+customer-feedback FEATURE SEGMENT SENTIMENT TEXT PAY="0": # add customer validation feedback
+	./scripts/business-intelligence.sh feedback "{{FEATURE}}" "{{SEGMENT}}" "{{SENTIMENT}}" "{{TEXT}}" {{PAY}}
+
+bi-dashboard: # show business intelligence dashboard
+	./scripts/business-intelligence.sh dashboard
+
+bi-report TYPE="weekly": # generate executive report
+	./scripts/business-intelligence.sh report {{TYPE}}
+
+# ---------- Unified Command Center (Level 9) ----------
+command-center ACTION="dashboard": # unified command center integrating all 7 systems
+	./scripts/command-center.sh {{ACTION}}
+
+cc ACTION="dashboard": # unified command center integrating all 7 systems
+	./scripts/cc-working.sh {{ACTION}}
+
+cc-generate: # generate new prioritized action plan
+	./scripts/cc-working.sh generate
+
+cc-review: # review current action plan in JSON format
+	./scripts/cc-working.sh review
+
+cc-feedback ACTION_ID OUTCOME IMPACT="75": # track decision feedback and outcomes
+	@echo "Feedback tracking: Action {{ACTION_ID}} -> {{OUTCOME}} (Impact: {{IMPACT}}/100)"
+	@echo "This helps improve future recommendations and KPI accuracy"
+
+# ---------- Universal Plan Memory System ----------
+memory ACTION="analyze": # universal development plan memory with deep code-context awareness
+	./scripts/plan-memory.sh {{ACTION}}
+
+memory-analyze: # deep codebase analysis and pattern recognition
+	./scripts/plan-memory.sh analyze
+
+memory-epic NAME AREA="general": # generate context-aware epic
+	./scripts/plan-memory.sh epic "{{NAME}}" {{AREA}}
+
+memory-plan GOAL TIMEFRAME="medium": # generate intelligent development plan
+	./scripts/plan-memory.sh plan "{{GOAL}}" {{TIMEFRAME}}
+
+memory-opportunities: # show identified development opportunities
+	./scripts/plan-memory.sh opportunities
+
+memory-dashboard: # show plan memory system dashboard
+	./scripts/plan-memory.sh dashboard
+
+memory-report: # generate comprehensive memory analysis report
+	./scripts/plan-memory.sh report
+
+memory-sync: # sync memory system with workflow and learning systems
+	./scripts/plan-memory.sh sync
+
 # ---------- CI-green commit ➜ push ➜ PR ----------
 # Usage:
 #   just ship "feat: awesome (CRA-123)"

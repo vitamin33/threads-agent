@@ -1,0 +1,75 @@
+{
+  "timestamp": "2025-07-21T10:26:49Z",
+  "focus": "engagement",
+  "current_metrics": {
+    "avg_session_duration": 115,
+    "bounce_rate": .333,
+    "feature_adoption_rate": .333,
+    "journey_friction_score": 0.25
+  },
+  "top_opportunity": {
+  "code_area": "engagement",
+  "retention_impact": 75,
+  "description": "Implement smart notifications and re-engagement features",
+  "code_changes": [
+    "Intelligent notifications",
+    "Email sequences",
+    "In-app messaging"
+  ],
+  "expected_retention_lift": "25-35%",
+  "development_effort": "medium"
+},
+  "all_opportunities": [
+  {
+    "code_area": "engagement",
+    "retention_impact": 75,
+    "description": "Implement smart notifications and re-engagement features",
+    "code_changes": [
+      "Intelligent notifications",
+      "Email sequences",
+      "In-app messaging"
+    ],
+    "expected_retention_lift": "25-35%",
+    "development_effort": "medium"
+  },
+  {
+    "code_area": "core_features",
+    "retention_impact": 70,
+    "description": "Enhance core features that drive daily usage",
+    "code_changes": [
+      "Usage analytics",
+      "Habit formation loops",
+      "Progress tracking"
+    ],
+    "expected_retention_lift": "20-30%",
+    "development_effort": "high"
+  },
+  {
+    "code_area": "onboarding",
+    "retention_impact": 65,
+    "description": "Improve user onboarding flow and time-to-value",
+    "code_changes": [
+      "Progressive disclosure",
+      "Interactive tutorials",
+      "Quick wins"
+    ],
+    "expected_retention_lift": "15-25%",
+    "development_effort": "medium"
+  },
+  {
+    "code_area": "performance",
+    "retention_impact": 55,
+    "description": "Optimize app performance and reduce friction",
+    "code_changes": [
+      "Load time optimization",
+      "Caching improvements",
+      "Error handling"
+    ],
+    "expected_retention_lift": "10-20%",
+    "development_effort": "low"
+  }
+],
+  "code_recommendations": ["Implement smart push notifications", "Add in-app messaging system", "Create email re-engagement sequences", "Add social sharing features"],
+  "implementation_priority": [{"rank": 1, "area": "Quick wins first", "timeline": "This week"}, {"rank": 2, "area": "High impact features", "timeline": "Next 2 weeks"}, {"rank": 3, "area": "Long-term improvements", "timeline": "Next month"}],
+  "success_tracking": [{"metric": "Day 1 retention", "current": "60%", "target": "75%"}, {"metric": "Day 7 retention", "current": "35%", "target": "50%"}, {"metric": "Day 30 retention", "current": "15%", "target": "25%"}]
+}

@@ -1,0 +1,27 @@
+{
+  "comparison": {
+    "feature1": "E4 - Bandit A/B",
+    "feature2": "E4 + E5 Combined",
+    "timestamp": "2025-07-21T09:35:13Z"
+  },
+  "metrics": {
+    "E4 - Bandit A/B": {
+      "roi_monthly": 22.00,
+      "investment": 18000,
+      "risk": "medium",
+      "year_end_mrr": "25000.0"
+    },
+    "E4 + E5 Combined": {
+      "roi_monthly": 66.00,
+      "investment": 45000,
+      "risk": "high",
+      "year_end_mrr": "208912.0"
+    }
+  },
+  "recommendation": "STRONGLY FAVOR Feature 2 - Significantly higher ROI",
+  "analysis": {
+    "roi_winner": "E4 + E5 Combined",
+    "cost_winner": "E4 - Bandit A/B",
+    "risk_winner": "E4 - Bandit A/B"
+  }
+}

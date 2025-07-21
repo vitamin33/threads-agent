@@ -1,0 +1,24 @@
+{
+  "feature": "E4 Bandit A/B vs E5 Trend & Pain",
+  "timestamp": "2025-07-21T09:34:50Z",
+  "investment": {
+    "dev_hours": 40,
+    "hourly_rate": 150,
+    "dev_cost": 6000,
+    "opportunity_cost": 3000,
+    "total_cost": 9000
+  },
+  "returns": {
+    "expected_monthly": 2000,
+    "adjusted_monthly": 3000.0,
+    "customer_impact": "medium",
+    "revenue_multiplier": 1.5
+  },
+  "roi": {
+    "monthly_percentage": 0,
+    "annual_percentage": 300.00,
+    "payback_months": 3.0,
+    "risk_level": "medium"
+  },
+  "recommendation": "NOT RECOMMENDED - Negative ROI expected"
+}

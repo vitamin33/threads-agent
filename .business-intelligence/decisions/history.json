@@ -1,0 +1,94 @@
+{
+  "decisions": [
+    {
+      "timestamp": "2025-07-21T09:27:04Z",
+      "type": "roi_analysis",
+      "description": "E4 - Bandit A/B",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_E4_-_Bandit_A_B_20250721_122704.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:27:10Z",
+      "type": "roi_analysis",
+      "description": "E5 - Trend & Pain",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_E5_-_Trend_&_Pain_20250721_122710.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:27:16Z",
+      "type": "feature_comparison",
+      "description": "E4 - Bandit A/B vs E5 - Trend & Pain",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/comparison_E4_-_Bandit_A_B_vs_E5_-_Trend_&_Pain_20250721_122716.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:27:48Z",
+      "type": "feature_comparison",
+      "description": "E4 - Bandit A/B vs E5 - Trend & Pain",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/comparison_E4_-_Bandit_A_B_vs_E5_-_Trend_&_Pain_20250721_122748.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:34:50Z",
+      "type": "roi_analysis",
+      "description": "E4 Bandit A/B vs E5 Trend & Pain",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_E4_Bandit_A_B_vs_E5_Trend_&_Pain_20250721_123450.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:35:00Z",
+      "type": "roi_analysis",
+      "description": "E4 + E5 Combined Implementation",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_E4_+_E5_Combined_Implementation_20250721_123500.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:35:13Z",
+      "type": "feature_comparison",
+      "description": "E4 - Bandit A/B vs E4 + E5 Combined",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/comparison_E4_-_Bandit_A_B_vs_E4_+_E5_Combined_20250721_123513.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:35:18Z",
+      "type": "feature_comparison",
+      "description": "E5 - Trend & Pain vs E4 + E5 Combined",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/comparison_E5_-_Trend_&_Pain_vs_E4_+_E5_Combined_20250721_123518.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:37:13Z",
+      "type": "market_timing",
+      "description": "A/B testing features",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/market/timing_A_B_testing_features_20250721_123713.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:37:46Z",
+      "type": "market_timing",
+      "description": "AI content optimization",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/market/timing_AI_content_optimization_20250721_123746.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:38:42Z",
+      "type": "roi_analysis",
+      "description": "Observability System",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_Observability_System_20250721_123842.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:38:46Z",
+      "type": "roi_analysis",
+      "description": "Content Moderation System",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_Content_Moderation_System_20250721_123846.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:38:50Z",
+      "type": "feature_comparison",
+      "description": "Observability System vs Content Moderation System",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/comparison_Observability_System_vs_Content_Moderation_System_20250721_123850.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:39:07Z",
+      "type": "market_timing",
+      "description": "Observability System",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/market/timing_Observability_System_20250721_123907.json"
+    },
+    {
+      "timestamp": "2025-07-21T09:39:11Z",
+      "type": "market_timing",
+      "description": "Content Moderation System",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/market/timing_Content_Moderation_System_20250721_123911.json"
+    }
+  ]
+}
