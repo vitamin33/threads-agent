@@ -100,6 +100,7 @@ jobs:
         continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MOCK: "1"
         run: |
           helm upgrade --install threads ./chart \
             -f chart/values-ci.yaml \

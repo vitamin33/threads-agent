@@ -22,6 +22,9 @@ personaRuntime:
     # optional LoRA location
     - name: LORA_PATH
       value: /models/lora.safetensors
+    # Enable fast CI mocking
+    - name: OPENAI_MOCK
+      value: "1"
 
 fakeThreads:
   enabled: true
