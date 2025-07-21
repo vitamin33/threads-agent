@@ -70,7 +70,15 @@
       "Bash(./scripts/command-center-simple.sh generate:*)",
       "Bash(./scripts/cc-working.sh generate:*)",
       "Bash(./scripts/cc-final.sh:*)",
-      "Bash(./test-cc.sh:*)"
+      "Bash(./test-cc.sh:*)",
+      "Bash(OPENAI_MOCK=1 PYTHONPATH=$PWD:$PYTHONPATH pytest -s -m e2e tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v)",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__directory_tree",
+      "Bash(just images)",
+      "Bash(just deploy-dev:*)",
+      "Bash(OPENAI_MOCK=1 PYTHONPATH=$PWD:$PYTHONPATH pytest -s -m e2e tests/e2e/test_enhanced_metrics.py::test_http_request_metrics -v)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

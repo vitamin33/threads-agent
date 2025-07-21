@@ -15,7 +15,12 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
 # ── shared helpers ────────────────────────────────────────────────────────────
-from services.common.metrics import maybe_start_metrics_server
+from services.common.metrics import (
+    maybe_start_metrics_server,
+    record_http_request,
+    record_post_generation,
+    update_system_health,
+)
 from services.orchestrator.vector import ensure_posts_collection
 
 # ── constants & wiring ────────────────────────────────────────────────────────
@@ -69,9 +74,19 @@ class Status(TypedDict):
 # ---------------------------------------------------------------------------
 @app.post("/task")
 async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> Status:
-    payload = req.model_dump(exclude_none=True) | {"task_id": str(uuid.uuid4())}
-    bg.add_task(celery_app.send_task, "tasks.queue_post", args=[payload])
-    return {"status": "queued"}
+    with record_http_request("orchestrator", "POST", "/task"):
+        try:
+            payload = req.model_dump(exclude_none=True) | {"task_id": str(uuid.uuid4())}
+            bg.add_task(celery_app.send_task, "tasks.queue_post", args=[payload])
+
+            # Record post generation attempt
+            record_post_generation(req.persona_id, "success")
+
+            return {"status": "queued"}
+        except Exception:
+            # Record failed post generation
+            record_post_generation(req.persona_id, "failed")
+            raise
 
 
 @celery_app.task(name="tasks.run_persona")  # type: ignore[misc]
@@ -87,9 +102,20 @@ def run_persona(cfg: dict[str, Any], user_input: str) -> None:
 @app.get("/metrics")
 async def metrics() -> Response:
     """Prometheus scrape endpoint (FastAPI-served)."""
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    with record_http_request("orchestrator", "GET", "/metrics"):
+        return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/health")
 async def health() -> Status:
-    return {"status": "ok"}
+    with record_http_request("orchestrator", "GET", "/health"):
+        # Update system health metrics
+        update_system_health("api", "orchestrator", True)
+        update_system_health(
+            "database", "orchestrator", True
+        )  # Could check actual DB health
+        update_system_health(
+            "queue", "orchestrator", True
+        )  # Could check RabbitMQ health
+
+        return {"status": "ok"}

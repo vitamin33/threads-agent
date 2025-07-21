@@ -20,7 +20,13 @@ from typing import Any, NotRequired, TypedDict
 import openai
 from langgraph.graph import END, START, StateGraph
 
-from services.common.metrics import LLM_TOKENS_TOTAL, record_latency
+from services.common.metrics import (
+    LLM_TOKENS_TOTAL,
+    record_error,
+    record_latency,
+    record_openai_cost,
+    update_content_quality,
+)
 
 # ───────────────────────── optional PEFT support ──────────────────────────
 PeftModel: Any  # forward declaration for static checkers
@@ -78,8 +84,8 @@ class FlowState(TypedDict, total=False):
 
 
 # ─────────────────────────── helper funcs ──────────────────────────────
-async def _llm(model: str, prompt: str) -> str:
-    """One-shot OpenAI call (returns stub when offline)."""
+async def _llm(model: str, prompt: str, content_type: str = "unknown") -> str:
+    """One-shot OpenAI call with enhanced metrics (returns stub when offline)."""
     if _MOCK_MODE:
         return "MOCK"
     if _OFFLINE:
@@ -89,16 +95,92 @@ async def _llm(model: str, prompt: str) -> str:
 
     # measure the call itself
     with record_latency("llm"):
-        resp = await openai_client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            resp = await openai_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+            )
 
-    # count total tokens (guard -- usage can be None in tests)
-    if resp.usage:
-        LLM_TOKENS_TOTAL.labels(model=model).inc(resp.usage.total_tokens)
-    print("<< got openai response")
-    return (resp.choices[0].message.content or "").strip()
+            # Extract response content
+            content = (resp.choices[0].message.content or "").strip()
+
+            # Enhanced metrics collection
+            if resp.usage:
+                total_tokens = resp.usage.total_tokens
+                input_tokens = resp.usage.prompt_tokens
+                output_tokens = resp.usage.completion_tokens
+
+                # Count total tokens (existing metric)
+                LLM_TOKENS_TOTAL.labels(model=model).inc(total_tokens)
+
+                # Calculate and record cost
+                cost_usd = _calculate_openai_cost(model, input_tokens, output_tokens)
+                record_openai_cost(model, "completion", cost_usd)
+
+                # Basic quality scoring based on response length and coherence
+                quality_score = _calculate_content_quality(content, content_type)
+
+                print(
+                    f"<< got openai response: {total_tokens} tokens, ${cost_usd:.6f} cost, quality: {quality_score:.3f}"
+                )
+
+            return content
+
+        except Exception as e:
+            record_error("persona_runtime", f"openai_{model}_error", "error")
+            print(f"❌ OpenAI API error: {e}")
+            raise
+
+
+def _calculate_openai_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Calculate OpenAI API cost in USD based on current pricing."""
+    # Pricing as of 2024 (per 1000 tokens)
+    pricing = {
+        "gpt-4o": {"input": 0.005, "output": 0.015},
+        "gpt-3.5-turbo-0125": {"input": 0.0005, "output": 0.0015},
+        "gpt-3.5-turbo": {"input": 0.0015, "output": 0.002},  # Legacy pricing
+    }
+
+    model_pricing = pricing.get(model, {"input": 0.001, "output": 0.002})  # Fallback
+
+    input_cost = (input_tokens / 1000) * model_pricing["input"]
+    output_cost = (output_tokens / 1000) * model_pricing["output"]
+
+    return input_cost + output_cost
+
+
+def _calculate_content_quality(content: str, content_type: str) -> float:
+    """Simple content quality scoring (0-1 scale)."""
+    if not content or content == "MOCK":
+        return 0.5  # Neutral for test mode
+
+    score = 0.5  # Base score
+
+    # Length scoring (appropriate length gets bonus)
+    length = len(content)
+    if content_type == "hook":
+        # Hooks should be concise (50-200 chars ideal)
+        if 50 <= length <= 200:
+            score += 0.3
+        elif length < 20 or length > 400:
+            score -= 0.2
+    elif content_type == "body":
+        # Body should be substantial (200-800 chars ideal)
+        if 200 <= length <= 800:
+            score += 0.3
+        elif length < 100 or length > 1200:
+            score -= 0.2
+
+    # Basic coherence scoring
+    sentences = content.count(".") + content.count("!") + content.count("?")
+    if sentences >= 1:
+        score += 0.1
+
+    # Engagement elements
+    if any(char in content for char in ["?", "!", ":"]):
+        score += 0.1
+
+    return max(0.0, min(1.0, score))
 
 
 async def _moderate(content: str) -> bool:
@@ -134,13 +216,30 @@ def build_dag_from_persona(persona_id: str) -> Any | None:
 
     # 2️⃣ hook LLM
     async def hook_llm(state: FlowState) -> FlowState:
-        hook = await _llm(HOOK_MODEL, state.get("text", ""))
+        hook = await _llm(HOOK_MODEL, state.get("text", ""), "hook")
+
+        # Record content quality metrics
+        quality_score = _calculate_content_quality(hook, "hook")
+        update_content_quality(persona_id, "hook", quality_score)
+
         return {"draft": {"hook": hook}}
 
     # 3️⃣ body LLM
     async def body_llm(state: FlowState) -> FlowState:
         prompt = f"{state.get('draft', {}).get('hook', '')}\n\nWrite a detailed post:"
-        body = await _llm(BODY_MODEL, prompt)
+        body = await _llm(BODY_MODEL, prompt, "body")
+
+        # Record content quality metrics
+        quality_score = _calculate_content_quality(body, "body")
+        update_content_quality(persona_id, "body", quality_score)
+
+        # Calculate combined quality score
+        hook_quality = _calculate_content_quality(
+            state.get("draft", {}).get("hook", ""), "hook"
+        )
+        combined_quality = (hook_quality + quality_score) / 2
+        update_content_quality(persona_id, "combined", combined_quality)
+
         return {"draft": {"body": body}}
 
     # 4️⃣ guard-rail

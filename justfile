@@ -299,6 +299,34 @@ memory-report: # generate comprehensive memory analysis report
 memory-sync: # sync memory system with workflow and learning systems
 	./scripts/plan-memory.sh sync
 
+# ---------- Claude Code Session Management ----------
+claude-start TASK="general development": # start new Claude session with tracking
+	./scripts/claude-session-tracker.sh start
+	@echo "📝 Claude session started for: {{TASK}}"
+	@echo "Use 'just claude-end' when session is complete"
+
+claude-end SUMMARY="Claude Code session completed": # end Claude session and auto-commit
+	./scripts/claude-session-tracker.sh end "{{SUMMARY}}"
+
+claude-status: # show current Claude session status
+	./scripts/claude-session-tracker.sh status
+
+claude-sessions LIMIT="10": # list recent Claude sessions
+	./scripts/claude-session-tracker.sh list {{LIMIT}}
+
+claude-ship SUMMARY="Claude Code changes": # quick commit current Claude session changes
+	@echo "🚀 Committing Claude Code session changes..."
+	./scripts/claude-session-tracker.sh end "{{SUMMARY}}"
+
+claude-watch-start: # start automatic file watcher for Claude sessions
+	./scripts/claude-file-watcher.sh start
+
+claude-watch-stop: # stop automatic file watcher
+	./scripts/claude-file-watcher.sh stop
+
+claude-watch-status: # check file watcher status
+	./scripts/claude-file-watcher.sh status
+
 # ---------- CI-green commit ➜ push ➜ PR ----------
 # Usage:
 #   just ship "feat: awesome (CRA-123)"

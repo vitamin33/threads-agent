@@ -10,7 +10,16 @@ from celery import Celery, Task, shared_task
 
 from services.celery_worker.sse import run_persona
 from services.celery_worker.store import save_post, upsert_vector
-from services.common.metrics import maybe_start_metrics_server
+from services.common.metrics import (
+    maybe_start_metrics_server,
+    record_celery_task,
+    record_content_generation_latency,
+    record_database_query,
+    record_error,
+    record_post_generation,
+    record_qdrant_operation,
+    update_cost_per_post,
+)
 
 maybe_start_metrics_server()
 
@@ -48,31 +57,53 @@ def queue_post(self: Task, payload: Dict[str, Any]) -> None:  # noqa: ANN401
     user_input = payload.get("pain_statement") or payload.get("trend_snippet") or ""
     task_type = payload.get("task_type", "post")
 
-    try:
-        # 1️⃣  persona-runtime
-        draft = run_persona(PERSONA_RUNTIME_URL, persona, user_input, headers=hdr)
-        hook, body = draft["hook"], draft["body"]
+    with record_celery_task("tasks.queue_post"):
+        with record_content_generation_latency(persona, "total"):
+            try:
+                # 1️⃣  persona-runtime (content generation)
+                with record_content_generation_latency(persona, "hook"):
+                    draft = run_persona(
+                        PERSONA_RUNTIME_URL, persona, user_input, headers=hdr
+                    )
+                    hook, body = draft["hook"], draft["body"]
 
-        # 2️⃣  Postgres
-        row_id = save_post(
-            {
-                "persona_id": persona,
-                "hook": hook,
-                "body": body,
-            }
-        )
+                # 2️⃣  Postgres (database storage)
+                with record_database_query("postgres", "insert"):
+                    row_id = save_post(
+                        {
+                            "persona_id": persona,
+                            "hook": hook,
+                            "body": body,
+                        }
+                    )
 
-        # 3️⃣  Qdrant
-        upsert_vector(persona, row_id, [0.0] * 128)
+                # 3️⃣  Qdrant (vector storage)
+                collection_name = f"posts_{persona}"
+                with record_qdrant_operation("upsert", collection_name):
+                    upsert_vector(persona, row_id, [0.0] * 128)
 
-        # 4️⃣  Threads stub
-        topic = f"{persona} – {task_type}"
-        _publish_to_threads(topic, f"{hook}\n\n{body}", hdr)
+                # 4️⃣  Threads stub (publishing)
+                topic = f"{persona} – {task_type}"
+                _publish_to_threads(topic, f"{hook}\n\n{body}", hdr)
 
-        print(f"✅  task {task_id}: stored row {row_id} & published draft", flush=True)
+                # Record successful post generation
+                record_post_generation(persona, "success")
 
-    except Exception as exc:
-        print(f"❌  task {task_id} failed:", exc, flush=True)
-        raise self.retry(exc=exc, countdown=2**self.request.retries)
+                # Estimate cost per post (simplified - could be enhanced)
+                estimated_cost = 0.015  # $0.015 estimated per post
+                update_cost_per_post(persona, estimated_cost)
+
+                print(
+                    f"✅  task {task_id}: stored row {row_id} & published draft",
+                    flush=True,
+                )
+
+            except Exception as exc:
+                # Record failed post generation and error details
+                record_post_generation(persona, "failed")
+                record_error("celery_worker", type(exc).__name__, "error")
+
+                print(f"❌  task {task_id} failed:", exc, flush=True)
+                raise self.retry(exc=exc, countdown=2**self.request.retries)
 
     time.sleep(0.05)
