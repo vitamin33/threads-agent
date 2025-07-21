@@ -1,0 +1,24 @@
+{
+  "competitors": [
+    {
+      "name": "BufferBot",
+      "website": "https://bufferbot.com",
+      "social_handle": "@bufferbot",
+      "monitoring_focus": "marketing",
+      "added": "2025-07-21T09:48:43Z",
+      "status": "active"
+    }
+  ],
+  "updates": [
+    {
+      "competitor": "BufferBot",
+      "timestamp": "2025-07-21T09:48:48Z",
+      "type": "pricing",
+      "description": "Reduced pricing by 25%",
+      "impact_level": "high",
+      "source": "news",
+      "month": "2025-07",
+      "week": "2025-W29"
+    }
+  ]
+}

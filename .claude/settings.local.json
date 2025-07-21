@@ -55,7 +55,18 @@
       "Bash(git pull:*)",
       "Bash(OPENAI_MOCK=1 PYTHONPATH=$PWD:$PYTHONPATH pytest -k \"test_draft_post_happy_path\" -s)",
       "Bash(OPENAI_MOCK=1 PYTHONPATH=$PWD:$PYTHONPATH python -c \"\nimport os\nos.environ[''OPENAI_MOCK''] = ''1''\nfrom services.common.openai_wrapper import chat, _usd\nresult = chat(''gpt-4o'', ''test prompt'')\ncost = _usd(''gpt-4o'', 10, 10)\nprint(f''Result: {result}'')\nprint(f''Cost: {cost}'')\nprint(''OPENAI_MOCK mode working correctly!'')\n\")",
-      "Bash(OPENAI_MOCK=1 just e2e)"
+      "Bash(OPENAI_MOCK=1 just e2e)",
+      "Bash(jq:*)",
+      "Bash(cat:*)",
+      "Bash(./scripts/command-center.sh generate:*)",
+      "Bash(rm:*)",
+      "Bash(./debug-cc.sh:*)",
+      "Bash(quality_data='{\"\"\"\"quality_score\"\"\"\": 88}')",
+      "Bash(echo \"$quality_data\")",
+      "Bash(./scripts/command-center-simple.sh generate:*)",
+      "Bash(./scripts/cc-working.sh generate:*)",
+      "Bash(./scripts/cc-final.sh:*)",
+      "Bash(./test-cc.sh:*)"
     ],
     "deny": []
   }
