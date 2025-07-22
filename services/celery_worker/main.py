@@ -33,6 +33,7 @@ POSTGRES_DSN = os.getenv(
     "POSTGRES_DSN", "postgresql://postgres:pass@postgres:5432/postgres"
 )
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
+VIRAL_ENGINE_URL = os.getenv("VIRAL_ENGINE_URL", "http://viral-engine:8080")
 
 app = Celery("worker", broker=BROKER_URL)
 
@@ -70,24 +71,73 @@ def queue_post(self: Task, payload: Dict[str, Any]) -> None:  # noqa: ANN401
                         )
                         hook, body = draft["hook"], draft["body"]
 
-                    # 2️⃣  Postgres (database storage)
-                    with record_database_query("postgres", "insert"):
-                        row_id = save_post(
-                            {
+                    # 2️⃣  Viral Engine Pipeline (quality gate + reply magnetizer)
+                    content = f"{hook}\n\n{body}"
+                    try:
+                        pipeline_response = httpx.post(
+                            f"{VIRAL_ENGINE_URL}/pipeline/process",
+                            json={
+                                "content": content,
                                 "persona_id": persona,
-                                "hook": hook,
-                                "body": body,
-                            }
+                                "enable_hook_optimization": False,  # Already optimized by persona
+                                "enable_reply_magnets": True,
+                                "metadata": {
+                                    "task_id": task_id,
+                                    "task_type": task_type,
+                                },
+                            },
+                            headers=hdr,
+                            timeout=10.0,
                         )
+                        pipeline_response.raise_for_status()
 
-                    # 3️⃣  Qdrant (vector storage)
+                        pipeline_result = pipeline_response.json()
+
+                        if not pipeline_result["success"]:
+                            # Content rejected by quality gate
+                            rejection_reason = pipeline_result.get(
+                                "rejection_reason", "Quality below threshold"
+                            )
+                            print(
+                                f"⚠️  Content rejected by quality gate: {rejection_reason}"
+                            )
+                            record_post_generation(persona, "blocked")
+
+                            # Could retry with different approach or notify for human review
+                            return
+
+                        # Use enhanced content with reply magnets
+                        final_content = pipeline_result["final_content"]
+                        quality_score = pipeline_result["pipeline_stages"][
+                            "quality_gate"
+                        ]["quality_score"]
+
+                    except Exception as e:
+                        print(
+                            f"⚠️  Viral engine pipeline failed, using original content: {e}"
+                        )
+                        final_content = content
+                        quality_score = None
+
+                    # 3️⃣  Postgres (database storage)
+                    with record_database_query("postgres", "insert"):
+                        post_data = {
+                            "persona_id": persona,
+                            "hook": hook,
+                            "body": body,
+                        }
+                        if quality_score is not None:
+                            post_data["quality_score"] = quality_score
+                        row_id = save_post(post_data)
+
+                    # 4️⃣  Qdrant (vector storage)
                     collection_name = f"posts_{persona}"
                     with record_qdrant_operation("upsert", collection_name):
                         upsert_vector(persona, row_id, [0.0] * 128)
 
-                    # 4️⃣  Threads stub (publishing)
+                    # 5️⃣  Threads stub (publishing)
                     topic = f"{persona} – {task_type}"
-                    _publish_to_threads(topic, f"{hook}\n\n{body}", hdr)
+                    _publish_to_threads(topic, final_content, hdr)
 
                     # Record successful post generation
                     record_post_generation(persona, "success")
