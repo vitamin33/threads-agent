@@ -23,6 +23,7 @@ from langgraph.graph import END, START, StateGraph
 from services.common.metrics import (
     LLM_TOKENS_TOTAL,
     record_error,
+    record_hourly_openai_cost,
     record_latency,
     record_openai_cost,
     update_content_quality,
@@ -116,6 +117,7 @@ async def _llm(model: str, prompt: str, content_type: str = "unknown") -> str:
                 # Calculate and record cost
                 cost_usd = _calculate_openai_cost(model, input_tokens, output_tokens)
                 record_openai_cost(model, "completion", cost_usd)
+                record_hourly_openai_cost(model, cost_usd)
 
                 # Basic quality scoring based on response length and coherence
                 quality_score = _calculate_content_quality(content, content_type)

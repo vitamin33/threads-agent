@@ -48,6 +48,19 @@ CONTENT_QUALITY_SCORE = Gauge(
     ["persona_id", "content_type"],  # content_type: hook, body, combined
 )
 
+POSTS_ENGAGEMENT_RATE = Histogram(
+    "posts_engagement_rate",
+    "Actual engagement rates of published posts",
+    ["persona_id"],
+    buckets=[0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.15, 0.20, 0.30],
+)
+
+REVENUE_PROJECTION_MONTHLY = Gauge(
+    "revenue_projection_monthly",
+    "Monthly revenue projection in USD",
+    ["source"],  # source: current_run_rate, forecast, target
+)
+
 # ───── API Metrics (RED Methodology) ─────────────────────────────────────────────────
 HTTP_REQUESTS_TOTAL = Counter(
     "http_requests_total",
@@ -124,8 +137,22 @@ OPENAI_API_COSTS = Counter(
     ["model", "operation"],  # operation: completion, embedding, moderation
 )
 
+OPENAI_COST_HOURLY = Histogram(
+    "openai_cost_hourly_dollars",
+    "OpenAI costs per hour in USD",
+    ["model"],
+    buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0],
+)
+
 COST_PER_POST = Gauge(
     "cost_per_post_usd", "Cost in USD to generate each post", ["persona_id"]
+)
+
+COST_PER_FOLLOW = Histogram(
+    "cost_per_follow_dollars",
+    "Cost per follower acquisition in USD",
+    ["persona_id"],
+    buckets=[0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0],
 )
 
 # ───── Performance & Reliability ─────────────────────────────────────────────────────
@@ -149,6 +176,19 @@ SYSTEM_HEALTH_STATUS = Gauge(
     "system_health_status",
     "System component health status (1=healthy, 0=unhealthy)",
     ["component", "service"],  # component: database, queue, api, llm
+)
+
+SERVICE_UPTIME = Gauge(
+    "service_uptime_seconds",
+    "Service uptime in seconds",
+    ["service_name"],
+)
+
+ERROR_RATE_PERCENTAGE = Histogram(
+    "error_rate_percentage",
+    "Error rate percentage by service",
+    ["service_name", "error_type"],
+    buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0],
 )
 
 
@@ -264,6 +304,17 @@ def record_qdrant_operation(
         ).observe(duration)
 
 
+@contextmanager
+def record_business_metric(metric_name: str) -> Generator[None, None, None]:
+    """Generic context manager for tracking business metrics."""
+    try:
+        yield
+    except Exception:
+        # Record business metric failure
+        record_error("business_metrics", f"{metric_name}_failure", "error")
+        raise
+
+
 def record_post_generation(
     persona_id: str, status: Literal["success", "failed", "blocked"]
 ) -> None:
@@ -324,6 +375,40 @@ def update_system_health(component: str, service: str, healthy: bool) -> None:
     )
 
 
+def record_engagement_rate(persona_id: str, engagement_rate: float) -> None:
+    """Record actual engagement rate for a published post."""
+    POSTS_ENGAGEMENT_RATE.labels(persona_id=persona_id).observe(engagement_rate)
+
+
+def update_revenue_projection(source: str, amount_usd: float) -> None:
+    """Update monthly revenue projection."""
+    REVENUE_PROJECTION_MONTHLY.labels(source=source).set(amount_usd)
+
+
+def record_hourly_openai_cost(model: str, cost_usd: float) -> None:
+    """Record OpenAI cost for hourly aggregation."""
+    OPENAI_COST_HOURLY.labels(model=model).observe(cost_usd)
+
+
+def record_cost_per_follow(persona_id: str, cost_usd: float) -> None:
+    """Record cost per follower acquisition."""
+    COST_PER_FOLLOW.labels(persona_id=persona_id).observe(cost_usd)
+
+
+def update_service_uptime(service_name: str, uptime_seconds: float) -> None:
+    """Update service uptime in seconds."""
+    SERVICE_UPTIME.labels(service_name=service_name).set(uptime_seconds)
+
+
+def record_error_rate_percentage(
+    service_name: str, error_type: str, error_percentage: float
+) -> None:
+    """Record error rate as a percentage."""
+    ERROR_RATE_PERCENTAGE.labels(
+        service_name=service_name, error_type=error_type
+    ).observe(error_percentage)
+
+
 def maybe_start_metrics_server(port: int = 9090) -> None:
     """
     Idempotently start the Prometheus exposition HTTP server.
@@ -351,6 +436,10 @@ def _initialize_default_metrics() -> None:
         0.0
     )
     COST_PER_POST.labels(persona_id="ai-jesus").set(0.0)
+    POSTS_ENGAGEMENT_RATE.labels(persona_id="ai-jesus").observe(0.0)
+    REVENUE_PROJECTION_MONTHLY.labels(source="current_run_rate").set(0.0)
+    OPENAI_COST_HOURLY.labels(model="gpt-4o").observe(0.0)
+    COST_PER_FOLLOW.labels(persona_id="ai-jesus").observe(0.0)
 
     # Initialize RED methodology metrics
     HTTP_REQUESTS_TOTAL.labels(
@@ -365,3 +454,10 @@ def _initialize_default_metrics() -> None:
     CELERY_TASKS_TOTAL.labels(task_name="tasks.queue_post", status="success").inc(0)
     CELERY_TASK_DURATION.labels(task_name="tasks.queue_post").observe(0)
     DATABASE_QUERY_DURATION.labels(database="postgres", operation="insert").observe(0)
+
+    # Initialize service health metrics
+    SERVICE_UPTIME.labels(service_name="orchestrator").set(0)
+    ERROR_RATE_PERCENTAGE.labels(
+        service_name="orchestrator", error_type="api_error"
+    ).observe(0.0)
+    SYSTEM_HEALTH_STATUS.labels(component="api", service="orchestrator").set(1)
