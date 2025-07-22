@@ -89,6 +89,12 @@
       "type": "market_timing",
       "description": "Content Moderation System",
       "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/market/timing_Content_Moderation_System_20250721_123911.json"
+    },
+    {
+      "timestamp": "2025-07-22T13:30:49Z",
+      "type": "roi_analysis",
+      "description": "complete CRA-223",
+      "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_complete_CRA-223_20250722_163049.json"
     }
   ]
 }

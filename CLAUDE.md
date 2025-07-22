@@ -233,7 +233,19 @@ class Task(Base):
 - **Key Metrics**:
   - `request_latency_seconds{phase}` - Pipeline phase timing
   - `llm_tokens_total{model}` - Token usage by model
-- **Helper**: `services.common.metrics.record_latency()`
+  - `posts_generated_total{persona_id,status}` - Total posts by persona and outcome
+  - `posts_engagement_rate{persona_id}` - Actual engagement rates
+  - `revenue_projection_monthly{source}` - Monthly revenue projections
+  - `cost_per_post_usd{persona_id}` - Cost per post generation
+  - `cost_per_follow_dollars{persona_id}` - Cost per follower acquisition
+  - `openai_cost_hourly_dollars{model}` - Hourly OpenAI costs
+  - `service_uptime_seconds{service_name}` - Service uptime tracking
+  - `error_rate_percentage{service_name,error_type}` - Error rate percentages
+- **Helpers**: 
+  - `services.common.metrics.record_latency()`
+  - `services.common.metrics.record_business_metric()`
+  - `services.common.metrics.record_engagement_rate()`
+  - `services.common.metrics.update_revenue_projection()`
 
 ### Tracing (Jaeger)
 - **UI**: `just jaeger-ui` → http://localhost:16686

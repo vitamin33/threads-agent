@@ -110,7 +110,12 @@
       "Bash(PYTHONPATH=. pytest -m \"not e2e\" -q)",
       "Bash(PYTHONPATH=. pytest tests/e2e/test_metrics.py -v --tb=short)",
       "Bash(PYTHONPATH=. pytest tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v --tb=short)",
-      "Bash(kubectl exec:*)"
+      "Bash(kubectl exec:*)",
+      "Bash(grep:*)",
+      "mcp__linear__linear_getInitiatives",
+      "mcp__linear__linear_getProjectIssues",
+      "Bash(PYTHONPATH=. pytest services/common/tests/test_enhanced_metrics.py -v)",
+      "Bash(PYTHONPATH=. pytest services/common/tests/test_enhanced_metrics.py::test_business_metrics -v)"
     ],
     "deny": []
   }

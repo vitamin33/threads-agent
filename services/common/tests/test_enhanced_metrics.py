@@ -9,9 +9,16 @@ from prometheus_client import REGISTRY
 from services.common.metrics import (
     CONTENT_QUALITY_SCORE,
     POSTS_GENERATED_TOTAL,
+    record_business_metric,
+    record_cost_per_follow,
+    record_engagement_rate,
+    record_error_rate_percentage,
+    record_hourly_openai_cost,
     record_http_request,
     record_post_generation,
     update_content_quality,
+    update_revenue_projection,
+    update_service_uptime,
 )
 
 
@@ -92,10 +99,67 @@ def test_metrics_registration() -> None:
         ), f"Missing metric: {metric_name} in {metric_names}"
 
 
+def test_business_metrics() -> None:
+    """Test new business metrics added for CRA-223."""
+    # Test engagement rate recording
+    record_engagement_rate("ai-jesus", 0.065)
+    record_engagement_rate("ai-elon", 0.082)
+
+    # Test revenue projection
+    update_revenue_projection("current_run_rate", 5000.0)
+    update_revenue_projection("forecast", 8000.0)
+    update_revenue_projection("target", 20000.0)
+
+    # Test hourly OpenAI cost tracking
+    record_hourly_openai_cost("gpt-4o", 5.25)
+    record_hourly_openai_cost("gpt-3.5-turbo", 1.50)
+
+    # Test cost per follow
+    record_cost_per_follow("ai-jesus", 0.012)
+    record_cost_per_follow("ai-elon", 0.018)
+
+    # All should execute without errors
+    assert True
+
+
+def test_service_health_metrics() -> None:
+    """Test service health and uptime metrics."""
+    # Test service uptime
+    update_service_uptime("orchestrator", 3600.0)
+    update_service_uptime("celery-worker", 3550.0)
+
+    # Test error rate percentage
+    record_error_rate_percentage("orchestrator", "api_error", 0.5)
+    record_error_rate_percentage("celery-worker", "task_failure", 2.3)
+
+    # All should execute without errors
+    assert True
+
+
+def test_business_metric_context_manager() -> None:
+    """Test business metric tracking context manager."""
+    # Test successful business operation
+    try:
+        with record_business_metric("post_generation"):
+            pass  # Simulate successful operation
+    except Exception:
+        pytest.fail("Business metric context manager should not raise on success")
+
+    # Test operation with exception
+    try:
+        with record_business_metric("revenue_calculation"):
+            raise ValueError("Business logic error")
+    except ValueError:
+        pass  # Expected
+
+
 if __name__ == "__main__":
     # Run basic verification
     test_post_generation_metrics()
     test_content_quality_metrics()
     test_http_request_context_manager()
     test_metrics_registration()
+    test_business_metrics()
+    test_service_health_metrics()
+    test_business_metric_context_manager()
     print("✅ All metric tests passed!")

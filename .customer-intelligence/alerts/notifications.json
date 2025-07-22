@@ -23,6 +23,14 @@
       "severity": "medium",
       "source": "system",
       "status": "active"
+    },
+    {
+      "timestamp": "2025-07-22T13:28:43Z",
+      "type": "daily_insight",
+      "message": "No user activity detected today",
+      "severity": "medium",
+      "source": "system",
+      "status": "active"
     }
   ]
 }

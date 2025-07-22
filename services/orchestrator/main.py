@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 import uuid
 from typing import Any, TypedDict
 
@@ -19,6 +20,7 @@ from services.common.metrics import (
     maybe_start_metrics_server,
     record_http_request,
     record_post_generation,
+    update_service_uptime,
     update_system_health,
 )
 from services.orchestrator.vector import ensure_posts_collection
@@ -32,6 +34,9 @@ celery_app = Celery("orchestrator", broker=BROKER_URL)
 maybe_start_metrics_server()  # Prom-client HTTP at :9090
 
 logger = logging.getLogger(__name__)
+
+# Track service startup time for uptime calculation
+_service_start_time = time.time()
 
 
 # ---------------------------------------------------------------------------
@@ -117,5 +122,9 @@ async def health() -> Status:
         update_system_health(
             "queue", "orchestrator", True
         )  # Could check RabbitMQ health
+
+        # Update service uptime
+        current_uptime = time.time() - _service_start_time
+        update_service_uptime("orchestrator", current_uptime)
 
         return {"status": "ok"}
