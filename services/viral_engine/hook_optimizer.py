@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from cachetools import LRUCache
+from cachetools import LRUCache  # type: ignore[import-untyped]
 from prometheus_client import Counter, Histogram
 
 # Metrics for monitoring
@@ -242,7 +242,7 @@ class ViralHookEngine:
 
         return str(filled_template)
 
-    @HOOK_GENERATION_LATENCY.time()
+    @HOOK_GENERATION_LATENCY.time()  # type: ignore[misc]
     async def optimize_hook(
         self,
         persona_id: str,
