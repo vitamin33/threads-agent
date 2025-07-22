@@ -12,6 +12,12 @@ celeryWorker:
     repository: celery-worker
     tag: local
 
+viralEngine:
+  enabled: true
+  image:
+    repository: viral-engine
+    tag: local
+
 personaRuntime:
   image:
     repository: persona-runtime
@@ -26,6 +32,8 @@ personaRuntime:
       value: /models/lora.safetensors
     - name: OPENAI_API_KEY   # forces stub even if the Secret still exists
       value: "test"
+    - name: VIRAL_ENGINE_URL   # viral hook optimization service
+      value: "http://viral-engine:8090"
 
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"

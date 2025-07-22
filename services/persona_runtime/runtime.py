@@ -17,6 +17,8 @@ import re
 from types import SimpleNamespace
 from typing import Any, NotRequired, TypedDict
 
+# Viral hook engine HTTP client for enhanced hook generation
+import httpx
 import openai
 from langgraph.graph import END, START, StateGraph
 
@@ -28,6 +30,16 @@ from services.common.metrics import (
     record_openai_cost,
     update_content_quality,
 )
+
+VIRAL_ENGINE_URL = os.getenv("VIRAL_ENGINE_URL")
+VIRAL_ENGINE_AVAILABLE = bool(VIRAL_ENGINE_URL)
+
+if VIRAL_ENGINE_AVAILABLE:
+    print(f"[VIRAL] ViralHookEngine HTTP client available at {VIRAL_ENGINE_URL}")
+else:
+    print(
+        "[VIRAL] ViralHookEngine not available - no VIRAL_ENGINE_URL environment variable"
+    )
 
 # ───────────────────────── optional PEFT support ──────────────────────────
 PeftModel: Any  # forward declaration for static checkers
@@ -216,9 +228,46 @@ def build_dag_from_persona(persona_id: str) -> Any | None:
     def ingest(state: FlowState) -> FlowState:
         return {"text": state.get("text", "").strip()}
 
-    # 2️⃣ hook LLM
+    # 2️⃣ hook LLM (enhanced with viral patterns)
     async def hook_llm(state: FlowState) -> FlowState:
-        hook = await _llm(HOOK_MODEL, state.get("text", ""), "hook")
+        base_content = state.get("text", "")
+        hook = None
+
+        # Try viral hook optimization first
+        if VIRAL_ENGINE_AVAILABLE and VIRAL_ENGINE_URL:
+            try:
+                with record_latency("viral_hook_optimization"):
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
+                            f"{VIRAL_ENGINE_URL}/optimize-hook",
+                            json={
+                                "persona_id": persona_id,
+                                "base_content": base_content,
+                            },
+                            timeout=5.0,
+                        )
+                        response.raise_for_status()
+                        viral_result = response.json()
+
+                    # Use viral hook if it meets quality threshold
+                    if viral_result["expected_engagement_rate"] > 0.06:  # 6% threshold
+                        hook = viral_result["optimized_hooks"][0]["content"]
+                        print(
+                            f"[VIRAL] Using viral hook: {viral_result['selected_pattern']} (ER: {viral_result['expected_engagement_rate']:.3f})"
+                        )
+                    else:
+                        print(
+                            f"[VIRAL] Viral hook below threshold ({viral_result['expected_engagement_rate']:.3f}), falling back to LLM"
+                        )
+
+            except Exception as e:
+                print(f"[VIRAL] Hook optimization failed: {e}, falling back to LLM")
+                record_error("persona_runtime", "viral_hook_error", "error")
+
+        # Fall back to LLM if viral hook not available or below threshold
+        if hook is None:
+            hook = await _llm(HOOK_MODEL, base_content, "hook")
+            print("[VIRAL] Using LLM-generated hook")
 
         # Record content quality metrics
         quality_score = _calculate_content_quality(hook, "hook")

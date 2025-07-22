@@ -5,3 +5,7 @@ pydantic~=2.7            # data models (FastAPI peer)
 requests>=2.31           # already used by linear_mark_done.py
 celery~=5.4
 kombu~=5.3
+cachetools>=5.3.0        # LRU cache for viral_engine
+scikit-learn>=1.3.0      # ML for engagement predictor
+numpy>=1.24.0           # Numerical computations
+nltk>=3.8.1             # Natural language processing

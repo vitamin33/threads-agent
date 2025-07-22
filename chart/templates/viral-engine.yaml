@@ -1,0 +1,62 @@
+# File: chart/templates/viral-engine.yaml
+{{- if .Values.viralEngine.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viral-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viral-engine
+  template:
+    metadata:
+      labels:
+        app: viral-engine
+    spec:
+      containers:
+        - name: viral-engine
+          image: "{{ tpl .Values.viralEngine.image.repository $ }}:{{ tpl .Values.viralEngine.image.tag $ }}"
+          imagePullPolicy: IfNotPresent
+
+          # ───── ports ─────
+          ports:
+            - containerPort: 8090
+
+          # ───── health checks ─────
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 10
+            periodSeconds: 30
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          # ───── resources ─────
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: viral-engine
+spec:
+  selector:
+    app: viral-engine
+  ports:
+    - port: 8090
+      targetPort: 8090
+  type: ClusterIP
+{{- end }}

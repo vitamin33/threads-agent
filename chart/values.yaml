@@ -46,6 +46,12 @@ celeryWorker:
     repository: ghcr.io/threads-agent-stack/celery-worker
     tag: "0.2.0"
 
+viralEngine:
+  enabled: false                   # turn ON in dev/ci values
+  image:
+    repository: ghcr.io/threads-agent-stack/viral-engine
+    tag: "0.1.0"
+
 # ───────── generic chart knobs ─────────
 replicaCount: 1
 

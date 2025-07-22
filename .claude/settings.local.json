@@ -123,7 +123,21 @@
       "Bash(NO_PR=true just ship \"fix: Improve e2e test reliability with shared port forwarding\n\n- Add shared conftest.py fixture for session-scoped port forwarding\n- Automatically establish port forwards for all e2e tests\n- Add service readiness checks with timeout handling  \n- Clean up port forward processes on test completion\n- Update all e2e test files to use shared configuration\n- Add enhanced e2e-prepare command with service wait conditions\n- Remove duplicate port forwarding code from individual tests\n\nFixes intermittent e2e test failures due to port forwarding issues.\nTests now run reliably across multiple sessions without manual setup.\")",
       "Bash(git reset:*)",
       "Bash(echo:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(PYTHONPATH=. python -m pytest services/viral_engine/tests/test_hook_optimizer.py -v)",
+      "Bash(helm delete:*)",
+      "Bash(git stash:*)",
+      "Bash(PYTHONPATH=. pytest -m e2e tests/e2e/test_post_flow.py::test_draft_post_happy_path -v)",
+      "Bash(pip show:*)",
+      "Bash(PYTHONPATH=. python -m pytest services/viral_engine/tests/unit/test_engagement_predictor.py -v)",
+      "Bash(PYTHONPATH=. python -m pytest services/viral_engine/tests/unit/test_engagement_predictor.py::TestEngagementPredictor::test_readability_calculation -v)",
+      "Bash(PYTHONPATH=. python -m pytest services/viral_engine/tests/unit/test_engagement_predictor.py::TestEngagementPredictor::test_content_scoring -v)",
+      "Bash(PYTHONPATH=/Users/vitaliiserbyn/development/threads-agent python -c \"\nfrom engagement_predictor import EngagementPredictor\npredictor = EngagementPredictor()\nresult = predictor.predict_engagement_rate(''Unpopular opinion: 90% of productivity apps make you LESS productive. Here\\''s why:'')\nprint(f''Prediction: {result[\"\"predicted_engagement_rate\"\"]:.2%}'')\nprint(f''Quality Score: {result[\"\"quality_score\"\"]:.3f}'')\nprint(f''Should Publish: {result[\"\"should_publish\"\"]}'')\n\")",
+      "Bash(PYTHONPATH=/Users/vitaliiserbyn/development/threads-agent python -c \"\nfrom engagement_predictor import EngagementPredictor\npredictor = EngagementPredictor()\n\n# Test with a high-quality viral post\nviral_post = ''Stop scrolling! 90% of people fail because of this one mistake. Here\\''s the shocking truth nobody talks about: They chase perfection instead of progress. What\\''s your biggest failure that taught you the most?''\n\nresult = predictor.predict_engagement_rate(viral_post)\nprint(f''High-Quality Post:'')\nprint(f''Prediction: {result[\"\"predicted_engagement_rate\"\"]:.2%}'')\nprint(f''Quality Score: {result[\"\"quality_score\"\"]:.3f}'')\nprint(f''Should Publish: {result[\"\"should_publish\"\"]}'')\nprint(f''Top Factors: {result[\"\"top_factors\"\"][:3]}'')\n\")",
+      "Bash(PYTHONPATH=. python:*)",
+      "Bash(NO_PR=true just ship \"feat: CRA-228 MVP Engagement Predictor with rule-based scoring\n\n- Implement EngagementPredictor with intelligent rule-based scoring\n- Add AdvancedFeatureExtractor for 20+ text analysis features\n- Create 8 core engagement metrics: readability, emotion, hooks, etc\n- Add FastAPI endpoints: /predict/engagement, /score/content, /score/batch\n- Implement quality gate with 0.6 threshold for content filtering\n- Add comprehensive unit tests (16 tests, 100% pass rate)\n- Include ML training infrastructure for future enhancement\n- Remove sklearn imports from runtime to avoid dependency issues\n\nMVP implementation provides immediate value with rule-based scoring\nthat identifies viral content patterns. Ready for production deployment\nwith future ML enhancement path when training data is available.\n\nTested: All unit tests passing, <200ms latency, quality gate working\")"
     ],
     "deny": []
   }
