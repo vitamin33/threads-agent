@@ -15,7 +15,7 @@ bootstrap:          # spin local k3d
 images:
 	@echo "🐳  building dev images …"
 
-	for svc in orchestrator celery_worker persona_runtime fake_threads; do \
+	for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine; do \
 		docker build -f services/${svc}/Dockerfile -t ${svc//_/-}:local .; \
 	done
 
@@ -26,12 +26,12 @@ images:
 	docker pull qdrant/qdrant:v1.9.4
 	k3d image import qdrant/qdrant:v1.9.4 -c dev
 
-	for img in orchestrator celery-worker persona-runtime fake-threads; do \
+	for img in orchestrator celery-worker persona-runtime fake-threads viral-engine; do \
 		k3d image import ${img}:local -c dev; \
 	done
 
 	@echo "🔍  images inside k3d nodes:"
-	docker exec k3d-dev-agent-0 crictl images | grep -E 'orchestrator|celery|persona|fake'
+	docker exec k3d-dev-agent-0 crictl images | grep -E 'orchestrator|celery|persona|fake|viral'
 
 deploy-dev TIMEOUT="360s":
 	@bash -ceu 'extra=""; [ -f chart/values-dev.local.yaml ] && extra="-f chart/values-dev.local.yaml"; \

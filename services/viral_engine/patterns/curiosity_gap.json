@@ -1,0 +1,119 @@
+{
+  "category": "curiosity_gap",
+  "description": "Incomplete information loops that create curiosity and drive engagement",
+  "avg_engagement_rate": 0.091,
+  "best_times": ["lunch", "afternoon"],
+  "target_audience": ["general", "professionals", "learners"],
+  "patterns": [
+    {
+      "id": "curiosity_001",
+      "template": "I {action} for {time_period}. The results? {teaser}",
+      "variables": ["action", "time_period", "teaser"],
+      "avg_er": 0.098,
+      "examples": [
+        "I tracked my attention for 30 days. The results? Mind-blowing.",
+        "I cold-emailed 100 CEOs for career advice. The results? Surprising.",
+        "I used AI to write all my emails for a month. The results? Game-changing."
+      ]
+    },
+    {
+      "id": "curiosity_002",
+      "template": "The secret to {desired_outcome}? It's not what you think.",
+      "variables": ["desired_outcome"],
+      "avg_er": 0.089,
+      "examples": [
+        "The secret to productivity? It's not what you think.",
+        "The secret to networking? It's not what you think.", 
+        "The secret to getting hired? It's not what you think."
+      ]
+    },
+    {
+      "id": "curiosity_003",
+      "template": "What I learned from {experience} will shock you:",
+      "variables": ["experience"],
+      "avg_er": 0.092,
+      "examples": [
+        "What I learned from failing 3 startups will shock you:",
+        "What I learned from interviewing 50 millionaires will shock you:",
+        "What I learned from quitting social media will shock you:"
+      ]
+    },
+    {
+      "id": "curiosity_004", 
+      "template": "There's something {authority_figure} don't want you to know about {topic}:",
+      "variables": ["authority_figure", "topic"],
+      "avg_er": 0.087,
+      "examples": [
+        "There's something VCs don't want you to know about fundraising:",
+        "There's something universities don't want you to know about education:",
+        "There's something bosses don't want you to know about promotions:"
+      ]
+    },
+    {
+      "id": "curiosity_005",
+      "template": "The {number} {thing} that changed my {area}:",
+      "variables": ["number", "thing", "area"],
+      "avg_er": 0.094,
+      "examples": [
+        "The 3 books that changed my career:",
+        "The 5 habits that changed my productivity:",
+        "The 1 question that changed my relationships:"
+      ]
+    },
+    {
+      "id": "curiosity_006",
+      "template": "Why {common_belief} is completely wrong:",
+      "variables": ["common_belief"],
+      "avg_er": 0.091,
+      "examples": [
+        "Why 'follow your passion' is completely wrong:",
+        "Why 'work hard, play hard' is completely wrong:",
+        "Why 'fake it till you make it' is completely wrong:"
+      ]
+    },
+    {
+      "id": "curiosity_007",
+      "template": "I discovered something weird about {topic}. Here's what happened:",
+      "variables": ["topic"],
+      "avg_er": 0.088,
+      "examples": [
+        "I discovered something weird about successful people. Here's what happened:",
+        "I discovered something weird about remote work. Here's what happened:",
+        "I discovered something weird about AI tools. Here's what happened:"
+      ]
+    },
+    {
+      "id": "curiosity_008",
+      "template": "The {adjective} truth about {topic} (thread):",
+      "variables": ["adjective", "topic"],
+      "avg_er": 0.095,
+      "examples": [
+        "The uncomfortable truth about networking (thread):",
+        "The surprising truth about productivity (thread):",
+        "The hidden truth about success (thread):"
+      ]
+    },
+    {
+      "id": "curiosity_009",
+      "template": "I tried {experiment} and the outcome was {unexpected_result}:",
+      "variables": ["experiment", "unexpected_result"],
+      "avg_er": 0.093,
+      "examples": [
+        "I tried working 4-hour days and the outcome was unexpected:",
+        "I tried saying no to everything and the outcome was surprising:",
+        "I tried automation for everything and the outcome was shocking:"
+      ]
+    },
+    {
+      "id": "curiosity_010",
+      "template": "Everyone thinks {common_assumption}, but here's what actually happens:",
+      "variables": ["common_assumption"],
+      "avg_er": 0.090,
+      "examples": [
+        "Everyone thinks networking is about collecting contacts, but here's what actually happens:",
+        "Everyone thinks productivity is about doing more, but here's what actually happens:",
+        "Everyone thinks success is about talent, but here's what actually happens:"
+      ]
+    }
+  ]
+}

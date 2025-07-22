@@ -5,3 +5,4 @@ pydantic~=2.7            # data models (FastAPI peer)
 requests>=2.31           # already used by linear_mark_done.py
 celery~=5.4
 kombu~=5.3
+cachetools>=5.3.0        # LRU cache for viral_engine

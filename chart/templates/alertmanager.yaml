@@ -18,7 +18,7 @@ spec:
         app: alertmanager
         {{- include "threads.labels" . | nindent 8 }}
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/templates/alertmanager-config.yaml") . | sha256sum }}
+        checksum/config: "disabled"
     spec:
       containers:
       - name: alertmanager

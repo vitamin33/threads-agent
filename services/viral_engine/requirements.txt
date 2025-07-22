@@ -1,0 +1,16 @@
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Viral analysis dependencies
+textstat>=0.7.3
+nltk>=3.8.1
+spacy>=3.7.0
+
+# Performance and caching
+redis>=5.0.0
+cachetools>=5.3.0
+
+# Common dependencies
+prometheus-client>=0.19.0

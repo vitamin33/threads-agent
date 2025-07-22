@@ -9,4 +9,5 @@ regex>=2024.5
 openai>=1.14
 redis>=5.0
 tenacity>=8.2
+httpx>=0.25.0
 

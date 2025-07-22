@@ -1,0 +1,64 @@
+{
+  "category": "social_proof",
+  "description": "Authority and numbers-based hooks that leverage credibility",
+  "avg_engagement_rate": 0.087,
+  "best_times": ["morning", "afternoon"],
+  "target_audience": ["professionals", "entrepreneurs", "general"],
+  "patterns": [
+    {
+      "id": "social_001",
+      "template": "{number} {authority_figure} do this. Here's why:",
+      "variables": ["number", "authority_figure"],
+      "avg_er": 0.092,
+      "examples": [
+        "95% of successful entrepreneurs do this. Here's why:",
+        "Every millionaire I know does this. Here's why:",
+        "100+ top performers do this. Here's why:"
+      ]
+    },
+    {
+      "id": "social_002",
+      "template": "After interviewing {number} {type_people}, I learned {insight}:",
+      "variables": ["number", "type_people", "insight"],
+      "avg_er": 0.089,
+      "examples": [
+        "After interviewing 50 CEOs, I learned this pattern:",
+        "After interviewing 100 successful people, I learned this secret:",
+        "After interviewing 25 millionaires, I learned this truth:"
+      ]
+    },
+    {
+      "id": "social_003",
+      "template": "Study of {number} {group} reveals {surprising_finding}:",
+      "variables": ["number", "group", "surprising_finding"],
+      "avg_er": 0.086,
+      "examples": [
+        "Study of 1000 entrepreneurs reveals this pattern:",
+        "Study of 500 high achievers reveals this habit:",
+        "Study of 10,000 successful people reveals this secret:"
+      ]
+    },
+    {
+      "id": "social_004",
+      "template": "{famous_person} swears by this {method}. Here's why:",
+      "variables": ["famous_person", "method"],
+      "avg_er": 0.088,
+      "examples": [
+        "Warren Buffett swears by this investment strategy. Here's why:",
+        "Elon Musk swears by this productivity method. Here's why:",
+        "Bill Gates swears by this learning technique. Here's why:"
+      ]
+    },
+    {
+      "id": "social_005",
+      "template": "Fortune 500 companies use this {strategy}. You should too:",
+      "variables": ["strategy"],
+      "avg_er": 0.090,
+      "examples": [
+        "Fortune 500 companies use this hiring strategy. You should too:",
+        "Fortune 500 companies use this innovation method. You should too:",
+        "Fortune 500 companies use this decision framework. You should too:"
+      ]
+    }
+  ]
+}
