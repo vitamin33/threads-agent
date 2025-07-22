@@ -1,0 +1,260 @@
+groups:
+# ================================
+# CRITICAL ALERTS (Immediate PagerDuty)
+# ================================
+- name: critical.rules
+  rules:
+  # Service down for more than 1 minute
+  - alert: ServiceDown
+    expr: up{job=~"threads-agent-.*"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      alert_type: service
+    annotations:
+      summary: "{{ $labels.instance }} service is down"
+      description: "{{ $labels.job }} instance {{ $labels.instance }} has been down for more than 1 minute."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-ServiceDown"
+
+  # High error rate (>5% for 5 minutes)
+  - alert: HighErrorRate
+    expr: (rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m])) * 100 > 5
+    for: 5m
+    labels:
+      severity: critical
+      alert_type: service
+    annotations:
+      summary: "High error rate on {{ $labels.service }}"
+      description: "{{ $labels.service }} has an error rate of {{ $value }}% which is above the 5% threshold for 5 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighErrorRate"
+
+  # Database connection failures
+  - alert: DatabaseConnectionFailure
+    expr: database_connections_active == 0
+    for: 30s
+    labels:
+      severity: critical
+      alert_type: database
+    annotations:
+      summary: "Database connection failure on {{ $labels.service }}"
+      description: "{{ $labels.service }} has no active database connections. Application may be unable to function."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-DatabaseConnection"
+
+  # Celery queue depth too high (>1000 messages)
+  - alert: CeleryQueueDepthHigh
+    expr: celery_queue_length > 1000
+    for: 2m
+    labels:
+      severity: critical
+      alert_type: queue
+    annotations:
+      summary: "Celery queue depth critically high"
+      description: "Celery queue {{ $labels.queue_name }} has {{ $value }} messages, which exceeds the critical threshold of 1000."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-CeleryQueue"
+
+  # Disk space >85%
+  - alert: DiskSpaceHigh
+    expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+    for: 1m
+    labels:
+      severity: critical
+      alert_type: infrastructure
+    annotations:
+      summary: "Disk space critically low on {{ $labels.instance }}"
+      description: "Disk usage on {{ $labels.instance }} at {{ $labels.mountpoint }} is {{ $value }}% which exceeds 85%."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-DiskSpace"
+
+  # Kubernetes pod crash looping
+  - alert: PodCrashLooping
+    expr: increase(kube_pod_container_status_restarts_total[1h]) > 5
+    for: 5m
+    labels:
+      severity: critical
+      alert_type: infrastructure
+    annotations:
+      summary: "Pod {{ $labels.pod }} is crash looping"
+      description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last hour."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-PodCrashLoop"
+
+# ================================
+# WARNING ALERTS (Slack notification)
+# ================================
+- name: warning.rules
+  rules:
+  # High latency: p95 >2s for 10 minutes
+  - alert: HighLatency
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+    for: 10m
+    labels:
+      severity: warning
+      alert_type: performance
+    annotations:
+      summary: "High latency on {{ $labels.service }} {{ $labels.endpoint }}"
+      description: "95th percentile latency on {{ $labels.service }} {{ $labels.endpoint }} is {{ $value }}s, above 2s threshold for 10 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighLatency"
+
+  # Token cost >$5/hour
+  - alert: HighTokenCost
+    expr: rate(openai_cost_hourly_dollars_sum[1h]) * 3600 > 5
+    for: 15m
+    labels:
+      severity: warning
+      alert_type: cost
+    annotations:
+      summary: "High OpenAI token costs: ${{ $value }}/hour"
+      description: "OpenAI token costs for {{ $labels.model }} are ${{ $value }}/hour, exceeding $5/hour threshold."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighTokenCost"
+
+  # Memory usage >80%
+  - alert: HighMemoryUsage
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+      alert_type: infrastructure
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage on {{ $labels.instance }} is {{ $value }}%, above 80% threshold for 5 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighMemory"
+
+  # Failed posts >10% for 15 minutes
+  - alert: HighPostFailureRate
+    expr: (rate(posts_generated_total{status="failed"}[15m]) / rate(posts_generated_total[15m])) * 100 > 10
+    for: 15m
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "High post failure rate for {{ $labels.persona_id }}"
+      description: "Post failure rate for {{ $labels.persona_id }} is {{ $value }}%, above 10% threshold for 15 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-PostFailures"
+
+  # Celery task duration is high
+  - alert: HighCeleryTaskDuration
+    expr: histogram_quantile(0.95, rate(celery_task_duration_seconds_bucket[10m])) > 30
+    for: 10m
+    labels:
+      severity: warning
+      alert_type: performance
+    annotations:
+      summary: "High Celery task duration for {{ $labels.task_name }}"
+      description: "95th percentile duration for {{ $labels.task_name }} is {{ $value }}s, above 30s threshold."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-SlowTasks"
+
+  # Database query performance degrading
+  - alert: SlowDatabaseQueries
+    expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[10m])) > 1
+    for: 10m
+    labels:
+      severity: warning
+      alert_type: database
+    annotations:
+      summary: "Slow database queries on {{ $labels.database }}"
+      description: "95th percentile query time for {{ $labels.operation }} on {{ $labels.database }} is {{ $value }}s, above 1s."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-SlowQueries"
+
+# ================================
+# BUSINESS ALERTS (Email notifications)
+# ================================
+- name: business.rules
+  rules:
+  # Engagement rate drops below 4%
+  - alert: LowEngagementRate
+    expr: histogram_quantile(0.50, rate(posts_engagement_rate_bucket[1h])) < 0.04
+    for: 30m
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "Low engagement rate for {{ $labels.persona_id }}"
+      description: "Median engagement rate for {{ $labels.persona_id }} is {{ $value | humanizePercentage }}, below 4% target for 30 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-LowEngagement"
+
+  # Cost per follow exceeds $0.02
+  - alert: HighCostPerFollow
+    expr: histogram_quantile(0.50, rate(cost_per_follow_dollars_bucket[1h])) > 0.02
+    for: 30m
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "High cost per follow for {{ $labels.persona_id }}"
+      description: "Cost per follow for {{ $labels.persona_id }} is ${{ $value }}, exceeding $0.02 target for 30 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighCostPerFollow"
+
+  # Zero posts generated for >30min
+  - alert: NoPostsGenerated
+    expr: increase(posts_generated_total[30m]) == 0
+    for: 30m
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "No posts generated for {{ $labels.persona_id }}"
+      description: "No posts have been generated for {{ $labels.persona_id }} in the last 30 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-NoPostGeneration"
+
+  # Revenue projection falling behind target
+  - alert: RevenueBelowTarget
+    expr: revenue_projection_monthly{source="current_run_rate"} < revenue_projection_monthly{source="target"} * 0.8
+    for: 1h
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "Revenue projection below 80% of target"
+      description: "Current run rate revenue projection (${{ $value }}) is below 80% of target. Review business metrics."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-LowRevenue"
+
+  # Content quality degrading
+  - alert: LowContentQuality
+    expr: avg_over_time(content_quality_score{content_type="combined"}[1h]) < 0.6
+    for: 1h
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "Content quality below threshold for {{ $labels.persona_id }}"
+      description: "Average content quality for {{ $labels.persona_id }} is {{ $value }}, below 0.6 threshold for 1 hour."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-ContentQuality"
+
+# ================================
+# INFRASTRUCTURE ALERTS (Hybrid notification)
+# ================================
+- name: infrastructure.rules
+  rules:
+  # Kubernetes cluster health issues
+  - alert: KubernetesNodeNotReady
+    expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+    for: 5m
+    labels:
+      severity: warning
+      alert_type: infrastructure
+    annotations:
+      summary: "Kubernetes node {{ $labels.node }} not ready"
+      description: "Kubernetes node {{ $labels.node }} has been in NotReady state for 5 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-NodeNotReady"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+    for: 10m
+    labels:
+      severity: warning
+      alert_type: infrastructure
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU usage on {{ $labels.instance }} is {{ $value }}%, above 85% for 10 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighCPU"
+
+  # Network connectivity issues
+  - alert: HighNetworkErrors
+    expr: increase(node_network_receive_errs_total[5m]) > 100
+    for: 5m
+    labels:
+      severity: warning
+      alert_type: infrastructure
+    annotations:
+      summary: "High network errors on {{ $labels.instance }}"
+      description: "Network interface {{ $labels.device }} on {{ $labels.instance }} has {{ $value }} errors in the last 5 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-NetworkErrors"

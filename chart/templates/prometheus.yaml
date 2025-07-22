@@ -31,6 +31,9 @@ spec:
         - --web.console.templates=/etc/prometheus/consoles
         - --storage.tsdb.retention.time=15d
         - --web.enable-lifecycle
+        {{- if .Values.monitoring.alertmanager.enabled }}
+        - --alertmanager.url=http://alertmanager:9093
+        {{- end }}
         resources:
           {{- toYaml .Values.monitoring.prometheus.resources | nindent 10 }}
         volumeMounts:
@@ -38,6 +41,10 @@ spec:
           mountPath: /etc/prometheus/
         - name: prometheus-storage-volume
           mountPath: /prometheus/
+        {{- if .Values.monitoring.alertmanager.enabled }}
+        - name: prometheus-alert-rules
+          mountPath: /etc/prometheus/rules
+        {{- end }}
       volumes:
       - name: prometheus-config-volume
         configMap:
@@ -50,6 +57,11 @@ spec:
         {{- else }}
         emptyDir: {}
         {{- end }}
+      {{- if .Values.monitoring.alertmanager.enabled }}
+      - name: prometheus-alert-rules
+        configMap:
+          name: prometheus-alert-rules
+      {{- end }}
 
 ---
 {{- if .Values.monitoring.prometheus.persistence.enabled }}
@@ -98,6 +110,19 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
+    
+    {{- if .Values.monitoring.alertmanager.enabled }}
+    # Rule files specify a list of paths from which rules are read
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+    
+    # Alertmanager configuration
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+    {{- end }}
     
     scrape_configs:
     - job_name: 'threads-agent-orchestrator'
@@ -149,4 +174,17 @@ data:
       - source_labels: [__meta_kubernetes_pod_name]
         action: replace
         target_label: kubernetes_pod_name
+
+---
+{{- if .Values.monitoring.alertmanager.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alert-rules
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+data:
+  alert-rules.yml: |
+{{ .Files.Get "monitoring/alertmanager/alert-rules.yml" | indent 4 }}
+{{- end }}
 {{- end }}
