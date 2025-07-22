@@ -120,7 +120,10 @@
       "Bash(helm template:*)",
       "Bash(kubectl wait:*)",
       "Bash(PYTHONPATH=. pytest -m e2e tests/e2e/test_metrics.py::test_metrics_endpoint -v)",
-      "Bash(NO_PR=true just ship \"fix: Improve e2e test reliability with shared port forwarding\n\n- Add shared conftest.py fixture for session-scoped port forwarding\n- Automatically establish port forwards for all e2e tests\n- Add service readiness checks with timeout handling  \n- Clean up port forward processes on test completion\n- Update all e2e test files to use shared configuration\n- Add enhanced e2e-prepare command with service wait conditions\n- Remove duplicate port forwarding code from individual tests\n\nFixes intermittent e2e test failures due to port forwarding issues.\nTests now run reliably across multiple sessions without manual setup.\")"
+      "Bash(NO_PR=true just ship \"fix: Improve e2e test reliability with shared port forwarding\n\n- Add shared conftest.py fixture for session-scoped port forwarding\n- Automatically establish port forwards for all e2e tests\n- Add service readiness checks with timeout handling  \n- Clean up port forward processes on test completion\n- Update all e2e test files to use shared configuration\n- Add enhanced e2e-prepare command with service wait conditions\n- Remove duplicate port forwarding code from individual tests\n\nFixes intermittent e2e test failures due to port forwarding issues.\nTests now run reliably across multiple sessions without manual setup.\")",
+      "Bash(git reset:*)",
+      "Bash(echo:*)",
+      "Bash(ruff check:*)"
     ],
     "deny": []
   }

@@ -178,6 +178,49 @@ SYSTEM_HEALTH_STATUS = Gauge(
     ["component", "service"],  # component: database, queue, api, llm
 )
 
+# ───── Search Integration Metrics ────────────────────────────────────────────────────
+search_requests_total = Counter(
+    "search_requests_total",
+    "Total number of search requests",
+    ["search_type", "persona_id"],  # search_type: trends, competitive, quick
+)
+
+search_latency_seconds = Summary(
+    "search_latency_seconds",
+    "Search request latency in seconds",
+    ["search_type"],
+)
+
+trends_discovered_total = Counter(
+    "trends_discovered_total",
+    "Total number of trends discovered",
+    ["topic", "timeframe"],  # timeframe: day, week, month
+)
+
+viral_patterns_analyzed_total = Counter(
+    "viral_patterns_analyzed_total",
+    "Total viral patterns analyzed",
+    ["topic", "platform"],  # platform: threads, twitter, etc
+)
+
+search_enhanced_posts_total = Counter(
+    "search_enhanced_posts_total",
+    "Total posts generated with search enhancement",
+    ["persona_id", "enhancement_type"],  # enhancement_type: trends, viral, both
+)
+
+search_cache_operations = Counter(
+    "search_cache_operations_total",
+    "Search cache operations",
+    ["operation", "result"],  # operation: get, set; result: hit, miss
+)
+
+trend_relevance_score = Gauge(
+    "trend_relevance_score",
+    "Relevance score of discovered trends (0-1)",
+    ["topic", "persona_id"],
+)
+
 SERVICE_UPTIME = Gauge(
     "service_uptime_seconds",
     "Service uptime in seconds",
@@ -404,9 +447,57 @@ def record_error_rate_percentage(
     service_name: str, error_type: str, error_percentage: float
 ) -> None:
     """Record error rate as a percentage."""
-    ERROR_RATE_PERCENTAGE.labels(
-        service_name=service_name, error_type=error_type
-    ).observe(error_percentage)
+    ERROR_RATE_PERCENTAGE.labels(service_name=service_name, error_type=error_type).set(
+        error_percentage
+    )
+
+
+# ───── Search Integration Metric Helpers ─────────────────────────────────────────────
+def record_search_request(search_type: str, persona_id: str = "none") -> None:
+    """Record a search request."""
+    search_requests_total.labels(search_type=search_type, persona_id=persona_id).inc()
+
+
+@contextmanager
+def track_search_latency(search_type: str) -> Generator[None, None, None]:
+    """Track search request latency."""
+    start = time.time()
+    try:
+        yield
+    finally:
+        search_latency_seconds.labels(search_type=search_type).observe(
+            time.time() - start
+        )
+
+
+def record_trends_discovered(topic: str, timeframe: str, count: int) -> None:
+    """Record number of trends discovered."""
+    trends_discovered_total.labels(topic=topic, timeframe=timeframe).inc(count)
+
+
+def record_viral_patterns(topic: str, platform: str, count: int) -> None:
+    """Record viral patterns analyzed."""
+    viral_patterns_analyzed_total.labels(topic=topic, platform=platform).inc(count)
+
+
+def record_search_enhanced_post(
+    persona_id: str, enhancement_type: str = "both"
+) -> None:
+    """Record a post generated with search enhancement."""
+    search_enhanced_posts_total.labels(
+        persona_id=persona_id, enhancement_type=enhancement_type
+    ).inc()
+
+
+def record_search_cache(operation: str, hit: bool) -> None:
+    """Record search cache operation."""
+    result = "hit" if hit else "miss"
+    search_cache_operations.labels(operation=operation, result=result).inc()
+
+
+def update_trend_relevance(topic: str, persona_id: str, score: float) -> None:
+    """Update trend relevance score (0-1)."""
+    trend_relevance_score.labels(topic=topic, persona_id=persona_id).set(score)
 
 
 def maybe_start_metrics_server(port: int = 9090) -> None:

@@ -23,6 +23,7 @@ from services.common.metrics import (
     update_service_uptime,
     update_system_health,
 )
+from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
 
 # ── constants & wiring ────────────────────────────────────────────────────────
@@ -34,6 +35,9 @@ celery_app = Celery("orchestrator", broker=BROKER_URL)
 maybe_start_metrics_server()  # Prom-client HTTP at :9090
 
 logger = logging.getLogger(__name__)
+
+# Include search router
+app.include_router(search_router)
 
 # Track service startup time for uptime calculation
 _service_start_time = time.time()

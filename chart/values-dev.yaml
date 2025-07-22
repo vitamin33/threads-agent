@@ -123,3 +123,7 @@ monitoring:
       from: "dev-alerts@threads-agent.local"
       businessRecipients: "dev-business@threads-agent.local"
       infrastructureRecipients: "dev-ops@threads-agent.local"
+
+# Redis cache for trend data and search results
+redis:
+  enabled: true

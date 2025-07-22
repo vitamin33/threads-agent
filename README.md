@@ -33,6 +33,17 @@ online A/B · Trend & Pain Flywheel · FinOps board · SRE/Chaos add-ons.
 
 ## ⚡ Quick-start (local)
 
+### 🎯 NEW: 80/20 Productivity Mode
+```bash
+# The ONLY commands you need daily:
+just work-day        # Start everything (morning)
+just create-viral    # AI creates viral content
+just make-money      # Run business on autopilot
+
+# See: QUICK_REFERENCE.md for all mega commands
+```
+
+### Traditional Setup
 ```bash
 # 0 · prereqs: Docker >= 24, k3d >= 5.6, Helm >= 3.14, Python 3.11
 git clone git@github.com:threads-agent-stack/threads-agent.git
