@@ -15,8 +15,8 @@ from pydantic import BaseModel
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common.metrics import record_business_metric, record_http_request
-from common.searxng_wrapper import analyze_viral, find_trends, search
+from services.common.metrics import record_business_metric, record_http_request
+from services.common.searxng_wrapper import analyze_viral, find_trends, search
 
 logger = logging.getLogger(__name__)
 

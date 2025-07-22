@@ -139,7 +139,15 @@
       "Bash(PYTHONPATH=. python:*)",
       "Bash(NO_PR=true just ship \"feat: CRA-228 MVP Engagement Predictor with rule-based scoring\n\n- Implement EngagementPredictor with intelligent rule-based scoring\n- Add AdvancedFeatureExtractor for 20+ text analysis features\n- Create 8 core engagement metrics: readability, emotion, hooks, etc\n- Add FastAPI endpoints: /predict/engagement, /score/content, /score/batch\n- Implement quality gate with 0.6 threshold for content filtering\n- Add comprehensive unit tests (16 tests, 100% pass rate)\n- Include ML training infrastructure for future enhancement\n- Remove sklearn imports from runtime to avoid dependency issues\n\nMVP implementation provides immediate value with rule-based scoring\nthat identifies viral content patterns. Ready for production deployment\nwith future ML enhancement path when training data is available.\n\nTested: All unit tests passing, <200ms latency, quality gate working\")",
       "Bash(python:*)",
-      "Bash(black:*)"
+      "Bash(black:*)",
+      "Bash(for img in orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local bitnami/postgresql:16 rabbitmq:3.13-management-alpine)",
+      "Bash(do k3d image import $img -c dev)",
+      "Bash(done)",
+      "Bash(kubectl scale:*)",
+      "Bash(helm status:*)",
+      "Bash(helm delete:*)",
+      "Bash(kubectl config:*)",
+      "Bash(kubectl apply:*)"
     ],
     "deny": []
   }
