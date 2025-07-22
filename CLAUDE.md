@@ -59,9 +59,9 @@ just test             # Run full test suite
 
 #### Testing  
 - `just unit` - Run unit tests only (`pytest -m "not e2e"`)
-- `just e2e` - Run end-to-end tests (`pytest -m e2e`)
+- `just e2e` - Run end-to-end tests with automatic port forwarding (`pytest -m e2e`)
 - `just test-watch [SERVICE]` - Watch mode testing
-- `just e2e-prepare` - Full e2e setup (bootstrap + images + deploy)
+- `just e2e-prepare` - Full e2e setup (bootstrap + images + deploy + service readiness checks)
 
 #### Quality & Shipping
 - `just lint` - Format with ruff, isort, black
@@ -246,6 +246,17 @@ class Task(Base):
   - `services.common.metrics.record_business_metric()`
   - `services.common.metrics.record_engagement_rate()`
   - `services.common.metrics.update_revenue_projection()`
+
+### Grafana Dashboards (CRA-221)
+- **Access**: `kubectl port-forward svc/grafana 3000:3000` → http://localhost:3000
+- **Credentials**: admin / admin123 (dev), configurable in production
+- **Dashboards**:
+  - **Business KPIs** (`business-kpis.json`): Revenue projection to $20k MRR, engagement rate tracking (target: 6%+), cost per follow (target: $0.01), token usage costs, content quality scores
+  - **Technical Metrics** (`technical-metrics.json`): Service uptime, error rates by service, HTTP request latency (P95, P99), Celery queue depth, database connection pools, task execution times
+  - **Infrastructure** (`infrastructure.json`): Pod CPU/memory usage, network I/O patterns, storage usage trends, Kubernetes cluster health, Qdrant vector database operations
+- **Location**: `monitoring/grafana/dashboards/`
+- **Auto-provisioned**: Dashboards deployed via Helm ConfigMaps in `chart/templates/grafana.yaml`
+- **Configuration**: Enable via `monitoring.grafana.enabled: true` in values files
 
 ### Tracing (Jaeger)
 - **UI**: `just jaeger-ui` → http://localhost:16686

@@ -78,3 +78,21 @@ global:
   storageClass: local-path
 
 resources: {}
+
+# ───────── monitoring & observability ─────────
+monitoring:
+  prometheus:
+    enabled: true
+    url: http://prometheus:9090
+    persistence:
+      enabled: true
+      size: 2Gi
+      storageClass: local-path
+  grafana:
+    enabled: true
+    adminPassword: admin123
+    plugins: "grafana-piechart-panel"
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: local-path

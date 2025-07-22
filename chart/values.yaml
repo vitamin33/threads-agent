@@ -54,3 +54,41 @@ service:
   port: 8080
 
 resources: {}
+
+# ───────── monitoring & observability ─────────
+monitoring:
+  prometheus:
+    enabled: false                    # turn ON in dev/prod values
+    url: http://prometheus:9090
+    image:
+      repository: prom/prometheus
+      tag: "v2.47.0"
+    persistence:
+      enabled: false
+      size: 2Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  grafana:
+    enabled: false                     # turn ON in dev/prod values
+    image:
+      repository: grafana/grafana
+      tag: "10.2.0"
+    adminPassword: admin123           # override in prod
+    plugins: ""                       # comma-separated list of plugins
+    persistence:
+      enabled: false
+      size: 1Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
