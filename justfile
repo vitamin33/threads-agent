@@ -572,6 +572,35 @@ make-money: grow-business
 	@echo "💸 Money printer activated!"
 	@echo "Check back in 24 hours..."
 
+# ---------- AI TOKEN EFFICIENCY (80/20 Rule) ----------
+# Save 80% of AI tokens while maintaining quality
+
+token-status: # check daily AI token usage
+	@./scripts/ai-token-optimizer.sh daily-report
+
+token-viral PERSONA="ai-jesus" TOPIC="AI trends": # create viral content with 80% less tokens
+	@./scripts/ai-token-optimizer.sh optimize-viral {{PERSONA}} "{{TOPIC}}"
+
+token-batch PERSONA="ai-jesus": # generate entire week's content in one AI call
+	@./scripts/ai-token-optimizer.sh batch-week {{PERSONA}}
+
+token-optimize: # enable all token optimizations
+	@./scripts/ai-token-optimizer.sh auto-optimize
+	@echo "✅ Token optimization active - saving 80% on AI costs"
+
+# Smart cached versions of expensive commands
+cached-analyze: # use cached analysis (0 tokens)
+	@./scripts/ai-token-optimizer.sh smart-analyze
+
+cached-trends: # use cached trends (0 tokens)
+	@just cache-get "trends:$(date +%Y%m%d)" || just trend-check "AI" | head -20 | just cache-set "trends:$(date +%Y%m%d)" -
+
+# The ULTIMATE efficient command
+make-money-cheap: token-optimize cached-trends
+	@echo "💸 Money printer activated (80% less AI cost)!"
+	@just token-batch ai-jesus
+	@echo "✅ Week's content created with minimal tokens"
+
 # Performance check in one command
 health-check:
 	@echo "🏥 System Health Check"
