@@ -77,6 +77,14 @@ openai:
   enabled: false
   apiKey: "REPLACE_IN_RUNTIME"
 
+# Redis for caching trends and token optimization
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: local-path
+
 # ───────── service for orchestrator itself ─────────
 service:
   type: ClusterIP
