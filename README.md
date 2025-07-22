@@ -72,21 +72,21 @@ _See [.github/CODEOWNERS](.github/CODEOWNERS) for full mapping._
 
 ## 🗺 Roadmap (epics)
 
-| Epic                         | Status         | ETA      |
-| ---------------------------- | -------------- | -------- |
-| **E1 – Dev-platform**        | 🟡 in progress | T + 0 d  |
-| **E2 – Core MVP**            | ⬜ not started | T + 3 d  |
-| **E3 – SRE v1**              | ⬜             | T + 5 d  |
-| **E4 – Bandit A/B**          | ⬜             | T + 6 d  |
-| **E5 – Trend & Pain**        | ⬜             | T + 9 d  |
-| **E6 – FinOps board**        | ⬜             | T + 10 d |
-| **E7 – IaC (Stage EKS)**     | ⬜             | T + 12 d |
-| **E8 – Prod autoscale**      | ⬜             | T + 13 d |
-| **E9 – Docs & Showcase**     | ⬜             | T + 14 d |
-| **E10 – Go-live marketing**  | ⬜             | T + 15 d |
-| **E11 – Security hardening** | ⬜             | T + 17 d |
-| **E12 – Prompt registry**    | ⬜             | T + 19 d |
-| **E13 – Chaos engineering**  | ⬜             | T + 20 d |
+| Epic                                            | Status         | Timeline      |
+| ----------------------------------------------- | -------------- | ------------- |
+| **E1 – Core MVP (templates)**                   | ✅ completed   | Completed     |
+| **E2 – Core MVP (IMPL)**                        | ✅ completed   | Completed     |
+| **E3 – SRE v1: Advanced Monitoring & Alerting** | ✅ completed   | Completed     |
+| **E3.5 – Revenue Foundation + Viral Core**      | 🟡 in progress | Jul 29 - Aug 2|
+| **E4 – Advanced Multi-Variant Testing**         | ⬜ planned     | Aug 2 - 5     |
+| **E5 – DM-to-Purchase Pipeline**                | ⬜ planned     | Aug 5 - 7     |
+| **E6 – Viral Observability & FinOps**           | ⬜ planned     | Aug 7 - 12    |
+| **E7 – Viral Learning Flywheel**                | ⬜ planned     | Aug 12 - 18   |
+| **E8 – Premium Intelligence Products**          | ⬜ planned     | Aug 18 - 20   |
+| **E9 – Intelligent Engagement Engine**          | ⬜ planned     | Aug 20 - 25   |
+| **E10 – Engagement Guarantee System**           | ⬜ planned     | Aug 25 - 27   |
+| **E11 – Scale Validation**                      | ⬜ planned     | Aug 27 - 30   |
+| **E12 – Portfolio Polish**                      | ⬜ planned     | Aug 30 - Sep 6|
 
 _(Live backlog & task breakdown lives in Linear → link in repo description.)_
 
