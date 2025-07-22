@@ -92,3 +92,46 @@ monitoring:
       requests:
         cpu: 100m
         memory: 128Mi
+  alertmanager:
+    enabled: false                        # turn ON in dev/prod values
+    image:
+      repository: prom/alertmanager
+      tag: "v0.26.0"
+    replicas: 1
+    externalUrl: ""                       # override in prod (e.g., https://alerts.company.com)
+    logLevel: info
+    dataRetention: 120h
+    persistence:
+      enabled: false
+      size: 1Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    # Email configuration
+    smtp:
+      smarthost: "localhost:587"
+      from: "alerts@threads-agent.com"
+      auth:
+        username: ""                      # override in prod
+        password: ""                      # override in prod
+    # PagerDuty integration
+    pagerduty:
+      enabled: false                      # turn ON in prod values
+      integrationKey: ""                  # override in prod (secret)
+    # Slack integration
+    slack:
+      enabled: false                      # turn ON in dev/prod values
+      apiUrl: ""                          # override with webhook URL
+      warningsChannel: "#alerts-warnings"
+      infrastructureChannel: "#alerts-infrastructure"
+    # Email recipients
+    email:
+      enabled: false                      # turn ON in prod values
+      from: "alerts@threads-agent.com"
+      businessRecipients: "business@threads-agent.com"
+      infrastructureRecipients: "ops@threads-agent.com"

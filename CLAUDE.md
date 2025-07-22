@@ -258,6 +258,66 @@ class Task(Base):
 - **Auto-provisioned**: Dashboards deployed via Helm ConfigMaps in `chart/templates/grafana.yaml`
 - **Configuration**: Enable via `monitoring.grafana.enabled: true` in values files
 
+### AlertManager (CRA-222)
+- **Access**: `kubectl port-forward svc/alertmanager 9093:9093` → http://localhost:9093
+- **Purpose**: Centralized alerting with intelligent routing and escalation
+- **Integration**: PagerDuty (critical), Slack (warnings), Email (business)
+
+#### Alert Categories
+- **Critical Alerts** (🚨 PagerDuty):
+  - `ServiceDown` - Service unavailable >1 minute
+  - `HighErrorRate` - Error rate >5% for 5 minutes
+  - `DatabaseConnectionFailure` - No active DB connections
+  - `CeleryQueueDepthHigh` - Queue >1000 messages
+  - `DiskSpaceHigh` - Disk usage >85%
+  - `PodCrashLooping` - Pod restarts >5 in 1 hour
+  
+- **Warning Alerts** (⚠️ Slack):
+  - `HighLatency` - P95 >2s for 10 minutes
+  - `HighTokenCost` - OpenAI costs >$5/hour
+  - `HighMemoryUsage` - Memory >80% for 5 minutes
+  - `HighPostFailureRate` - Post failures >10% for 15 minutes
+  - `SlowDatabaseQueries` - P95 query time >1s
+
+- **Business Alerts** (📈 Email):
+  - `LowEngagementRate` - Engagement <4% for 30 minutes (target: 6%+)
+  - `HighCostPerFollow` - Cost >$0.02 per follow (target: $0.01)
+  - `NoPostsGenerated` - Zero posts for 30 minutes
+  - `RevenueBelowTarget` - Revenue <80% of $20k MRR target
+  - `LowContentQuality` - Quality score <0.6
+
+- **Infrastructure Alerts** (🏗️ Hybrid):
+  - `KubernetesNodeNotReady` - Node unavailable >5 minutes
+  - `HighCPUUsage` - CPU >85% for 10 minutes
+  - `HighNetworkErrors` - Network errors >100/5min
+
+#### Configuration Files
+- **Alert Rules**: `monitoring/alertmanager/alert-rules.yml`
+- **Base Config**: `monitoring/alertmanager/alertmanager.yml`
+- **Helm Template**: `chart/templates/alertmanager.yaml`
+- **Prometheus Integration**: Rule files mounted at `/etc/prometheus/rules/`
+
+#### Notification Channels
+- **PagerDuty**: Integration key configured via `monitoring.alertmanager.pagerduty.integrationKey`
+- **Slack**: Webhook URL via `monitoring.alertmanager.slack.apiUrl`
+  - Warnings → `#alerts-warnings`
+  - Infrastructure → `#alerts-infrastructure`
+- **Email**: SMTP configuration in `monitoring.alertmanager.smtp`
+  - Business alerts → `business@threads-agent.com`
+  - Infrastructure → `ops@threads-agent.com`
+
+#### Deployment
+- **Development**: Enabled in `values-dev.yaml` with local email testing
+- **Production**: Enabled in `values-prod.yaml` with full PagerDuty/Slack integration
+- **High Availability**: 2 replicas in production with persistent storage
+- **Templates**: Custom notification templates in `alertmanager-templates` ConfigMap
+
+#### Runbook
+- **Location**: `docs/runbook-alerting.md`
+- **Response Procedures**: Detailed steps for each alert type
+- **Escalation**: L1 (Auto) → L2 (Manual, 1hr) → L3 (Executive, 4hr)
+- **Troubleshooting**: Ready-to-use kubectl commands and health checks
+
 ### Tracing (Jaeger)
 - **UI**: `just jaeger-ui` → http://localhost:16686
 - **Integration**: OpenTelemetry auto-instrumentation

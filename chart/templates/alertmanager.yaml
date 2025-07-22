@@ -1,0 +1,345 @@
+{{- if .Values.monitoring.alertmanager.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.monitoring.alertmanager.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+        {{- include "threads.labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/templates/alertmanager-config.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: alertmanager
+        image: "{{ .Values.monitoring.alertmanager.image.repository }}:{{ .Values.monitoring.alertmanager.image.tag }}"
+        ports:
+        - containerPort: 9093
+          name: web
+        - containerPort: 9094
+          name: cluster
+        args:
+        - --config.file=/etc/alertmanager/config.yml
+        - --storage.path=/alertmanager/data
+        - --web.external-url={{ .Values.monitoring.alertmanager.externalUrl | default "http://localhost:9093" }}
+        - --web.route-prefix=/
+        - --cluster.listen-address=0.0.0.0:9094
+        - --cluster.peer={{ include "threads.fullname" . }}-alertmanager:9094
+        - --log.level={{ .Values.monitoring.alertmanager.logLevel | default "info" }}
+        - --data.retention={{ .Values.monitoring.alertmanager.dataRetention | default "120h" }}
+        resources:
+          {{- toYaml .Values.monitoring.alertmanager.resources | nindent 10 }}
+        volumeMounts:
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager
+        - name: alertmanager-storage
+          mountPath: /alertmanager/data
+        - name: alertmanager-templates
+          mountPath: /etc/alertmanager/templates
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9093
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9093
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+      - name: alertmanager-storage
+        {{- if .Values.monitoring.alertmanager.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: alertmanager-pvc
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: alertmanager-templates
+        configMap:
+          name: alertmanager-templates
+
+---
+{{- if .Values.monitoring.alertmanager.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.monitoring.alertmanager.persistence.size }}
+  {{- if .Values.monitoring.alertmanager.persistence.storageClass }}
+  storageClassName: {{ .Values.monitoring.alertmanager.persistence.storageClass }}
+  {{- end }}
+
+---
+{{- end }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  ports:
+  - port: 9093
+    targetPort: 9093
+    name: web
+  - port: 9094
+    targetPort: 9094
+    name: cluster
+  selector:
+    app: alertmanager
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+data:
+  config.yml: |
+    global:
+      smtp_smarthost: '{{ .Values.monitoring.alertmanager.smtp.smarthost }}'
+      smtp_from: '{{ .Values.monitoring.alertmanager.smtp.from }}'
+      {{- if .Values.monitoring.alertmanager.smtp.auth.username }}
+      smtp_auth_username: '{{ .Values.monitoring.alertmanager.smtp.auth.username }}'
+      smtp_auth_password: '{{ .Values.monitoring.alertmanager.smtp.auth.password }}'
+      {{- end }}
+      pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+      {{- if .Values.monitoring.alertmanager.slack.apiUrl }}
+      slack_api_url: '{{ .Values.monitoring.alertmanager.slack.apiUrl }}'
+      {{- end }}
+
+    templates:
+      - '/etc/alertmanager/templates/*.tmpl'
+
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'default-receiver'
+      routes:
+      # Critical alerts go to PagerDuty immediately
+      {{- if .Values.monitoring.alertmanager.pagerduty.enabled }}
+      - match:
+          severity: critical
+        receiver: pagerduty-critical
+        group_wait: 0s
+        repeat_interval: 5m
+      {{- end }}
+      
+      # Warning alerts go to Slack
+      {{- if .Values.monitoring.alertmanager.slack.enabled }}
+      - match:
+          severity: warning
+        receiver: slack-warnings
+        group_wait: 30s
+        repeat_interval: 30m
+      {{- end }}
+      
+      # Business alerts go to email
+      {{- if .Values.monitoring.alertmanager.email.enabled }}
+      - match:
+          alert_type: business
+        receiver: email-business
+        group_wait: 1m
+        repeat_interval: 2h
+      {{- end }}
+      
+      # Infrastructure alerts go to both Slack and email
+      - match:
+          alert_type: infrastructure
+        receiver: infrastructure-alerts
+        group_wait: 30s
+        repeat_interval: 1h
+
+    inhibit_rules:
+    - source_match:
+        severity: 'critical'
+      target_match:
+        severity: 'warning'
+      equal: ['alertname', 'cluster', 'service']
+
+    receivers:
+    - name: 'default-receiver'
+      webhook_configs:
+      - url: 'http://127.0.0.1:5001/'
+
+    {{- if .Values.monitoring.alertmanager.pagerduty.enabled }}
+    - name: pagerduty-critical
+      pagerduty_configs:
+      - routing_key: '{{ .Values.monitoring.alertmanager.pagerduty.integrationKey }}'
+        severity: '{{`{{ .GroupLabels.severity }}`}}'
+        description: '{{`{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}`}}'
+        details:
+          firing: '{{`{{ .Alerts.Firing | len }}`}}'
+          resolved: '{{`{{ .Alerts.Resolved | len }}`}}'
+          alertname: '{{`{{ .GroupLabels.alertname }}`}}'
+          cluster: '{{`{{ .GroupLabels.cluster }}`}}'
+          service: '{{`{{ .GroupLabels.service }}`}}'
+        links:
+        - href: '{{ .Values.monitoring.grafana.externalUrl | default "http://localhost:3000" }}'
+          text: 'Grafana Dashboard'
+        - href: '{{ .Values.monitoring.prometheus.externalUrl | default "http://localhost:9090" }}'
+          text: 'Prometheus'
+    {{- end }}
+
+    {{- if .Values.monitoring.alertmanager.slack.enabled }}
+    - name: slack-warnings
+      slack_configs:
+      - api_url: '{{ .Values.monitoring.alertmanager.slack.apiUrl }}'
+        channel: '{{ .Values.monitoring.alertmanager.slack.warningsChannel | default "#alerts-warnings" }}'
+        username: 'AlertManager'
+        icon_emoji: ':warning:'
+        title: '⚠️  {{`{{ .GroupLabels.alertname }}`}} Warning'
+        text: >-
+          {{`{{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Severity:* {{ .Labels.severity }}
+          *Service:* {{ .Labels.service }}
+          *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+          {{ end }}`}}
+        actions:
+        - type: button
+          text: 'View in Grafana :chart_with_upwards_trend:'
+          url: '{{ .Values.monitoring.grafana.externalUrl | default "http://localhost:3000" }}'
+        - type: button
+          text: 'View in Prometheus :mag:'
+          url: '{{ .Values.monitoring.prometheus.externalUrl | default "http://localhost:9090" }}'
+    {{- end }}
+
+    {{- if .Values.monitoring.alertmanager.email.enabled }}
+    - name: email-business
+      email_configs:
+      - to: '{{ .Values.monitoring.alertmanager.email.businessRecipients }}'
+        from: '{{ .Values.monitoring.alertmanager.email.from }}'
+        subject: '🚨 Business Alert: {{`{{ .GroupLabels.alertname }}`}}'
+        html: |
+          <html>
+            <head><title>Threads Agent Business Alert</title></head>
+            <body>
+              <h2>🚨 Business Alert: {{`{{ .GroupLabels.alertname }}`}}</h2>
+              <table border="1" style="border-collapse: collapse;">
+                <tr><th>Alert</th><th>Severity</th><th>Service</th><th>Started</th><th>Description</th></tr>
+                {{`{{ range .Alerts }}
+                <tr>
+                  <td>{{ .Labels.alertname }}</td>
+                  <td>{{ .Labels.severity }}</td>
+                  <td>{{ .Labels.service }}</td>
+                  <td>{{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}</td>
+                  <td>{{ .Annotations.description }}</td>
+                </tr>
+                {{ end }}`}}
+              </table>
+              <p><strong>Dashboard:</strong> <a href="{{ .Values.monitoring.grafana.externalUrl | default "http://localhost:3000" }}">Grafana</a></p>
+              <p><strong>Metrics:</strong> <a href="{{ .Values.monitoring.prometheus.externalUrl | default "http://localhost:9090" }}">Prometheus</a></p>
+            </body>
+          </html>
+    {{- end }}
+
+    - name: infrastructure-alerts
+      {{- if .Values.monitoring.alertmanager.slack.enabled }}
+      slack_configs:
+      - api_url: '{{ .Values.monitoring.alertmanager.slack.apiUrl }}'
+        channel: '{{ .Values.monitoring.alertmanager.slack.infrastructureChannel | default "#alerts-infrastructure" }}'
+        username: 'AlertManager'
+        icon_emoji: ':construction:'
+        title: '🏗️  Infrastructure Alert: {{`{{ .GroupLabels.alertname }}`}}'
+        text: >-
+          {{`{{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Severity:* {{ .Labels.severity }}
+          *Component:* {{ .Labels.component }}
+          *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+          {{ end }}`}}
+      {{- end }}
+      {{- if .Values.monitoring.alertmanager.email.enabled }}
+      email_configs:
+      - to: '{{ .Values.monitoring.alertmanager.email.infrastructureRecipients }}'
+        from: '{{ .Values.monitoring.alertmanager.email.from }}'
+        subject: '🏗️  Infrastructure Alert: {{`{{ .GroupLabels.alertname }}`}}'
+        html: |
+          <html>
+            <head><title>Threads Agent Infrastructure Alert</title></head>
+            <body>
+              <h2>🏗️  Infrastructure Alert: {{`{{ .GroupLabels.alertname }}`}}</h2>
+              <table border="1" style="border-collapse: collapse;">
+                <tr><th>Alert</th><th>Severity</th><th>Component</th><th>Started</th><th>Description</th></tr>
+                {{`{{ range .Alerts }}
+                <tr>
+                  <td>{{ .Labels.alertname }}</td>
+                  <td>{{ .Labels.severity }}</td>
+                  <td>{{ .Labels.component }}</td>
+                  <td>{{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}</td>
+                  <td>{{ .Annotations.description }}</td>
+                </tr>
+                {{ end }}`}}
+              </table>
+              <p><strong>Runbook:</strong> Check service status and resource utilization</p>
+              <p><strong>Dashboard:</strong> <a href="{{ .Values.monitoring.grafana.externalUrl | default "http://localhost:3000" }}">Grafana Infrastructure</a></p>
+            </body>
+          </html>
+      {{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-templates
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+data:
+  default.tmpl: |
+    {{`{{ define "slack.default.title" }}{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}{{ end }}
+    {{ define "slack.default.text" }}{{ range .Alerts }}{{ .Annotations.description }}{{ end }}{{ end }}
+    {{ define "email.default.subject" }}{{ .GroupLabels.alertname }} - {{ .Status | title }}{{ end }}
+    {{ define "email.default.body" }}
+    Alert: {{ .GroupLabels.alertname }}
+    Status: {{ .Status | title }}
+    {{ range .Alerts }}
+    Description: {{ .Annotations.description }}
+    Labels:{{ range .Labels.SortedPairs }}
+      {{ .Name }}: {{ .Value }}{{ end }}
+    {{ end }}
+    {{ end }}`}}
+
+---
+{{- if .Values.monitoring.alertmanager.pagerduty.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pagerduty-integration-key
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+type: Opaque
+data:
+  integration-key: {{ .Values.monitoring.alertmanager.pagerduty.integrationKey | b64enc }}
+{{- end }}
+{{- end }}

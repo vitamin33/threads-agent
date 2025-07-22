@@ -1,0 +1,174 @@
+global:
+  # Global configuration for AlertManager
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@threads-agent.com'
+  smtp_auth_username: 'alerts@threads-agent.com'
+  smtp_auth_password: 'changeme'  # Override in production
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'  # Override in production
+
+# Templates for notification formatting
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Routing configuration
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+  # Critical alerts go to PagerDuty immediately
+  - match:
+      severity: critical
+    receiver: pagerduty-critical
+    group_wait: 0s
+    repeat_interval: 5m
+  
+  # Warning alerts go to Slack
+  - match:
+      severity: warning
+    receiver: slack-warnings
+    group_wait: 30s
+    repeat_interval: 30m
+  
+  # Business alerts go to email
+  - match:
+      alert_type: business
+    receiver: email-business
+    group_wait: 1m
+    repeat_interval: 2h
+  
+  # Infrastructure alerts go to both Slack and email
+  - match:
+      alert_type: infrastructure
+    receiver: infrastructure-alerts
+    group_wait: 30s
+    repeat_interval: 1h
+
+# Inhibit rules to prevent alert spam
+inhibit_rules:
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  equal: ['alertname', 'cluster', 'service']
+
+# Receiver configurations
+receivers:
+- name: 'web.hook'
+  webhook_configs:
+  - url: 'http://127.0.0.1:5001/'
+
+# PagerDuty for critical alerts
+- name: pagerduty-critical
+  pagerduty_configs:
+  - routing_key: '{{ .Values.alerting.pagerduty.integrationKey }}'
+    severity: '{{ .GroupLabels.severity }}'
+    description: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+    details:
+      firing: '{{ .Alerts.Firing | len }}'
+      resolved: '{{ .Alerts.Resolved | len }}'
+      alertname: '{{ .GroupLabels.alertname }}'
+      cluster: '{{ .GroupLabels.cluster }}'
+      service: '{{ .GroupLabels.service }}'
+    links:
+    - href: '{{ .Values.monitoring.grafana.externalUrl }}'
+      text: 'Grafana Dashboard'
+    - href: '{{ .Values.monitoring.prometheus.externalUrl }}'
+      text: 'Prometheus'
+
+# Slack for warning alerts
+- name: slack-warnings
+  slack_configs:
+  - api_url: '{{ .Values.alerting.slack.webhookUrl }}'
+    channel: '#alerts-warnings'
+    username: 'AlertManager'
+    icon_emoji: ':warning:'
+    title: '⚠️  {{ .GroupLabels.alertname }} Warning'
+    text: >-
+      {{ range .Alerts }}
+      *Alert:* {{ .Annotations.summary }}
+      *Description:* {{ .Annotations.description }}
+      *Severity:* {{ .Labels.severity }}
+      *Service:* {{ .Labels.service }}
+      *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+      {{ end }}
+    actions:
+    - type: button
+      text: 'View in Grafana :chart_with_upwards_trend:'
+      url: '{{ .Values.monitoring.grafana.externalUrl }}'
+    - type: button  
+      text: 'View in Prometheus :mag:'
+      url: '{{ .Values.monitoring.prometheus.externalUrl }}'
+
+# Email for business alerts
+- name: email-business
+  email_configs:
+  - to: '{{ .Values.alerting.email.businessRecipients }}'
+    from: '{{ .Values.alerting.email.from }}'
+    subject: '🚨 Business Alert: {{ .GroupLabels.alertname }}'
+    html: |
+      <html>
+        <head><title>Threads Agent Business Alert</title></head>
+        <body>
+          <h2>🚨 Business Alert: {{ .GroupLabels.alertname }}</h2>
+          <table border="1" style="border-collapse: collapse;">
+            <tr><th>Alert</th><th>Severity</th><th>Service</th><th>Started</th><th>Description</th></tr>
+            {{ range .Alerts }}
+            <tr>
+              <td>{{ .Labels.alertname }}</td>
+              <td>{{ .Labels.severity }}</td>
+              <td>{{ .Labels.service }}</td>
+              <td>{{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}</td>
+              <td>{{ .Annotations.description }}</td>
+            </tr>
+            {{ end }}
+          </table>
+          <p><strong>Dashboard:</strong> <a href="{{ .Values.monitoring.grafana.externalUrl }}">Grafana</a></p>
+          <p><strong>Metrics:</strong> <a href="{{ .Values.monitoring.prometheus.externalUrl }}">Prometheus</a></p>
+        </body>
+      </html>
+
+# Combined infrastructure alerts
+- name: infrastructure-alerts
+  slack_configs:
+  - api_url: '{{ .Values.alerting.slack.webhookUrl }}'
+    channel: '#alerts-infrastructure'
+    username: 'AlertManager'
+    icon_emoji: ':construction:'
+    title: '🏗️  Infrastructure Alert: {{ .GroupLabels.alertname }}'
+    text: >-
+      {{ range .Alerts }}
+      *Alert:* {{ .Annotations.summary }}
+      *Description:* {{ .Annotations.description }}
+      *Severity:* {{ .Labels.severity }}
+      *Component:* {{ .Labels.component }}
+      *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+      {{ end }}
+  email_configs:
+  - to: '{{ .Values.alerting.email.infrastructureRecipients }}'
+    from: '{{ .Values.alerting.email.from }}'
+    subject: '🏗️  Infrastructure Alert: {{ .GroupLabels.alertname }}'
+    html: |
+      <html>
+        <head><title>Threads Agent Infrastructure Alert</title></head>
+        <body>
+          <h2>🏗️  Infrastructure Alert: {{ .GroupLabels.alertname }}</h2>
+          <table border="1" style="border-collapse: collapse;">
+            <tr><th>Alert</th><th>Severity</th><th>Component</th><th>Started</th><th>Description</th></tr>
+            {{ range .Alerts }}
+            <tr>
+              <td>{{ .Labels.alertname }}</td>
+              <td>{{ .Labels.severity }}</td>
+              <td>{{ .Labels.component }}</td>
+              <td>{{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}</td>
+              <td>{{ .Annotations.description }}</td>
+            </tr>
+            {{ end }}
+          </table>
+          <p><strong>Runbook:</strong> Check service status and resource utilization</p>
+          <p><strong>Dashboard:</strong> <a href="{{ .Values.monitoring.grafana.externalUrl }}">Grafana Infrastructure</a></p>
+        </body>
+      </html>

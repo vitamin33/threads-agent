@@ -96,3 +96,30 @@ monitoring:
       enabled: true
       size: 1Gi
       storageClass: local-path
+    externalUrl: http://localhost:3000
+  alertmanager:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: local-path
+    externalUrl: http://localhost:9093
+    # Email configuration (dev only)
+    smtp:
+      smarthost: "localhost:1025"          # MailHog for dev testing
+      from: "dev-alerts@threads-agent.local"
+      auth:
+        username: ""
+        password: ""
+    # Slack integration (optional for dev - disabled by default)
+    slack:
+      enabled: false                       # enable if you have a dev Slack webhook
+      apiUrl: ""                           # add your dev Slack webhook URL
+      warningsChannel: "#dev-alerts"
+      infrastructureChannel: "#dev-infra"
+    # Email recipients (dev)
+    email:
+      enabled: true
+      from: "dev-alerts@threads-agent.local"
+      businessRecipients: "dev-business@threads-agent.local"
+      infrastructureRecipients: "dev-ops@threads-agent.local"

@@ -45,3 +45,42 @@ monitoring:
       requests:
         cpu: 200m
         memory: 256Mi
+    externalUrl: https://grafana.threads-agent.com
+  alertmanager:
+    enabled: true
+    replicas: 2
+    persistence:
+      enabled: true
+      size: 2Gi
+      storageClass: gp3
+    externalUrl: https://alerts.threads-agent.com
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    # Email configuration (production)
+    smtp:
+      smarthost: "{{ .Values.alerting.smtp.smarthost }}"
+      from: "alerts@threads-agent.com"
+      auth:
+        username: "{{ .Values.alerting.smtp.username }}"
+        password: "{{ .Values.alerting.smtp.password }}"
+    # PagerDuty integration (production)
+    pagerduty:
+      enabled: true
+      integrationKey: "{{ .Values.alerting.pagerduty.integrationKey }}"
+    # Slack integration (production)
+    slack:
+      enabled: true
+      apiUrl: "{{ .Values.alerting.slack.webhookUrl }}"
+      warningsChannel: "#alerts-warnings"
+      infrastructureChannel: "#alerts-infrastructure"
+    # Email recipients (production)
+    email:
+      enabled: true
+      from: "alerts@threads-agent.com"
+      businessRecipients: "business@threads-agent.com,founders@threads-agent.com"
+      infrastructureRecipients: "ops@threads-agent.com,engineering@threads-agent.com"
