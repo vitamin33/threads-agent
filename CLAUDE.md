@@ -254,9 +254,33 @@ class Task(Base):
 - **Testing**: High coverage with unit + integration + e2e
 
 ### Git Workflow  
-- **Branching**: `feat/<epic>-<slug>` pattern
+- **Branching**: `feat/<epic>-<slug>` pattern (general features)
+- **Task Branches**: `cra-{ticket-number}-{kebab-case-title}` pattern (Linear tasks)
 - **Protection**: `main` branch requires PR + CI passing + code owner review
 - **Automation**: `just ship` handles commit → push → PR creation
+
+### Branch Management for Linear Tasks
+
+**IMPORTANT**: When starting work on any new task from Linear, you MUST:
+
+1. **ALWAYS create a new branch** before making any changes
+2. **Branch naming format**: `cra-{ticket-number}-{kebab-case-title}`
+   - Example: For ticket CRA-217 "Alerting & Incident Response System"
+   - Branch name: `cra-217-alerting-incident-response-system`
+3. **Required commands to run**:
+   ```bash
+   # Ensure you're on main and up to date
+   git checkout main
+   git pull origin main
+   
+   # Create and checkout new branch
+   git checkout -b cra-{number}-{title}
+   
+   # Push branch to set upstream tracking
+   git push -u origin cra-{number}-{title}
+   ```
+4. **Never commit directly to main** - all work must be done in feature branches
+5. **Confirm branch creation** with the user before proceeding with implementation
 
 ### Service Development
 - **Scaffolding**: `just scaffold NEW_SERVICE` from template
@@ -361,6 +385,6 @@ curl localhost:8080/health
 
 ---
 
-**Last Updated**: 2025-07-19  
+**Last Updated**: 2025-07-22  
 **Repository**: https://github.com/threads-agent-stack/threads-agent  
 **Documentation**: This file serves as the authoritative development guide for future Claude instances working on this codebase.

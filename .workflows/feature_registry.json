@@ -55,6 +55,48 @@
       "epic": "epic_1753120032",
       "status": "planned",
       "created": "2025-07-21T20:47:12+03:00"
+    },
+    {
+      "id": "feat_1753181522_29818",
+      "name": "Research & Design",
+      "epic": "epic_1753181522",
+      "status": "planned",
+      "created": "2025-07-22T13:52:02+03:00"
+    },
+    {
+      "id": "feat_1753181522_29818",
+      "name": "Infrastructure",
+      "epic": "epic_1753181522",
+      "status": "planned",
+      "created": "2025-07-22T13:52:02+03:00"
+    },
+    {
+      "id": "feat_1753181522_29818",
+      "name": "Core Features",
+      "epic": "epic_1753181522",
+      "status": "planned",
+      "created": "2025-07-22T13:52:02+03:00"
+    },
+    {
+      "id": "feat_1753181522_29818",
+      "name": "Integration Layer",
+      "epic": "epic_1753181522",
+      "status": "planned",
+      "created": "2025-07-22T13:52:02+03:00"
+    },
+    {
+      "id": "feat_1753181522_29818",
+      "name": "Testing & QA",
+      "epic": "epic_1753181522",
+      "status": "planned",
+      "created": "2025-07-22T13:52:02+03:00"
+    },
+    {
+      "id": "feat_1753181522_29818",
+      "name": "Documentation & Training",
+      "epic": "epic_1753181522",
+      "status": "planned",
+      "created": "2025-07-22T13:52:02+03:00"
     }
   ]
 }

@@ -10,7 +10,7 @@ from services.persona_runtime.runtime import build_dag_from_persona
 async def test_dag_produces_draft(monkeypatch: pytest.MonkeyPatch) -> None:
     """Ensure the DAG returns a formatted draft and injects the emoji."""
 
-    async def fake_llm(model: str, prompt: str) -> str:
+    async def fake_llm(model: str, prompt: str, content_type: str = "unknown") -> str:
         return f"resp-{model}"
 
     async def fake_mod(_text: str) -> bool:

@@ -168,23 +168,36 @@ dependencies: []
 features:
 EOF
     
-    # Use AI to suggest feature breakdown
-    local breakdown_prompt="Break down this epic into implementable features:
+    # Use AI to suggest detailed feature breakdown with Linear integration context
+    local breakdown_prompt="Break down this epic into detailed implementable features for Linear task creation:
+
 Epic: $epic_name
 Description: $epic_description
 Complexity: $complexity
 
-Provide 3-8 features with clear scope, ordered by dependency.
-Consider: architecture, implementation, testing, deployment.
-Format: feature_name|description|effort|priority"
+Requirements:
+- Provide 6-10 features with clear scope and dependencies
+- Each feature should be implementable within 1-2 weeks
+- Include specific technical details for implementation
+- Consider: architecture, implementation, testing, deployment, documentation
+- Order by logical dependency sequence
+- Include acceptance criteria for each feature
+
+Format for each feature (pipe-separated):
+feature_name|detailed_description_with_technical_specifics|effort|priority|acceptance_criteria|files_to_modify|required_dependencies
+
+Example format:
+Setup Docker Compose Development Environment|Replace k3d/Helm with docker-compose.yaml for simplified local development. Include hot-reload volumes, simplified networking, environment variable management, and health checks. Maintain production Kubernetes compatibility.|medium|high|Developer can run 'docker-compose up' and have full stack in <30s with hot-reload working|docker-compose.yaml,docker-compose.override.yaml,.env.example,README.md|docker-compose>=2.0,python-dotenv>=1.0.0
+
+Provide comprehensive breakdown optimized for solo developer efficiency:"
     
     if command -v claude >/dev/null 2>&1 && [[ "${USE_CLAUDE_BREAKDOWN:-false}" == "true" ]]; then
         log_info "Using Claude for intelligent epic breakdown..."
-        local features=$(echo "$breakdown_prompt" | timeout 10 claude 2>/dev/null | grep -E "^[^|]+\|[^|]+\|[^|]+\|[^|]+$" || echo "")
+        local features=$(echo "$breakdown_prompt" | timeout 30 claude 2>/dev/null | grep -E "^[^|]+\|.*\|[^|]+\|[^|]+\|.*\|.*\|.*$" || echo "")
         
         if [[ -n "$features" ]]; then
-            echo "$features" | while IFS='|' read -r fname fdesc feffort fpriority; do
-                local feature_id=$(generate_feature "$epic_id" "$fname" "$fdesc" "$feffort" "$fpriority")
+            echo "$features" | while IFS='|' read -r fname fdesc feffort fpriority facceptance ffiles fdeps; do
+                local feature_id=$(generate_detailed_feature "$epic_id" "$fname" "$fdesc" "$feffort" "$fpriority" "$facceptance" "$ffiles" "$fdeps")
                 echo "  - id: \"$feature_id\"" >> "$epic_file"
                 echo "    name: \"$fname\"" >> "$epic_file"
                 echo "    effort: \"$feffort\"" >> "$epic_file"
@@ -289,10 +302,16 @@ EOF
     # Track in learning system
     [[ -f "$LEARNING_SYSTEM" ]] && "$LEARNING_SYSTEM" track "epic-breakdown" 0 1.0 "complexity:$complexity"
     
+    # Optionally create Linear tasks automatically
+    if [[ "${AUTO_CREATE_LINEAR_TASKS:-true}" == "true" ]]; then
+        log_info "Auto-creating Linear tasks for epic..."
+        sync_with_linear "create_epic_tasks" "$epic_id" || log_warn "Failed to auto-create Linear tasks"
+    fi
+    
     echo "$epic_id"
 }
 
-# Generate a feature
+# Generate a feature (legacy function for backward compatibility)
 generate_feature() {
     local epic_id="$1"
     local feature_name="$2"
@@ -300,29 +319,133 @@ generate_feature() {
     local effort="${4:-medium}"
     local priority="${5:-medium}"
     
+    generate_detailed_feature "$epic_id" "$feature_name" "$description" "$effort" "$priority" "" "" ""
+}
+
+# Generate detailed feature with comprehensive metadata for Linear integration
+generate_detailed_feature() {
+    local epic_id="$1"
+    local feature_name="$2"
+    local description="${3:-}"
+    local effort="${4:-medium}"
+    local priority="${5:-medium}"
+    local acceptance="${6:-}"
+    local files="${7:-}"
+    local deps="${8:-}"
+    
     local feature_id="feat_$(date +%s)_$$"
     local feature_file="$FEATURES_DIR/${feature_id}.yaml"
     
-    log_feature "Generating feature: $feature_name"
+    log_feature "Generating detailed feature: $feature_name"
     
-    # Create feature from template
-    cp "$TEMPLATES_DIR/feature_template.yaml" "$feature_file"
-    
-    # Customize feature
-    sed -i '' "s/{feature_name}/$feature_name/g" "$feature_file"
-    sed -i '' "s/{epic_id}/$epic_id/g" "$feature_file"
-    sed -i '' "s/estimated_effort: \"medium\"/estimated_effort: \"$effort\"/g" "$feature_file"
-    sed -i '' "s/priority: \"medium\"/priority: \"$priority\"/g" "$feature_file"
-    
-    # Add feature-specific metadata
+    # Create comprehensive feature file
+    cat > "$feature_file" << EOF
+# Feature: $feature_name
+name: "$feature_name"
+epic: "$epic_id"
+type: "feature"
+priority: "$priority"
+estimated_effort: "$effort"
+lifecycle_stage: "planning"
+
+# Detailed Description
+description: "$description"
+
+# Acceptance Criteria
+acceptance_criteria: "$acceptance"
+
+# Technical Implementation Details
+implementation:
+  files_to_modify:
+EOF
+
+    # Add files to modify
+    if [[ -n "$files" ]]; then
+        echo "$files" | tr ',' '\n' | while read -r file; do
+            if [[ -n "$file" ]]; then
+                echo "    - \"$(echo "$file" | xargs)\"" >> "$feature_file"
+            fi
+        done
+    else
+        echo "    - \"TBD\"" >> "$feature_file"
+    fi
+
+    cat >> "$feature_file" << EOF
+  
+  dependencies:
+EOF
+
+    # Add dependencies
+    if [[ -n "$deps" ]]; then
+        echo "$deps" | tr ',' '\n' | while read -r dep; do
+            if [[ -n "$dep" ]]; then
+                echo "    - \"$(echo "$dep" | xargs)\"" >> "$feature_file"
+            fi
+        done
+    else
+        echo "    - \"None\"" >> "$feature_file"
+    fi
+
     cat >> "$feature_file" << EOF
 
+# Standard Implementation Tasks
+tasks:
+  - name: "Technical Design and Planning"
+    type: "planning"
+    checklist:
+      - "Analyze requirements and constraints"
+      - "Design technical approach and architecture"
+      - "Identify integration points and dependencies"
+      - "Create implementation timeline"
+      - "Review design with stakeholders"
+    
+  - name: "Core Implementation"
+    type: "development"
+    checklist:
+      - "Set up development environment and branches"
+      - "Implement core functionality according to design"
+      - "Handle edge cases and error conditions"
+      - "Follow coding standards and best practices"
+      - "Perform self-review and refactoring"
+    
+  - name: "Testing and Quality Assurance"
+    type: "testing"
+    checklist:
+      - "Write comprehensive unit tests"
+      - "Create integration tests for key flows"
+      - "Perform manual testing and user acceptance testing"
+      - "Validate performance and security requirements"
+      - "Ensure test coverage meets quality standards"
+    
+  - name: "Documentation and Deployment"
+    type: "documentation"
+    checklist:
+      - "Update API documentation and code comments"
+      - "Create or update user-facing documentation"
+      - "Document deployment procedures and configuration"
+      - "Update changelog and migration guides"
+      - "Prepare production deployment checklist"
+
+# Automation Configuration
+automation:
+  branch_naming: "feat/$(echo "$epic_id" | tr '[:upper:]' '[:lower:]')-$(echo "$feature_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | cut -c1-30)"
+  pr_template: "standard"
+  quality_gates: ["lint", "test", "security"]
+  deployment: "staging"
+
 # Feature Metadata
-id: "$feature_id"
-description: "$description"
-created: "$(date -Iseconds)"
-assigned_to: "unassigned"
-dependencies: []
+metadata:
+  id: "$feature_id"
+  created: "$(date -Iseconds)"
+  assigned_to: "unassigned"
+  estimated_hours: $(convert_effort_to_hours "$effort")
+  complexity_score: $(calculate_complexity_score "$description" "$files" "$deps")
+
+# Linear Integration
+linear:
+  auto_create: true
+  labels: ["feature", "$priority", "$effort"]
+  project_sync: true
 
 # Lifecycle Events
 lifecycle:
@@ -334,6 +457,47 @@ EOF
     register_feature "$feature_id" "$feature_name" "$epic_id"
     
     echo "$feature_id"
+}
+
+# Helper functions for detailed feature generation
+convert_effort_to_hours() {
+    local effort="$1"
+    case "$effort" in
+        "small") echo "20" ;;
+        "medium") echo "40" ;;
+        "large") echo "80" ;;
+        *) echo "40" ;;
+    esac
+}
+
+calculate_complexity_score() {
+    local description="$1"
+    local files="$2"
+    local deps="$3"
+    
+    local score=1
+    
+    # Add complexity based on description keywords
+    if echo "$description" | grep -qiE "integration|migration|refactor|architecture"; then
+        score=$((score + 2))
+    fi
+    if echo "$description" | grep -qiE "performance|security|scalability"; then
+        score=$((score + 1))
+    fi
+    
+    # Add complexity based on file count
+    local file_count=$(echo "$files" | tr ',' '\n' | wc -l)
+    if [[ $file_count -gt 5 ]]; then
+        score=$((score + 1))
+    fi
+    
+    # Add complexity based on dependencies
+    local dep_count=$(echo "$deps" | tr ',' '\n' | wc -l)
+    if [[ $dep_count -gt 3 ]]; then
+        score=$((score + 1))
+    fi
+    
+    echo "$score"
 }
 
 # Feature lifecycle management
@@ -859,32 +1023,273 @@ display_orchestration_suggestions() {
     echo
 }
 
-# Linear integration (if available)
+# Enhanced Linear integration with MCP support
 sync_with_linear() {
     local action="${1:-sync}"
+    local epic_id="${2:-}"
     
-    if ! command -v linear >/dev/null 2>&1; then
-        log_warn "Linear CLI not found - skipping project management sync"
+    # Check for Claude MCP Linear integration first
+    if command -v claude >/dev/null 2>&1; then
+        log_info "Using Claude MCP Linear integration..."
+        case "$action" in
+            "create_epic_tasks")
+                create_linear_tasks_from_epic "$epic_id"
+                ;;
+            "sync")
+                sync_epics_to_linear
+                sync_features_to_linear
+                ;;
+            "create")
+                create_linear_issues
+                ;;
+            "update")
+                update_linear_status
+                ;;
+        esac
         return 0
     fi
     
-    log_info "Syncing with Linear project management..."
+    # Fallback to Linear CLI if available
+    if ! command -v linear >/dev/null 2>&1; then
+        log_warn "Neither Claude MCP Linear nor Linear CLI found - skipping Linear integration"
+        return 0
+    fi
+    
+    log_info "Using Linear CLI for project management sync..."
     
     case "$action" in
         "sync")
-            # Sync epics and features with Linear
             sync_epics_to_linear
             sync_features_to_linear
             ;;
         "create")
-            # Create Linear issues from features
             create_linear_issues
             ;;
         "update")
-            # Update Linear issue status
             update_linear_status
             ;;
     esac
+}
+
+# Create Linear tasks from epic breakdown using Claude MCP
+create_linear_tasks_from_epic() {
+    local epic_id="$1"
+    local epic_file="$EPICS_DIR/${epic_id}.yaml"
+    
+    if [[ ! -f "$epic_file" ]]; then
+        log_error "Epic file not found: $epic_file"
+        return 1
+    fi
+    
+    log_info "Creating Linear tasks from epic breakdown..."
+    
+    # Get epic details
+    local epic_name=$(awk '/^name:/ {gsub(/^name: *"|"$/, ""); print}' "$epic_file")
+    local epic_description=$(awk '/^description:/ {gsub(/^description: *"|"$/, ""); print}' "$epic_file")
+    
+    # Create epic project in Linear
+    local project_creation_prompt="Create a Linear project for this epic:
+Title: $epic_name
+Description: $epic_description
+
+Return only the project ID after creation."
+    
+    local project_id=""
+    if command -v claude >/dev/null 2>&1; then
+        project_id=$(echo "$project_creation_prompt" | claude 2>/dev/null | grep -o '[a-f0-9-]\{36\}' | head -1 || echo "")
+    fi
+    
+    # Extract features from epic file
+    awk '/^features:$/,/^[^[:space:]]/ {
+        if (/^  - id:/) {
+            gsub(/^  - id: *"|"$/, ""); 
+            print "FEATURE_ID:" $0
+        }
+        if (/^    name:/) {
+            gsub(/^    name: *"|"$/, ""); 
+            print "FEATURE_NAME:" $0
+        }
+        if (/^    effort:/) {
+            gsub(/^    effort: *"|"$/, ""); 
+            print "FEATURE_EFFORT:" $0
+        }
+        if (/^    priority:/) {
+            gsub(/^    priority: *"|"$/, ""); 
+            print "FEATURE_PRIORITY:" $0
+        }
+    }' "$epic_file" | {
+        local current_feature_id=""
+        local current_feature_name=""
+        local current_effort=""
+        local current_priority=""
+        
+        while IFS=':' read -r key value; do
+            case "$key" in
+                "FEATURE_ID")
+                    # Process previous feature if exists
+                    if [[ -n "$current_feature_id" && -n "$current_feature_name" ]]; then
+                        create_detailed_linear_task "$current_feature_id" "$current_feature_name" "$current_effort" "$current_priority" "$project_id"
+                    fi
+                    current_feature_id="$value"
+                    current_feature_name=""
+                    current_effort=""
+                    current_priority=""
+                    ;;
+                "FEATURE_NAME")
+                    current_feature_name="$value"
+                    ;;
+                "FEATURE_EFFORT")
+                    current_effort="$value"
+                    ;;
+                "FEATURE_PRIORITY")
+                    current_priority="$value"
+                    ;;
+            esac
+        done
+        
+        # Process final feature
+        if [[ -n "$current_feature_id" && -n "$current_feature_name" ]]; then
+            create_detailed_linear_task "$current_feature_id" "$current_feature_name" "$current_effort" "$current_priority" "$project_id"
+        fi
+    }
+    
+    log_success "Linear tasks created for epic: $epic_name"
+}
+
+# Create detailed Linear task with full description
+create_detailed_linear_task() {
+    local feature_id="$1"
+    local feature_name="$2"
+    local effort="${3:-medium}"
+    local priority="${4:-medium}"
+    local project_id="${5:-}"
+    
+    local feature_file="$FEATURES_DIR/${feature_id}.yaml"
+    
+    if [[ ! -f "$feature_file" ]]; then
+        log_warn "Feature file not found: $feature_file - creating basic task"
+        create_basic_linear_task "$feature_name" "$effort" "$priority" "$project_id"
+        return 0
+    fi
+    
+    # Extract detailed task information from feature file
+    local description=""
+    local acceptance_criteria=""
+    local checklist=""
+    local files=""
+    local libs=""
+    
+    # Parse feature file for details
+    description=$(awk '/^description:/ {gsub(/^description: *"|"$/, ""); print}' "$feature_file")
+    
+    # Extract checklist items
+    checklist=$(awk '/checklist:$/,/^[^[:space:]]/ {
+        if (/^[[:space:]]*-[[:space:]]*".*"/) {
+            gsub(/^[[:space:]]*-[[:space:]]*"|"$/, "");
+            print "- " $0
+        }
+    }' "$feature_file")
+    
+    # Extract file paths
+    files=$(awk '/files:$/,/^[^[:space:]]/ {
+        if (/^[[:space:]]*-[[:space:]]*".*"/) {
+            gsub(/^[[:space:]]*-[[:space:]]*"|"$/, "");
+            print "- " $0
+        }
+    }' "$feature_file")
+    
+    # Extract libraries
+    libs=$(awk '/libs:$/,/^[^[:space:]]/ {
+        if (/^[[:space:]]*-[[:space:]]*".*"/) {
+            gsub(/^[[:space:]]*-[[:space:]]*"|"$/, "");
+            print "- " $0
+        }
+    }' "$feature_file")
+    
+    # Build comprehensive task description
+    local full_description="$description"
+    
+    if [[ -n "$checklist" ]]; then
+        full_description="$full_description
+
+## Implementation Checklist
+$checklist"
+    fi
+    
+    if [[ -n "$files" ]]; then
+        full_description="$full_description
+
+## Files to Modify
+$files"
+    fi
+    
+    if [[ -n "$libs" ]]; then
+        full_description="$full_description
+
+## Dependencies
+$libs"
+    fi
+    
+    # Add effort and priority context
+    full_description="$full_description
+
+## Task Metadata
+- **Effort Estimate:** $effort
+- **Priority:** $priority
+- **Feature ID:** $feature_id"
+    
+    # Create task using Claude MCP Linear integration
+    if command -v claude >/dev/null 2>&1; then
+        local task_creation_prompt="Create a Linear issue with the following details:
+
+Title: $feature_name
+Description: $full_description
+Priority: $priority
+Team: Use the team that handles CRA- prefixed tickets
+
+If project_id '$project_id' is provided, add the issue to that project.
+
+Return only 'SUCCESS: [ISSUE_ID]' after creation, or 'ERROR: [reason]' if failed."
+        
+        log_info "Creating detailed Linear task: $feature_name"
+        local result=$(echo "$task_creation_prompt" | claude 2>/dev/null | head -1)
+        
+        if [[ "$result" =~ SUCCESS:* ]]; then
+            local issue_id=$(echo "$result" | sed 's/SUCCESS: *//')
+            log_success "Created Linear task: $feature_name (ID: $issue_id)"
+            
+            # Update feature file with Linear task ID
+            echo "linear_issue_id: \"$issue_id\"" >> "$feature_file"
+        else
+            log_error "Failed to create Linear task: $feature_name - $result"
+        fi
+    else
+        log_warn "Claude not available - cannot create detailed Linear task"
+    fi
+}
+
+# Create basic Linear task (fallback)
+create_basic_linear_task() {
+    local task_name="$1"
+    local effort="${2:-medium}"
+    local priority="${3:-medium}"
+    local project_id="${4:-}"
+    
+    log_info "Creating basic Linear task: $task_name"
+    
+    if command -v claude >/dev/null 2>&1; then
+        local basic_prompt="Create a Linear issue:
+Title: $task_name
+Priority: $priority
+Estimate: $effort
+
+Return only the issue ID after creation."
+        
+        local issue_id=$(echo "$basic_prompt" | claude 2>/dev/null | head -1)
+        if [[ -n "$issue_id" ]]; then
+            log_success "Created basic Linear task: $task_name (ID: $issue_id)"
+        fi
+    fi
 }
 
 sync_epics_to_linear() {
