@@ -115,7 +115,11 @@
       "mcp__linear__linear_getInitiatives",
       "mcp__linear__linear_getProjectIssues",
       "Bash(PYTHONPATH=. pytest services/common/tests/test_enhanced_metrics.py -v)",
-      "Bash(PYTHONPATH=. pytest services/common/tests/test_enhanced_metrics.py::test_business_metrics -v)"
+      "Bash(PYTHONPATH=. pytest services/common/tests/test_enhanced_metrics.py::test_business_metrics -v)",
+      "Bash(git push:*)",
+      "Bash(helm template:*)",
+      "Bash(kubectl wait:*)",
+      "Bash(PYTHONPATH=. pytest -m e2e tests/e2e/test_metrics.py::test_metrics_endpoint -v)"
     ],
     "deny": []
   }

@@ -13,3 +13,35 @@ persistence:
   enabled: true
   size: 5Gi
   storageClass: gp3
+
+# ───────── monitoring & observability ─────────
+monitoring:
+  prometheus:
+    enabled: true
+    url: http://prometheus:9090
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: gp3
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+  grafana:
+    enabled: true
+    adminPassword: "{{ .Values.grafana.adminPassword | default \"changeme\" }}"
+    plugins: "grafana-piechart-panel,grafana-polystat-panel"
+    persistence:
+      enabled: true
+      size: 2Gi
+      storageClass: gp3
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 256Mi
