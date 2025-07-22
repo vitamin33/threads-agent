@@ -200,6 +200,6 @@ async def metrics() -> Response:
 
 
 if __name__ == "__main__":
-    import uvicorn  # type: ignore[import-not-found]
+    import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8080)

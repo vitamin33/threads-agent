@@ -9,16 +9,14 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 try:
-    from sklearn.ensemble import RandomForestClassifier  # type: ignore[import-not-found,import-untyped]
-    from sklearn.feature_extraction.text import (
-        TfidfVectorizer,  # type: ignore[import-not-found,import-untyped]
-    )
-    from sklearn.metrics import (  # type: ignore[import-not-found,import-untyped]
+    from sklearn.ensemble import RandomForestClassifier  # type: ignore
+    from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
+    from sklearn.metrics import (  # type: ignore
         accuracy_score,
         classification_report,
         confusion_matrix,
     )
-    from sklearn.model_selection import (  # type: ignore[import-not-found,import-untyped]
+    from sklearn.model_selection import (  # type: ignore
         cross_val_score,
         train_test_split,
     )

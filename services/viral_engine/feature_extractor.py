@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Dict, List
 
-import nltk  # type: ignore[import-not-found,import-untyped]
+import nltk  # type: ignore
 import numpy as np
 
 # Download required NLTK data (run once)
@@ -18,7 +18,7 @@ try:
 except LookupError:
     nltk.download("vader_lexicon", quiet=True)
 
-from nltk.sentiment.vader import SentimentIntensityAnalyzer  # type: ignore[import-not-found,import-untyped]
+from nltk.sentiment.vader import SentimentIntensityAnalyzer  # type: ignore
 
 
 class AdvancedFeatureExtractor:
