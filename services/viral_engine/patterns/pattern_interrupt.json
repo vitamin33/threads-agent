@@ -1,0 +1,64 @@
+{
+  "category": "pattern_interrupt",
+  "description": "Attention-grabbing hooks that break normal patterns",
+  "avg_engagement_rate": 0.094,
+  "best_times": ["anytime"],
+  "target_audience": ["general", "professionals"],
+  "patterns": [
+    {
+      "id": "interrupt_001",
+      "template": "STOP {common_action}. Do this instead:",
+      "variables": ["common_action"],
+      "avg_er": 0.098,
+      "examples": [
+        "STOP networking. Do this instead:",
+        "STOP multitasking. Do this instead:",
+        "STOP trying to be productive. Do this instead:"
+      ]
+    },
+    {
+      "id": "interrupt_002",
+      "template": "Don't {common_advice}. {alternative_action}:",
+      "variables": ["common_advice", "alternative_action"],
+      "avg_er": 0.091,
+      "examples": [
+        "Don't follow your passion. Do this:",
+        "Don't work harder. Work differently:",
+        "Don't network more. Network better:"
+      ]
+    },
+    {
+      "id": "interrupt_003",
+      "template": "Never {common_mistake} again. Here's how:",
+      "variables": ["common_mistake"],
+      "avg_er": 0.089,
+      "examples": [
+        "Never send a boring email again. Here's how:",
+        "Never have an awkward networking conversation again. Here's how:",
+        "Never miss a deadline again. Here's how:"
+      ]
+    },
+    {
+      "id": "interrupt_004",
+      "template": "Delete {tool_or_app}. Use this instead:",
+      "variables": ["tool_or_app"],
+      "avg_er": 0.096,
+      "examples": [
+        "Delete LinkedIn. Use this instead:",
+        "Delete your to-do list. Use this instead:",
+        "Delete social media. Use this instead:"
+      ]
+    },
+    {
+      "id": "interrupt_005",
+      "template": "Forget everything you know about {topic}:",
+      "variables": ["topic"],
+      "avg_er": 0.093,
+      "examples": [
+        "Forget everything you know about productivity:",
+        "Forget everything you know about networking:",
+        "Forget everything you know about success:"
+      ]
+    }
+  ]
+}

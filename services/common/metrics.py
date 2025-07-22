@@ -195,7 +195,7 @@ ERROR_RATE_PERCENTAGE = Histogram(
 # ───── utilities ────────────────────────────────────────────────────────
 @contextmanager
 def record_latency(
-    phase: Literal["parse", "llm", "persist"],
+    phase: Literal["parse", "llm", "persist", "viral_hook_optimization"],
 ) -> Generator[None, None, None]:
     """Context manager → records time spent inside the **with** block."""
     start = time.perf_counter()

@@ -1,0 +1,69 @@
+{
+  "category": "emotion_triggers",
+  "description": "Emotion-driven hooks that trigger fear, excitement, anger, curiosity",
+  "avg_engagement_rate": 0.085,
+  "best_times": ["morning", "evening"],
+  "target_audience": ["general", "entrepreneurs"],
+  "patterns": [
+    {
+      "id": "emotion_001",
+      "template": "This {situation} will make you {emotion}:",
+      "variables": ["situation", "emotion"],
+      "avg_er": 0.087,
+      "emotions": ["angry", "excited", "worried", "motivated"],
+      "examples": [
+        "This networking mistake will make you cringe:",
+        "This productivity hack will make you excited:",
+        "This career trap will make you worried:"
+      ]
+    },
+    {
+      "id": "emotion_002",
+      "template": "Warning: {dangerous_trend} is {consequence}",
+      "variables": ["dangerous_trend", "consequence"],
+      "avg_er": 0.091,
+      "emotions": ["fear", "concern", "urgency"],
+      "examples": [
+        "Warning: Remote work is killing your career progression",
+        "Warning: AI tools are making people lazy thinkers",
+        "Warning: Hustle culture is burning out entire generations"
+      ]
+    },
+    {
+      "id": "emotion_003",
+      "template": "Get ready to be {emotion} by {revelation}:",
+      "variables": ["emotion", "revelation"],
+      "avg_er": 0.089,
+      "emotions": ["amazed", "shocked", "inspired", "outraged"],
+      "examples": [
+        "Get ready to be shocked by this networking secret:",
+        "Get ready to be amazed by this productivity truth:",
+        "Get ready to be inspired by this career story:"
+      ]
+    },
+    {
+      "id": "emotion_004",
+      "template": "I can't believe {shocking_fact}. This changes everything.",
+      "variables": ["shocking_fact"],
+      "avg_er": 0.092,
+      "emotions": ["disbelief", "excitement", "urgency"],
+      "examples": [
+        "I can't believe 90% of networking is done wrong. This changes everything.",
+        "I can't believe this simple habit transformed my career. This changes everything.",
+        "I can't believe most people ignore this success factor. This changes everything."
+      ]
+    },
+    {
+      "id": "emotion_005",
+      "template": "This will make you {emotion} about {topic}:",
+      "variables": ["emotion", "topic"],
+      "avg_er": 0.088,
+      "emotions": ["rethink", "question", "reconsider"],
+      "examples": [
+        "This will make you rethink productivity:",
+        "This will make you question networking:",
+        "This will make you reconsider your career path:"
+      ]
+    }
+  ]
+}

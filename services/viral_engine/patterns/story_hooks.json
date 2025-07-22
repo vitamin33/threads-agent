@@ -1,0 +1,64 @@
+{
+  "category": "story_hooks", 
+  "description": "Narrative opening hooks that draw readers into personal stories",
+  "avg_engagement_rate": 0.083,
+  "best_times": ["evening", "weekend"],
+  "target_audience": ["general", "professionals", "entrepreneurs"],
+  "patterns": [
+    {
+      "id": "story_001",
+      "template": "I {past_action} and {unexpected_outcome}. Here's what I learned:",
+      "variables": ["past_action", "unexpected_outcome"],
+      "avg_er": 0.086,
+      "examples": [
+        "I quit my job without a plan and doubled my income. Here's what I learned:",
+        "I cold-emailed 100 strangers and changed my career. Here's what I learned:",
+        "I failed 3 startups and found my calling. Here's what I learned:"
+      ]
+    },
+    {
+      "id": "story_002",
+      "template": "Two years ago, I was {past_situation}. Today, I'm {current_situation}. Here's how:",
+      "variables": ["past_situation", "current_situation"],
+      "avg_er": 0.089,
+      "examples": [
+        "Two years ago, I was unemployed and broke. Today, I'm running a 6-figure business. Here's how:",
+        "Two years ago, I was working 80-hour weeks. Today, I work 4 hours a day. Here's how:",
+        "Two years ago, I was invisible on LinkedIn. Today, I have 50k followers. Here's how:"
+      ]
+    },
+    {
+      "id": "story_003", 
+      "template": "My {relationship} told me {advice}. I ignored it. Big mistake.",
+      "variables": ["relationship", "advice"],
+      "avg_er": 0.084,
+      "examples": [
+        "My mentor told me to specialize. I ignored it. Big mistake.",
+        "My mom told me to save money first. I ignored it. Big mistake.",
+        "My boss told me to focus on relationships. I ignored it. Big mistake."
+      ]
+    },
+    {
+      "id": "story_004",
+      "template": "The moment that changed my {area} forever:",
+      "variables": ["area"],
+      "avg_er": 0.088,
+      "examples": [
+        "The moment that changed my career forever:",
+        "The moment that changed my mindset forever:",
+        "The moment that changed my relationships forever:"
+      ]
+    },
+    {
+      "id": "story_005",
+      "template": "I used to {old_behavior}. Then I discovered {revelation}. Everything changed.",
+      "variables": ["old_behavior", "revelation"],  
+      "avg_er": 0.087,
+      "examples": [
+        "I used to network constantly. Then I discovered quality over quantity. Everything changed.",
+        "I used to work all the time. Then I discovered the power of focus. Everything changed.",
+        "I used to chase every opportunity. Then I discovered saying no. Everything changed."
+      ]
+    }
+  ]
+}

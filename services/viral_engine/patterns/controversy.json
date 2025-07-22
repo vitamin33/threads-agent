@@ -1,0 +1,119 @@
+{
+  "category": "controversy",
+  "description": "Debate-triggering hooks that generate strong engagement through polarizing opinions",
+  "avg_engagement_rate": 0.082,
+  "best_times": ["morning", "evening"],
+  "target_audience": ["general", "entrepreneurs", "tech"],
+  "patterns": [
+    {
+      "id": "controversy_001",
+      "template": "Unpopular opinion: {statement}",
+      "variables": ["statement"],
+      "avg_er": 0.094,
+      "examples": [
+        "Unpopular opinion: Most productivity advice is just procrastination with extra steps",
+        "Unpopular opinion: AI will make most marketing jobs obsolete within 3 years",
+        "Unpopular opinion: Working from home is making us less creative"
+      ]
+    },
+    {
+      "id": "controversy_002", 
+      "template": "Hot take: {bold_statement}",
+      "variables": ["bold_statement"],
+      "avg_er": 0.089,
+      "examples": [
+        "Hot take: LinkedIn is just Facebook for people who think they're too good for Facebook",
+        "Hot take: Most startups fail because founders are too proud to ask for help",
+        "Hot take: Remote work is killing company culture"
+      ]
+    },
+    {
+      "id": "controversy_003",
+      "template": "Controversial truth: {reality_check}",
+      "variables": ["reality_check"],
+      "avg_er": 0.087,
+      "examples": [
+        "Controversial truth: Your network matters more than your skills",
+        "Controversial truth: Most 'thought leaders' just repackage old ideas",
+        "Controversial truth: Hustle culture is just toxic positivity in disguise"
+      ]
+    },
+    {
+      "id": "controversy_004",
+      "template": "I'm going to say it: {bold_claim}",
+      "variables": ["bold_claim"],
+      "avg_er": 0.091,
+      "examples": [
+        "I'm going to say it: Most online courses are just expensive YouTube videos",
+        "I'm going to say it: Networking events are awkward and inefficient",
+        "I'm going to say it: Most entrepreneurs are just unemployed people with better marketing"
+      ]
+    },
+    {
+      "id": "controversy_005",
+      "template": "Fight me on this: {position}",
+      "variables": ["position"],
+      "avg_er": 0.096,
+      "examples": [
+        "Fight me on this: Email is more productive than Slack",
+        "Fight me on this: Most innovation happens by accident, not design",
+        "Fight me on this: The best ideas come during boring meetings"
+      ]
+    },
+    {
+      "id": "controversy_006",
+      "template": "This will upset people, but {uncomfortable_truth}",
+      "variables": ["uncomfortable_truth"],
+      "avg_er": 0.088,
+      "examples": [
+        "This will upset people, but talent without persistence is worthless",
+        "This will upset people, but most 'disruptive' companies just have better marketing",
+        "This will upset people, but being busy doesn't mean being productive"
+      ]
+    },
+    {
+      "id": "controversy_007",
+      "template": "Hear me out: {unconventional_view}",
+      "variables": ["unconventional_view"],
+      "avg_er": 0.085,
+      "examples": [
+        "Hear me out: Failure is overrated as a learning tool",
+        "Hear me out: Most successful people are just lucky with good timing",
+        "Hear me out: Perfectionism is often just fear disguised as standards"
+      ]
+    },
+    {
+      "id": "controversy_008",
+      "template": "Nobody talks about this, but {hidden_truth}",
+      "variables": ["hidden_truth"],
+      "avg_er": 0.092,
+      "examples": [
+        "Nobody talks about this, but most mentorship is just ego validation",
+        "Nobody talks about this, but company culture is mostly performative",
+        "Nobody talks about this, but most networking is transactional"
+      ]
+    },
+    {
+      "id": "controversy_009",
+      "template": "The truth nobody wants to hear: {harsh_reality}",
+      "variables": ["harsh_reality"],
+      "avg_er": 0.090,
+      "examples": [
+        "The truth nobody wants to hear: Your ideas aren't unique",
+        "The truth nobody wants to hear: Most passion projects fail because of poor execution",
+        "The truth nobody wants to hear: Being an entrepreneur isn't for everyone"
+      ]
+    },
+    {
+      "id": "controversy_010",
+      "template": "Am I the only one who thinks {contrarian_view}?",
+      "variables": ["contrarian_view"],
+      "avg_er": 0.086,
+      "examples": [
+        "Am I the only one who thinks most TED talks are just motivational fluff?",
+        "Am I the only one who thinks open offices kill productivity?",
+        "Am I the only one who thinks most startup advice comes from survivorship bias?"
+      ]
+    }
+  ]
+}
