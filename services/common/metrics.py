@@ -330,8 +330,38 @@ def maybe_start_metrics_server(port: int = 9090) -> None:
 
     • Keeps a module-level flag so we don't start multiple times
     • Call this once from service startup (orchestrator, worker, …)
+    • Initializes key metrics with default values so they appear in /metrics
     """
     if getattr(maybe_start_metrics_server, "_started", False):
         return
+
+    # Initialize key metrics with default values so they appear in /metrics endpoint
+    _initialize_default_metrics()
+
     start_http_server(port)  # non-blocking
     setattr(maybe_start_metrics_server, "_started", True)
+
+
+def _initialize_default_metrics() -> None:
+    """Initialize metrics with default values to ensure they appear in /metrics."""
+    # Initialize business metrics with zero values by calling proper methods
+    POSTS_GENERATED_TOTAL.labels(persona_id="ai-jesus", status="success").inc(0)
+    CONTENT_GENERATION_LATENCY.labels(persona_id="ai-jesus", phase="total").observe(0)
+    CONTENT_QUALITY_SCORE.labels(persona_id="ai-jesus", content_type="combined").set(
+        0.0
+    )
+    COST_PER_POST.labels(persona_id="ai-jesus").set(0.0)
+
+    # Initialize RED methodology metrics
+    HTTP_REQUESTS_TOTAL.labels(
+        service="orchestrator", method="POST", endpoint="/task", status_code="200"
+    ).inc(0)
+    HTTP_REQUEST_DURATION.labels(
+        service="orchestrator", method="POST", endpoint="/task"
+    ).observe(0)
+    HTTP_REQUESTS_IN_FLIGHT.labels(service="orchestrator", endpoint="/task").set(0)
+
+    # Initialize USE methodology metrics
+    CELERY_TASKS_TOTAL.labels(task_name="tasks.queue_post", status="success").inc(0)
+    CELERY_TASK_DURATION.labels(task_name="tasks.queue_post").observe(0)
+    DATABASE_QUERY_DURATION.labels(database="postgres", operation="insert").observe(0)

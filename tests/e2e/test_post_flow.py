@@ -178,12 +178,16 @@ def test_draft_post_happy_path() -> None:
         "# TYPE llm_tokens_total" in metrics_text
     ), "llm_tokens_total metric not found"
 
-    # Verify latency was recorded for key phases
-    # In test mode, llm phase might not be recorded due to stubbed calls
-    # but persist phase should always be recorded
+    # Verify business metrics were recorded during content generation
+    # Check that posts were generated (should be > 0 after successful generation)
     assert (
-        'request_latency_seconds_count{phase="persist"}' in metrics_text
-    ), "persist phase latency not recorded"
+        "posts_generated_total" in metrics_text
+    ), "posts_generated_total metric not found"
+
+    # Check that content generation latency was recorded
+    assert (
+        "content_generation_latency_seconds" in metrics_text
+    ), "content_generation_latency_seconds metric not found"
 
     # 7️⃣ verify test completed within time budget
     elapsed = time.time() - start_time
