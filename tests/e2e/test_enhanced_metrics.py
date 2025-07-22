@@ -3,39 +3,15 @@
 
 from __future__ import annotations
 
-import subprocess
 import time
-from typing import Iterator
 
 import httpx
 import pytest
 
+from .conftest import ORCH_PORT, THREADS_PORT
+
 pytestmark = pytest.mark.e2e
-
-ORCH_PORT = 8080
-THREADS_PORT = 9009
-
-
-def _port_forward(svc: str, local: int, remote: int) -> subprocess.Popen[bytes]:
-    """Run `kubectl port-forward` in the background and return its process."""
-    return subprocess.Popen(
-        ["kubectl", "port-forward", f"svc/{svc}", f"{local}:{remote}"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
-@pytest.fixture(autouse=True)
-def port_forwards() -> Iterator[None]:
-    """Establish local forwards to orchestrator and fake-threads for metrics testing."""
-    pf1 = _port_forward("orchestrator", ORCH_PORT, 8080)
-    pf2 = _port_forward("fake-threads", THREADS_PORT, 9009)
-    time.sleep(3)  # give k8s a moment for port forwards
-    try:
-        yield
-    finally:
-        pf1.terminate()
-        pf2.terminate()
+# Port forwards are now handled by conftest.py k8s_port_forwards fixture
 
 
 def test_business_metrics_collection() -> None:

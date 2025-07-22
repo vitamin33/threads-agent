@@ -59,9 +59,9 @@ just test             # Run full test suite
 
 #### Testing  
 - `just unit` - Run unit tests only (`pytest -m "not e2e"`)
-- `just e2e` - Run end-to-end tests (`pytest -m e2e`)
+- `just e2e` - Run end-to-end tests with automatic port forwarding (`pytest -m e2e`)
 - `just test-watch [SERVICE]` - Watch mode testing
-- `just e2e-prepare` - Full e2e setup (bootstrap + images + deploy)
+- `just e2e-prepare` - Full e2e setup (bootstrap + images + deploy + service readiness checks)
 
 #### Quality & Shipping
 - `just lint` - Format with ruff, isort, black

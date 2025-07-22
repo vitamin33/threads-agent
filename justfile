@@ -54,12 +54,18 @@ reset-hard:
     just docker-cache-clear
 
 # ---------- Local e2e run ----------
-e2e-prepare:
+e2e-prepare:          # full e2e setup: bootstrap + images + deploy + test
+    @echo "🚀  setting up complete e2e environment..."
     just bootstrap
-    just images
+    just images  
     just deploy-dev
+    @echo "⏳  waiting for services to be ready..."
+    kubectl wait --for=condition=ready pod -l app=postgres --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=orchestrator --timeout=300s
+    @echo "✅  e2e environment ready!"
 
 e2e:
+    @echo "🧪  running e2e tests (with automatic service checks)..."
     PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -s -m e2e
 
 # ---------- Unit-only test run ----------
