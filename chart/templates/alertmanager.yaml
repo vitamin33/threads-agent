@@ -18,7 +18,7 @@ spec:
         app: alertmanager
         {{- include "threads.labels" . | nindent 8 }}
       annotations:
-        checksum/config: "disabled"
+        checksum/config: {{ toYaml .Values.monitoring.alertmanager | sha256sum }}
     spec:
       containers:
       - name: alertmanager

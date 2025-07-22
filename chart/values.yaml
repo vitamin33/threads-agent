@@ -141,3 +141,21 @@ monitoring:
       from: "alerts@threads-agent.com"
       businessRecipients: "business@threads-agent.com"
       infrastructureRecipients: "ops@threads-agent.com"
+
+# Redis cache for trend analysis and token optimization
+redis:
+  enabled: false                          # turn ON in dev/prod values for caching
+  image:
+    repository: redis
+    tag: "7-alpine"
+  port: 6379
+  persistence:
+    enabled: false
+    size: 1Gi
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

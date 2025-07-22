@@ -136,6 +136,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
 .envrc
 .venv
 env/
@@ -245,3 +246,10 @@ traces.zip                     # OTEL export artefacts
 *.crt
 *.p12
 *.safetensors                 # LoRA checkpoints – store in S3/MinIO
+
+# ── SearXNG local instance ────────────────────────────
+.searxng/
+
+# ── Claude Code local settings ────────────────────────
+.claude/settings.local.json
+.claude-local.json

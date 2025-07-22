@@ -61,6 +61,12 @@ qdrant:
 minio:
   enabled: false
 
+# Redis for caching and token optimization
+redis:
+  enabled: true
+  persistence:
+    enabled: false  # No persistence needed in CI
+
 openai:
   enabled: true
   apiKey: "REPLACE_IN_RUNTIME"

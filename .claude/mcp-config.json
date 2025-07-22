@@ -1,0 +1,56 @@
+{
+  "mcpServers": {
+    "searxng": {
+      "command": "mcp-searxng",
+      "args": ["--url", "http://localhost:8888"],
+      "env": {}
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "xoxb-8970898560864-8950765486740-LPDfpEPZ5cEFWNcN7RLplgoR",
+        "SLACK_TEAM_ID": "T08V06BA8KH",
+        "SLACK_CHANNEL_IDS": "alerts"
+      }
+    },
+    "redis": {
+      "command": "redis-mcp",
+      "args": [],
+      "env": {
+        "REDIS_URL": "redis://localhost:6379"
+      }
+    },
+    "kubernetes": {
+      "command": "mcp-server-kubernetes",
+      "args": ["--kubeconfig", "/Users/vitaliiserbyn/.kube/config", "--context", "k3d-threads-agent"],
+      "env": {}
+    },
+    "postgresql": {
+      "command": "postgres-mcp-server",
+      "args": [],
+      "env": {
+        "PGHOST": "localhost",
+        "PGPORT": "5432",
+        "PGUSER": "postgres",
+        "PGPASSWORD": "postgres",
+        "PGDATABASE": "threads_agent"
+      }
+    },
+    "openai": {
+      "command": "openai-mcp-server",
+      "args": [],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite", "--db-path", "./data/threads-metrics.db"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/vitaliiserbyn/development/team/jordan-kim/threads-agent"]
+    }
+  }
+}
