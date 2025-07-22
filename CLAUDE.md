@@ -569,18 +569,49 @@ class Task(Base):
 
 ### Git Workflow  
 - **Branching**: `feat/<epic>-<slug>` pattern (general features)
-- **Task Branches**: `cra-{ticket-number}-{kebab-case-title}` pattern (Linear tasks)
+- **Task Branches**: `task-{epic-id}-{kebab-case-title}` pattern (local tasks)
 - **Protection**: `main` branch requires PR + CI passing + code owner review
 - **Automation**: `just ship` handles commit → push → PR creation
 
-### Branch Management for Linear Tasks
+### Local Epic & Task Management System
 
-**IMPORTANT**: When starting work on any new task from Linear, you MUST:
+**Overview**: This project uses a local YAML-based epic and task management system located in `.workflows/` directory.
+
+**Directory Structure**:
+```
+.workflows/
+├── epics/              # Epic definitions (epic_*.yaml)
+├── features/           # Feature breakdowns (feat_*.yaml)
+├── tasks/              # Task tracking (task_*.yaml)
+├── templates/          # Reusable templates
+├── active_epics.json   # Active epic registry
+└── feature_registry.json # Feature tracking
+```
+
+**Workflow Commands** (`scripts/workflow-automation.sh`):
+```bash
+# Epic Management
+./scripts/workflow-automation.sh epic "Epic Name" "Description" [complexity]
+./scripts/workflow-automation.sh epics  # List all epics
+
+# Task Management
+./scripts/workflow-automation.sh tasks list <epic_id> [status]
+./scripts/workflow-automation.sh tasks show <task_id>
+./scripts/workflow-automation.sh tasks update <task_id> <status>
+./scripts/workflow-automation.sh tasks assign <task_id> <user>
+
+# Development Orchestration
+./scripts/workflow-automation.sh orchestrate [mode]
+```
+
+### Branch Management for Local Tasks
+
+**IMPORTANT**: When starting work on any new task, you MUST:
 
 1. **ALWAYS create a new branch** before making any changes
-2. **Branch naming format**: `cra-{ticket-number}-{kebab-case-title}`
-   - Example: For ticket CRA-217 "Alerting & Incident Response System"
-   - Branch name: `cra-217-alerting-incident-response-system`
+2. **Branch naming format**: `task-{epic-id}-{kebab-case-title}`
+   - Example: For epic "epic_1753181522" task "Implement API Gateway"
+   - Branch name: `task-1753181522-implement-api-gateway`
 3. **Required commands to run**:
    ```bash
    # Ensure you're on main and up to date
@@ -591,10 +622,31 @@ class Task(Base):
    git checkout -b cra-{number}-{title}
    
    # Push branch to set upstream tracking
-   git push -u origin cra-{number}-{title}
+   git push -u origin task-{epic-id}-{title}
    ```
 4. **Never commit directly to main** - all work must be done in feature branches
 5. **Confirm branch creation** with the user before proceeding with implementation
+
+**Example Workflow**:
+```bash
+# 1. Create a new epic
+./scripts/workflow-automation.sh epic "Search Enhancement" "Add real-time search capabilities" medium
+
+# 2. List epics to get the epic ID
+./scripts/workflow-automation.sh epics
+
+# 3. View tasks for the epic
+./scripts/workflow-automation.sh tasks list epic_1753181522
+
+# 4. Create branch for a task
+git checkout -b task-1753181522-implement-search-api
+
+# 5. Update task status as you work
+./scripts/workflow-automation.sh tasks update task_feat_1753181522_29818 in_progress
+
+# 6. When done, ship the changes
+just ship "feat: implement search API endpoints"
+```
 
 ### Service Development
 - **Scaffolding**: `just scaffold NEW_SERVICE` from template

@@ -1,23 +1,45 @@
-name: "{epic_name}"
-description: "{epic_description}"
-type: "epic"
-priority: "high"
-target_date: "{target_date}"
-success_metrics:
-  - metric: "completion_rate"
-    target: "100%"
-  - metric: "quality_score"
-    target: "90%"
+id: "epic_{timestamp}"
+name: "{EPIC_NAME}"
+description: "{EPIC_DESCRIPTION}"
+complexity: "{COMPLEXITY}"  # small, medium, large, xl
+created: "{CREATED_DATE}"
+status: "planning"  # planning, active, completed, on_hold
+lifecycle_stage: "inception"  # inception, elaboration, construction, transition
 
-breakdown_strategy:
-  max_feature_size: "large"
-  parallel_features: 3
-  dependency_management: "automatic"
+# Epic Analysis
+estimated_effort: "{EFFORT_ESTIMATE}"  # e.g., "4-8 weeks"
+risk_level: "{RISK_LEVEL}"  # low, medium, high
+dependencies: []  # List of epic IDs this depends on
 
-features: []
-milestones: []
+# Feature Breakdown
+features:
+  - id: "feat_{epic_id}_{random}"
+    name: "{FEATURE_NAME}"
+    effort: "{EFFORT}"  # small, medium, large
+    priority: "{PRIORITY}"  # low, medium, high
 
+# Milestones
+milestones:
+  - name: "{MILESTONE_NAME}"
+    target_date: "{TARGET_DATE}"
+    criteria: 
+      - "{ACCEPTANCE_CRITERION}"
+
+# Automation Configuration
 automation:
-  tracking: "linear"
-  reporting: "weekly"
-  notifications: ["slack", "email"]
+  project_board: "local"
+  branch_prefix: "{BRANCH_PREFIX}"
+  ci_pipeline: "full"
+  notifications:
+    - channel: "development"
+      events: ["milestone_reached", "blocker_detected"]
+
+# Success Metrics
+metrics:
+  - name: "{METRIC_NAME}"
+    target: "{TARGET_VALUE}"
+    measurement: "{HOW_TO_MEASURE}"
+
+# Notes
+notes: |
+  Additional context and implementation notes go here.
