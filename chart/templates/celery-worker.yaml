@@ -22,7 +22,11 @@ spec:
             - name: CELERY_BROKER_URL
               value: {{ .Values.rabbitmq.url }}
             - name: THREADS_BASE_URL
+              {{- if .Values.threadsAdaptor.enabled }}
+              value: "http://threads-adaptor:8080"
+              {{- else }}
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+              {{- end }}
             - name: POSTGRES_DSN
               value: "postgresql://postgres:pass@postgres:5432/postgres"
             - name: QDRANT_URL

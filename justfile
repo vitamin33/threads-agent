@@ -34,7 +34,7 @@ cluster-delete NAME: # delete a specific cluster
 images CLUSTER="":
 	@echo "🐳  building dev images …"
 
-	for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine; do \
+	for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine threads_adaptor; do \
 		docker build -f services/${svc}/Dockerfile -t ${svc//_/-}:local .; \
 	done
 
@@ -50,11 +50,11 @@ images CLUSTER="":
 	k3d image import qdrant/qdrant:v1.9.4 -c $$cluster_name || true; \
 	k3d image import bitnami/postgresql:16 -c $$cluster_name || true; \
 	k3d image import rabbitmq:3.13-management-alpine -c $$cluster_name || true; \
-	for img in orchestrator celery-worker persona-runtime fake-threads viral-engine; do \
+	for img in orchestrator celery-worker persona-runtime fake-threads viral-engine threads-adaptor; do \
 		k3d image import $${img}:local -c $$cluster_name || true; \
 	done; \
 	echo "🔍  images inside k3d nodes:"; \
-	docker exec k3d-$$cluster_name-agent-0 crictl images | grep -E "orchestrator|celery|persona|fake|viral" || true
+	docker exec k3d-$$cluster_name-agent-0 crictl images | grep -E "orchestrator|celery|persona|fake|viral|threads" || true
 
 deploy-dev TIMEOUT="360s":
 	@bash -ceu 'extra=""; [ -f chart/values-dev.local.yaml ] && extra="-f chart/values-dev.local.yaml"; \
@@ -449,6 +449,37 @@ smart:              # comprehensive health + predictions
     ./scripts/efficient-dev.sh smart
 
 dev-status: smart   # alias for smart
+
+# ---------- Threads API Integration ----------
+threads-health: # check Threads API connection status
+	kubectl port-forward svc/threads-adaptor 8090:8080 &
+	@sleep 2
+	@curl -s http://localhost:8090/health | jq
+	@pkill -f "port-forward.*threads-adaptor" || true
+
+threads-test-post CONTENT="Testing Threads API integration! 🚀": # test posting to Threads
+	kubectl port-forward svc/threads-adaptor 8090:8080 &
+	@sleep 2
+	@curl -s -X POST http://localhost:8090/publish \
+		-H "Content-Type: application/json" \
+		-d '{"topic": "test", "content": "{{CONTENT}}", "persona_id": "ai-jesus"}' | jq
+	@pkill -f "port-forward.*threads-adaptor" || true
+
+threads-metrics THREAD_ID: # get engagement metrics for a post
+	kubectl port-forward svc/threads-adaptor 8090:8080 &
+	@sleep 2
+	@curl -s http://localhost:8090/metrics/{{THREAD_ID}} | jq
+	@pkill -f "port-forward.*threads-adaptor" || true
+
+threads-refresh-metrics: # refresh all post metrics
+	kubectl port-forward svc/threads-adaptor 8090:8080 &
+	@sleep 2
+	@curl -s -X POST http://localhost:8090/refresh-metrics | jq
+	@pkill -f "port-forward.*threads-adaptor" || true
+
+threads-setup: # show Threads API setup instructions
+	@echo "📖 Opening Threads API setup guide..."
+	@cat docs/threads-api-setup.md | less
 
 # ---------- Utilities ----------
 jaeger-ui:          # open Jaeger in browser (mac)
