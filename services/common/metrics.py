@@ -159,6 +159,13 @@ DATABASE_QUERY_DURATION = _safe_metric(
 )
 
 # ───── FinOps Metrics ────────────────────────────────────────────────────────────────
+OPENAI_API_COSTS_TOTAL = _safe_metric(
+    Counter,
+    "openai_api_costs_usd_total",
+    "Total OpenAI API costs in USD",
+    ["model"],
+)
+
 OPENAI_COST_HOURLY = _safe_metric(
     Histogram,
     "openai_cost_hourly_dollars",
@@ -611,6 +618,8 @@ def record_hourly_openai_cost(model: str, cost: float) -> None:
 
 def record_openai_cost(model: str, cost: float) -> None:
     """Record OpenAI API cost."""
+    # Record to the total counter
+    OPENAI_API_COSTS_TOTAL.labels(model=model).inc(cost)
     # Map to finops metrics
     record_finops_metric("api_costs", resource="openai", cost_type=model, amount=cost)
 

@@ -1,8 +1,18 @@
 name: Auto-Fix CI Failures
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to fix'
+        required: true
+        type: string
+      run_id:
+        description: 'Failed workflow run ID'
+        required: true
+        type: string
   workflow_run:
-    workflows: ["Dev CI"]
+    workflows: ["dev-ci"]
     types:
       - completed
     branches:
