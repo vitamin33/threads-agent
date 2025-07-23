@@ -1,9 +1,109 @@
 # CLAUDE.md - Threads-Agent Stack Development Guide
 
-> **🚀 Productivity First**: This codebase includes advanced productivity features that save 20-25 hours/week.
-> See [PRODUCTIVITY_GUIDE.md](./PRODUCTIVITY_GUIDE.md) for the complete guide.
+> **🚀 AI-Powered Development**: From idea to shipped code in minutes with GPT-4 planning + auto-git workflow.
 > 
-> **Quick Start**: `just dev-start` - This single command sets up EVERYTHING!
+> **Quick Start**: `export OPENAI_API_KEY=your-key && ./scripts/workflow-automation.sh ai-plan "your idea"`
+
+## 🎯 **Your Daily Development Workflow**
+
+### **🌅 Morning: Plan Your Work (2 minutes)**
+```bash
+# Set up (one-time)
+export OPENAI_API_KEY="your-openai-key"
+gh auth login
+
+# Plan today's work
+./scripts/workflow-automation.sh ai-plan "Build user authentication system"
+# → AI creates epic with features and tasks in 30 seconds
+
+# See what you'll work on
+./scripts/workflow-automation.sh tasks list epic_generated_id
+```
+
+### **💻 Development: Zero-Friction Coding**
+```bash
+# Start a task (creates branch, sets up everything)
+./scripts/workflow-automation.sh tasks start task_auth_001
+
+# Code in your editor (branch auto-created, commit template ready)
+
+# Commit with rich context (enhanced messages, auto-push)
+./scripts/workflow-automation.sh tasks commit task_auth_001 "implement JWT middleware"
+
+# Ship when ready (auto-PR with task description)
+./scripts/workflow-automation.sh tasks ship task_auth_001
+
+# Complete and move to next task
+./scripts/workflow-automation.sh tasks complete task_auth_001
+```
+
+### **🌆 End of Day: Track Progress**
+```bash
+# See your progress
+./scripts/workflow-automation.sh tasks list epic_current_001
+./scripts/workflow-automation.sh epics  # All epic progress
+```
+
+### **👥 Team Collaboration**
+```bash
+# Assign tasks to team members
+./scripts/workflow-automation.sh tasks assign task_001 alice
+./scripts/workflow-automation.sh tasks assign task_002 bob
+
+# Track team progress
+./scripts/workflow-automation.sh tasks list epic_team_001
+```
+
+---
+
+## 🚀 **Quick Reference Guide**
+
+### **Essential Commands (Only 4 you need to know)**
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `ai-plan` | AI creates project plan | `./scripts/workflow-automation.sh ai-plan "user auth"` |
+| `tasks start` | Begin working (auto-branch) | `./scripts/workflow-automation.sh tasks start task_001` |
+| `tasks commit` | Enhanced commit + push | `./scripts/workflow-automation.sh tasks commit task_001 "add middleware"` |
+| `tasks ship` | Create PR automatically | `./scripts/workflow-automation.sh tasks ship task_001` |
+
+### **Complete Workflow (Copy-Paste Ready)**
+```bash
+# 1. Plan your feature
+./scripts/workflow-automation.sh ai-plan "Build payment processing system"
+
+# 2. Start first task
+./scripts/workflow-automation.sh tasks start $(./scripts/workflow-automation.sh tasks list <epic_id> | head -1 | awk '{print $1}')
+
+# 3. Code + commit as you work
+./scripts/workflow-automation.sh tasks commit <task_id> "implement stripe integration"
+./scripts/workflow-automation.sh tasks commit <task_id> "add error handling"
+
+# 4. Ship for review
+./scripts/workflow-automation.sh tasks ship <task_id>
+
+# 5. After merge, complete and get next task
+./scripts/workflow-automation.sh tasks complete <task_id>
+```
+
+### **Power Tips**
+- **Demo Mode**: Use `./scripts/ai-epic-planner.sh demo` without OpenAI API key
+- **See All Tasks**: `./scripts/workflow-automation.sh tasks list epic_12345`
+- **Team Assignment**: `./scripts/workflow-automation.sh tasks assign task_001 alice`
+- **Epic Overview**: `./scripts/workflow-automation.sh epics`
+- **Task Details**: `./scripts/workflow-automation.sh tasks show task_12345`
+
+### **Emergency Recovery**
+```bash
+# If something goes wrong, you can always manually:
+git checkout main && git pull origin main
+git checkout -b emergency-fix-branch
+# ... make changes ...
+git add . && git commit -m "emergency fix"
+git push -u origin emergency-fix-branch
+```
+
+---
 
 ## Project Overview
 
@@ -12,7 +112,10 @@
 - Uses a microservices architecture on Kubernetes
 - Implements LangGraph workflows with LLM integration (OpenAI)
 - Includes comprehensive monitoring, testing, and FinOps capabilities
-- **NEW**: Integrates SearXNG for real-time trend detection and competitive analysis
+- **🤖 AI-Powered Development**: Complete planning system using GPT-4
+- **🔄 Auto-Git Integration**: Seamless task → code → ship workflow
+- **📋 Local Epic Management**: YAML-based project tracking
+- **🔍 SearXNG Integration**: Real-time trend detection and competitive analysis
 - Goal: Achieve 6%+ engagement rate and $0.01 cost/follow, scaling to $20k MRR
 
 ### Key Performance Indicators (KPIs)
@@ -573,59 +676,95 @@ class Task(Base):
 - **Protection**: `main` branch requires PR + CI passing + code owner review
 - **Automation**: `just ship` handles commit → push → PR creation
 
-### Local Epic & Task Management System
+### 🤖 AI-Powered Epic & Task Management System
 
-**Overview**: This project uses a local YAML-based epic and task management system located in `.workflows/` directory.
+**Overview**: Revolutionary local YAML-based project management with AI-powered planning using GPT-4.
+Complete automation from idea → epic → features → tasks → code → ship.
 
 **Directory Structure**:
 ```
 .workflows/
-├── epics/              # Epic definitions (epic_*.yaml)
-├── features/           # Feature breakdowns (feat_*.yaml)
-├── tasks/              # Task tracking (task_*.yaml)
-├── templates/          # Reusable templates
+├── epics/              # AI-generated epic definitions (epic_*.yaml)
+├── features/           # AI-broken-down features (feat_*.yaml)
+├── tasks/              # Smart task tracking with git integration (task_*.yaml)
+├── templates/          # AI-optimized templates
 ├── active_epics.json   # Active epic registry
-└── feature_registry.json # Feature tracking
+├── feature_registry.json # Feature tracking
+└── AUTO_GIT_GUIDE.md   # Complete auto-git workflow guide
 ```
 
-**Workflow Commands** (`scripts/workflow-automation.sh`):
+**🚀 Core AI Workflow Commands**:
 ```bash
-# Epic Management
-./scripts/workflow-automation.sh epic "Epic Name" "Description" [complexity]
-./scripts/workflow-automation.sh epics  # List all epics
+# AI PLANNING: From idea to implementation plan
+./scripts/workflow-automation.sh ai-plan "Build user authentication system"
+# Creates epic + 3-5 features + 10-15 tasks automatically
 
-# Task Management
-./scripts/workflow-automation.sh tasks list <epic_id> [status]
-./scripts/workflow-automation.sh tasks show <task_id>
-./scripts/workflow-automation.sh tasks update <task_id> <status>
-./scripts/workflow-automation.sh tasks assign <task_id> <user>
+# GIT INTEGRATION: Smart branch + commit + PR workflow
+./scripts/workflow-automation.sh tasks start task_12345    # Auto-branch + setup
+./scripts/workflow-automation.sh tasks commit task_12345 "add JWT validation"  # Enhanced commits
+./scripts/workflow-automation.sh tasks ship task_12345     # Auto-PR creation
+./scripts/workflow-automation.sh tasks complete task_12345 # Cleanup + next tasks
 
-# Development Orchestration
-./scripts/workflow-automation.sh orchestrate [mode]
+# MANAGEMENT: Traditional commands enhanced with AI
+./scripts/workflow-automation.sh epics                     # List all epics
+./scripts/workflow-automation.sh tasks list epic_001      # Show tasks
+./scripts/workflow-automation.sh tasks assign task_001 alice  # Team assignment
 ```
 
-### Branch Management for Local Tasks
+**🎯 Quick Start Example**:
+```bash
+# 1. AI creates complete project plan
+./scripts/workflow-automation.sh ai-plan "E-commerce checkout flow"
 
-**IMPORTANT**: When starting work on any new task, you MUST:
+# 2. Start working on first task
+./scripts/workflow-automation.sh tasks start task_001
 
-1. **ALWAYS create a new branch** before making any changes
-2. **Branch naming format**: `task-{epic-id}-{kebab-case-title}`
-   - Example: For epic "epic_1753181522" task "Implement API Gateway"
-   - Branch name: `task-1753181522-implement-api-gateway`
-3. **Required commands to run**:
-   ```bash
-   # Ensure you're on main and up to date
-   git checkout main
-   git pull origin main
-   
-   # Create and checkout new branch
-   git checkout -b cra-{number}-{title}
-   
-   # Push branch to set upstream tracking
-   git push -u origin task-{epic-id}-{title}
-   ```
-4. **Never commit directly to main** - all work must be done in feature branches
-5. **Confirm branch creation** with the user before proceeding with implementation
+# 3. Code + commit + ship
+# ... make your changes ...
+./scripts/workflow-automation.sh tasks commit task_001 "implement payment gateway"
+./scripts/workflow-automation.sh tasks ship task_001
+
+# 4. Complete and move to next
+./scripts/workflow-automation.sh tasks complete task_001
+```
+
+### 🔄 Auto-Git Integration (Revolutionary!)
+
+**IMPORTANT**: Git workflow is now COMPLETELY AUTOMATED! No manual branch management needed.
+
+**🎯 One Command Does Everything**:
+```bash
+# This handles EVERYTHING automatically:
+./scripts/workflow-automation.sh tasks start task_12345
+```
+
+**✅ What happens automatically:**
+- ✅ Ensures main branch is up-to-date
+- ✅ Creates semantic branch: `task-epic123-implement-auth-middleware`
+- ✅ Sets up commit template with task context
+- ✅ Updates task status to "in_progress"
+- ✅ Shows task description and next steps
+
+**🚀 Enhanced Commit & Ship Process**:
+```bash
+# Enhanced commits with task context
+./scripts/workflow-automation.sh tasks commit task_12345 "add JWT validation"
+
+# Auto-PR creation with rich descriptions
+./scripts/workflow-automation.sh tasks ship task_12345 "feat: JWT authentication"
+
+# Complete with cleanup and next tasks
+./scripts/workflow-automation.sh tasks complete task_12345
+```
+
+**📋 Smart Features**:
+- **Branch Naming**: Auto-generated from task context
+- **Commit Templates**: Pre-filled with task info, epic, priority
+- **PR Descriptions**: Rich markdown with checklists and task links
+- **Progress Tracking**: Real-time updates with completion prompts
+- **Team Integration**: Assignment and collaboration features
+
+**📖 Complete Guide**: See `.workflows/AUTO_GIT_GUIDE.md` for full workflow documentation
 
 **Example Workflow**:
 ```bash
