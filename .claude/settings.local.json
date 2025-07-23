@@ -150,7 +150,9 @@
       "Bash(./scripts/ai-epic-planner.sh:*)",
       "Bash(./scripts/ai-epic-planner-demo.sh:*)",
       "Bash(./demo_auto_git.sh)",
-      "Bash(./scripts/auto-git-integration.sh:*)"
+      "Bash(./scripts/auto-git-integration.sh:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": []
   }
