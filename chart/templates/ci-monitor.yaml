@@ -54,6 +54,6 @@ metadata:
     {{- include "threads.labels" . | nindent 4 }}
 type: Opaque
 stringData:
-  github-token: {{ .Values.ciMonitor.githubToken | quote }}
-  anthropic-api-key: {{ .Values.ciMonitor.anthropicApiKey | quote }}
+  github-token: {{ .Values.ciMonitor.githubToken | default "" | quote }}
+  anthropic-api-key: {{ .Values.ciMonitor.anthropicApiKey | default "" | quote }}
 {{- end }}

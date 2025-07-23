@@ -190,7 +190,9 @@
       "Bash(kubectl config:*)",
       "Bash(helm rollback:*)",
       "Bash(PYTHONPATH=$PWD:$PYTHONPATH:- pytest -s tests/e2e/test_enhanced_metrics.py::test_http_request_metrics -v)",
-      "Bash(PYTHONPATH=$PWD:$PYTHONPATH:- pytest -s tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v)"
+      "Bash(PYTHONPATH=$PWD:$PYTHONPATH:- pytest -s tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v)",
+      "Bash(gh api:*)",
+      "Bash(gh run download:*)"
     ],
     "deny": []
   }
