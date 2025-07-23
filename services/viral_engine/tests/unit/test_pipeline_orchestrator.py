@@ -220,7 +220,8 @@ class TestPipelineOrchestrator:
         # Create a scenario that might cause an error
         # For now, just test with None content
         result = await pipeline_orchestrator.process_content(
-            None, "test"  # type: ignore
+            None,
+            "test",  # type: ignore
         )
 
         # None content should fail quality gate (not error)
