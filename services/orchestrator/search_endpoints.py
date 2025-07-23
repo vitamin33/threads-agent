@@ -87,7 +87,7 @@ async def search_trends(request: TrendSearchRequest) -> SearchResponse:
             "limit": 10
         }
     """
-    with record_http_request("orchestrator", "POST", 200):
+    with record_http_request("orchestrator", "POST", "/search/trends"):
         try:
             logger.info(f"Searching trends for topic: {request.topic}")
 

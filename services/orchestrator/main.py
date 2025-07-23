@@ -90,7 +90,7 @@ async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> Status:
 
         # Record metrics
         duration = time.time() - start_time
-        record_http_request("orchestrator", "POST", "/task", 200, duration)
+        record_http_request("POST", "/task", 200, duration)
 
         # Record post generation attempt
         record_post_generation(req.persona_id, "success")
@@ -102,7 +102,7 @@ async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> Status:
 
         # Record error metrics
         duration = time.time() - start_time
-        record_http_request("orchestrator", "POST", "/task", 500, duration)
+        record_http_request("POST", "/task", 500, duration)
         raise
 
 
