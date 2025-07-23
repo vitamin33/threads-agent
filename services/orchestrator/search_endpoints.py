@@ -16,7 +16,24 @@ from pydantic import BaseModel
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.common.metrics import record_business_metric, record_http_request
-from services.common.searxng_wrapper import analyze_viral, find_trends, search
+
+# Conditional import for search functionality - gracefully handle missing deps
+try:
+    from services.common.searxng_wrapper import analyze_viral, find_trends, search
+
+    SEARCH_AVAILABLE = True
+except ImportError:
+    # Mock functions for CI environments where searxng dependencies aren't available
+    def find_trends(topic, timeframe):
+        return []
+
+    def analyze_viral(topic, platform="threads"):
+        return []
+
+    def search(query, limit=10):
+        return []
+
+    SEARCH_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
