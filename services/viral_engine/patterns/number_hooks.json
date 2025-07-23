@@ -1,0 +1,119 @@
+{
+  "category": "number_hooks",
+  "description": "Statistics, lists, and number-based hooks that promise specific value",
+  "avg_engagement_rate": 0.093,
+  "best_times": ["morning", "lunch"],
+  "target_audience": ["professionals", "data-driven", "learners"],
+  "patterns": [
+    {
+      "id": "number_001",
+      "template": "{number} {items} that {outcome} (number {highlight_number} will shock you)",
+      "variables": ["number", "items", "outcome", "highlight_number"],
+      "avg_er": 0.096,
+      "examples": [
+        "7 habits that changed my life (number 5 will shock you)",
+        "10 books that made me a millionaire (number 3 will shock you)",
+        "5 mistakes that kill startups (number 2 will shock you)"
+      ]
+    },
+    {
+      "id": "number_002",
+      "template": "I analyzed {number} {subjects} and found {finding}:",
+      "variables": ["number", "subjects", "finding"],
+      "avg_er": 0.098,
+      "examples": [
+        "I analyzed 1000 viral posts and found 3 common patterns:",
+        "I analyzed 500 successful founders and found their secret:",
+        "I analyzed 10000 LinkedIn profiles and found what works:"
+      ]
+    },
+    {
+      "id": "number_003",
+      "template": "After {number} {time_unit} of {activity}, here are my {number2} biggest lessons:",
+      "variables": ["number", "time_unit", "activity", "number2"],
+      "avg_er": 0.091,
+      "examples": [
+        "After 5 years of building startups, here are my 10 biggest lessons:",
+        "After 1000 days of writing online, here are my 7 biggest lessons:",
+        "After 100 interviews with CEOs, here are my 5 biggest lessons:"
+      ]
+    },
+    {
+      "id": "number_004",
+      "template": "The {number}-step formula that {result}:",
+      "variables": ["number", "result"],
+      "avg_er": 0.089,
+      "examples": [
+        "The 3-step formula that doubled my productivity:",
+        "The 5-step formula that grew my following to 100k:",
+        "The 7-step formula that lands any job:"
+      ]
+    },
+    {
+      "id": "number_005",
+      "template": "{percentage}% of {group} don't know this about {topic}:",
+      "variables": ["percentage", "group", "topic"],
+      "avg_er": 0.092,
+      "examples": [
+        "99% of entrepreneurs don't know this about fundraising:",
+        "87% of employees don't know this about salary negotiation:",
+        "93% of founders don't know this about product-market fit:"
+      ]
+    },
+    {
+      "id": "number_006",
+      "template": "I spent {amount} on {thing} so you don't have to. Here's what I learned:",
+      "variables": ["amount", "thing"],
+      "avg_er": 0.094,
+      "examples": [
+        "I spent $50,000 on courses so you don't have to. Here's what I learned:",
+        "I spent 10,000 hours mastering sales so you don't have to. Here's what I learned:",
+        "I spent 5 years making mistakes so you don't have to. Here's what I learned:"
+      ]
+    },
+    {
+      "id": "number_007",
+      "template": "{number} {category} rules that will {benefit} in {year}:",
+      "variables": ["number", "category", "benefit", "year"],
+      "avg_er": 0.090,
+      "examples": [
+        "12 productivity rules that will 10x your output in 2025:",
+        "8 money rules that will make you wealthy in 2025:",
+        "15 health rules that will transform your life in 2025:"
+      ]
+    },
+    {
+      "id": "number_008",
+      "template": "It took me {time_period} to realize these {number} truths about {topic}:",
+      "variables": ["time_period", "number", "topic"],
+      "avg_er": 0.088,
+      "examples": [
+        "It took me 10 years to realize these 5 truths about success:",
+        "It took me 6 months to realize these 3 truths about content creation:",
+        "It took me 2 failed startups to realize these 7 truths about business:"
+      ]
+    },
+    {
+      "id": "number_009",
+      "template": "Here's how I {achievement} with just {number} {resources}:",
+      "variables": ["achievement", "number", "resources"],
+      "avg_er": 0.095,
+      "examples": [
+        "Here's how I built a 6-figure business with just 3 tools:",
+        "Here's how I gained 50k followers with just 1 hour per day:",
+        "Here's how I learned to code with just 2 free resources:"
+      ]
+    },
+    {
+      "id": "number_010",
+      "template": "The {number} {items} every {person} needs to {achieve}:",
+      "variables": ["number", "items", "person", "achieve"],
+      "avg_er": 0.087,
+      "examples": [
+        "The 5 skills every founder needs to succeed:",
+        "The 10 tools every creator needs to grow:",
+        "The 7 habits every leader needs to inspire:"
+      ]
+    }
+  ]
+}

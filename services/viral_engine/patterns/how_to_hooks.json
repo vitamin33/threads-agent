@@ -1,0 +1,119 @@
+{
+  "category": "how_to_hooks",
+  "description": "Educational promises and step-by-step value propositions",
+  "avg_engagement_rate": 0.085,
+  "best_times": ["morning", "afternoon"],
+  "target_audience": ["learners", "professionals", "ambitious"],
+  "patterns": [
+    {
+      "id": "how_to_001",
+      "template": "How to {achieve_goal} without {common_requirement}:",
+      "variables": ["achieve_goal", "common_requirement"],
+      "avg_er": 0.089,
+      "examples": [
+        "How to build a business without investors:",
+        "How to get fit without a gym:",
+        "How to learn coding without a degree:"
+      ]
+    },
+    {
+      "id": "how_to_002",
+      "template": "How I {achievement} in {time_period} (and you can too):",
+      "variables": ["achievement", "time_period"],
+      "avg_er": 0.087,
+      "examples": [
+        "How I grew to 100k followers in 6 months (and you can too):",
+        "How I built a $10k/month business in 90 days (and you can too):",
+        "How I learned a new language in 3 months (and you can too):"
+      ]
+    },
+    {
+      "id": "how_to_003",
+      "template": "The lazy person's guide to {achievement}:",
+      "variables": ["achievement"],
+      "avg_er": 0.091,
+      "examples": [
+        "The lazy person's guide to productivity:",
+        "The lazy person's guide to getting rich:",
+        "The lazy person's guide to staying fit:"
+      ]
+    },
+    {
+      "id": "how_to_004",
+      "template": "How to {action} like a {expert}:",
+      "variables": ["action", "expert"],
+      "avg_er": 0.083,
+      "examples": [
+        "How to negotiate like a CEO:",
+        "How to write like a bestselling author:",
+        "How to network like a venture capitalist:"
+      ]
+    },
+    {
+      "id": "how_to_005",
+      "template": "Stop {wrong_action}. Do this instead:",
+      "variables": ["wrong_action"],
+      "avg_er": 0.093,
+      "examples": [
+        "Stop chasing followers. Do this instead:",
+        "Stop working harder. Do this instead:",
+        "Stop copying others. Do this instead:"
+      ]
+    },
+    {
+      "id": "how_to_006",
+      "template": "How to turn your {weakness} into your {strength}:",
+      "variables": ["weakness", "strength"],
+      "avg_er": 0.086,
+      "examples": [
+        "How to turn your overthinking into your superpower:",
+        "How to turn your introversion into your advantage:",
+        "How to turn your failures into your fortune:"
+      ]
+    },
+    {
+      "id": "how_to_007",
+      "template": "The beginner's guide to {topic} (from someone who {credibility}):",
+      "variables": ["topic", "credibility"],
+      "avg_er": 0.084,
+      "examples": [
+        "The beginner's guide to investing (from someone who retired at 35):",
+        "The beginner's guide to content creation (from someone who gained 500k followers):",
+        "The beginner's guide to startups (from someone who sold 3 companies):"
+      ]
+    },
+    {
+      "id": "how_to_008",
+      "template": "How to {achieve} even if you {limitation}:",
+      "variables": ["achieve", "limitation"],
+      "avg_er": 0.088,
+      "examples": [
+        "How to start a business even if you have no money:",
+        "How to get fit even if you hate exercise:",
+        "How to build an audience even if you're introverted:"
+      ]
+    },
+    {
+      "id": "how_to_009",
+      "template": "The counterintuitive way to {achieve_goal}:",
+      "variables": ["achieve_goal"],
+      "avg_er": 0.090,
+      "examples": [
+        "The counterintuitive way to increase productivity:",
+        "The counterintuitive way to grow your network:",
+        "The counterintuitive way to learn faster:"
+      ]
+    },
+    {
+      "id": "how_to_010",
+      "template": "How to go from {start_point} to {end_point} in {timeframe}:",
+      "variables": ["start_point", "end_point", "timeframe"],
+      "avg_er": 0.085,
+      "examples": [
+        "How to go from 0 to 10k followers in 30 days:",
+        "How to go from idea to profitable business in 90 days:",
+        "How to go from beginner to expert in 6 months:"
+      ]
+    }
+  ]
+}

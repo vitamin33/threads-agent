@@ -74,3 +74,15 @@ def ensure_posts_collection(dim: int = 128) -> None:
         # another pod created it a split-second earlier → ignore
         if "already exists" not in str(e):
             raise
+
+
+async def store_hook_variant(
+    persona_id: str,
+    variant_id: str, 
+    content: str,
+    metadata: dict[str, Any]
+) -> None:
+    """Store a hook variant in the vector database for similarity search"""
+    # TODO: Implement actual vector storage when embeddings are available
+    # For now, this is a placeholder for the batch API
+    pass

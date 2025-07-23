@@ -1,0 +1,119 @@
+{
+  "category": "question_hooks",
+  "description": "Questions that create curiosity gaps and demand answers",
+  "avg_engagement_rate": 0.087,
+  "best_times": ["morning", "lunch", "evening"],
+  "target_audience": ["general", "professionals", "curious_minds"],
+  "patterns": [
+    {
+      "id": "question_001",
+      "template": "Why do {group} always {action}? The answer might surprise you:",
+      "variables": ["group", "action"],
+      "avg_er": 0.091,
+      "examples": [
+        "Why do successful people always wake up early? The answer might surprise you:",
+        "Why do millionaires always read books? The answer might surprise you:",
+        "Why do entrepreneurs always fail first? The answer might surprise you:"
+      ]
+    },
+    {
+      "id": "question_002",
+      "template": "What's the one thing {experts} never tell you about {topic}?",
+      "variables": ["experts", "topic"],
+      "avg_er": 0.094,
+      "examples": [
+        "What's the one thing VCs never tell you about fundraising?",
+        "What's the one thing doctors never tell you about health?",
+        "What's the one thing CEOs never tell you about leadership?"
+      ]
+    },
+    {
+      "id": "question_003",
+      "template": "Ever wonder why {phenomenon}? I finally figured it out:",
+      "variables": ["phenomenon"],
+      "avg_er": 0.088,
+      "examples": [
+        "Ever wonder why some posts go viral? I finally figured it out:",
+        "Ever wonder why Monday feels so hard? I finally figured it out:",
+        "Ever wonder why ideas come in the shower? I finally figured it out:"
+      ]
+    },
+    {
+      "id": "question_004",
+      "template": "How do {achievers} manage to {achievement} every single time?",
+      "variables": ["achievers", "achievement"],
+      "avg_er": 0.085,
+      "examples": [
+        "How do top performers manage to stay focused every single time?",
+        "How do serial entrepreneurs manage to spot opportunities every single time?",
+        "How do influencers manage to go viral every single time?"
+      ]
+    },
+    {
+      "id": "question_005",
+      "template": "Is {common_belief} actually {opposing_view}? Here's what I discovered:",
+      "variables": ["common_belief", "opposing_view"],
+      "avg_er": 0.092,
+      "examples": [
+        "Is working hard actually holding you back? Here's what I discovered:",
+        "Is perfectionism actually procrastination? Here's what I discovered:",
+        "Is networking actually overrated? Here's what I discovered:"
+      ]
+    },
+    {
+      "id": "question_006",
+      "template": "What if I told you {surprising_fact}? Would you believe me?",
+      "variables": ["surprising_fact"],
+      "avg_er": 0.089,
+      "examples": [
+        "What if I told you 90% of success is just showing up? Would you believe me?",
+        "What if I told you your biggest weakness is your superpower? Would you believe me?",
+        "What if I told you failure is more valuable than success? Would you believe me?"
+      ]
+    },
+    {
+      "id": "question_007",
+      "template": "Why does {action} feel so {emotion}, but {opposite_action} doesn't?",
+      "variables": ["action", "emotion", "opposite_action"],
+      "avg_er": 0.083,
+      "examples": [
+        "Why does saying no feel so hard, but saying yes doesn't?",
+        "Why does starting feel so difficult, but continuing doesn't?",
+        "Why does criticism feel so painful, but praise doesn't?"
+      ]
+    },
+    {
+      "id": "question_008",
+      "template": "Ready to learn why {percentage}% of {group} fail at {goal}?",
+      "variables": ["percentage", "group", "goal"],
+      "avg_er": 0.090,
+      "examples": [
+        "Ready to learn why 87% of entrepreneurs fail at scaling?",
+        "Ready to learn why 92% of people fail at habit building?",
+        "Ready to learn why 76% of startups fail at marketing?"
+      ]
+    },
+    {
+      "id": "question_009",
+      "template": "What's the difference between {winners} and {losers}? It's not what you think:",
+      "variables": ["winners", "losers"],
+      "avg_er": 0.095,
+      "examples": [
+        "What's the difference between successful founders and failed ones? It's not what you think:",
+        "What's the difference between viral posts and ignored ones? It's not what you think:",
+        "What's the difference between leaders and followers? It's not what you think:"
+      ]
+    },
+    {
+      "id": "question_010",
+      "template": "Can {simple_action} really {impressive_result}? I tested it for {time_period}:",
+      "variables": ["simple_action", "impressive_result", "time_period"],
+      "avg_er": 0.086,
+      "examples": [
+        "Can 5 minutes of meditation really change your life? I tested it for 30 days:",
+        "Can one cold email really land your dream job? I tested it for 2 weeks:",
+        "Can posting daily really grow your audience? I tested it for 60 days:"
+      ]
+    }
+  ]
+}
