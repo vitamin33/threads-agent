@@ -168,7 +168,13 @@
       "Bash(git config:*)",
       "Bash(export:*)",
       "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" just deploy-dev)",
-      "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" kubectl get pods)"
+      "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" kubectl get pods)",
+      "Bash(gh pr checks:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)"
     ],
     "deny": []
   }

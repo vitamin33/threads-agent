@@ -497,7 +497,7 @@ def record_celery_task(task_name: str, status: str, duration: float = 0.0) -> No
         component="celery",
         operation=task_name,
         status=status,
-        duration=duration
+        duration=duration,
     )
 
 
@@ -505,21 +505,18 @@ def record_error(service: str, error_type: str, error_message: str = "") -> None
     """Record error occurrences."""
     # Map to infrastructure metrics
     record_infrastructure_metric(
-        "service_errors",
-        component=service,
-        service=service,
-        error_type=error_type
+        "service_errors", component=service, service=service, error_type=error_type
     )
 
 
 def record_database_query(operation: str, table: str, duration: float) -> None:
     """Record database query metrics."""
-    # Map to infrastructure metrics  
+    # Map to infrastructure metrics
     record_infrastructure_metric(
         "database_queries",
         component="postgres",
         operation=f"{operation}_{table}",
-        duration=duration
+        duration=duration,
     )
 
 
@@ -530,7 +527,7 @@ def record_qdrant_operation(operation: str, collection: str, duration: float) ->
         "vector_operations",
         component="qdrant",
         operation=f"{operation}_{collection}",
-        duration=duration
+        duration=duration,
     )
 
 
@@ -538,30 +535,17 @@ def update_cost_per_post(persona_id: str, cost: float) -> None:
     """Update the cost per post metric."""
     # Map to finops metrics
     record_finops_metric(
-        "cost_tracking",
-        resource="post_generation",
-        cost_type=persona_id,
-        amount=cost
+        "cost_tracking", resource="post_generation", cost_type=persona_id, amount=cost
     )
 
 
 def record_hourly_openai_cost(model: str, cost: float) -> None:
     """Record hourly OpenAI API costs."""
     # Map to finops metrics
-    record_finops_metric(
-        "api_costs",
-        resource="openai",
-        cost_type=model,
-        amount=cost
-    )
-EOF < /dev/null
+    record_finops_metric("api_costs", resource="openai", cost_type=model, amount=cost)
+
 
 def record_openai_cost(model: str, cost: float) -> None:
     """Record OpenAI API cost."""
     # Map to finops metrics
-    record_finops_metric(
-        "api_costs",
-        resource="openai",
-        cost_type=model,
-        amount=cost
-    )
+    record_finops_metric("api_costs", resource="openai", cost_type=model, amount=cost)
