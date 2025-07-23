@@ -73,6 +73,31 @@ threadsService:                        # used by orchestrator & worker envs
   name: fake-threads
   port: 9009
 
+# Real Threads API integration (disabled by default)
+# To enable: set enabled: true and provide credentials
+threadsAdaptor:
+  enabled: false
+  image:
+    repository: threads-adaptor
+    tag: "local"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  rateLimit: 20                        # requests per minute
+  credentials:
+    # Get these from Meta Developer Dashboard
+    # See docs/threads-api-setup.md for instructions
+    appId: ""                          # Your Threads App ID
+    appSecret: ""                      # Your Threads App Secret  
+    accessToken: ""                    # User Access Token
+    userId: ""                         # Your Threads User ID
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
 openai:
   enabled: false
   apiKey: "REPLACE_IN_RUNTIME"

@@ -52,6 +52,28 @@ viralEngine:
     repository: ghcr.io/threads-agent-stack/viral-engine
     tag: "0.1.0"
 
+threadsAdaptor:
+  enabled: false                   # turn ON when using real Threads API
+  image:
+    repository: threads-adaptor
+    tag: "local"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  rateLimit: 20                    # requests per minute
+  credentials:
+    appId: ""                      # Threads App ID
+    appSecret: ""                  # Threads App Secret
+    accessToken: ""                # Threads Access Token
+    userId: ""                     # Threads User ID
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  extraEnv: []
+
 # ───────── generic chart knobs ─────────
 replicaCount: 1
 

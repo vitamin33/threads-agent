@@ -152,7 +152,23 @@
       "Bash(./demo_auto_git.sh)",
       "Bash(./scripts/auto-git-integration.sh:*)",
       "Bash(git fetch:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(for img in orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local bitnami/postgresql:16 rabbitmq:3.13-management-alpine)",
+      "Bash(do k3d image import $img -c dev)",
+      "Bash(done)",
+      "Bash(kubectl scale:*)",
+      "Bash(helm status:*)",
+      "Bash(helm delete:*)",
+      "Bash(kubectl config:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(PYTHONPATH=$PWD pytest services/threads_adaptor/tests/unit/test_limiter.py -v)",
+      "Bash(gh pr create:*)",
+      "WebFetch(domain:www.postman.com)",
+      "Bash(kubectl config:*)",
+      "Bash(git config:*)",
+      "Bash(export:*)",
+      "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" just deploy-dev)",
+      "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" kubectl get pods)"
     ],
     "deny": []
   }

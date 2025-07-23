@@ -31,9 +31,6 @@ spec:
         - --web.console.templates=/etc/prometheus/consoles
         - --storage.tsdb.retention.time=15d
         - --web.enable-lifecycle
-        {{- if .Values.monitoring.alertmanager.enabled }}
-        - --alertmanager.url=http://alertmanager:9093
-        {{- end }}
         resources:
           {{- toYaml .Values.monitoring.prometheus.resources | nindent 10 }}
         volumeMounts:

@@ -111,13 +111,23 @@ def run_persona(cfg: dict[str, Any], user_input: str) -> None:
 @app.get("/metrics")
 async def metrics() -> Response:
     """Prometheus scrape endpoint (FastAPI-served)."""
-    with record_http_request("orchestrator", "GET", "/metrics"):
-        return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    start_time = time.time()
+    try:
+        response = Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+        status = 200
+        return response
+    except Exception as e:
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("GET", "/metrics", status, duration)
 
 
 @app.get("/health")
 async def health() -> Status:
-    with record_http_request("orchestrator", "GET", "/health"):
+    start_time = time.time()
+    try:
         # Update system health metrics
         update_system_health("api", "orchestrator", True)
         update_system_health(
@@ -131,4 +141,11 @@ async def health() -> Status:
         current_uptime = time.time() - _service_start_time
         update_service_uptime("orchestrator", current_uptime)
 
+        status = 200
         return {"status": "ok"}
+    except Exception as e:
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("GET", "/health", status, duration)

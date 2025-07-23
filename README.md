@@ -15,6 +15,8 @@
 > researches trends ➜ writes & posts Threads content ➜ measures ROI – all on a
 > production-grade Kubernetes architecture.
 > **Goal**: prove 6 %+ ER and $0.01 cost/follow, then scale to \$20 k MRR.
+> 
+> **NEW**: Real Threads API integration for actual posting and engagement tracking!
 
 _Micro-services:_ Orchestrator · Persona-runtime (LangGraph + LoRA) · Bandit
 online A/B · Trend & Pain Flywheel · FinOps board · SRE/Chaos add-ons.
@@ -80,6 +82,20 @@ just bootstrap        # → k3d cluster dev
 just deploy-dev       # → helm install threads
 just test             # → pytest (unit + e2e)
 open http://localhost:16686   # Jaeger UI
+```
+
+### 🔌 Real Threads API Integration (NEW!)
+```bash
+# Enable real posting to Threads (replaces fake-threads)
+# 1. Get credentials from Meta Developer Dashboard
+# 2. Configure in chart/values-dev.yaml
+# 3. See full setup guide:
+cat docs/threads-api-setup.md
+
+# Quick test:
+just threads-health          # Check API connection
+just threads-test-post       # Post to real Threads
+just threads-refresh-metrics # Get engagement data
 ```
 
 ---

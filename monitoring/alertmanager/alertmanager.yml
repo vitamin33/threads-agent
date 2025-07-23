@@ -108,7 +108,8 @@ receivers:
   email_configs:
   - to: '{{ .Values.alerting.email.businessRecipients }}'
     from: '{{ .Values.alerting.email.from }}'
-    subject: '🚨 Business Alert: {{ .GroupLabels.alertname }}'
+    headers:
+      Subject: '🚨 Business Alert: {{ .GroupLabels.alertname }}'
     html: |
       <html>
         <head><title>Threads Agent Business Alert</title></head>
@@ -150,7 +151,8 @@ receivers:
   email_configs:
   - to: '{{ .Values.alerting.email.infrastructureRecipients }}'
     from: '{{ .Values.alerting.email.from }}'
-    subject: '🏗️  Infrastructure Alert: {{ .GroupLabels.alertname }}'
+    headers:
+      Subject: '🏗️  Infrastructure Alert: {{ .GroupLabels.alertname }}'
     html: |
       <html>
         <head><title>Threads Agent Infrastructure Alert</title></head>
