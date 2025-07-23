@@ -191,6 +191,9 @@ orchestrate MODE="suggest": # intelligent development orchestration
 workflow-dashboard: # show workflow automation dashboard
 	./scripts/workflow-automation.sh dashboard
 
+dashboard: # launch AI metrics dashboard (alias)
+	./scripts/workflow-automation.sh dashboard
+
 workflow-report: # generate workflow automation report
 	./scripts/workflow-automation.sh report
 

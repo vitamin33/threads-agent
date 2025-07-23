@@ -1310,57 +1310,9 @@ sync_features_to_linear() {
 
 # Show workflow dashboard
 show_dashboard() {
-    clear
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║              WORKFLOW AUTOMATION DASHBOARD                    ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
-    echo
-    
-    # Epic summary
-    local epic_count=0
-    local epic_active=0
-    if [[ -f "$WORKFLOW_DIR/active_epics.json" ]]; then
-        epic_count=$(jq -r '.epics | length' "$WORKFLOW_DIR/active_epics.json" 2>/dev/null || echo 0)
-        epic_active=$(jq -r '.epics[] | select(.status != "completed") | .id' "$WORKFLOW_DIR/active_epics.json" 2>/dev/null | wc -l || echo 0)
-    fi
-    
-    # Feature summary
-    local feature_count=0
-    local feature_active=0
-    local feature_blocked=0
-    if [[ -f "$WORKFLOW_DIR/feature_registry.json" ]]; then
-        feature_count=$(jq -r '.features | length' "$WORKFLOW_DIR/feature_registry.json" 2>/dev/null || echo 0)
-        feature_active=$(get_active_features | wc -l)
-        feature_blocked=$(get_blocked_features | wc -l)
-    fi
-    
-    printf "📊 EPIC STATUS\n"
-    printf "   Total Epics:     %d\n" "$epic_count"
-    printf "   Active Epics:    %d\n" "$epic_active"
-    echo
-    
-    printf "🚀 FEATURE STATUS\n"
-    printf "   Total Features:  %d\n" "$feature_count"
-    printf "   Active:          %d\n" "$feature_active"
-    printf "   Blocked:         %d\n" "$feature_blocked"
-    echo
-    
-    printf "⚡ QUICK ACTIONS\n"
-    printf "   1. Break down new epic\n"
-    printf "   2. Start feature development\n"
-    printf "   3. Run orchestration\n"
-    printf "   4. View lifecycle events\n"
-    printf "   5. Generate reports\n"
-    echo
-    
-    # Recent activity
-    if [[ -f "$LIFECYCLE_DIR/lifecycle_events.log" ]]; then
-        printf "📅 RECENT ACTIVITY\n"
-        tail -5 "$LIFECYCLE_DIR/lifecycle_events.log" 2>/dev/null | while IFS='|' read -r timestamp fid action metadata; do
-            printf "   %s: %s\n" "$(echo "$timestamp" | cut -d'T' -f2 | cut -d'+' -f1)" "$action on $fid"
-        done
-    fi
-    echo
+    # Launch the new AI-powered metrics dashboard
+    log_info "Launching AI Development Metrics Dashboard..."
+    "$SCRIPT_DIR/metrics-dashboard.sh" start
 }
 
 # Generate workflow report
