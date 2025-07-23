@@ -7,7 +7,15 @@ import time
 from contextlib import contextmanager
 from typing import Generator, Literal
 
-from prometheus_client import Counter, Gauge, Histogram, Summary, start_http_server, CollectorRegistry, REGISTRY
+from prometheus_client import (
+    REGISTRY,
+    Counter,
+    Gauge,
+    Histogram,
+    Summary,
+    start_http_server,
+)
+
 
 # Helper to handle duplicate registrations
 def _safe_metric(metric_class, name, description, labels=None, **kwargs):
@@ -17,10 +25,11 @@ def _safe_metric(metric_class, name, description, labels=None, **kwargs):
     except ValueError:
         # Metric already registered, find and return it
         for collector in REGISTRY._collector_to_names:
-            if hasattr(collector, '_name') and collector._name == name:
+            if hasattr(collector, "_name") and collector._name == name:
                 return collector
         # If not found, re-raise the error
         raise
+
 
 # ───── Core Pipeline Metrics (CRA-212) ──────────────────────────────────────────────────
 REQUEST_LATENCY = _safe_metric(
@@ -153,10 +162,7 @@ OPENAI_COST_HOURLY = _safe_metric(
 )
 
 COST_PER_POST = _safe_metric(
-    Gauge,
-    "cost_per_post_usd", 
-    "Cost in USD to generate each post", 
-    ["persona_id"]
+    Gauge, "cost_per_post_usd", "Cost in USD to generate each post", ["persona_id"]
 )
 
 COST_PER_FOLLOW = _safe_metric(
@@ -333,15 +339,11 @@ def record_business_metric(
             persona_id=kwargs["persona_id"], content_type=kwargs["content_type"]
         ).set(kwargs["score"])
     elif metric_type == "revenue_projection":
-        REVENUE_PROJECTION_MONTHLY.labels(source=kwargs["source"]).set(
-            kwargs["amount"]
-        )
+        REVENUE_PROJECTION_MONTHLY.labels(source=kwargs["source"]).set(kwargs["amount"])
     elif metric_type == "cost_per_post":
         COST_PER_POST.labels(persona_id=kwargs["persona_id"]).set(kwargs["cost"])
     elif metric_type == "cost_per_follow":
-        COST_PER_FOLLOW.labels(persona_id=kwargs["persona_id"]).observe(
-            kwargs["cost"]
-        )
+        COST_PER_FOLLOW.labels(persona_id=kwargs["persona_id"]).observe(kwargs["cost"])
 
 
 def record_api_metric(
@@ -387,9 +389,7 @@ def record_infrastructure_metric(
             kwargs["duration"]
         )
     elif metric_type == "queue_depth":
-        CELERY_QUEUE_DEPTH.labels(queue_name=kwargs["queue_name"]).set(
-            kwargs["depth"]
-        )
+        CELERY_QUEUE_DEPTH.labels(queue_name=kwargs["queue_name"]).set(kwargs["depth"])
     elif metric_type == "db_connection":
         DATABASE_CONNECTIONS.labels(
             db_name=kwargs["db_name"], state=kwargs["state"]
@@ -451,7 +451,9 @@ def record_http_request(
     method: str, endpoint: str, status: int, duration: float
 ) -> None:
     """Record HTTP request metrics."""
-    http_requests_total.labels(method=method, endpoint=endpoint, status=str(status)).inc()
+    http_requests_total.labels(
+        method=method, endpoint=endpoint, status=str(status)
+    ).inc()
     http_request_duration.labels(
         method=method, endpoint=endpoint, status=str(status)
     ).observe(duration)
@@ -484,3 +486,35 @@ def update_system_health(component: str, service: str, healthy: bool) -> None:
     SYSTEM_HEALTH_STATUS.labels(component=component, service=service).set(
         1 if healthy else 0
     )
+
+
+# Revenue-specific metrics
+AFFILIATE_CLICKS_TOTAL = Counter(
+    "affiliate_clicks_total", "Total affiliate link clicks", ["merchant", "category"]
+)
+
+AFFILIATE_CONVERSIONS_TOTAL = Counter(
+    "affiliate_conversions_total",
+    "Total affiliate conversions",
+    ["merchant", "category"],
+)
+
+AFFILIATE_REVENUE_USD = Counter(
+    "affiliate_revenue_usd", "Total affiliate revenue in USD", ["merchant", "category"]
+)
+
+LEADS_CAPTURED_TOTAL = Counter(
+    "leads_captured_total", "Total leads captured", ["source", "converted"]
+)
+
+LEAD_SCORE_AVERAGE = Gauge("lead_score_average", "Average lead score", ["source"])
+
+SUBSCRIPTIONS_CREATED_TOTAL = Counter(
+    "subscriptions_created_total", "Total subscriptions created", ["tier", "status"]
+)
+
+MRR_USD = Gauge("mrr_usd", "Monthly Recurring Revenue in USD", ["tier"])
+
+REVENUE_TOTAL_USD = Counter(
+    "revenue_total_usd", "Total revenue in USD", ["type", "source"]
+)

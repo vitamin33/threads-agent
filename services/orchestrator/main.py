@@ -116,7 +116,7 @@ async def metrics() -> Response:
         response = Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
         status = 200
         return response
-    except Exception as e:
+    except Exception:
         status = 500
         raise
     finally:
@@ -143,7 +143,7 @@ async def health() -> Status:
 
         status = 200
         return {"status": "ok"}
-    except Exception as e:
+    except Exception:
         status = 500
         raise
     finally:

@@ -8,6 +8,10 @@ from typing import Any, Dict
 import httpx
 from celery import Celery, Task, shared_task
 
+from services.celery_worker.revenue_integration import (
+    categorize_content,
+    enhance_content_with_revenue,
+)
 from services.celery_worker.sse import run_persona
 from services.celery_worker.store import save_post, upsert_vector
 from services.common.metrics import (
@@ -129,6 +133,13 @@ def queue_post(self: Task, payload: Dict[str, Any]) -> None:  # noqa: ANN401
                         if quality_score is not None:
                             post_data["quality_score"] = quality_score
                         row_id = save_post(post_data)
+
+                    # 3.5️⃣ Revenue Enhancement (affiliate links + lead capture)
+                    content_category = categorize_content(user_input)
+                    revenue_result = enhance_content_with_revenue(
+                        final_content, persona, row_id, content_category
+                    )
+                    final_content = revenue_result["enhanced_content"]
 
                     # 4️⃣  Qdrant (vector storage)
                     collection_name = f"posts_{persona}"

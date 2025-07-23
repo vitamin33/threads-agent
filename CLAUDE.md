@@ -52,6 +52,7 @@ services/
   - **OpenAI** - Token tracking and model management
   - **File System** - Direct file access
   - **GitHub** - Repository operations
+  - **Linear** - Issue tracking and project management integration
 
 ## Development Workflow
 
@@ -271,6 +272,7 @@ just ship "feat: implemented trend-aware content generation"
 - `just mcp-redis-test` - Test Redis MCP functionality
 - `just mcp-k8s-test` - Test Kubernetes MCP access
 - `just mcp-postgres-test` - Test PostgreSQL MCP queries
+- `just linear-mcp-setup` - Setup Linear MCP with your API key
 
 #### Testing  
 - `just unit` - Run unit tests only (`pytest -m "not e2e"`)
@@ -772,6 +774,12 @@ MCP (Model Context Protocol) servers provide direct access to tools and services
    - No API keys or rate limits
    - **Time Saved**: $500+/month vs paid alternatives
 
+6. **Linear MCP** - Issue tracking integration
+   - Create and manage issues directly from Claude
+   - Track tasks with CRA ticket numbers
+   - Automatic branch naming for Linear tasks
+   - **Time Saved**: 2-3 hours/week on task management
+
 ### Daily MCP Usage Examples
 
 #### Cache Management (Redis)
@@ -799,6 +807,15 @@ GROUP BY persona_id;
 # No more manual kubectl commands
 # MCP handles port-forwarding automatically
 # Direct access to pods, logs, deployments
+```
+
+#### Issue Tracking (Linear)
+```bash
+# Create issues directly from Claude
+# Example: "Create a Linear issue for implementing engagement tracking"
+# List issues: "Show me all Linear issues in progress"
+# Update issues: "Mark CRA-217 as done"
+# Get team info: "List all Linear teams"
 ```
 
 ## 🔍 SearXNG Search Integration

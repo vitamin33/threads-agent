@@ -18,7 +18,7 @@
 > 
 > **NEW**: Real Threads API integration for actual posting and engagement tracking!
 
-_Micro-services:_ Orchestrator · Persona-runtime (LangGraph + LoRA) · Bandit
+_Micro-services:_ Orchestrator · Persona-runtime (LangGraph + LoRA) · Revenue (Stripe + Affiliate) · Bandit
 online A/B · Trend & Pain Flywheel · FinOps board · SRE/Chaos add-ons.
 
 ---
@@ -68,6 +68,23 @@ cat docs/threads-api-setup.md
 just threads-health          # Check API connection
 just threads-test-post       # Post to real Threads
 just threads-refresh-metrics # Get engagement data
+```
+
+### 💰 Revenue Infrastructure (NEW!)
+```bash
+# Complete monetization system with 3 revenue streams:
+# 1. Affiliate commissions (auto link injection)
+# 2. Lead capture (email + scoring)
+# 3. Subscriptions ($29/$97/$297 tiers)
+
+# Configuration:
+# - Set Stripe keys in values-dev.yaml
+# - Revenue service auto-enhances all content
+# - Real-time analytics at /revenue/analytics
+
+# Quick revenue check:
+just revenue-dashboard       # View revenue metrics
+just revenue-forecast        # 12-month projection
 ```
 
 ---

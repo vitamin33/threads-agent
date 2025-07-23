@@ -661,6 +661,14 @@ mcp-k8s-test: # test Kubernetes MCP functionality
 mcp-postgres-test: # test PostgreSQL MCP functionality
 	./scripts/test-postgres-mcp.sh
 
+linear-mcp-setup: # setup Linear MCP server with API key
+	@if [ -z "$(LINEAR_API_KEY)" ]; then \
+		echo "❌ Error: LINEAR_API_KEY not set"; \
+		echo "Usage: LINEAR_API_KEY=your-key just linear-mcp-setup"; \
+		exit 1; \
+	fi
+	./scripts/setup-linear-mcp.sh "$(LINEAR_API_KEY)"
+
 redis-cli: # connect to Redis CLI
 	kubectl exec -it deploy/redis -- redis-cli
 
