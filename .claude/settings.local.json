@@ -148,7 +148,9 @@
       "Bash(./scripts/workflow-test.sh:*)",
       "Bash(git restore:*)",
       "Bash(./scripts/ai-epic-planner.sh:*)",
-      "Bash(./scripts/ai-epic-planner-demo.sh:*)"
+      "Bash(./scripts/ai-epic-planner-demo.sh:*)",
+      "Bash(./demo_auto_git.sh)",
+      "Bash(./scripts/auto-git-integration.sh:*)"
     ],
     "deny": []
   }

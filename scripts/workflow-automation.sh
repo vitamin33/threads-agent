@@ -1678,6 +1678,12 @@ COMMANDS:
     tasks update task_id status  Update task status
     tasks assign task_id user    Assign task to user
     
+    # Auto-Git Workflow
+    tasks start task_id          Start working (auto-branch + setup)
+    tasks commit task_id "msg"   Commit with enhanced context
+    tasks ship task_id ["title"] Create PR with task description
+    tasks complete task_id       Mark done and cleanup branch
+    
     # Integration
     sync [action]              Sync local task tracking
         Actions: sync, create, update
@@ -1689,7 +1695,14 @@ EXAMPLES:
     # Break down a new epic manually
     $0 epic "User Authentication System" "Implement OAuth2 authentication" large
     
-    # Start feature development
+    # Complete AI → Git workflow
+    $0 ai-plan "Build user authentication"
+    $0 tasks start task_feat_epic123_auth_001
+    # ... make changes ...
+    $0 tasks commit task_feat_epic123_auth_001 "implement JWT middleware"
+    $0 tasks ship task_feat_epic123_auth_001
+    
+    # Start feature development manually
     $0 feature start feat_1234567890
     
     # Run orchestration suggestions
@@ -1795,9 +1808,25 @@ main() {
                 assign)
                     assign_task "${3:-}" "${4:-}"
                     ;;
+                start)
+                    # Start working on a task with auto-git
+                    "$SCRIPT_DIR/auto-git-integration.sh" start "${3:-}"
+                    ;;
+                commit)
+                    # Commit with task context
+                    "$SCRIPT_DIR/auto-git-integration.sh" commit "${3:-}" "${4:-}"
+                    ;;
+                ship)
+                    # Create PR for task
+                    "$SCRIPT_DIR/auto-git-integration.sh" ship "${3:-}" "${4:-}"
+                    ;;
+                complete)
+                    # Complete task and cleanup
+                    "$SCRIPT_DIR/auto-git-integration.sh" complete "${3:-}"
+                    ;;
                 *)
                     log_error "Unknown task command: $2"
-                    log_info "Available: list, show, update, assign"
+                    log_info "Available: list, show, update, assign, start, commit, ship, complete"
                     ;;
             esac
             ;;
