@@ -149,7 +149,13 @@
       "Bash(kubectl config:*)",
       "Bash(kubectl apply:*)",
       "Bash(PYTHONPATH=$PWD pytest services/threads_adaptor/tests/unit/test_limiter.py -v)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "WebFetch(domain:www.postman.com)",
+      "Bash(kubectl config:*)",
+      "Bash(git config:*)",
+      "Bash(export:*)",
+      "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" just deploy-dev)",
+      "Bash(KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\" kubectl get pods)"
     ],
     "deny": []
   }
