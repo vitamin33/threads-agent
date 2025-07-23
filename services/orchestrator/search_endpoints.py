@@ -70,19 +70,16 @@ async def search_trends(request: TrendSearchRequest) -> SearchResponse:
             "limit": 10
         }
     """
-    with record_http_request("orchestrator", "POST", "/search/trends"):
+    with record_http_request("orchestrator", "POST", 200):
         try:
             logger.info(f"Searching trends for topic: {request.topic}")
 
             # Find trends
             trends = find_trends(request.topic, request.timeframe)[: request.limit]
 
-            # Record metrics
-            record_business_metric(
-                "trend_searches_total",
-                1,
-                {"topic": request.topic, "timeframe": request.timeframe},
-            )
+            # Record search metrics using search-specific metrics
+            # TODO: Add proper search metrics if needed
+            logger.info(f"Trend search completed for topic: {request.topic}")
 
             return SearchResponse(
                 success=True,

@@ -410,7 +410,7 @@ async def update_post_metrics(thread_id: str, persona_id: str) -> None:
                 # This is a simplified calculation
                 cost_per_follow = 0.05  # $0.05 estimated cost per follower
                 record_business_metric(
-                    "cost_per_follow", cost_per_follow, {"persona_id": persona_id}
+                    "cost_per_follow", persona_id=persona_id, cost=cost_per_follow
                 )
 
                 # Update revenue projection based on follower growth

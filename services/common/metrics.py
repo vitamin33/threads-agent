@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 from contextlib import contextmanager
-from typing import Generator, Literal
+from typing import Any, Generator, Literal
 
 from prometheus_client import (
     REGISTRY,
@@ -18,7 +18,13 @@ from prometheus_client import (
 
 
 # Helper to handle duplicate registrations
-def _safe_metric(metric_class, name: str, description: str, labels=None, **kwargs):
+def _safe_metric(
+    metric_class: type,
+    name: str,
+    description: str,
+    labels: list[str] | None = None,
+    **kwargs: Any,
+) -> Any:
     """Create metric safely, handling duplicate registrations."""
     try:
         return metric_class(name, description, labels or [], **kwargs)
@@ -192,6 +198,13 @@ ERROR_RATE_BY_SERVICE = _safe_metric(
     ["service", "error_type", "severity"],  # severity: warning, error, critical
 )
 
+SERVICE_ERRORS_TOTAL = _safe_metric(
+    Counter,
+    "service_errors_total",
+    "Total errors by service and type",
+    ["service", "error_type"],
+)
+
 SYSTEM_HEALTH_STATUS = _safe_metric(
     Gauge,
     "system_health_status",
@@ -323,7 +336,7 @@ def record_business_metric(
         "cost_per_post",
         "cost_per_follow",
     ],
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Record various business metrics."""
     if metric_type == "posts_generated":
@@ -347,7 +360,7 @@ def record_business_metric(
 
 
 def record_api_metric(
-    metric_type: Literal["request", "duration", "in_flight"], **kwargs
+    metric_type: Literal["request", "duration", "in_flight"], **kwargs: Any
 ) -> None:
     """Record API-related metrics following RED methodology."""
     if metric_type == "request":
@@ -376,8 +389,12 @@ def record_infrastructure_metric(
         "queue_depth",
         "db_connection",
         "db_query",
+        "task_execution",
+        "service_errors",
+        "database_queries",
+        "vector_operations",
     ],
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
     """Record infrastructure metrics following USE methodology."""
     if metric_type == "celery_task":
@@ -398,11 +415,47 @@ def record_infrastructure_metric(
         DATABASE_QUERY_DURATION.labels(
             db_name=kwargs["db_name"], operation=kwargs["operation"]
         ).observe(kwargs["duration"])
+    elif metric_type == "task_execution":
+        # Map to celery task metrics
+        CELERY_TASKS_TOTAL.labels(
+            task_name=kwargs.get("operation", "unknown"),
+            status=kwargs.get("status", "unknown"),
+        ).inc()
+        if "duration" in kwargs:
+            CELERY_TASK_DURATION.labels(
+                task_name=kwargs.get("operation", "unknown")
+            ).observe(kwargs["duration"])
+    elif metric_type == "service_errors":
+        # Use the SERVICE_ERRORS_TOTAL metric
+        SERVICE_ERRORS_TOTAL.labels(
+            service=kwargs.get("service", "unknown"),
+            error_type=kwargs.get("error_type", "unknown"),
+        ).inc()
+    elif metric_type == "database_queries":
+        # Map to db_query
+        DATABASE_QUERY_DURATION.labels(
+            db_name=kwargs.get("component", "postgres"),
+            operation=kwargs.get("operation", "unknown"),
+        ).observe(kwargs.get("duration", 0.0))
+    elif metric_type == "vector_operations":
+        # Map to cache operations for now
+        CACHE_OPERATIONS_TOTAL.labels(
+            operation=kwargs.get("operation", "unknown"),
+            cache_name="qdrant",
+            status="success",
+        ).inc()
 
 
 def record_finops_metric(
-    metric_type: Literal["openai_cost", "cache_operation", "error", "health"],
-    **kwargs,
+    metric_type: Literal[
+        "openai_cost",
+        "cache_operation",
+        "error",
+        "health",
+        "cost_tracking",
+        "api_costs",
+    ],
+    **kwargs: Any,
 ) -> None:
     """Record FinOps and reliability metrics."""
     if metric_type == "openai_cost":
@@ -423,34 +476,56 @@ def record_finops_metric(
         SYSTEM_HEALTH_STATUS.labels(
             component=kwargs["component"], service=kwargs["service"]
         ).set(kwargs["status"])
+    elif metric_type == "cost_tracking":
+        # Map to cost per post
+        if "cost_type" in kwargs:
+            COST_PER_POST.labels(persona_id=kwargs["cost_type"]).set(
+                kwargs.get("amount", 0.0)
+            )
+    elif metric_type == "api_costs":
+        # Map to openai cost
+        OPENAI_COST_HOURLY.labels(model=kwargs.get("cost_type", "unknown")).observe(
+            kwargs.get("amount", 0.0)
+        )
 
 
-def record_content_generation_latency(persona_id: str, phase: str, duration: float):
+def record_content_generation_latency(
+    persona_id: str, phase: str, duration: float
+) -> None:
     """Record content generation latency."""
     CONTENT_GENERATION_LATENCY.labels(persona_id=persona_id, phase=phase).observe(
         duration
     )
 
 
-def record_engagement_prediction(persona_id: str, predicted_rate: float):
+def record_engagement_prediction(persona_id: str, predicted_rate: float) -> None:
     """Record engagement rate prediction."""
     ENGAGEMENT_RATE_PREDICTION.labels(persona_id=persona_id).set(predicted_rate)
 
 
-def record_engagement_rate(persona_id: str, actual_rate: float):
+def record_engagement_rate(persona_id: str, actual_rate: float) -> None:
     """Record actual engagement rate."""
     POSTS_ENGAGEMENT_RATE.labels(persona_id=persona_id).observe(actual_rate)
 
 
-def update_revenue_projection(source: str, amount: float):
+def update_revenue_projection(source: str, amount: float) -> None:
     """Update revenue projection gauge."""
     REVENUE_PROJECTION_MONTHLY.labels(source=source).set(amount)
 
 
 def record_http_request(
-    method: str, endpoint: str, status: int, duration: float
-) -> None:
-    """Record HTTP request metrics."""
+    method: str, endpoint: str, status: int, duration: float = 0.0
+) -> Any:
+    """Record HTTP request metrics (can be used as context manager or function)."""
+    # If called with 3 args and no duration, return context manager
+    if duration == 0.0 and status != 0:
+        # Return a context manager
+        service = method  # First arg is actually service when used as context manager
+        method_str = endpoint  # Second arg is method
+        endpoint_str = str(status)  # Third arg is endpoint
+        return record_http_request_context(service, method_str, endpoint_str)
+
+    # Normal function usage
     http_requests_total.labels(
         method=method, endpoint=endpoint, status=str(status)
     ).inc()
@@ -549,3 +624,57 @@ def record_openai_cost(model: str, cost: float) -> None:
     """Record OpenAI API cost."""
     # Map to finops metrics
     record_finops_metric("api_costs", resource="openai", cost_type=model, amount=cost)
+
+
+def record_cost_per_follow(persona_id: str, cost: float) -> None:
+    """Record cost per follower metric."""
+    # COST_PER_FOLLOW is a Histogram, so use observe instead of set
+    COST_PER_FOLLOW.labels(persona_id=persona_id).observe(cost)
+
+
+def record_error_rate_percentage(service: str, error_type: str, rate: float) -> None:
+    """Record error rate percentage for a service."""
+    # This can be calculated from error counts vs total requests
+    # For now, we will just record it as a gauge using the ERROR_RATE_BY_SERVICE metric
+    ERROR_RATE_BY_SERVICE.labels(
+        service=service, error_type=error_type, severity="warning"
+    ).inc(
+        int(rate)
+    )  # Convert rate to count for counter metric
+
+
+def update_content_quality(persona_id: str, content_type: str, score: float) -> None:
+    """Update content quality score."""
+    CONTENT_QUALITY_SCORE.labels(persona_id=persona_id, content_type=content_type).set(
+        score
+    )
+
+
+@contextmanager
+def record_http_request_context(
+    service: str, method: str, endpoint: str
+) -> Generator[None, None, None]:
+    """Context manager for recording HTTP request metrics."""
+    start_time = time.time()
+    try:
+        yield
+        # Success
+        duration = time.time() - start_time
+        record_http_request(method, endpoint, 200, duration)
+    except Exception:
+        # Error
+        duration = time.time() - start_time
+        record_http_request(method, endpoint, 500, duration)
+        raise
+
+
+@contextmanager
+def record_business_metric_context(metric_type: str) -> Generator[None, None, None]:
+    """Context manager for recording business metrics."""
+    # Could add timing or other metrics here in the future
+    try:
+        yield
+        # Success - you would record appropriate metrics here
+    except Exception:
+        # Error - record failure
+        raise

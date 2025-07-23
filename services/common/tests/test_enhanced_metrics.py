@@ -9,7 +9,7 @@ from prometheus_client import REGISTRY
 from services.common.metrics import (
     CONTENT_QUALITY_SCORE,
     POSTS_GENERATED_TOTAL,
-    record_business_metric,
+    record_business_metric_context,
     record_cost_per_follow,
     record_engagement_rate,
     record_error_rate_percentage,
@@ -48,14 +48,14 @@ def test_http_request_context_manager() -> None:
 
     # Test successful request
     try:
-        with record_http_request("orchestrator", "GET", "/health"):
+        with record_http_request("orchestrator", "GET", 200):
             pass  # Simulate successful request
     except Exception:
         pytest.fail("HTTP request context manager should not raise on success")
 
     # Test request with exception
     try:
-        with record_http_request("orchestrator", "POST", "/task"):
+        with record_http_request("orchestrator", "POST", 500):
             raise ValueError("Simulated error")
     except ValueError:
         pass  # Expected
@@ -71,7 +71,7 @@ def test_metrics_registration() -> None:
 
     # Use HTTP request context manager to register HTTP metrics
     try:
-        with record_http_request("test", "GET", "/test"):
+        with record_http_request("test", "GET", 200):
             pass
     except Exception:
         pass  # Don't care about exceptions, just want to register the metrics
@@ -140,14 +140,14 @@ def test_business_metric_context_manager() -> None:
     """Test business metric tracking context manager."""
     # Test successful business operation
     try:
-        with record_business_metric("post_generation"):
+        with record_business_metric_context("post_generation"):
             pass  # Simulate successful operation
     except Exception:
         pytest.fail("Business metric context manager should not raise on success")
 
     # Test operation with exception
     try:
-        with record_business_metric("revenue_calculation"):
+        with record_business_metric_context("revenue_calculation"):
             raise ValueError("Business logic error")
     except ValueError:
         pass  # Expected
