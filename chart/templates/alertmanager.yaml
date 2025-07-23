@@ -239,7 +239,8 @@ data:
       email_configs:
       - to: '{{ .Values.monitoring.alertmanager.email.businessRecipients }}'
         from: '{{ .Values.monitoring.alertmanager.email.from }}'
-        subject: '🚨 Business Alert: {{`{{ .GroupLabels.alertname }}`}}'
+        headers:
+          Subject: '🚨 Business Alert: {{`{{ .GroupLabels.alertname }}`}}'
         html: |
           <html>
             <head><title>Threads Agent Business Alert</title></head>
@@ -284,7 +285,8 @@ data:
       email_configs:
       - to: '{{ .Values.monitoring.alertmanager.email.infrastructureRecipients }}'
         from: '{{ .Values.monitoring.alertmanager.email.from }}'
-        subject: '🏗️  Infrastructure Alert: {{`{{ .GroupLabels.alertname }}`}}'
+        headers:
+          Subject: '🏗️  Infrastructure Alert: {{`{{ .GroupLabels.alertname }}`}}'
         html: |
           <html>
             <head><title>Threads Agent Infrastructure Alert</title></head>
