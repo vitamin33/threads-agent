@@ -60,12 +60,10 @@ def queue_post(self: Task, payload: Dict[str, Any]) -> None:  # noqa: ANN401
     user_input = payload.get("pain_statement") or payload.get("trend_snippet") or ""
     task_type = payload.get("task_type", "post")
 
-    with record_celery_task("tasks.queue_post"):
-        with record_business_metric("post_generation"):
-            with record_content_generation_latency(persona, "total"):
-                try:
-                    # 1️⃣  persona-runtime (content generation)
-                    with record_content_generation_latency(persona, "hook"):
+    start_time = time.time()
+    try:
+        # 1️⃣  persona-runtime (content generation)
+        hook_start = time.time()
                         draft = run_persona(
                             PERSONA_RUNTIME_URL, persona, user_input, headers=hdr
                         )
