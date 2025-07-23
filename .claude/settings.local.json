@@ -147,7 +147,9 @@
       "Bash(helm status:*)",
       "Bash(helm delete:*)",
       "Bash(kubectl config:*)",
-      "Bash(kubectl apply:*)"
+      "Bash(kubectl apply:*)",
+      "Bash(PYTHONPATH=$PWD pytest services/threads_adaptor/tests/unit/test_limiter.py -v)",
+      "Bash(gh pr create:*)"
     ],
     "deny": []
   }
