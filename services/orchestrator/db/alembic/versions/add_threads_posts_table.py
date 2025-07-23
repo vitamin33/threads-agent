@@ -1,7 +1,7 @@
 """add threads posts table
 
 Revision ID: threads_posts_001
-Revises: add_quality_gate_tables
+Revises: add_quality_gate
 Create Date: 2025-07-22 12:00:00.000000
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "threads_posts_001"
-down_revision = "add_quality_gate_tables"
+down_revision = "add_quality_gate"
 branch_labels = None
 depends_on = None
 
