@@ -1653,6 +1653,7 @@ COMMANDS:
     # Epic Management
     epic <name> [desc] [size]   Break down epic into features
     epics                       List all epics
+    ai-plan "requirement" ["context"] AI-powered epic planning from requirements
     
     # Feature Lifecycle
     feature <action> <id>       Manage feature lifecycle
@@ -1682,7 +1683,10 @@ COMMANDS:
         Actions: sync, create, update
 
 EXAMPLES:
-    # Break down a new epic
+    # AI-powered epic planning
+    $0 ai-plan "Build a real-time chat application with WebSocket support"
+    
+    # Break down a new epic manually
     $0 epic "User Authentication System" "Implement OAuth2 authentication" large
     
     # Start feature development
@@ -1761,6 +1765,16 @@ main() {
             ;;
         sync)
             sync_with_linear "${2:-sync}"
+            ;;
+        ai-plan)
+            # AI-powered epic planning
+            if [[ $# -lt 2 ]]; then
+                log_error "Usage: ai-plan \"requirement description\" [\"additional context\"]"
+                log_info "Example: ai-plan \"Build user authentication with OAuth2\""
+                exit 1
+            fi
+            shift
+            "$SCRIPT_DIR/ai-epic-planner.sh" "$@"
             ;;
         tasks)
             # New task management commands

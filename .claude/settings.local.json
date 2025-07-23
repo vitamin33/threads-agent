@@ -146,7 +146,9 @@
       "Bash(sed:*)",
       "Bash(mv:*)",
       "Bash(./scripts/workflow-test.sh:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(./scripts/ai-epic-planner.sh:*)",
+      "Bash(./scripts/ai-epic-planner-demo.sh:*)"
     ],
     "deny": []
   }

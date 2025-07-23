@@ -23,6 +23,12 @@
       "name": "Test Epic",
       "status": "active",
       "created": "2025-07-23T02:39:57+0300"
+    },
+    {
+      "id": "epic_demo_1753228808",
+      "name": "Demo: Build a mobile app for food delivery",
+      "status": "planning",
+      "created": "2025-07-23T03:00:08+0300"
     }
   ]
 }
