@@ -294,21 +294,7 @@ content_quality_metrics = _safe_metric(
     ["persona_id", "metric_name"],  # metric_name: readability, emotion, hooks, etc.
 )
 
-# ───── HTTP Request Metrics ──────────────────────────────────────────────────────────
-http_request_duration = _safe_metric(
-    Histogram,
-    "http_request_duration_seconds_histogram",
-    "HTTP request duration in seconds",
-    ["method", "endpoint", "status"],
-    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
-)
-
-http_requests_total = _safe_metric(
-    Counter,
-    "http_requests_total_counter",
-    "Total number of HTTP requests",
-    ["method", "endpoint", "status"],
-)
+# ───── Legacy HTTP Request Metrics (deprecated - use uppercase versions) ─────────────
 
 
 # ───── Helper Functions ──────────────────────────────────────────────────────────────
@@ -525,12 +511,15 @@ def record_http_request(
         endpoint_str = str(status)  # Third arg is endpoint
         return record_http_request_context(service, method_str, endpoint_str)
 
-    # Normal function usage
-    http_requests_total.labels(
-        method=method, endpoint=endpoint, status=str(status)
+    # Normal function usage - use the uppercase metrics
+    HTTP_REQUESTS_TOTAL.labels(
+        service="orchestrator",  # Default service name
+        method=method,
+        endpoint=endpoint,
+        status_code=str(status),
     ).inc()
-    http_request_duration.labels(
-        method=method, endpoint=endpoint, status=str(status)
+    HTTP_REQUEST_DURATION.labels(
+        service="orchestrator", method=method, endpoint=endpoint
     ).observe(duration)
 
 
@@ -660,11 +649,21 @@ def record_http_request_context(
         yield
         # Success
         duration = time.time() - start_time
-        record_http_request(method, endpoint, 200, duration)
+        HTTP_REQUESTS_TOTAL.labels(
+            service=service, method=method, endpoint=endpoint, status_code="200"
+        ).inc()
+        HTTP_REQUEST_DURATION.labels(
+            service=service, method=method, endpoint=endpoint
+        ).observe(duration)
     except Exception:
         # Error
         duration = time.time() - start_time
-        record_http_request(method, endpoint, 500, duration)
+        HTTP_REQUESTS_TOTAL.labels(
+            service=service, method=method, endpoint=endpoint, status_code="500"
+        ).inc()
+        HTTP_REQUEST_DURATION.labels(
+            service=service, method=method, endpoint=endpoint
+        ).observe(duration)
         raise
 
 
