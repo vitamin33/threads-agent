@@ -49,3 +49,62 @@ class HookVariant(Base):
     experiment_id: Mapped[str] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
     updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
+
+
+class Experiment(Base):
+    __tablename__ = "experiments"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(Text, unique=True, index=True)
+    name: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    persona_id: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="draft")  # draft, active, paused, completed
+    type: Mapped[str] = mapped_column(Text, default="ab_test")  # ab_test, multi_variant, bandit
+    
+    # Configuration
+    min_sample_size: Mapped[int] = mapped_column(default=100)
+    max_duration_hours: Mapped[int] = mapped_column(default=72)
+    confidence_level: Mapped[float] = mapped_column(default=0.95)
+    power: Mapped[float] = mapped_column(default=0.8)
+    posts_per_hour: Mapped[int] = mapped_column(default=2)
+    posting_hours: Mapped[dict] = mapped_column(Text, default='{"start": 9, "end": 21}')
+    
+    # Results
+    winner_variant_id: Mapped[str] = mapped_column(Text, nullable=True)
+    significance_achieved: Mapped[bool] = mapped_column(default=False)
+    p_value: Mapped[float] = mapped_column(nullable=True)
+    stopping_reason: Mapped[str] = mapped_column(Text, nullable=True)
+    
+    # Timestamps
+    started_at: Mapped[datetime] = mapped_column(nullable=True)
+    completed_at: Mapped[datetime] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
+
+
+class ExperimentVariant(Base):
+    __tablename__ = "experiment_variants"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(Text, index=True)
+    variant_id: Mapped[str] = mapped_column(Text, index=True)
+    
+    # Assignment
+    traffic_allocation: Mapped[float] = mapped_column(default=0.5)
+    is_control: Mapped[bool] = mapped_column(default=False)
+    
+    # Performance
+    posts_count: Mapped[int] = mapped_column(default=0)
+    impressions_total: Mapped[int] = mapped_column(default=0)
+    engagements_total: Mapped[int] = mapped_column(default=0)
+    engagement_rate: Mapped[float] = mapped_column(nullable=True)
+    
+    # Statistical data
+    conversion_count: Mapped[int] = mapped_column(default=0)
+    mean_engagement: Mapped[float] = mapped_column(nullable=True)
+    variance: Mapped[float] = mapped_column(nullable=True)
+    standard_error: Mapped[float] = mapped_column(nullable=True)
+    
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())

@@ -41,6 +41,10 @@ logger = logging.getLogger(__name__)
 app.include_router(search_router)
 app.include_router(batch_router)
 
+# Import and include experiment router
+from services.orchestrator.experiment_endpoints import experiment_router
+app.include_router(experiment_router)
+
 # Track service startup time for uptime calculation
 _service_start_time = time.time()
 
