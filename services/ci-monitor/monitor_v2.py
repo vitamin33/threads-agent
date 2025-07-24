@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
-from anthropic import Anthropic  # type: ignore[import-not-found]
-from github import Github  # type: ignore[import-not-found]
+from anthropic import Anthropic
+from github import Github
 
 
 class EnhancedCIMonitor:
@@ -198,7 +198,11 @@ Provide actionable fixes that can be automated."""
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            return str(response.content[0].text)
+            if response.content and len(response.content) > 0:
+                content = response.content[0]
+                if hasattr(content, "text"):
+                    return str(content.text)
+            return None
         except Exception as e:
             print(f"Error calling Claude API: {e}")
             return None

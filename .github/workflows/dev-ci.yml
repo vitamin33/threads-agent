@@ -65,26 +65,30 @@ jobs:
 
           BUILDER="${{ steps.buildx.outputs.name }}"   # <— builder set above
 
+          # Build services that exist
+          BUILT_IMAGES=""
           for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine revenue; do
-            docker buildx build \
-              --builder "$BUILDER" \
-              --load \
-              $CACHE_OPTS \
-              -f services/${svc}/Dockerfile \
-              -t ${svc//_/-}:local .
+            if [ -d "services/${svc}" ]; then
+              echo "Building $svc..."
+              docker buildx build \
+                --builder "$BUILDER" \
+                --load \
+                $CACHE_OPTS \
+                -f services/${svc}/Dockerfile \
+                -t ${svc//_/-}:local .
+              BUILT_IMAGES="$BUILT_IMAGES ${svc//_/-}:local"
+            else
+              echo "⚠️ Skipping $svc - directory not found"
+            fi
           done
 
           docker pull bitnami/postgresql:16
           docker pull rabbitmq:3.13-management-alpine
           docker pull qdrant/qdrant:v1.9.4
 
+          # Import only built images
           k3d image import \
-            orchestrator:local \
-            celery-worker:local \
-            persona-runtime:local \
-            fake-threads:local \
-            viral-engine:local \
-            revenue:local \
+            $BUILT_IMAGES \
             qdrant/qdrant:v1.9.4 \
             -c dev
 
@@ -159,7 +163,10 @@ jobs:
           pip install -r services/persona_runtime/requirements.txt
           pip install -r services/fake_threads/requirements.txt
           pip install -r services/viral_engine/requirements.txt
-          pip install -r services/revenue/requirements.txt
+          # Install revenue requirements only if the service exists
+          if [ -f "services/revenue/requirements.txt" ]; then
+            pip install -r services/revenue/requirements.txt
+          fi
           pip install -r tests/requirements.txt
           # Uninstall langsmith to prevent pytest plugin loading issues
           pip uninstall -y langsmith || true

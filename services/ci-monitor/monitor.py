@@ -9,9 +9,12 @@ import time
 from typing import Any, Dict, List
 
 try:
-    from github import Github  # type: ignore[import-not-found]
+    from github import Github
+
+    HAS_GITHUB = True
 except ImportError:
-    Github = None
+    Github = None  # type: ignore[assignment,misc]
+    HAS_GITHUB = False
 
 
 class CIMonitor:
@@ -19,7 +22,7 @@ class CIMonitor:
         self.github_token = os.getenv("GITHUB_TOKEN")
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         self.repo_name = "threads-agent-stack/threads-agent"
-        if Github:
+        if HAS_GITHUB:
             self.github = Github(self.github_token)
             self.repo = self.github.get_repo(self.repo_name)
         else:
