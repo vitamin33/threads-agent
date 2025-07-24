@@ -205,7 +205,9 @@
       "Bash(gh run watch:*)",
       "Bash(gh run rerun:*)",
       "Bash(gh pr checks:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(PYTHONPATH=$PWD:$PYTHONPATH LANGCHAIN_TRACING_V2=false pytest -q -m \"not e2e\" --tb=short)",
+      "Bash(PYTHONPATH=$PWD:$PYTHONPATH LANGCHAIN_TRACING_V2=false python -m pytest -q -m \"not e2e\" --tb=short)"
     ],
     "deny": []
   }

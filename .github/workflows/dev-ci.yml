@@ -161,8 +161,8 @@ jobs:
           pip install -r services/viral_engine/requirements.txt
           pip install -r services/revenue/requirements.txt
           pip install -r tests/requirements.txt
-          # Force reinstall langsmith with a specific version that's compatible with pydantic v1
-          pip install --force-reinstall "langsmith==0.1.31"
+          # Upgrade langsmith to latest version to fix compatibility issues
+          pip install --upgrade langsmith
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites
