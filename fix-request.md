@@ -1,6 +1,7 @@
 The CI pipeline has failed. Please analyze the errors and fix them.
 
 Error Summary:
+error: code = Internal desc = SendMsg called after CloseSend
 Error: unexpected indent
 failed: 0, jobs succeeded: 0
 
