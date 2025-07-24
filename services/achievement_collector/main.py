@@ -2,15 +2,14 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import make_asgi_app
-
 from api.routes import achievements, analysis, portfolio, webhooks
 from core.config import settings
 from core.logging import setup_logging
 from db.config import engine
 from db.models import Base
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import make_asgi_app
 
 # Setup logging
 logger = setup_logging(__name__)
@@ -21,13 +20,13 @@ async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     logger.info("Starting Achievement Collector Service")
-    
+
     # Create database tables
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables created/verified")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Achievement Collector Service")
 

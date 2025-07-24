@@ -2,16 +2,16 @@
 
 import os
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
-from sqlalchemy import and_, desc
-from sqlalchemy.orm import Session
-
 from api.schemas import PortfolioRequest, PortfolioResponse
 from core.config import settings
 from core.logging import setup_logging
 from db.config import get_db
 from db.models import Achievement, PortfolioSnapshot
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
+from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
+
 from services.portfolio_generator import PortfolioGenerator
 
 logger = setup_logging(__name__)
@@ -27,50 +27,49 @@ async def generate_portfolio(
     db: Session = Depends(get_db),
 ):
     """Generate portfolio document"""
-    
+
     # Build query for achievements
     query = db.query(Achievement)
-    
+
     # Apply filters
     conditions = []
-    
+
     if request.portfolio_ready_only:
         conditions.append(Achievement.portfolio_ready.is_(True))
-    
+
     if request.min_impact_score > 0:
         conditions.append(Achievement.impact_score >= request.min_impact_score)
-    
+
     if request.include_categories:
         conditions.append(Achievement.category.in_(request.include_categories))
-    
+
     if conditions:
         query = query.filter(and_(*conditions))
-    
+
     # Order by display priority and impact score
     query = query.order_by(
         desc(Achievement.display_priority),
         desc(Achievement.impact_score),
     )
-    
+
     # Apply limit if specified
     if request.max_achievements:
         query = query.limit(request.max_achievements)
-    
+
     achievements = query.all()
-    
+
     if not achievements:
         raise HTTPException(
-            status_code=404,
-            detail="No achievements found matching criteria"
+            status_code=404, detail="No achievements found matching criteria"
         )
-    
+
     try:
         # Generate portfolio
         portfolio_data = await generator.generate(
             achievements=achievements,
             format=request.format,
         )
-        
+
         # Create snapshot record
         snapshot = PortfolioSnapshot(
             version=portfolio_data["version"],
@@ -91,14 +90,14 @@ async def generate_portfolio(
             generation_time_seconds=portfolio_data["generation_time"],
             storage_url=portfolio_data.get("storage_url"),
         )
-        
+
         db.add(snapshot)
         db.commit()
-        
+
         logger.info(
             f"Generated {request.format} portfolio with {len(achievements)} achievements"
         )
-        
+
         return PortfolioResponse(
             version=portfolio_data["version"],
             format=request.format,
@@ -110,12 +109,11 @@ async def generate_portfolio(
             download_url=f"/portfolio/download/{snapshot.id}",
             storage_url=portfolio_data.get("storage_url"),
         )
-        
+
     except Exception as e:
         logger.error(f"Portfolio generation failed: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Portfolio generation failed: {str(e)}"
+            status_code=500, detail=f"Portfolio generation failed: {str(e)}"
         )
 
 
@@ -125,20 +123,20 @@ async def download_portfolio(
     db: Session = Depends(get_db),
 ):
     """Download generated portfolio"""
-    
-    snapshot = db.query(PortfolioSnapshot).filter(
-        PortfolioSnapshot.id == snapshot_id
-    ).first()
-    
+
+    snapshot = (
+        db.query(PortfolioSnapshot).filter(PortfolioSnapshot.id == snapshot_id).first()
+    )
+
     if not snapshot:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    
+
     # Get file path from metadata
     file_path = snapshot.metadata.get("full_content_path")
-    
+
     if not file_path or not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Portfolio file not found")
-    
+
     # Determine filename
     ext_map = {
         "markdown": "md",
@@ -146,9 +144,9 @@ async def download_portfolio(
         "html": "html",
         "json": "json",
     }
-    
+
     filename = f"portfolio_{snapshot.version}.{ext_map.get(snapshot.format, 'txt')}"
-    
+
     return FileResponse(
         path=file_path,
         filename=filename,
@@ -163,16 +161,14 @@ async def list_portfolio_snapshots(
     db: Session = Depends(get_db),
 ):
     """List portfolio snapshots"""
-    
+
     query = db.query(PortfolioSnapshot)
-    
+
     if format:
         query = query.filter(PortfolioSnapshot.format == format)
-    
-    snapshots = query.order_by(
-        desc(PortfolioSnapshot.generated_at)
-    ).limit(limit).all()
-    
+
+    snapshots = query.order_by(desc(PortfolioSnapshot.generated_at)).limit(limit).all()
+
     return [
         {
             "id": s.id,
@@ -194,7 +190,7 @@ async def generate_from_template(
     db: Session = Depends(get_db),
 ):
     """Generate portfolio using predefined template"""
-    
+
     templates = {
         "executive_summary": {
             "format": "pdf",
@@ -203,7 +199,7 @@ async def generate_from_template(
             "max_achievements": 10,
         },
         "technical_portfolio": {
-            "format": "markdown", 
+            "format": "markdown",
             "include_categories": ["feature", "optimization", "architecture"],
             "portfolio_ready_only": True,
         },
@@ -213,14 +209,13 @@ async def generate_from_template(
             "min_impact_score": 0,
         },
     }
-    
+
     if template_name not in templates:
         raise HTTPException(
-            status_code=404,
-            detail=f"Template '{template_name}' not found"
+            status_code=404, detail=f"Template '{template_name}' not found"
         )
-    
+
     # Use template configuration
     request = PortfolioRequest(**templates[template_name])
-    
+
     return await generate_portfolio(request, db)

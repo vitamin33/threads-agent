@@ -4,13 +4,13 @@ import hashlib
 import hmac
 import json
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from sqlalchemy.orm import Session
-
 from api.schemas import WebhookResponse
 from core.config import settings
 from core.logging import setup_logging
 from db.config import get_db
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from sqlalchemy.orm import Session
+
 from services.github_processor import GitHubProcessor
 
 logger = setup_logging(__name__)
@@ -26,20 +26,23 @@ def verify_github_signature(
     secret: str,
 ) -> bool:
     """Verify GitHub webhook signature"""
-    
+
     if not signature:
         return False
-    
+
     # GitHub sends sha256=<signature>
     if not signature.startswith("sha256="):
         return False
-    
-    expected_signature = "sha256=" + hmac.new(
-        secret.encode("utf-8"),
-        payload,
-        hashlib.sha256,
-    ).hexdigest()
-    
+
+    expected_signature = (
+        "sha256="
+        + hmac.new(
+            secret.encode("utf-8"),
+            payload,
+            hashlib.sha256,
+        ).hexdigest()
+    )
+
     return hmac.compare_digest(expected_signature, signature)
 
 
@@ -51,10 +54,10 @@ async def github_webhook(
     db: Session = Depends(get_db),
 ):
     """Handle GitHub webhook events"""
-    
+
     # Get raw payload
     payload = await request.body()
-    
+
     # Verify signature if secret is configured
     if settings.GITHUB_WEBHOOK_SECRET:
         if not verify_github_signature(
@@ -64,20 +67,20 @@ async def github_webhook(
         ):
             logger.warning("Invalid GitHub webhook signature")
             raise HTTPException(status_code=401, detail="Invalid signature")
-    
+
     # Parse payload
     try:
         data = json.loads(payload)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
-    
+
     # Log event
     logger.info(f"Received GitHub webhook: {x_github_event}")
-    
+
     # Process based on event type
     achievement_created = False
     achievement_id = None
-    
+
     try:
         if x_github_event == "pull_request":
             # Handle PR events
@@ -86,7 +89,7 @@ async def github_webhook(
                 if result:
                     achievement_created = True
                     achievement_id = result.id
-        
+
         elif x_github_event == "workflow_run":
             # Handle CI/CD events
             if data.get("action") == "completed":
@@ -94,14 +97,14 @@ async def github_webhook(
                 if result:
                     achievement_created = True
                     achievement_id = result.id
-        
+
         elif x_github_event == "push":
             # Handle push events
             result = await processor.process_push(data, db)
             if result:
                 achievement_created = True
                 achievement_id = result.id
-        
+
         elif x_github_event == "issues":
             # Handle issue events
             if data.get("action") in ["closed"]:
@@ -109,17 +112,16 @@ async def github_webhook(
                 if result:
                     achievement_created = True
                     achievement_id = result.id
-        
+
         else:
             logger.info(f"Unhandled event type: {x_github_event}")
-            
+
     except Exception as e:
         logger.error(f"Error processing webhook: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Webhook processing failed: {str(e)}"
+            status_code=500, detail=f"Webhook processing failed: {str(e)}"
         )
-    
+
     return WebhookResponse(
         status="processed",
         message=f"Processed {x_github_event} event",
@@ -136,9 +138,9 @@ async def gitlab_webhook(
     db: Session = Depends(get_db),
 ):
     """Handle GitLab webhook events (placeholder)"""
-    
+
     # TODO: Implement GitLab webhook processing
-    
+
     return WebhookResponse(
         status="not_implemented",
         message="GitLab webhooks not yet implemented",
@@ -153,17 +155,16 @@ async def ci_webhook(
     db: Session = Depends(get_db),
 ):
     """Handle CI/CD provider webhooks"""
-    
+
     supported_providers = ["jenkins", "circleci", "travis", "gitlab-ci"]
-    
+
     if provider not in supported_providers:
         raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported CI provider: {provider}"
+            status_code=400, detail=f"Unsupported CI provider: {provider}"
         )
-    
+
     # TODO: Implement CI provider webhook processing
-    
+
     return WebhookResponse(
         status="not_implemented",
         message=f"{provider} webhooks not yet implemented",
@@ -174,7 +175,7 @@ async def ci_webhook(
 @router.get("/health")
 async def webhook_health():
     """Check webhook endpoint health"""
-    
+
     return {
         "status": "healthy",
         "github_configured": bool(settings.GITHUB_WEBHOOK_SECRET),

@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 # Database URL from environment or default
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:pass@localhost:5432/achievement_collector"
+    "DATABASE_URL", "postgresql://postgres:pass@localhost:5432/achievement_collector"
 )
 
 # Create engine

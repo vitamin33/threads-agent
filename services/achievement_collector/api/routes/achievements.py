@@ -2,10 +2,6 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func
-from sqlalchemy.orm import Session
-
 from api.schemas import (
     Achievement,
     AchievementCreate,
@@ -15,6 +11,9 @@ from api.schemas import (
 from core.logging import setup_logging
 from db.config import get_db
 from db.models import Achievement as AchievementModel
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
 
 logger = setup_logging(__name__)
 router = APIRouter()
@@ -26,22 +25,24 @@ async def create_achievement(
     db: Session = Depends(get_db),
 ):
     """Create a new achievement"""
-    
+
     # Calculate duration
-    duration = (achievement.completed_at - achievement.started_at).total_seconds() / 3600
-    
+    duration = (
+        achievement.completed_at - achievement.started_at
+    ).total_seconds() / 3600
+
     # Create achievement
     db_achievement = AchievementModel(
         **achievement.model_dump(),
         duration_hours=duration,
     )
-    
+
     db.add(db_achievement)
     db.commit()
     db.refresh(db_achievement)
-    
+
     logger.info(f"Created achievement: {db_achievement.id} - {db_achievement.title}")
-    
+
     return db_achievement
 
 
@@ -53,49 +54,51 @@ async def list_achievements(
     portfolio_ready: Optional[bool] = None,
     min_impact_score: Optional[float] = Query(None, ge=0, le=100),
     search: Optional[str] = None,
-    sort_by: str = Query("completed_at", pattern="^(completed_at|impact_score|business_value)$"),
+    sort_by: str = Query(
+        "completed_at", pattern="^(completed_at|impact_score|business_value)$"
+    ),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     """List achievements with filtering and pagination"""
-    
+
     # Base query
     query = db.query(AchievementModel)
-    
+
     # Apply filters
     if category:
         query = query.filter(AchievementModel.category == category)
-    
+
     if portfolio_ready is not None:
         query = query.filter(AchievementModel.portfolio_ready == portfolio_ready)
-    
+
     if min_impact_score is not None:
         query = query.filter(AchievementModel.impact_score >= min_impact_score)
-    
+
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(
-            (AchievementModel.title.ilike(search_pattern)) |
-            (AchievementModel.description.ilike(search_pattern))
+            (AchievementModel.title.ilike(search_pattern))
+            | (AchievementModel.description.ilike(search_pattern))
         )
-    
+
     # Count total
     total = query.count()
-    
+
     # Apply sorting
     sort_column = getattr(AchievementModel, sort_by)
     if order == "desc":
         query = query.order_by(desc(sort_column))
     else:
         query = query.order_by(sort_column)
-    
+
     # Pagination
     offset = (page - 1) * per_page
     items = query.offset(offset).limit(per_page).all()
-    
+
     # Calculate pages
     pages = (total + per_page - 1) // per_page
-    
+
     return AchievementList(
         items=items,
         total=total,
@@ -111,14 +114,14 @@ async def get_achievement(
     db: Session = Depends(get_db),
 ):
     """Get specific achievement"""
-    
-    achievement = db.query(AchievementModel).filter(
-        AchievementModel.id == achievement_id
-    ).first()
-    
+
+    achievement = (
+        db.query(AchievementModel).filter(AchievementModel.id == achievement_id).first()
+    )
+
     if not achievement:
         raise HTTPException(status_code=404, detail="Achievement not found")
-    
+
     return achievement
 
 
@@ -129,24 +132,24 @@ async def update_achievement(
     db: Session = Depends(get_db),
 ):
     """Update achievement"""
-    
-    achievement = db.query(AchievementModel).filter(
-        AchievementModel.id == achievement_id
-    ).first()
-    
+
+    achievement = (
+        db.query(AchievementModel).filter(AchievementModel.id == achievement_id).first()
+    )
+
     if not achievement:
         raise HTTPException(status_code=404, detail="Achievement not found")
-    
+
     # Update fields
     update_data = update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(achievement, field, value)
-    
+
     db.commit()
     db.refresh(achievement)
-    
+
     logger.info(f"Updated achievement: {achievement.id}")
-    
+
     return achievement
 
 
@@ -156,19 +159,19 @@ async def delete_achievement(
     db: Session = Depends(get_db),
 ):
     """Delete achievement"""
-    
-    achievement = db.query(AchievementModel).filter(
-        AchievementModel.id == achievement_id
-    ).first()
-    
+
+    achievement = (
+        db.query(AchievementModel).filter(AchievementModel.id == achievement_id).first()
+    )
+
     if not achievement:
         raise HTTPException(status_code=404, detail="Achievement not found")
-    
+
     db.delete(achievement)
     db.commit()
-    
+
     logger.info(f"Deleted achievement: {achievement_id}")
-    
+
     return {"status": "deleted", "id": achievement_id}
 
 
@@ -177,7 +180,7 @@ async def get_achievement_stats(
     db: Session = Depends(get_db),
 ):
     """Get achievement statistics"""
-    
+
     stats = db.query(
         func.count(AchievementModel.id).label("total_achievements"),
         func.sum(AchievementModel.business_value).label("total_value"),
@@ -185,12 +188,16 @@ async def get_achievement_stats(
         func.avg(AchievementModel.impact_score).label("avg_impact_score"),
         func.avg(AchievementModel.complexity_score).label("avg_complexity_score"),
     ).first()
-    
-    category_stats = db.query(
-        AchievementModel.category,
-        func.count(AchievementModel.id).label("count"),
-    ).group_by(AchievementModel.category).all()
-    
+
+    category_stats = (
+        db.query(
+            AchievementModel.category,
+            func.count(AchievementModel.id).label("count"),
+        )
+        .group_by(AchievementModel.category)
+        .all()
+    )
+
     return {
         "total_achievements": stats.total_achievements or 0,
         "total_value_generated": float(stats.total_value or 0),
