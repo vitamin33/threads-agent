@@ -317,7 +317,11 @@ jobs:
           
           # Uninstall langsmith to completely avoid pydantic v1 compatibility issues
           echo "🔧 Removing langsmith to prevent pydantic conflicts..."
-          pip uninstall -y langsmith langchain-community langchain || true
+          pip uninstall -y langsmith langchain-community langchain langchain-core || true
+          
+          # Double-check langsmith is gone
+          echo "Checking if langsmith is still installed..."
+          pip list | grep -i langsmith || echo "✅ langsmith not found (good!)"
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites (smart selection)
@@ -365,12 +369,12 @@ jobs:
           # Disable langsmith to avoid pydantic v1 compatibility issues
           export LANGCHAIN_TRACING_V2=false
           export LANGSMITH_TRACING=false
+          export LANGCHAIN_TRACING=false
+          export LANGSMITH_API_KEY="dummy"
+          export LANGSMITH_DISABLED=true
 
           echo "🧪 Running tests for: $TEST_PATHS"
-          # Disable pytest plugin autoload to prevent langsmith from loading
-          export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
-          # Only load the plugins we explicitly need
-          pytest $PYTEST_ARGS -p xdist -p timeout -p asyncio $TEST_PATHS -x  # -x stops on first failure
+          pytest $PYTEST_ARGS $TEST_PATHS -x  # -x stops on first failure
 
           # ➌ tidy up port-forwards if started
           if [ "$RUN_E2E" = "true" ]; then
