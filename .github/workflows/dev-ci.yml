@@ -315,25 +315,18 @@ jobs:
           # Show what's installed
           pip list
           
-          # Remove langsmith pytest plugin entry point to prevent loading
-          echo "🔧 Removing langsmith pytest plugin to prevent loading..."
+          # Upgrade langsmith and related packages to latest versions compatible with pydantic v2
+          echo "🔧 Upgrading langsmith and langchain packages to fix pydantic compatibility..."
           
-          # Find the langsmith package location
-          SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
+          # Force upgrade to latest versions
+          pip install --upgrade "langsmith>=0.4.8" "langchain-core>=0.3.0" "pydantic>=2.0"
           
-          # Remove the pytest11 entry point from langsmith
-          if [ -f "$SITE_PACKAGES/langsmith-"*".dist-info/entry_points.txt" ]; then
-            echo "Found langsmith entry_points.txt, removing pytest11 section..."
-            for file in "$SITE_PACKAGES/langsmith-"*".dist-info/entry_points.txt"; do
-              # Remove the pytest11 section
-              sed -i '/\[pytest11\]/,/^$/d' "$file" || true
-              echo "Modified: $file"
-            done
-          fi
+          # Show versions for debugging
+          echo "📦 Package versions after upgrade:"
+          pip show langsmith langchain-core pydantic | grep -E "Name:|Version:"
           
-          # Double-check by listing pytest plugins
-          echo "Checking available pytest plugins..."
-          python -m pytest --trace-config 2>&1 | grep -i langsmith || echo "✅ langsmith plugin not found (good!)"
+          # Verify pydantic v2 is being used
+          python -c "import pydantic; print(f'Pydantic version: {pydantic.VERSION}')"
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites (smart selection)
@@ -342,7 +335,7 @@ jobs:
         id: tests
         run: |
           # Determine which tests to run based on changes
-          PYTEST_ARGS="-q -p no:langsmith -n auto --maxprocesses=4 --dist loadscope --timeout=60"
+          PYTEST_ARGS="-q -n auto --maxprocesses=4 --dist loadscope --timeout=60"
 
           # If no Python files changed, skip tests entirely
           if [ "${{ steps.changes.outputs.python }}" != "true" ]; then
