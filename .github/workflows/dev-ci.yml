@@ -315,18 +315,35 @@ jobs:
           # Show what's installed
           pip list
           
-          # Upgrade langsmith and related packages to latest versions compatible with pydantic v2
-          echo "🔧 Upgrading langsmith and langchain packages to fix pydantic compatibility..."
+          # Fix langsmith/pydantic compatibility by preventing pytest from loading the plugin
+          echo "🔧 Preventing langsmith pytest plugin from loading..."
           
-          # Force upgrade to latest versions
-          pip install --upgrade "langsmith>=0.4.8" "langchain-core>=0.3.0" "pydantic>=2.0"
+          # Create a conftest.py in the root that prevents langsmith plugin from loading
+          cat > conftest.py << 'EOF'
+# Prevent langsmith plugin from loading due to pydantic v1 compatibility issues with Python 3.12
+import sys
+import _pytest.config
+
+# Remove langsmith from pytest plugin list before it loads
+original_import = _pytest.config.importlib.import_module
+
+def patched_import(name, package=None):
+    if name == "langsmith.pytest_plugin":
+        # Return a dummy module instead of the real langsmith plugin
+        import types
+        dummy = types.ModuleType("langsmith.pytest_plugin")
+        sys.modules["langsmith.pytest_plugin"] = dummy
+        return dummy
+    return original_import(name, package)
+
+_pytest.config.importlib.import_module = patched_import
+EOF
           
-          # Show versions for debugging
-          echo "📦 Package versions after upgrade:"
-          pip show langsmith langchain-core pydantic | grep -E "Name:|Version:"
+          echo "✅ Created conftest.py to block langsmith plugin"
           
-          # Verify pydantic v2 is being used
-          python -c "import pydantic; print(f'Pydantic version: {pydantic.VERSION}')"
+          # Show current langsmith/pydantic versions for debugging
+          echo "📦 Current package versions:"
+          pip show langsmith langchain-core pydantic 2>/dev/null | grep -E "Name:|Version:" || echo "Some packages not installed"
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites (smart selection)
