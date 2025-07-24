@@ -196,7 +196,16 @@
       "Bash(PYTHONPATH=$PWD:$PYTHONPATH:- pytest -s tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v)",
       "Bash(gh api:*)",
       "Bash(gh run download:*)",
-      "Bash(export KUBECONFIG=~/.kube/config)"
+      "Bash(export KUBECONFIG=~/.kube/config)",
+      "Bash(PYTHONPATH=$PWD:$PYTHONPATH pytest services/revenue/tests/ -v --tb=short)",
+      "Bash(git restore:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh run rerun:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh api:*)"
     ],
     "deny": []
   }
