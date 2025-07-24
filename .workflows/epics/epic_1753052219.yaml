@@ -19,15 +19,15 @@ milestones:
   - name: "Planning Complete"
     target_date: "2025-07-21"
     criteria: ["Requirements finalized", "Architecture approved"]
-    
+
   - name: "Core Development"
     target_date: "2025-07-21"
     criteria: ["Core features implemented", "Unit tests passing"]
-    
+
   - name: "Integration Complete"
     target_date: "2025-07-21"
     criteria: ["All features integrated", "E2E tests passing"]
-    
+
   - name: "Production Ready"
     target_date: "2025-07-21"
     criteria: ["Documentation complete", "Performance validated", "Security approved"]

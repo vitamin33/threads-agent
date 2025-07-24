@@ -7,7 +7,7 @@
    - Run on your own infrastructure
    - Custom monitoring intervals (not limited by GitHub)
    - Can monitor multiple repositories simultaneously
-   
+
 2. **Cost Efficiency**
    - No GitHub Actions minutes consumed
    - Uses your Anthropic API key directly

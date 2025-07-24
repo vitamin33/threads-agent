@@ -36,7 +36,7 @@ log_ai() { echo -e "${PURPLE}[AI]${NC} $*"; }
 get_planning_prompt() {
     local requirement="$1"
     local context="${2:-}"
-    
+
     cat << EOF
 You are an expert software architect and project planner. Break down this requirement into a comprehensive implementation plan.
 
@@ -57,7 +57,7 @@ epic:
   risks:
     - "Risk 1"
     - "Risk 2"
-  
+
 features:
   - name: "Feature 1 Name"
     description: "What this feature accomplishes"
@@ -77,7 +77,7 @@ features:
         effort_hours: 1-2
         description: "Clear action item"
         technical_notes: "Implementation approach"
-  
+
   - name: "Feature 2 Name"
     description: "What this feature accomplishes"
     effort: "medium"
@@ -129,32 +129,32 @@ EOF
 process_ai_response() {
     local response="$1"
     local yaml_content=""
-    
+
     # Extract YAML content between code blocks
     yaml_content=$(echo "$response" | sed -n '/^```yaml$/,/^```$/p' | sed '1d;$d')
-    
+
     if [[ -z "$yaml_content" ]]; then
         log_error "No YAML content found in AI response"
         return 1
     fi
-    
+
     # Save to temporary file for processing
     local temp_file="/tmp/ai_plan_${TIMESTAMP}.yaml"
     echo "$yaml_content" > "$temp_file"
-    
+
     # Parse epic information
     local epic_name=$(yq eval '.epic.name' "$temp_file" 2>/dev/null || echo "")
     local epic_description=$(yq eval '.epic.description' "$temp_file" 2>/dev/null || echo "")
     local epic_complexity=$(yq eval '.epic.complexity' "$temp_file" 2>/dev/null || echo "medium")
     local estimated_weeks=$(yq eval '.epic.estimated_weeks' "$temp_file" 2>/dev/null || echo "4")
-    
+
     if [[ -z "$epic_name" ]]; then
         log_error "Failed to parse epic name from AI response"
         return 1
     fi
-    
+
     log_info "Creating epic: $epic_name"
-    
+
     # Create epic
     local epic_id="epic_$(date +%s)"
     cat > "$EPICS_DIR/${epic_id}.yaml" << EOF
@@ -207,27 +207,27 @@ automation:
     - channel: "development"
       events: ["milestone_reached", "blocker_detected"]
 EOF
-    
+
     # Update epic registry
     if [[ ! -f "$WORKFLOW_DIR/active_epics.json" ]]; then
         echo '{"epics": []}' > "$WORKFLOW_DIR/active_epics.json"
     fi
-    
+
     jq --arg id "$epic_id" --arg name "$epic_name" --arg status "planning" --arg created "$(date +%Y-%m-%dT%H:%M:%S%z)" \
         '.epics += [{"id": $id, "name": $name, "status": $status, "created": $created}]' \
         "$WORKFLOW_DIR/active_epics.json" > "$WORKFLOW_DIR/active_epics.json.tmp" && \
         mv "$WORKFLOW_DIR/active_epics.json.tmp" "$WORKFLOW_DIR/active_epics.json"
-    
+
     # Process features
     local feature_count=0
     yq eval '.features[]' "$temp_file" 2>/dev/null | while IFS= read -r feature_yaml; do
         ((feature_count++))
         process_feature "$epic_id" "$feature_yaml" "$feature_count"
     done
-    
+
     # Clean up
     rm -f "$temp_file"
-    
+
     log_success "Created epic: $epic_id with $(yq eval '.features | length' "$temp_file" 2>/dev/null || echo 0) features"
     echo "$epic_id"
 }
@@ -237,16 +237,16 @@ process_feature() {
     local epic_id="$1"
     local feature_yaml="$2"
     local feature_num="$3"
-    
+
     local feature_id="feat_${epic_id}_$(printf "%05d" $((RANDOM % 100000)))"
     local feature_name=$(echo "$feature_yaml" | yq eval '.name' -)
     local feature_description=$(echo "$feature_yaml" | yq eval '.description' -)
     local feature_effort=$(echo "$feature_yaml" | yq eval '.effort' -)
     local feature_priority=$(echo "$feature_yaml" | yq eval '.priority' -)
     local feature_category=$(echo "$feature_yaml" | yq eval '.category' -)
-    
+
     log_info "Creating feature: $feature_name"
-    
+
     # Create feature file
     cat > "$FEATURES_DIR/${feature_id}.yaml" << EOF
 id: "$feature_id"
@@ -300,19 +300,19 @@ testing:
   integration_tests:
     - "Test integration with existing system"
 EOF
-    
+
     # Update epic file to include feature reference
     local epic_file="$EPICS_DIR/${epic_id}.yaml"
     echo "  - id: \"$feature_id\"" >> "$epic_file"
     echo "    name: \"$feature_name\"" >> "$epic_file"
     echo "    effort: \"$feature_effort\"" >> "$epic_file"
     echo "    priority: \"$feature_priority\"" >> "$epic_file"
-    
+
     # Update feature registry
     if [[ ! -f "$WORKFLOW_DIR/feature_registry.json" ]]; then
         echo '{"features": []}' > "$WORKFLOW_DIR/feature_registry.json"
     fi
-    
+
     jq --arg id "$feature_id" --arg name "$feature_name" --arg epic "$epic_id" --arg status "planning" \
         '.features += [{"id": $id, "name": $name, "epic": $epic, "status": $status}]' \
         "$WORKFLOW_DIR/feature_registry.json" > "$WORKFLOW_DIR/feature_registry.json.tmp" && \
@@ -334,29 +334,29 @@ calculate_effort_hours() {
 ai_plan_epic() {
     local requirement="$1"
     local context="${2:-}"
-    
+
     log_ai "Planning epic for: $requirement"
-    
+
     # Check if OpenAI API key is available
     if [[ -z "${OPENAI_API_KEY:-}" ]]; then
         log_error "OPENAI_API_KEY not set. Please export OPENAI_API_KEY=your-key"
         return 1
     fi
-    
+
     # Check for required tools
     if ! command -v yq >/dev/null 2>&1; then
         log_error "yq is required for YAML parsing. Install with: brew install yq"
         return 1
     fi
-    
+
     # Initialize directories
     mkdir -p "$EPICS_DIR" "$FEATURES_DIR" "$WORKFLOW_DIR/tasks"
-    
+
     # Get planning prompt
     local prompt=$(get_planning_prompt "$requirement" "$context")
-    
+
     log_info "Consulting AI for epic breakdown..."
-    
+
     # Call OpenAI API
     local response=$(curl -s https://api.openai.com/v1/chat/completions \
         -H "Content-Type: application/json" \
@@ -376,15 +376,15 @@ ai_plan_epic() {
             "temperature": 0.7,
             "max_tokens": 3000
         }' | jq -r '.choices[0].message.content')
-    
+
     if [[ -z "$response" ]] || [[ "$response" == "null" ]]; then
         log_error "Failed to get response from OpenAI"
         return 1
     fi
-    
+
     # Process the AI response
     local epic_id=$(process_ai_response "$response")
-    
+
     if [[ -n "$epic_id" ]]; then
         log_success "AI planning complete! Epic created: $epic_id"
         echo
@@ -412,9 +412,9 @@ USAGE:
 
 EXAMPLES:
     $0 "Build a user authentication system with OAuth2"
-    
+
     $0 "Create a real-time chat application" "Must support 10k concurrent users"
-    
+
     $0 "Implement payment processing with Stripe" "Need subscription management"
 
 ENVIRONMENT:
@@ -437,7 +437,7 @@ main() {
         show_help
         exit 0
     fi
-    
+
     ai_plan_epic "$@"
 }
 

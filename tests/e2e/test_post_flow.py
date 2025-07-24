@@ -91,13 +91,14 @@ def test_draft_post_happy_path() -> None:
     else:  # pragma: no cover
         pytest.fail("publish never happened within 40s timeout")
 
-    # 3️⃣ verify Postgres has the most recent row with hook/body content
+    # 3️⃣ verify Postgres has a row matching our specific request
     with psycopg2.connect(PG_DSN) as pg, pg.cursor() as cur:
+        # Look for the specific ai-jesus post that should have been created
         cur.execute(
-            "SELECT persona_id, hook, body, tokens_used, ts FROM posts ORDER BY ts DESC LIMIT 1"
+            "SELECT persona_id, hook, body, tokens_used, ts FROM posts WHERE persona_id = 'ai-jesus' ORDER BY ts DESC LIMIT 1"
         )
         row = cur.fetchone()
-        assert row is not None, "no post found in database"
+        assert row is not None, "no ai-jesus post found in database"
 
         persona_id, hook, body, tokens_used, ts = row
 

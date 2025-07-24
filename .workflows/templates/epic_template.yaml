@@ -22,7 +22,7 @@ features:
 milestones:
   - name: "{MILESTONE_NAME}"
     target_date: "{TARGET_DATE}"
-    criteria: 
+    criteria:
       - "{ACCEPTANCE_CRITERION}"
 
 # Automation Configuration

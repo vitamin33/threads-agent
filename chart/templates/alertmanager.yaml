@@ -152,7 +152,7 @@ data:
         group_wait: 0s
         repeat_interval: 5m
       {{- end }}
-      
+
       # Warning alerts go to Slack
       {{- if .Values.monitoring.alertmanager.slack.enabled }}
       - match:
@@ -161,7 +161,7 @@ data:
         group_wait: 30s
         repeat_interval: 30m
       {{- end }}
-      
+
       # Business alerts go to email
       {{- if .Values.monitoring.alertmanager.email.enabled }}
       - match:
@@ -170,7 +170,7 @@ data:
         group_wait: 1m
         repeat_interval: 2h
       {{- end }}
-      
+
       # Infrastructure alerts go to both Slack and email
       - match:
           alert_type: infrastructure

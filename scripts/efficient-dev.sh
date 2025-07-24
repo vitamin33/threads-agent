@@ -13,21 +13,21 @@ health_check() {
     local issues=()
     local warnings=()
     local good=()
-    
+
     echo "🔍 Infrastructure Health Check"
     echo "==============================="
-    
+
     # Check k3d cluster
     if k3d cluster list 2>/dev/null | grep -q "dev.*running"; then
         good+=("✅ k3d cluster 'dev' running")
     else
         issues+=("❌ k3d cluster 'dev' not running (run: just bootstrap)")
     fi
-    
+
     # Check kubectl connectivity
     if kubectl get nodes >/dev/null 2>&1; then
         good+=("✅ kubectl connectivity")
-        
+
         # Check pod status
         local failed_pods=$(kubectl get pods --no-headers 2>/dev/null | grep -v Running | grep -v Completed | wc -l | tr -d ' ')
         if [[ $failed_pods -eq 0 ]]; then
@@ -35,7 +35,7 @@ health_check() {
         else
             warnings+=("⚠️  $failed_pods pod(s) not running (check: kubectl get pods)")
         fi
-        
+
         # Check critical services
         for svc in orchestrator celery-worker persona-runtime fake-threads; do
             if kubectl get svc $svc >/dev/null 2>&1; then
@@ -44,22 +44,22 @@ health_check() {
                 issues+=("❌ Service $svc missing (run: just deploy-dev)")
             fi
         done
-        
+
     else
         issues+=("❌ kubectl not connected (check cluster status)")
     fi
-    
+
     # Check port availability for testing
     for port in 8080 9009 6333 5432; do
         if lsof -i:$port >/dev/null 2>&1; then
             warnings+=("⚠️  Port $port in use (may conflict with port-forward)")
         fi
     done
-    
+
     # Check Docker
     if docker info >/dev/null 2>&1; then
         good+=("✅ Docker running")
-        
+
         # Check local images
         local missing_images=()
         for img in orchestrator celery-worker persona-runtime fake-threads; do
@@ -67,7 +67,7 @@ health_check() {
                 missing_images+=("$img")
             fi
         done
-        
+
         if [[ ${#missing_images[@]} -eq 0 ]]; then
             good+=("✅ All service images built")
         else
@@ -76,16 +76,16 @@ health_check() {
     else
         issues+=("❌ Docker not running")
     fi
-    
+
     # Check git state
     if git status >/dev/null 2>&1; then
         good+=("✅ Git repository")
-        
+
         local uncommitted=$(git status --porcelain | wc -l | tr -d ' ')
         if [[ $uncommitted -gt 0 ]]; then
             warnings+=("⚠️  $uncommitted uncommitted changes")
         fi
-        
+
         local branch=$(git branch --show-current)
         if [[ "$branch" == "main" ]]; then
             warnings+=("⚠️  On main branch (consider feature branch)")
@@ -95,32 +95,32 @@ health_check() {
     else
         issues+=("❌ Not in git repository")
     fi
-    
+
     # Check test readiness
     if [[ -f pytest.ini ]]; then
         good+=("✅ Test configuration present")
     else
         warnings+=("⚠️  No pytest.ini found")
     fi
-    
+
     # Display results
     if [[ ${#good[@]} -gt 0 ]]; then
         echo -e "\n🟢 HEALTHY:"
         printf '%s\n' "${good[@]}"
     fi
-    
+
     if [[ ${#warnings[@]} -gt 0 ]]; then
         echo -e "\n🟡 WARNINGS:"
         printf '%s\n' "${warnings[@]}"
     fi
-    
+
     if [[ ${#issues[@]} -gt 0 ]]; then
         echo -e "\n🔴 ISSUES:"
         printf '%s\n' "${issues[@]}"
         echo -e "\n💡 Quick fix: just e2e-prepare"
         return 1
     fi
-    
+
     echo -e "\n🎉 System healthy for development!"
     return 0
 }
@@ -129,53 +129,53 @@ health_check() {
 predict() {
     local predictions=()
     local context_info=""
-    
+
     echo "🔮 Development Predictions"
     echo "=========================="
-    
+
     # Load context if available
     if [[ -f "$CURRENT_SESSION" ]]; then
         context_info=$(head -5 "$CURRENT_SESSION" | tail -4 | tr '\n' ' ')
         echo "📋 Context: $context_info"
         echo ""
     fi
-    
+
     # Analyze git state
     if git status >/dev/null 2>&1; then
         local branch=$(git branch --show-current)
         local uncommitted=$(git status --porcelain | wc -l | tr -d ' ')
         local untracked=$(git ls-files --others --exclude-standard | wc -l | tr -d ' ')
-        
+
         # Branch analysis
         if [[ "$branch" =~ ^cra-[0-9]+-.*$ ]]; then
             local ticket=$(echo "$branch" | grep -o 'cra-[0-9]\+')
             predictions+=("🎯 Working on $ticket - consider updating Linear status")
         fi
-        
+
         # Change analysis
         if [[ $uncommitted -gt 0 ]]; then
             local modified=$(git status --porcelain | grep "^ M" | wc -l | tr -d ' ')
             local added=$(git status --porcelain | grep "^A" | wc -l | tr -d ' ')
-            
+
             if [[ $modified -gt 3 ]]; then
                 predictions+=("📝 $modified files modified - consider atomic commits")
             fi
-            
+
             # Predict test needs
             if git status --porcelain | grep -q "\.py$"; then
                 predictions+=("🧪 Python files changed - run: just test-watch")
             fi
-            
+
             # Predict lint needs
             if git status --porcelain | grep -q -E "\.(py|js|ts)$"; then
                 predictions+=("🧹 Code files changed - run: just lint before commit")
             fi
         fi
-        
+
         if [[ $untracked -gt 0 ]]; then
             predictions+=("📁 $untracked untracked files - review and add or gitignore")
         fi
-        
+
         # Recent commit analysis
         local last_commit=$(git log -1 --pretty=format:"%s" 2>/dev/null)
         if [[ "$last_commit" =~ ^(feat|fix|test|docs|refactor) ]]; then
@@ -186,7 +186,7 @@ predict() {
             fi
         fi
     fi
-    
+
     # Analyze file patterns
     if [[ -d services ]]; then
         local service_changes=$(git status --porcelain 2>/dev/null | grep "services/" | cut -d'/' -f2 | sort | uniq | head -3)
@@ -195,19 +195,19 @@ predict() {
             predictions+=("🐳 Consider rebuilding images: just images")
         fi
     fi
-    
+
     # Analyze test patterns
     if [[ -d tests ]]; then
         if git status --porcelain 2>/dev/null | grep -q "test.*\.py$"; then
             predictions+=("🔬 Test files modified - run specific tests first")
         fi
-        
+
         # Check for missing test coverage
         if git status --porcelain 2>/dev/null | grep -q "services/.*\.py$" && ! git status --porcelain 2>/dev/null | grep -q "test"; then
             predictions+=("⚠️  Code changes without test updates - consider test coverage")
         fi
     fi
-    
+
     # Infrastructure predictions
     if ! k3d cluster list 2>/dev/null | grep -q "dev.*running"; then
         predictions+=("🏗️  Infrastructure down - start with: just bootstrap")
@@ -219,17 +219,17 @@ predict() {
             predictions+=("🚨 $failing_pods failing pods - check: kubectl get pods")
         fi
     fi
-    
+
     # Configuration predictions
     if [[ -f chart/values-dev.yaml ]] && git status --porcelain 2>/dev/null | grep -q "chart/"; then
         predictions+=("⚙️  Helm config changed - redeploy: just deploy-dev")
     fi
-    
-    # Dependency predictions  
+
+    # Dependency predictions
     if git status --porcelain 2>/dev/null | grep -q "requirements\.txt"; then
         predictions+=("📦 Dependencies changed - rebuild images: just images")
     fi
-    
+
     # Development flow predictions
     local hour=$(date +%H)
     if [[ $hour -lt 10 ]]; then
@@ -237,13 +237,13 @@ predict() {
     elif [[ $hour -gt 17 ]]; then
         predictions+=("🌅 Evening session - consider: save context → review → ship work")
     fi
-    
+
     # Display predictions
     if [[ ${#predictions[@]} -gt 0 ]]; then
         printf '%s\n' "${predictions[@]}"
         echo ""
         echo "💡 Next suggested action:"
-        
+
         # Prioritize suggestions
         if [[ "${predictions[*]}" =~ "Infrastructure down" ]]; then
             echo "   just bootstrap"
