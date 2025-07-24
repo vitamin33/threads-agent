@@ -4,14 +4,14 @@ epic_id: "{EPIC_ID}"
 name: "{TASK_NAME}"
 description: |
   {TASK_DESCRIPTION}
-  
+
   ## Acceptance Criteria
   - [ ] {CRITERION_1}
   - [ ] {CRITERION_2}
-  
+
   ## Technical Notes
   {TECHNICAL_DETAILS}
-  
+
 priority: "{PRIORITY}"  # low, medium, high, urgent
 effort: "{EFFORT}"  # small (1-2h), medium (2-4h), large (4-8h), xl (8h+)
 status: "pending"  # pending, in_progress, blocked, completed, cancelled

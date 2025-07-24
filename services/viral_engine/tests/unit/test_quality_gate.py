@@ -28,8 +28,8 @@ class TestQualityGate:
         quality_gate.set_threshold(0.6)
 
         # High-quality viral content
-        content = """Stop scrolling! 90% of people fail because of this one mistake. 
-        Here's the shocking truth nobody talks about: They chase perfection instead of progress. 
+        content = """Stop scrolling! 90% of people fail because of this one mistake.
+        Here's the shocking truth nobody talks about: They chase perfection instead of progress.
         What's your biggest failure that taught you the most?"""
 
         passed, evaluation = quality_gate.should_publish(content, "ai-jesus")

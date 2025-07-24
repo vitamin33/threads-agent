@@ -18,7 +18,7 @@ error() { echo -e "${RED}✗${NC} $1"; }
 # Get git repository and user info
 get_cluster_identity() {
     local git_remote git_repo git_user git_email
-    
+
     # Get git remote URL and extract repo name
     if git_remote=$(git config --get remote.origin.url 2>/dev/null); then
         # Extract repo name from URL (works with both HTTPS and SSH)
@@ -27,17 +27,17 @@ get_cluster_identity() {
         # Fallback to current directory name
         git_repo=$(basename "$PWD" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
     fi
-    
+
     # Get git user info
     git_user=$(git config --get user.name 2>/dev/null || echo "unknown")
     git_email=$(git config --get user.email 2>/dev/null || echo "unknown@example.com")
-    
+
     # Create a short hash from email for uniqueness
     email_hash=$(echo -n "$git_email" | md5sum | cut -c1-6)
-    
+
     # Clean up user name for cluster name
     git_user_clean=$(echo "$git_user" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | cut -c1-10)
-    
+
     echo "{\"repo\":\"$git_repo\",\"user\":\"$git_user_clean\",\"email\":\"$git_email\",\"hash\":\"$email_hash\",\"full_user\":\"$git_user\"}"
 }
 
@@ -142,16 +142,16 @@ if k3d cluster list | grep -q "^$CLUSTER "; then
     else
         success "Cluster '$CLUSTER' already exists!"
         log "Use --force to recreate"
-        
+
         # Update kubeconfig and show info
         k3d kubeconfig get "$CLUSTER" \
           | sed -e "s/host\.docker\.internal/localhost/" \
                 -e "s/127\.0\.0\.1:[0-9]*/localhost:${API_PORT}/" \
           > "$KCFG"
-        
+
         export KUBECONFIG="$KCFG"
         kubectl config use-context "k3d-${CLUSTER}" &>/dev/null
-        
+
         echo ""
         success "Cluster ready!"
         echo "🌐 LoadBalancer: http://localhost:${LB_PORT}"

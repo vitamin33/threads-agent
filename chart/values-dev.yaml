@@ -86,22 +86,10 @@ threadsAdaptor:
   credentials:
     # Get these from Meta Developer Dashboard
     # See docs/threads-api-setup.md for instructions
-
-revenue:
-  enabled: true
-  image:
-    repository: revenue
-    tag: "local"
-    pullPolicy: IfNotPresent
-  replicas: 1
-  stripe:
-    # Use test keys for development
-    apiKey: "sk_test_placeholder"     # Replace with actual test key
-    webhookSecret: "whsec_test"       # Replace after setting up webhook
-    priceBasic: "price_test_basic"
-    pricePro: "price_test_pro"
-    priceEnterprise: "price_test_enterprise"
-  affiliateId: "viral123_dev"
+    appId: ""                          # Your Threads App ID
+    appSecret: ""                      # Your Threads App Secret
+    accessToken: ""                    # User Access Token
+    userId: ""                         # Your Threads User ID
   resources:
     requests:
       memory: "256Mi"

@@ -13,7 +13,7 @@ try:
 
     HAS_GITHUB = True
 except ImportError:
-    Github = None  # type: ignore[assignment,misc]
+    Github = None  # type: ignore[misc,assignment]
     HAS_GITHUB = False
 
 

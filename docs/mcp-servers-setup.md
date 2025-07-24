@@ -12,7 +12,7 @@ This guide documents the setup and configuration of Model Context Protocol (MCP)
 **Setup**: Run `./scripts/setup-searxng.sh` then `cd .searxng && docker-compose up -d`
 **Use Cases**:
 - Research trending AI/ML content on Threads
-- Analyze competitor engagement strategies  
+- Analyze competitor engagement strategies
 - Discover viral content patterns
 - Access multiple search engines (DuckDuckGo, Qwant, Google, Bing)
 **Advantages**:
@@ -21,7 +21,7 @@ This guide documents the setup and configuration of Model Context Protocol (MCP)
 - Self-hosted, no rate limits
 - JSON API for programmatic access
 
-### 2. Slack MCP Server  
+### 2. Slack MCP Server
 **Purpose**: Notifications for Level 9 system alerts
 **Status**: ✅ Installed (deprecated package warning)
 **Installation**: `npm install -g @modelcontextprotocol/server-slack`
@@ -37,7 +37,7 @@ This guide documents the setup and configuration of Model Context Protocol (MCP)
 ### 3. SQLite MCP Server
 **Purpose**: Local data experimentation
 **Status**: ⚠️ Requires Python package manager (uvx/pipx)
-**Installation**: 
+**Installation**:
 ```bash
 # Option 1: Using uvx (recommended)
 uvx install mcp-server-sqlite
@@ -97,7 +97,7 @@ To enable these MCP servers, add the following to your Claude settings:
 
 ### Slack (✅ Configured)
 - `SLACK_BOT_TOKEN`: xoxb-8970898560864-8950765486740-LPDfpEPZ5cEFWNcN7RLplgoR
-- `SLACK_TEAM_ID`: T08UJSEGGRE  
+- `SLACK_TEAM_ID`: T08UJSEGGRE
 - `SLACK_CHANNEL_IDS`: alerts (Channel ID: C08UZMT9D6J)
 - `SLACK_SIGNING_SECRET`: d14a59f32d23120a6cbd391e24f0e4c1
 - Bot Name: roi-agent-bot

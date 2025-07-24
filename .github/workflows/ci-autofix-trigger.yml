@@ -17,7 +17,7 @@ jobs:
   trigger-autofix:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Check if PR
         id: check-pr
@@ -29,20 +29,20 @@ jobs:
               console.log('Not a PR, skipping auto-fix');
               return;
             }
-            
+
             // Get PR details
             const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
               commit_sha: run.head_sha
             });
-            
+
             if (prs.data.length > 0) {
               const pr = prs.data[0];
               core.setOutput('should_fix', 'true');
               core.setOutput('pr_number', pr.number);
               core.setOutput('pr_branch', pr.head.ref);
-              
+
               // Post comment on PR
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -51,7 +51,7 @@ jobs:
                 body: `🤖 **CI Failure Detected**\n\nThe CI pipeline has failed. An automatic fix attempt will be initiated.\n\n[View failed workflow run](${run.html_url})`
               });
             }
-      
+
       - name: Trigger Auto-Fix Service
         if: steps.check-pr.outputs.should_fix == 'true'
         env:

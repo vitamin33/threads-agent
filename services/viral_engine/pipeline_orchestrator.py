@@ -138,10 +138,11 @@ class PipelineOrchestrator:
             # Stage 3: Reply Magnetizer (optional)
             if self.enable_reply_magnets and self.reply_magnetizer:
                 with PIPELINE_LATENCY.labels(stage="reply_magnetizer").time():
-                    enhanced_content, magnet_metadata = (
-                        self.reply_magnetizer.inject_reply_magnets(
-                            content, persona_id, magnet_count=1
-                        )
+                    (
+                        enhanced_content,
+                        magnet_metadata,
+                    ) = self.reply_magnetizer.inject_reply_magnets(
+                        content, persona_id, magnet_count=1
                     )
 
                     result["pipeline_stages"]["reply_magnetizer"] = {

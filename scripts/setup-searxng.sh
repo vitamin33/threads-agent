@@ -33,23 +33,23 @@ engines:
     engine: duckduckgo
     shortcut: ddg
     disabled: false
-    
+
   - name: qwant
     engine: qwant
     shortcut: qw
     disabled: false
     categories: [general, web]
-    
+
   - name: google
     engine: google
     shortcut: go
     disabled: false
-    
+
   - name: bing
     engine: bing
     shortcut: bi
     disabled: false
-    
+
   - name: startpage
     engine: startpage
     shortcut: sp

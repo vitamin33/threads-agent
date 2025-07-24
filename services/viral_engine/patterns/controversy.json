@@ -17,7 +17,7 @@
       ]
     },
     {
-      "id": "controversy_002", 
+      "id": "controversy_002",
       "template": "Hot take: {bold_statement}",
       "variables": ["bold_statement"],
       "avg_er": 0.089,

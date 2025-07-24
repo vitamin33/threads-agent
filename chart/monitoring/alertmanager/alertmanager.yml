@@ -25,21 +25,21 @@ route:
     receiver: pagerduty-critical
     group_wait: 0s
     repeat_interval: 5m
-  
+
   # Warning alerts go to Slack
   - match:
       severity: warning
     receiver: slack-warnings
     group_wait: 30s
     repeat_interval: 30m
-  
+
   # Business alerts go to email
   - match:
       alert_type: business
     receiver: email-business
     group_wait: 1m
     repeat_interval: 2h
-  
+
   # Infrastructure alerts go to both Slack and email
   - match:
       alert_type: infrastructure
@@ -99,7 +99,7 @@ receivers:
     - type: button
       text: 'View in Grafana :chart_with_upwards_trend:'
       url: '{{ .Values.monitoring.grafana.externalUrl }}'
-    - type: button  
+    - type: button
       text: 'View in Prometheus :mag:'
       url: '{{ .Values.monitoring.prometheus.externalUrl }}'
 

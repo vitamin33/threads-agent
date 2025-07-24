@@ -35,7 +35,7 @@ check_gh_cli() {
         echo "Please install it: https://cli.github.com/"
         exit 1
     fi
-    
+
     if ! gh auth status &> /dev/null; then
         echo -e "${RED}Error: Not authenticated with GitHub${NC}"
         echo "Please run: gh auth login"
@@ -46,7 +46,7 @@ check_gh_cli() {
 # Function to get auto-fix workflow runs
 get_autofix_runs() {
     echo -e "\n${YELLOW}Fetching auto-fix workflow runs...${NC}"
-    
+
     gh run list \
         --workflow="auto-fix-ci.yml" \
         --limit=100 \
@@ -60,27 +60,27 @@ analyze_success_rate() {
     local successful_fixes=0
     local failed_fixes=0
     local no_fix_needed=0
-    
+
     echo -e "\n${YELLOW}Analyzing auto-fix success rate...${NC}"
-    
+
     # Get all auto-fix runs
     local runs=$(gh run list \
         --workflow="auto-fix-ci.yml" \
         --limit=100 \
         --json status,conclusion,createdAt)
-    
+
     # Count outcomes
     total_runs=$(echo "$runs" | jq 'length')
     successful_fixes=$(echo "$runs" | jq '[.[] | select(.conclusion == "success")] | length')
     failed_fixes=$(echo "$runs" | jq '[.[] | select(.conclusion == "failure")] | length')
-    
+
     # Calculate success rate
     if [[ $total_runs -gt 0 ]]; then
         success_rate=$(awk "BEGIN {printf \"%.1f\", ($successful_fixes / $total_runs) * 100}")
     else
         success_rate=0
     fi
-    
+
     echo -e "\n📊 ${GREEN}Auto-Fix Statistics (Last $DAYS_TO_ANALYZE days)${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "Total Runs:        ${BLUE}$total_runs${NC}"
@@ -93,7 +93,7 @@ analyze_success_rate() {
 show_recent_fixes() {
     echo -e "\n${YELLOW}Recent Auto-Fix Activities:${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     gh run list \
         --workflow="auto-fix-ci.yml" \
         --limit=10 \
@@ -115,7 +115,7 @@ show_recent_fixes() {
 analyze_fix_patterns() {
     echo -e "\n${YELLOW}Analyzing common fix patterns...${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     # Get commit messages from successful auto-fixes
     local fix_commits=$(gh search commits \
         --author="Claude Code Bot" \
@@ -124,7 +124,7 @@ analyze_fix_patterns() {
         --json sha,commit \
         --jq '.[] | .commit.message' \
         2>/dev/null || echo "")
-    
+
     if [[ -n "$fix_commits" ]]; then
         # Extract patterns
         echo -e "\n${BLUE}Most Common Fixes:${NC}"
@@ -143,7 +143,7 @@ analyze_fix_patterns() {
 check_active_prs() {
     echo -e "\n${YELLOW}PRs with Recent Auto-Fix Activity:${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     # Find PRs with auto-fix commits
     gh pr list \
         --label "auto-fixed" \
@@ -164,14 +164,14 @@ check_active_prs() {
 generate_recommendations() {
     echo -e "\n${YELLOW}💡 Recommendations:${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     # Get failure patterns
     local recent_failures=$(gh run list \
         --workflow="auto-fix-ci.yml" \
         --status=failure \
         --limit=10 \
         --json name,conclusion)
-    
+
     if [[ $(echo "$recent_failures" | jq 'length') -gt 5 ]]; then
         echo -e "${RED}⚠️  High failure rate detected!${NC}"
         echo "   Consider:"
@@ -179,7 +179,7 @@ generate_recommendations() {
         echo "   - Adding more specific fix patterns"
         echo "   - Improving test stability"
     fi
-    
+
     # Check for repeated fixes
     local repeated_branches=$(gh run list \
         --workflow="auto-fix-ci.yml" \
@@ -188,7 +188,7 @@ generate_recommendations() {
         --jq '.[].headBranch' | \
         sort | uniq -c | sort -rn | \
         awk '$1 > 2 {print $2}')
-    
+
     if [[ -n "$repeated_branches" ]]; then
         echo -e "\n${YELLOW}⚠️  Branches requiring multiple fixes:${NC}"
         echo "$repeated_branches" | while IFS= read -r branch; do
@@ -201,7 +201,7 @@ generate_recommendations() {
 # Function to export metrics
 export_metrics() {
     echo -e "\n${YELLOW}Exporting metrics...${NC}"
-    
+
     local timestamp=$(date -Iseconds)
     local metrics=$(cat <<EOF
 {
@@ -214,30 +214,30 @@ export_metrics() {
 }
 EOF
 )
-    
+
     # Append to metrics file
     jq ".fixes += [$metrics]" "$METRICS_FILE" > "$METRICS_FILE.tmp" && \
         mv "$METRICS_FILE.tmp" "$METRICS_FILE"
-    
+
     echo -e "${GREEN}✓ Metrics exported to: $METRICS_FILE${NC}"
 }
 
 # Main execution
 main() {
     check_gh_cli
-    
+
     # Run analysis
     analyze_success_rate
     show_recent_fixes
     analyze_fix_patterns
     check_active_prs
     generate_recommendations
-    
+
     # Export metrics if we have data
     if [[ ${total_runs:-0} -gt 0 ]]; then
         export_metrics
     fi
-    
+
     echo -e "\n${GREEN}✓ Monitoring complete!${NC}"
 }
 
