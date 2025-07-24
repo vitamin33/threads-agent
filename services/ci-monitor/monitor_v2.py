@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
-from anthropic import Anthropic  # type: ignore[import-not-found]
-from github import Github  # type: ignore[import-not-found]
+from anthropic import Anthropic
+from github import Github
 
 
 class EnhancedCIMonitor:
@@ -170,7 +170,7 @@ class EnhancedCIMonitor:
         """Use Claude API to create a fix for the errors."""
         error_summary = "\n".join(analysis["errors"][:10])
 
-        prompt = f"""You are helping fix CI failures in a Python project. 
+        prompt = f"""You are helping fix CI failures in a Python project.
 
 The following errors were found in the CI pipeline:
 
@@ -198,7 +198,11 @@ Provide actionable fixes that can be automated."""
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            return str(response.content[0].text)
+            if response.content and len(response.content) > 0:
+                content = response.content[0]
+                if hasattr(content, "text"):
+                    return str(content.text)
+            return None
         except Exception as e:
             print(f"Error calling Claude API: {e}")
             return None
@@ -314,22 +318,22 @@ from pathlib import Path
 
 def main():
     print("Applying automated fixes...")
-    
+
     # Fix import errors
     if any('import' in err.lower() for err in {errors!r}):
         print("Fixing import errors...")
         subprocess.run(['isort', '.'], check=True)
-    
+
     # Fix formatting
     if any('black' in err.lower() or 'format' in err.lower() for err in {errors!r}):
         print("Fixing formatting...")
         subprocess.run(['black', '.'], check=True)
-    
+
     # Fix linting
     if any('ruff' in err.lower() for err in {errors!r}):
         print("Fixing linting issues...")
         subprocess.run(['ruff', 'check', '.', '--fix'], check=True)
-    
+
     # Fix common mypy errors
     if any('mypy' in err.lower() for err in {errors!r}):
         print("Attempting to fix type errors...")
@@ -339,16 +343,16 @@ def main():
                 if file.endswith('.py'):
                     filepath = Path(root) / file
                     content = filepath.read_text()
-                    
+
                     # Fix missing return type annotations
                     content = re.sub(
                         r'def ([\\w_]+)\\([^)]*\\)(?!\\s*->):',
                         r'def \\1(\\g<0>) -> None:',
                         content
                     )
-                    
+
                     filepath.write_text(content)
-    
+
     print("Fixes applied successfully!")
 
 if __name__ == "__main__":
@@ -383,9 +387,9 @@ if __name__ == "__main__":
                             print(
                                 f"Errors not auto-fixable for PR #{run_info['pr_number']}"
                             )
-                            self.attempted_fixes[str(run_info["run_id"])] = (
-                                datetime.now()
-                            )
+                            self.attempted_fixes[
+                                str(run_info["run_id"])
+                            ] = datetime.now()
                             continue
 
                         # Get fix plan from Claude
@@ -394,9 +398,9 @@ if __name__ == "__main__":
 
                         if not fix_plan:
                             print("Failed to get fix plan from Claude")
-                            self.attempted_fixes[str(run_info["run_id"])] = (
-                                datetime.now()
-                            )
+                            self.attempted_fixes[
+                                str(run_info["run_id"])
+                            ] = datetime.now()
                             continue
 
                         # Apply fixes

@@ -93,7 +93,7 @@ e2e:
 
 # ---------- Unit-only test run ----------
 unit:
-    PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -q -m "not e2e"
+    PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -q -m "not e2e" -n auto
 
 logs:
     kubectl logs -l app=orchestrator -f --tail=100
@@ -109,6 +109,21 @@ test-watch SERVICE="":
 	    pt="."; \
 	fi; \
 	pytest $$pt --maxfail=1 -q -f
+
+# Fast test for specific service (no k3d needed)
+test-service SERVICE:
+	@echo "🧪  testing {{SERVICE}} (fast mode)..."
+	@OPENAI_API_KEY=test PYTHONPATH=$PWD:${PYTHONPATH:-} pytest services/{{SERVICE}}/tests -n auto --timeout=30 -x
+
+# Test all services in parallel
+test-all-services:
+	@echo "🧪  testing all services in parallel..."
+	@for svc in orchestrator celery_worker persona_runtime fake_threads; do \
+		echo "🔸 Starting tests for $$svc..."; \
+		just test-service $$svc & \
+	done; \
+	wait
+	@echo "✅ All service tests completed"
 
 scaffold SERVICE:
     mkdir -p services/{{SERVICE}}
@@ -133,8 +148,8 @@ lint:
 check: lint
 	@echo "🔍  mypy type-check"
 	@if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && mypy --config-file mypy.ini .
-	@echo "🧪  pytest suite"
-	@if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -q
+	@echo "🧪  pytest suite (unit tests only - excluding e2e, running in parallel)"
+	@if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -q -m "not e2e" -n auto
 	@echo "✅  all green"
 	@./scripts/learning-system.sh track "just check" 0 "5.0" "full-check" 2>/dev/null || true
 
