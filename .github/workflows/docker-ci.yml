@@ -39,6 +39,8 @@ jobs:
               - 'services/fake_threads/**'
             viral_engine:
               - 'services/viral_engine/**'
+            revenue:
+              - 'services/revenue/**'
 
       - name: Set outputs
         id: set-matrix
@@ -49,6 +51,7 @@ jobs:
           if [ "${{ steps.changes.outputs.persona_runtime }}" == "true" ]; then services+=("persona_runtime"); fi
           if [ "${{ steps.changes.outputs.fake_threads }}" == "true" ]; then services+=("fake_threads"); fi
           if [ "${{ steps.changes.outputs.viral_engine }}" == "true" ]; then services+=("viral_engine"); fi
+          if [ "${{ steps.changes.outputs.revenue }}" == "true" ]; then services+=("revenue"); fi
 
           if [ ${#services[@]} -eq 0 ]; then
             echo "services=[]" >> $GITHUB_OUTPUT
