@@ -15,6 +15,9 @@ jobs:
   detect-changes:
     name: Detect Changed Services
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       services: ${{ steps.changes.outputs.services }}
       any_changed: ${{ steps.changes.outputs.any_changed }}
@@ -124,6 +127,8 @@ jobs:
             echo "✅ No Docker changes detected - skipping builds"
           elif [ "${{ needs.build.result }}" == "success" ]; then
             echo "✅ All Docker images built successfully"
+          elif [ "${{ needs.build.result }}" == "skipped" ]; then
+            echo "✅ No Docker changes detected - builds were skipped"
           else
             echo "❌ Docker build failed"
             exit 1
