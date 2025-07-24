@@ -183,7 +183,9 @@ class MultiRepoMonitor:
             import zipfile
 
             # Extract logs from zip
-            with zipfile.ZipFile(io.BytesIO(response[1])) as zf:
+            # The response is a tuple (headers, content)
+            logs_content = response[1] if isinstance(response, tuple) else response
+            with zipfile.ZipFile(io.BytesIO(logs_content)) as zf:
                 for filename in zf.namelist():
                     if filename.endswith(".txt"):
                         content = zf.read(filename).decode("utf-8", errors="ignore")
