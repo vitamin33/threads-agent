@@ -1,9 +1,7 @@
 The CI pipeline has failed. Please analyze the errors and fix them.
 
 Error Summary:
-Error: No module named 'stripe'
 failed: 0, jobs succeeded: 0
-ModuleNotFoundError: No module named 'stripe'
 
 Full logs are available in ci-failure-logs.txt
 
