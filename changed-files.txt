@@ -1,2 +1,0 @@
-changed-files.txt
-ci-failure-logs.txt

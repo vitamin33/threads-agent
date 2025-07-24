@@ -193,7 +193,12 @@
       "Bash(PYTHONPATH=$PWD:$PYTHONPATH:- pytest -s tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v)",
       "Bash(gh api:*)",
       "Bash(gh run download:*)",
-      "Bash(export KUBECONFIG=~/.kube/config)"
+      "Bash(export KUBECONFIG=~/.kube/config)",
+      "Bash(git rm:*)",
+      "Bash(gh secret set:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)"
     ],
     "deny": []
   }

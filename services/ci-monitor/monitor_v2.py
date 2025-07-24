@@ -42,7 +42,10 @@ class EnhancedCIMonitor:
         for workflow in workflows:
             if "ci" in workflow.name.lower() or "test" in workflow.name.lower():
                 runs = workflow.get_runs(status="failure")
-                for run in runs[:5]:  # Check last 5 failed runs
+                runs_list = (
+                    list(runs)[:5] if runs else []
+                )  # Convert paginated list and limit
+                for run in runs_list:  # Check last 5 failed runs
                     # Only process PR runs
                     if run.event == "pull_request":
                         pr_number = self._get_pr_from_run(run)
@@ -287,6 +290,15 @@ Automated fixes for the following errors:
 🤖 Fixed by CI Auto-Fix Bot using Claude AI"""
 
                 subprocess.run(["git", "commit", "-m", commit_message], check=True)
+                # Use PAT for pushing to trigger workflows
+                github_token = os.getenv("GITHUB_TOKEN", "")
+                if github_token:
+                    # Set remote URL with PAT
+                    remote_url = f"https://x-access-token:{github_token}@github.com/{self.repo_owner}/{self.repo_name}.git"
+                    subprocess.run(
+                        ["git", "remote", "set-url", "origin", remote_url], check=True
+                    )
+
                 subprocess.run(["git", "push", "origin", branch], check=True)
 
                 print(f"Successfully pushed fixes to {branch}")

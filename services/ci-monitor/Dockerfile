@@ -16,6 +16,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
+COPY monitor_v3.py .
 COPY monitor_v2.py .
 COPY monitor.py .
 
@@ -24,4 +25,4 @@ RUN git config --global user.email "ci-bot@threads-agent.com" && \
     git config --global user.name "CI Auto-Fix Bot"
 
 # Use the enhanced monitor by default
-CMD ["python", "monitor_v2.py"]
+CMD ["python", "monitor_v3.py"]
