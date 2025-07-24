@@ -161,8 +161,12 @@ jobs:
           pip install -r services/viral_engine/requirements.txt
           pip install -r services/revenue/requirements.txt
           pip install -r tests/requirements.txt
-          # Upgrade langsmith to latest version to fix compatibility issues
-          pip install --upgrade langsmith
+          # Uninstall langsmith to prevent pytest plugin loading issues
+          pip uninstall -y langsmith || true
+          # Mock langsmith module to prevent import errors
+          mkdir -p langsmith
+          echo "def get_tracing_context(): return None" > langsmith/run_helpers.py
+          echo "" > langsmith/__init__.py
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites
