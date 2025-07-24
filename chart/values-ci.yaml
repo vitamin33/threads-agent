@@ -74,6 +74,20 @@ viralEngine:
     repository: viral-engine
     tag: "local"
 
+# Revenue service for monetization
+revenue:
+  enabled: true
+  image:
+    repository: revenue
+    tag: "local"
+  stripe:
+    apiKey: "test_key"  # Dummy key for CI
+    webhookSecret: "test_webhook_secret"
+    priceBasic: "price_test_basic"
+    pricePro: "price_test_pro"
+    priceEnterprise: "price_test_enterprise"
+  affiliateId: "test_affiliate_123"
+
 openai:
   enabled: true
   apiKey: "REPLACE_IN_RUNTIME"
