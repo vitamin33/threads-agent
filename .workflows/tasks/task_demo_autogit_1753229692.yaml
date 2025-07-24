@@ -1,0 +1,29 @@
+task_id: "task_demo_autogit_1753229692"
+feature_id: "feat_demo_auth"
+epic_id: "epic_demo_123"
+name: "Implement JWT Authentication Middleware"
+description: |
+  Create JWT authentication middleware for API endpoints.
+  Should validate tokens, handle expiration, and provide user context.
+priority: "high"
+effort: "medium"
+status: "pending"
+created: "2025-07-23T03:14:52+0300"
+updated: "2025-07-23T03:14:52+0300"
+assigned_to: "demo-developer"
+labels:
+  - "feature"
+  - "high"
+  - "medium"
+  - "auth"
+progress: 0
+time_estimated: 4
+checklist:
+  - item: "Setup JWT library"
+    completed: false
+  - item: "Create middleware function"
+    completed: false
+  - item: "Add token validation"
+    completed: false
+  - item: "Write unit tests"
+    completed: false

@@ -67,6 +67,13 @@ redis:
   persistence:
     enabled: false  # No persistence needed in CI
 
+# Viral Engine for content quality
+viralEngine:
+  enabled: true
+  image:
+    repository: viral-engine
+    tag: "local"
+
 openai:
   enabled: true
   apiKey: "REPLACE_IN_RUNTIME"

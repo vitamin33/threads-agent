@@ -1,0 +1,50 @@
+# Claude Code CI Auto-Fix Configuration
+
+# Enable/disable auto-fix for different types of failures
+auto_fix:
+  enabled: true
+  fix_types:
+    test_failures: true
+    linting_errors: true
+    type_checking: true
+    import_errors: true
+    syntax_errors: true
+    
+# Validation settings
+validation:
+  run_tests: true
+  run_linting: true
+  run_type_checking: true
+  
+# PR comment settings  
+pr_comments:
+  enabled: true
+  mention_reviewers: false
+  add_labels:
+    - "auto-fixed"
+    - "needs-review"
+    
+# Safety settings
+safety:
+  max_files_changed: 10
+  max_lines_changed: 500
+  protected_files:
+    - ".github/workflows/*"
+    - "pyproject.toml"
+    - "setup.py"
+    - "requirements*.txt"
+  require_human_approval_for:
+    - "database migrations"
+    - "API changes"
+    - "configuration changes"
+    
+# Claude Code specific settings
+claude_code:
+  model: "claude-3-opus-20240229"
+  max_iterations: 3
+  temperature: 0.2
+  system_prompt: |
+    You are an expert CI/CD engineer fixing automated test failures.
+    Focus on minimal, targeted fixes that address only the specific failures.
+    Do not refactor or improve code beyond what's necessary to fix the CI.
+    Preserve existing code style and patterns.

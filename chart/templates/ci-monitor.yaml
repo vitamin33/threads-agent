@@ -1,0 +1,59 @@
+{{- if .Values.ciMonitor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ci-monitor
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    app: ci-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ci-monitor
+  template:
+    metadata:
+      labels:
+        app: ci-monitor
+    spec:
+      serviceAccountName: ci-monitor-sa
+      containers:
+      - name: ci-monitor
+        image: "{{ .Values.ciMonitor.image.repository }}:{{ .Values.ciMonitor.image.tag }}"
+        imagePullPolicy: {{ .Values.ciMonitor.image.pullPolicy }}
+        env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ci-monitor-secrets
+              key: github-token
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ci-monitor-secrets
+              key: anthropic-api-key
+        - name: MONITOR_INTERVAL
+          value: "{{ .Values.ciMonitor.monitorInterval }}"
+        - name: AUTO_APPROVE
+          value: "{{ .Values.ciMonitor.autoApprove }}"
+        resources:
+          {{- toYaml .Values.ciMonitor.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ci-monitor-sa
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ci-monitor-secrets
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  github-token: {{ .Values.ciMonitor.githubToken | default "" | quote }}
+  anthropic-api-key: {{ .Values.ciMonitor.anthropicApiKey | default "" | quote }}
+{{- end }}
