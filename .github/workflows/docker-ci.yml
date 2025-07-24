@@ -57,7 +57,8 @@ jobs:
             echo "services=[]" >> $GITHUB_OUTPUT
             echo "any_changed=false" >> $GITHUB_OUTPUT
           else
-            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
+            # Create compact JSON array
+            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c .)
             echo "services=$json" >> $GITHUB_OUTPUT
             echo "any_changed=true" >> $GITHUB_OUTPUT
           fi
