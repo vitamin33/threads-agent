@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from typing import List
+from typing import Any, List
 
 import qdrant_client
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -77,10 +77,7 @@ def ensure_posts_collection(dim: int = 128) -> None:
 
 
 async def store_hook_variant(
-    persona_id: str,
-    variant_id: str, 
-    content: str,
-    metadata: dict[str, Any]
+    persona_id: str, variant_id: str, content: str, metadata: dict[str, Any]
 ) -> None:
     """Store a hook variant in the vector database for similarity search"""
     # TODO: Implement actual vector storage when embeddings are available

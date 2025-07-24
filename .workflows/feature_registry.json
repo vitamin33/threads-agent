@@ -97,6 +97,62 @@
       "epic": "epic_1753181522",
       "status": "planned",
       "created": "2025-07-22T13:52:02+03:00"
+    },
+    {
+      "id": "feat_1753265223_59271",
+      "name": "Architecture Design",
+      "epic": "epic_1753265223",
+      "status": "planned",
+      "created": "2025-07-23T13:07:03+03:00"
+    },
+    {
+      "id": "feat_1753265223_59271",
+      "name": "Core Implementation",
+      "epic": "epic_1753265223",
+      "status": "planned",
+      "created": "2025-07-23T13:07:03+03:00"
+    },
+    {
+      "id": "feat_1753265223_59271",
+      "name": "Testing Suite",
+      "epic": "epic_1753265223",
+      "status": "planned",
+      "created": "2025-07-23T13:07:03+03:00"
+    },
+    {
+      "id": "feat_1753265223_59271",
+      "name": "Documentation",
+      "epic": "epic_1753265223",
+      "status": "planned",
+      "created": "2025-07-23T13:07:03+03:00"
+    },
+    {
+      "id": "feat_1753266934_74484",
+      "name": "Architecture Design",
+      "epic": "epic_1753266934",
+      "status": "planned",
+      "created": "2025-07-23T13:35:34+03:00"
+    },
+    {
+      "id": "feat_1753266934_74484",
+      "name": "Core Implementation",
+      "epic": "epic_1753266934",
+      "status": "planned",
+      "created": "2025-07-23T13:35:34+03:00"
+    },
+    {
+      "id": "feat_1753266934_74484",
+      "name": "Testing Suite",
+      "epic": "epic_1753266934",
+      "status": "planned",
+      "created": "2025-07-23T13:35:34+03:00"
+    },
+    {
+      "id": "feat_1753266934_74484",
+      "name": "Documentation",
+      "epic": "epic_1753266934",
+      "status": "planned",
+      "created": "2025-07-23T13:35:34+03:00"
     }
   ]
 }

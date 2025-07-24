@@ -29,6 +29,10 @@ spec:
               value: {{ .Values.rabbitmq.url }}
             - name: THREADS_BASE_URL
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/threads_agent"
+            - name: VIRAL_ENGINE_URL
+              value: "http://viral-engine:8090"
           envFrom:
             - secretRef:
                 name: openai-secret

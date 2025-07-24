@@ -75,30 +75,65 @@ class ViralHookEngine:
         # NEW: Emotion modifiers for variant generation
         self.emotion_modifiers = {
             "curiosity": {
-                "prefix": ["Ever wondered", "Did you know", "The truth about", "What if I told you"],
-                "suffix": ["...and what happened next will amaze you", "...the answer will shock you", "...here's what I found"],
-                "boost_factor": 1.1
+                "prefix": [
+                    "Ever wondered",
+                    "Did you know",
+                    "The truth about",
+                    "What if I told you",
+                ],
+                "suffix": [
+                    "...and what happened next will amaze you",
+                    "...the answer will shock you",
+                    "...here's what I found",
+                ],
+                "boost_factor": 1.1,
             },
             "urgency": {
                 "prefix": ["Breaking:", "Just in:", "Alert:", "Time-sensitive:"],
-                "suffix": ["...before it's too late", "...act now", "...limited time only"],
-                "boost_factor": 1.15
+                "suffix": [
+                    "...before it's too late",
+                    "...act now",
+                    "...limited time only",
+                ],
+                "boost_factor": 1.15,
             },
             "inspiration": {
                 "prefix": ["How I", "The day I", "When I finally", "My journey to"],
-                "suffix": ["...changed everything", "...and you can too", "...transformed my life"],
-                "boost_factor": 1.08
+                "suffix": [
+                    "...changed everything",
+                    "...and you can too",
+                    "...transformed my life",
+                ],
+                "boost_factor": 1.08,
             },
             "fear": {
-                "prefix": ["Warning:", "The hidden danger of", "Why you should stop", "Avoid this mistake:"],
-                "suffix": ["...before it costs you", "...could ruin everything", "...learn from my mistake"],
-                "boost_factor": 1.12
+                "prefix": [
+                    "Warning:",
+                    "The hidden danger of",
+                    "Why you should stop",
+                    "Avoid this mistake:",
+                ],
+                "suffix": [
+                    "...before it costs you",
+                    "...could ruin everything",
+                    "...learn from my mistake",
+                ],
+                "boost_factor": 1.12,
             },
             "authority": {
-                "prefix": ["After 10 years", "As a CEO", "Studies show", "Experts agree:"],
-                "suffix": ["...here's the truth", "...backed by science", "...proven method"],
-                "boost_factor": 1.09
-            }
+                "prefix": [
+                    "After 10 years",
+                    "As a CEO",
+                    "Studies show",
+                    "Experts agree:",
+                ],
+                "suffix": [
+                    "...here's the truth",
+                    "...backed by science",
+                    "...proven method",
+                ],
+                "boost_factor": 1.09,
+            },
         }
 
         # Load all pattern files
@@ -365,18 +400,20 @@ class ViralHookEngine:
         selected_patterns = self._select_optimal_patterns(
             persona_id=persona_id,
             topic_category=topic_category,
-            variant_count=max(3, variant_count // 2) if include_emotion_variants else variant_count,
+            variant_count=max(3, variant_count // 2)
+            if include_emotion_variants
+            else variant_count,
         )
 
         variants = []
         variant_counter = 0
-        
+
         for category, pattern in selected_patterns:
             # Generate base variant
             optimized_hook = self._fill_pattern_template(
                 pattern, base_content, persona_id
             )
-            
+
             # Create base variant
             variant = {
                 "variant_id": f"{persona_id}_v{variant_counter + 1}",
@@ -395,16 +432,16 @@ class ViralHookEngine:
             PATTERN_USAGE_COUNTER.labels(
                 pattern_id=pattern["id"], persona_id=persona_id
             ).inc()
-            
+
             # Generate emotion variants if requested
             if include_emotion_variants and variant_counter < variant_count:
                 emotion_variant = self._apply_emotion_modifier(
-                    optimized_hook, 
-                    pattern, 
-                    persona_id
+                    optimized_hook, pattern, persona_id
                 )
                 if emotion_variant:
-                    emotion_variant["variant_id"] = f"{persona_id}_v{variant_counter + 1}"
+                    emotion_variant["variant_id"] = (
+                        f"{persona_id}_v{variant_counter + 1}"
+                    )
                     variants.append(emotion_variant)
                     variant_counter += 1
 
@@ -457,28 +494,25 @@ class ViralHookEngine:
         return analytics
 
     def _apply_emotion_modifier(
-        self, 
-        base_hook: str, 
-        pattern: Dict[str, Any], 
-        persona_id: str
+        self, base_hook: str, pattern: Dict[str, Any], persona_id: str
     ) -> Optional[Dict[str, Any]]:
         """Apply emotion modifiers to create variants with different emotional tones"""
-        
+
         # Select appropriate emotion based on persona
         persona_prefs = self.persona_preferences.get(persona_id, {})
         tone = persona_prefs.get("tone", "neutral")
-        
+
         # Map persona tone to emotions
         tone_emotion_map = {
             "inspirational": ["inspiration", "curiosity", "authority"],
             "bold": ["urgency", "authority", "curiosity"],
             "neutral": ["curiosity", "authority"],
         }
-        
+
         suitable_emotions = tone_emotion_map.get(tone, ["curiosity"])
         selected_emotion = random.choice(suitable_emotions)
         emotion_mod = self.emotion_modifiers[selected_emotion]
-        
+
         # Apply prefix or suffix randomly
         if random.random() < 0.5 and emotion_mod.get("prefix"):
             prefix = random.choice(emotion_mod["prefix"])
@@ -488,7 +522,7 @@ class ViralHookEngine:
             # Remove trailing punctuation before adding suffix
             base_hook_clean = base_hook.rstrip(".:!?")
             modified_hook = f"{base_hook_clean}{suffix}"
-        
+
         return {
             "content": modified_hook,
             "pattern": pattern["id"],

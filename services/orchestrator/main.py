@@ -23,8 +23,9 @@ from services.common.metrics import (
     update_service_uptime,
     update_system_health,
 )
-from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.batch_endpoints import batch_router
+from services.orchestrator.experiment_endpoints import experiment_router
+from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
 
 # ── constants & wiring ────────────────────────────────────────────────────────
@@ -40,9 +41,6 @@ logger = logging.getLogger(__name__)
 # Include routers
 app.include_router(search_router)
 app.include_router(batch_router)
-
-# Import and include experiment router
-from services.orchestrator.experiment_endpoints import experiment_router
 app.include_router(experiment_router)
 
 # Track service startup time for uptime calculation

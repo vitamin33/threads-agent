@@ -29,6 +29,30 @@
       "name": "Demo: Build a mobile app for food delivery",
       "status": "planning",
       "created": "2025-07-23T03:00:08+0300"
+    },
+    {
+      "id": "epic_1753265223",
+      "name": "viral-content-retention",
+      "status": "planning",
+      "created": "2025-07-23T13:07:03+03:00"
+    },
+    {
+      "id": "epic_1753266110",
+      "name": "viral-content-retention-v2",
+      "status": "planning",
+      "created": "2025-07-23T13:21:50+03:00"
+    },
+    {
+      "id": "epic_1753266934",
+      "name": "threads-viral-laboratory",
+      "status": "planning",
+      "created": "2025-07-23T13:35:34+03:00"
+    },
+    {
+      "id": "epic_1753267144",
+      "name": "threads-viral-laboratory-v1",
+      "status": "planning",
+      "created": "2025-07-23T13:39:04+03:00"
     }
   ]
 }

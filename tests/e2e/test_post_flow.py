@@ -105,9 +105,9 @@ def test_draft_post_happy_path() -> None:
         assert persona_id == "ai-jesus", f"wrong persona_id: {persona_id}"
         assert hook and len(hook.strip()) > 0, "hook is empty"
         assert body and len(body.strip()) > 0, "body is empty"
-        assert (
-            tokens_used == 0
-        ), f"tokens_used should be 0 in test mode, got {tokens_used}"
+        assert tokens_used == 0, (
+            f"tokens_used should be 0 in test mode, got {tokens_used}"
+        )
         assert ts is not None, "timestamp not set"
 
         # Verify hook/body content makes sense
@@ -124,18 +124,18 @@ def test_draft_post_happy_path() -> None:
 
     # Check collection exists and has vectors
     count_result = qdrant.count(collection_name=COLLECTION_NAME)
-    assert (
-        count_result.count >= 1
-    ), f"expected at least 1 vector, got {count_result.count}"
+    assert count_result.count >= 1, (
+        f"expected at least 1 vector, got {count_result.count}"
+    )
 
     # 5️⃣ verify published content matches database content
     assert published_content is not None, "published content is None"
 
     # The published content should contain the hook and body
     published_text = published_content.get("content", "")
-    assert (
-        hook in published_text or body in published_text
-    ), "published content doesn't match database hook/body"
+    assert hook in published_text or body in published_text, (
+        "published content doesn't match database hook/body"
+    )
 
     # 6️⃣ verify latency metrics were logged
     metrics_response = httpx.get(f"http://localhost:{ORCH_PORT}/metrics", timeout=10)
@@ -143,23 +143,23 @@ def test_draft_post_happy_path() -> None:
     metrics_text = metrics_response.text
 
     # Verify required metric types exist
-    assert (
-        "# TYPE request_latency_seconds" in metrics_text
-    ), "request_latency_seconds metric not found"
-    assert (
-        "# TYPE llm_tokens_total" in metrics_text
-    ), "llm_tokens_total metric not found"
+    assert "# TYPE request_latency_seconds" in metrics_text, (
+        "request_latency_seconds metric not found"
+    )
+    assert "# TYPE llm_tokens_total" in metrics_text, (
+        "llm_tokens_total metric not found"
+    )
 
     # Verify business metrics were recorded during content generation
     # Check that posts were generated (should be > 0 after successful generation)
-    assert (
-        "posts_generated_total" in metrics_text
-    ), "posts_generated_total metric not found"
+    assert "posts_generated_total" in metrics_text, (
+        "posts_generated_total metric not found"
+    )
 
     # Check that content generation latency was recorded
-    assert (
-        "content_generation_latency_seconds" in metrics_text
-    ), "content_generation_latency_seconds metric not found"
+    assert "content_generation_latency_seconds" in metrics_text, (
+        "content_generation_latency_seconds metric not found"
+    )
 
     # 7️⃣ verify test completed within time budget
     elapsed = time.time() - start_time

@@ -34,6 +34,8 @@ personaRuntime:
       value: "test"
     - name: VIRAL_ENGINE_URL   # viral hook optimization service
       value: "http://viral-engine:8090"
+    - name: DATABASE_URL
+      value: "postgresql://postgres:pass@postgres:5432/threads_agent"
 
 rabbitmq:
   url: "amqp://user:pass@rabbitmq:5672/%2f"

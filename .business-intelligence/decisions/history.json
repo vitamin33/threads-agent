@@ -95,6 +95,42 @@
       "type": "roi_analysis",
       "description": "complete CRA-223",
       "report": "/Users/vitaliiserbyn/development/threads-agent/.business-intelligence/reports/roi_complete_CRA-223_20250722_163049.json"
+    },
+    {
+      "timestamp": "2025-07-23T10:00:58Z",
+      "type": "roi_analysis",
+      "description": "viral-content-engine",
+      "report": "/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/.business-intelligence/reports/roi_viral-content-engine_20250723_130058.json"
+    },
+    {
+      "timestamp": "2025-07-23T10:23:59Z",
+      "type": "roi_analysis",
+      "description": "user-tracking-infrastructure",
+      "report": "/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/.business-intelligence/reports/roi_user-tracking-infrastructure_20250723_132359.json"
+    },
+    {
+      "timestamp": "2025-07-23T10:24:04Z",
+      "type": "roi_analysis",
+      "description": "ab-testing-framework",
+      "report": "/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/.business-intelligence/reports/roi_ab-testing-framework_20250723_132404.json"
+    },
+    {
+      "timestamp": "2025-07-23T10:36:14Z",
+      "type": "roi_analysis",
+      "description": "threads-viral-laboratory",
+      "report": "/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/.business-intelligence/reports/roi_threads-viral-laboratory_20250723_133614.json"
+    },
+    {
+      "timestamp": "2025-07-23T10:40:34Z",
+      "type": "roi_analysis",
+      "description": "variant-generation-engine",
+      "report": "/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/.business-intelligence/reports/roi_variant-generation-engine_20250723_134034.json"
+    },
+    {
+      "timestamp": "2025-07-23T10:40:40Z",
+      "type": "roi_analysis",
+      "description": "ab-testing-infrastructure",
+      "report": "/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/.business-intelligence/reports/roi_ab-testing-infrastructure_20250723_134040.json"
     }
   ]
 }

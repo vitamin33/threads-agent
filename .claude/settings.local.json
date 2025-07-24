@@ -193,7 +193,23 @@
       "Bash(PYTHONPATH=$PWD:$PYTHONPATH:- pytest -s tests/e2e/test_enhanced_metrics.py::test_business_metrics_collection -v)",
       "Bash(gh api:*)",
       "Bash(gh run download:*)",
-      "Bash(export KUBECONFIG=~/.kube/config)"
+      "Bash(export KUBECONFIG=~/.kube/config)",
+      "Bash(export KUBECONFIG=\"/Users/vitaliiserbyn/.kube/threads-agent/config-threads-agent-riley-morg-25f3c7\")",
+      "Bash(helm rollback:*)",
+      "Bash(helm install:*)",
+      "Bash(kubectl logs -l app=orchestrator --tail=20)",
+      "Bash(kubectl logs -l app=orchestrator --since=1m)",
+      "Bash(kubectl get pods -l app=viral-engine)",
+      "Bash(docker build -t orchestrator:local -f services/orchestrator/Dockerfile .)",
+      "Bash(k3d image import orchestrator:local -c threads-agent-riley-morg-25f3c7)",
+      "Bash(curl -X POST \"http://localhost:8081/variants/generate-batch\" -H \"Content-Type: application/json\" -d '{\n    \"\"\"\"topics\"\"\"\": [\n      {\n        \"\"\"\"content\"\"\"\": \"\"\"\"AI productivity tips for developers\"\"\"\",\n        \"\"\"\"category\"\"\"\": \"\"\"\"productivity\"\"\"\"\n      }\n    ],\n    \"\"\"\"persona_id\"\"\"\": \"\"\"\"ai-jesus\"\"\"\",\n    \"\"\"\"count\"\"\"\": 3\n  }')",
+      "Bash(kubectl logs -l app=orchestrator --since=30s)",
+      "Bash(pkill -f \"kubectl port-forward\")",
+      "Bash(PYTHONPATH=$PWD python scripts/test-ab-testing.py)",
+      "Bash(PYTHONPATH=$PWD python3 scripts/test-ab-testing.py)",
+      "Bash(kubectl set env:*)",
+      "Bash(kubectl cp:*)",
+      "Bash(PYTHONPATH=$PWD python3 test_thompson_sampling.py)"
     ],
     "deny": []
   }

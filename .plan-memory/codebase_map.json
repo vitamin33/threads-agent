@@ -1,19 +1,11 @@
 {
-  "last_scan": "2025-07-21T01:56:56+03:00",
+  "last_scan": "2025-07-23T13:39:02+03:00",
   "structure": {
     "architecture": {
-      "timestamp": "2025-07-21T01:56:56+03:00",
+      "timestamp": "2025-07-23T13:39:02+03:00",
       "project_type": "microservices_k8s",
       "architecture_style": "microservices",
       "services": [
-        {
-          "name": "__pycache__",
-          "type": "lambda_function",
-          "endpoints": [
-            "API"
-          ],
-          "dependencies": []
-        },
         {
           "name": "celery_worker",
           "type": "fastapi_service",
@@ -33,6 +25,14 @@
           "dependencies": [
             "requirements"
           ]
+        },
+        {
+          "name": "dashboard",
+          "type": "lambda_function",
+          "endpoints": [
+            "API"
+          ],
+          "dependencies": []
         },
         {
           "name": "fake_threads",
@@ -66,7 +66,7 @@
         },
         {
           "name": "threads_adaptor",
-          "type": "lambda_function",
+          "type": "fastapi_service",
           "endpoints": [
             "API"
           ],
@@ -75,28 +75,30 @@
           ]
         },
         {
-          "name": "threads_agent.egg-info",
-          "type": "lambda_function",
+          "name": "viral_engine",
+          "type": "fastapi_service",
           "endpoints": [
             "API"
           ],
-          "dependencies": []
+          "dependencies": [
+            "requirements"
+          ]
         }
       ],
       "layers": {
-        "services": 36,
-        "tests": 5,
-        "scripts": 9,
-        "documentation": 0,
-        "infrastructure": 17
+        "services": 66,
+        "tests": 7,
+        "scripts": 34,
+        "documentation": 10,
+        "infrastructure": 24
       },
       "modules": [],
       "entry_points": [],
       "configuration": {
-        "env_files": 2,
-        "yaml_configs": 30,
-        "json_configs": 10,
-        "ini_configs": 8
+        "env_files": 0,
+        "yaml_configs": 52,
+        "json_configs": 3,
+        "ini_configs": 3
       },
       "infrastructure": {
         "docker_compose": false,
@@ -106,7 +108,7 @@
     }
   },
   "dependencies": {
-    "timestamp": "2025-07-21T01:56:57+03:00",
+    "timestamp": "2025-07-23T13:39:03+03:00",
     "internal_deps": {},
     "external_deps": [],
     "dependency_graph": {
