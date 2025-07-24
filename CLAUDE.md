@@ -384,7 +384,12 @@ just ship "feat: implemented trend-aware content generation"
 #### Quality & Shipping
 - `just lint` - Format with ruff, isort, black
 - `just check` - Full quality gate (lint + mypy + tests)
+  - **IMPORTANT**: `just check` is considered successful ONLY when it shows "✅ all green"
+  - The command runs: lint → mypy → pytest
+  - Requires virtual environment with all dependencies installed
+  - Sets PYTHONPATH=$PWD automatically
 - `just ship "commit message"` - CI-green commit → push → auto-PR
+  - **IMPORTANT**: Don't create or push PRs without successful `just check` command
 
 #### Utilities
 - `just scaffold SERVICE` - Generate new service from template

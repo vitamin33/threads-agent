@@ -21,7 +21,7 @@ from services.common.metrics import (
     record_http_request,
     record_latency,
 )
-from services.orchestrator.db.models import Base, HookVariant
+from services.orchestrator.db.models import HookVariant
 from services.orchestrator.vector import store_hook_variant
 
 logger = logging.getLogger(__name__)

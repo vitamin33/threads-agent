@@ -14,7 +14,7 @@ from scipy import stats
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from services.orchestrator.db.models import Base, Experiment, ExperimentVariant
+from services.orchestrator.db.models import Experiment, ExperimentVariant
 
 # Configuration
 DATABASE_URL = os.getenv(
@@ -439,5 +439,4 @@ class ExperimentManager:
                 session.commit()
 
 
-# Create tables if they don't exist
-Base.metadata.create_all(bind=engine)
+# Tables are created via alembic migrations, not at import time

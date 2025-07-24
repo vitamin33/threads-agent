@@ -76,7 +76,7 @@ class Experiment(Base):
     confidence_level: Mapped[float] = mapped_column(default=0.95)
     power: Mapped[float] = mapped_column(default=0.8)
     posts_per_hour: Mapped[int] = mapped_column(default=2)
-    posting_hours: Mapped[dict] = mapped_column(
+    posting_hours: Mapped[dict[str, int]] = mapped_column(
         JSON, default=lambda: {"start": 9, "end": 21}
     )
 

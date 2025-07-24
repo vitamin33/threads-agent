@@ -214,7 +214,9 @@
       "Bash(gh pr checks:*)",
       "Bash(gh pr view:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(OPENAI_API_KEY=test DATABASE_URL=sqlite:///test.db just check)",
+      "Bash(OPENAI_API_KEY=test DATABASE_URL=sqlite:///test.db pytest -q -m \"not e2e\")"
     ],
     "deny": []
   }
