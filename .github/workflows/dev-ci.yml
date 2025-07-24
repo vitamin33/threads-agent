@@ -314,6 +314,10 @@ jobs:
 
           # Show what's installed
           pip list
+          
+          # Uninstall langsmith to completely avoid pydantic v1 compatibility issues
+          echo "🔧 Removing langsmith to prevent pydantic conflicts..."
+          pip uninstall -y langsmith langchain-community langchain || true
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites (smart selection)
@@ -321,9 +325,6 @@ jobs:
       - name: pytest (unit + e2e) - parallel with smart selection
         id: tests
         run: |
-          # Uninstall langsmith to completely avoid pydantic v1 compatibility issues
-          pip uninstall -y langsmith langchain-community langchain || true
-          
           # Determine which tests to run based on changes
           PYTEST_ARGS="-q -p no:langsmith -n auto --maxprocesses=4 --dist loadscope --timeout=60"
 
