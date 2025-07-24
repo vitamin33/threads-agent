@@ -168,8 +168,8 @@ dependencies: []
 features:
 EOF
     
-    # Use AI to suggest detailed feature breakdown with Linear integration context
-    local breakdown_prompt="Break down this epic into detailed implementable features for Linear task creation:
+    # Use AI to suggest detailed feature breakdown
+    local breakdown_prompt="Break down this epic into detailed implementable features:
 
 Epic: $epic_name
 Description: $epic_description
@@ -285,7 +285,7 @@ milestones:
 
 # Automation Configuration
 automation:
-  project_board: "linear"
+  project_board: "local"
   branch_prefix: "$(echo "$epic_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | cut -c1-20)"
   ci_pipeline: "full"
   notifications:
@@ -302,10 +302,10 @@ EOF
     # Track in learning system
     [[ -f "$LEARNING_SYSTEM" ]] && "$LEARNING_SYSTEM" track "epic-breakdown" 0 1.0 "complexity:$complexity"
     
-    # Optionally create Linear tasks automatically
-    if [[ "${AUTO_CREATE_LINEAR_TASKS:-true}" == "true" ]]; then
-        log_info "Auto-creating Linear tasks for epic..."
-        sync_with_linear "create_epic_tasks" "$epic_id" || log_warn "Failed to auto-create Linear tasks"
+    # Create local task tracking
+    if [[ "${AUTO_CREATE_LOCAL_TASKS:-true}" == "true" ]]; then
+        log_info "Creating local task tracking for epic..."
+        create_local_task_tracking "$epic_id" || log_warn "Failed to create local task tracking"
     fi
     
     echo "$epic_id"
@@ -322,7 +322,7 @@ generate_feature() {
     generate_detailed_feature "$epic_id" "$feature_name" "$description" "$effort" "$priority" "" "" ""
 }
 
-# Generate detailed feature with comprehensive metadata for Linear integration
+# Generate detailed feature with comprehensive metadata for local tracking
 generate_detailed_feature() {
     local epic_id="$1"
     local feature_name="$2"
@@ -441,10 +441,11 @@ metadata:
   estimated_hours: $(convert_effort_to_hours "$effort")
   complexity_score: $(calculate_complexity_score "$description" "$files" "$deps")
 
-# Linear Integration
-linear:
-  auto_create: true
+# Local Task Tracking
+local_tracking:
+  status: "pending"
   labels: ["feature", "$priority", "$effort"]
+  created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
   project_sync: true
 
 # Lifecycle Events
@@ -509,7 +510,7 @@ manage_feature_lifecycle() {
     local feature_file="$FEATURES_DIR/${feature_id}.yaml"
     
     if [[ ! -f "$feature_file" ]]; then
-        log_error "Feature not found: $feature_id (looking for $feature_file)"
+        log_error "Feature not found: $feature_id - looking for: $feature_file"
         return 1
     fi
     
@@ -586,7 +587,7 @@ manage_feature_lifecycle() {
 orchestrate_development() {
     local mode="${1:-auto}"
     
-    log_orchestrate "Starting intelligent development orchestration (mode: $mode)"
+    log_orchestrate "Starting intelligent development orchestration - mode: $mode"
     
     # Load current state
     local active_features=$(get_active_features)
@@ -1023,56 +1024,48 @@ display_orchestration_suggestions() {
     echo
 }
 
-# Enhanced Linear integration with MCP support
+# Local task tracking and management
+create_local_task_tracking() {
+    local epic_id="$1"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    mkdir -p "$tasks_dir"
+    
+    # Create tasks file for the epic
+    local tasks_file="$tasks_dir/${epic_id}_tasks.yaml"
+    cat > "$tasks_file" << EOF
+epic_id: "$epic_id"
+created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+tasks: []
+EOF
+    
+    log_success "Created local task tracking for epic: $epic_id"
+}
+
+# Legacy function for compatibility - redirects to local tracking
 sync_with_linear() {
     local action="${1:-sync}"
     local epic_id="${2:-}"
     
-    # Check for Claude MCP Linear integration first
-    if command -v claude >/dev/null 2>&1; then
-        log_info "Using Claude MCP Linear integration..."
-        case "$action" in
-            "create_epic_tasks")
-                create_linear_tasks_from_epic "$epic_id"
-                ;;
-            "sync")
-                sync_epics_to_linear
-                sync_features_to_linear
-                ;;
-            "create")
-                create_linear_issues
-                ;;
-            "update")
-                update_linear_status
-                ;;
-        esac
-        return 0
-    fi
-    
-    # Fallback to Linear CLI if available
-    if ! command -v linear >/dev/null 2>&1; then
-        log_warn "Neither Claude MCP Linear nor Linear CLI found - skipping Linear integration"
-        return 0
-    fi
-    
-    log_info "Using Linear CLI for project management sync..."
-    
+    # Redirect to local task management
+    log_info "Using local task management system..."
     case "$action" in
+        "create_epic_tasks")
+            create_local_tasks_from_epic "$epic_id"
+            ;;
         "sync")
-            sync_epics_to_linear
-            sync_features_to_linear
+            sync_local_tasks
             ;;
         "create")
-            create_linear_issues
+            create_local_tasks
             ;;
         "update")
-            update_linear_status
+            update_local_task_status
             ;;
     esac
 }
 
-# Create Linear tasks from epic breakdown using Claude MCP
-create_linear_tasks_from_epic() {
+# Create local tasks from epic breakdown
+create_local_tasks_from_epic() {
     local epic_id="$1"
     local epic_file="$EPICS_DIR/${epic_id}.yaml"
     
@@ -1081,16 +1074,25 @@ create_linear_tasks_from_epic() {
         return 1
     fi
     
-    log_info "Creating Linear tasks from epic breakdown..."
+    log_info "Creating local tasks from epic breakdown..."
     
     # Get epic details
     local epic_name=$(awk '/^name:/ {gsub(/^name: *"|"$/, ""); print}' "$epic_file")
     local epic_description=$(awk '/^description:/ {gsub(/^description: *"|"$/, ""); print}' "$epic_file")
     
-    # Create epic project in Linear
-    local project_creation_prompt="Create a Linear project for this epic:
-Title: $epic_name
-Description: $epic_description
+    # Create local project tracking
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    local project_file="$tasks_dir/${epic_id}_project.yaml"
+    mkdir -p "$tasks_dir"
+    
+    cat > "$project_file" << EOF
+epic_id: "$epic_id"
+name: "$epic_name"
+description: "$epic_description"
+created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+features: []
+tasks: []
+EOF
 
 Return only the project ID after creation."
     
@@ -1128,7 +1130,7 @@ Return only the project ID after creation."
                 "FEATURE_ID")
                     # Process previous feature if exists
                     if [[ -n "$current_feature_id" && -n "$current_feature_name" ]]; then
-                        create_detailed_linear_task "$current_feature_id" "$current_feature_name" "$current_effort" "$current_priority" "$project_id"
+                        create_local_task "$current_feature_id" "$current_feature_name" "$current_effort" "$current_priority" "$epic_id"
                     fi
                     current_feature_id="$value"
                     current_feature_name=""
@@ -1156,19 +1158,23 @@ Return only the project ID after creation."
     log_success "Linear tasks created for epic: $epic_name"
 }
 
-# Create detailed Linear task with full description
-create_detailed_linear_task() {
+# Create local task with full description
+create_local_task() {
     local feature_id="$1"
     local feature_name="$2"
     local effort="${3:-medium}"
     local priority="${4:-medium}"
-    local project_id="${5:-}"
+    local epic_id="${5:-}"
     
     local feature_file="$FEATURES_DIR/${feature_id}.yaml"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    local task_file="$tasks_dir/task_${feature_id}.yaml"
+    
+    mkdir -p "$tasks_dir"
     
     if [[ ! -f "$feature_file" ]]; then
         log_warn "Feature file not found: $feature_file - creating basic task"
-        create_basic_linear_task "$feature_name" "$effort" "$priority" "$project_id"
+        create_basic_local_task "$feature_name" "$effort" "$priority" "$epic_id"
         return 0
     fi
     
@@ -1238,74 +1244,211 @@ $libs"
 - **Priority:** $priority
 - **Feature ID:** $feature_id"
     
-    # Create task using Claude MCP Linear integration
-    if command -v claude >/dev/null 2>&1; then
-        local task_creation_prompt="Create a Linear issue with the following details:
-
-Title: $feature_name
-Description: $full_description
-Priority: $priority
-Team: Use the team that handles CRA- prefixed tickets
-
-If project_id '$project_id' is provided, add the issue to that project.
-
-Return only 'SUCCESS: [ISSUE_ID]' after creation, or 'ERROR: [reason]' if failed."
-        
-        log_info "Creating detailed Linear task: $feature_name"
-        local result=$(echo "$task_creation_prompt" | claude 2>/dev/null | head -1)
-        
-        if [[ "$result" =~ SUCCESS:* ]]; then
-            local issue_id=$(echo "$result" | sed 's/SUCCESS: *//')
-            log_success "Created Linear task: $feature_name (ID: $issue_id)"
-            
-            # Update feature file with Linear task ID
-            echo "linear_issue_id: \"$issue_id\"" >> "$feature_file"
-        else
-            log_error "Failed to create Linear task: $feature_name - $result"
-        fi
-    else
-        log_warn "Claude not available - cannot create detailed Linear task"
+    # Create local task file
+    cat > "$task_file" << EOF
+task_id: "task_${feature_id}"
+feature_id: "$feature_id"
+epic_id: "$epic_id"
+name: "$feature_name"
+description: |
+$(echo "$full_description" | sed 's/^/  /')
+priority: "$priority"
+effort: "$effort"
+status: "pending"
+created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+updated: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+assigned_to: ""
+labels:
+  - "feature"
+  - "$priority"
+  - "$effort"
+comments: []
+progress: 0
+EOF
+    
+    log_success "Created local task: $feature_name - ID: task_${feature_id}"
+    
+    # Update feature file with local task ID
+    echo "local_task_id: \"task_${feature_id}\"" >> "$feature_file"
+    
+    # Update epic's project file to include this task
+    local project_file="$tasks_dir/${epic_id}_project.yaml"
+    if [[ -f "$project_file" ]]; then
+        echo "  - task_id: \"task_${feature_id}\"" >> "$project_file"
+        echo "    feature_id: \"$feature_id\"" >> "$project_file"
+        echo "    name: \"$feature_name\"" >> "$project_file"
     fi
 }
 
-# Create basic Linear task (fallback)
-create_basic_linear_task() {
+# Create basic local task (fallback)
+create_basic_local_task() {
     local task_name="$1"
     local effort="${2:-medium}"
     local priority="${3:-medium}"
-    local project_id="${4:-}"
+    local epic_id="${4:-}"
     
-    log_info "Creating basic Linear task: $task_name"
+    log_info "Creating basic local task: $task_name"
     
-    if command -v claude >/dev/null 2>&1; then
-        local basic_prompt="Create a Linear issue:
-Title: $task_name
-Priority: $priority
-Estimate: $effort
-
-Return only the issue ID after creation."
-        
-        local issue_id=$(echo "$basic_prompt" | claude 2>/dev/null | head -1)
-        if [[ -n "$issue_id" ]]; then
-            log_success "Created basic Linear task: $task_name (ID: $issue_id)"
-        fi
-    fi
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    local task_id="task_$(date +%s)_$$"
+    local task_file="$tasks_dir/${task_id}.yaml"
+    
+    mkdir -p "$tasks_dir"
+    
+    cat > "$task_file" << EOF
+task_id: "$task_id"
+epic_id: "$epic_id"
+name: "$task_name"
+description: "Basic task - no detailed feature file available"
+priority: "$priority"
+effort: "$effort"
+status: "pending"
+created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+updated: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+assigned_to: ""
+labels:
+  - "basic"
+  - "$priority"
+  - "$effort"
+comments: []
+progress: 0
+EOF
+    
+    log_success "Created basic local task: $task_name - ID: $task_id"
 }
 
-sync_epics_to_linear() {
+sync_local_tasks() {
     local registry="$WORKFLOW_DIR/active_epics.json"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    
     if [[ -f "$registry" ]]; then
-        # Would sync each epic as a Linear project
-        log_info "Syncing epics to Linear projects..."
+        log_info "Syncing local task tracking..."
+        
+        # Update task counts and statuses
+        for task_file in "$tasks_dir"/task_*.yaml; do
+            [[ -f "$task_file" ]] || continue
+            # Could update task statuses based on git commits, etc.
+        done
+        
+        log_success "Local task sync completed"
     fi
 }
 
-sync_features_to_linear() {
-    local registry="$WORKFLOW_DIR/feature_registry.json"
-    if [[ -f "$registry" ]]; then
-        # Would sync each feature as a Linear issue
-        log_info "Syncing features to Linear issues..."
+create_local_tasks() {
+    log_info "Creating local tasks from feature registry..."
+    # Implemented via create_local_task function
+}
+
+update_local_task_status() {
+    local task_id="${1:-}"
+    local new_status="${2:-in_progress}"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    
+    if [[ -z "$task_id" ]]; then
+        log_error "Task ID required for status update"
+        return 1
     fi
+    
+    local task_file="$tasks_dir/${task_id}.yaml"
+    if [[ ! -f "$task_file" ]]; then
+        log_error "Task file not found: $task_file"
+        return 1
+    fi
+    
+    # Update status in YAML file
+    sed -i.bak "s/^status: .*/status: \"$new_status\"/" "$task_file"
+    sed -i.bak "s/^updated: .*/updated: \"$(date +%Y-%m-%dT%H:%M:%S%z)\"/" "$task_file"
+    rm "${task_file}.bak"
+    
+    log_success "Updated task $task_id status to: $new_status"
+}
+
+# List tasks for an epic
+list_epic_tasks() {
+    local epic_id="${1:-}"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    local status_filter="${2:-all}"
+    
+    if [[ -z "$epic_id" ]]; then
+        log_error "Epic ID required"
+        return 1
+    fi
+    
+    log_info "Tasks for epic: $epic_id - filter: $status_filter"
+    echo
+    
+    local count=0
+    for task_file in "$tasks_dir"/task_*.yaml; do
+        [[ -f "$task_file" ]] || continue
+        
+        local task_epic_id=$(grep "^epic_id:" "$task_file" | cut -d'"' -f2)
+        [[ "$task_epic_id" == "$epic_id" ]] || continue
+        
+        local task_id=$(grep "^task_id:" "$task_file" | cut -d'"' -f2)
+        local name=$(grep "^name:" "$task_file" | cut -d'"' -f2)
+        local status=$(grep "^status:" "$task_file" | cut -d'"' -f2)
+        local priority=$(grep "^priority:" "$task_file" | cut -d'"' -f2)
+        local effort=$(grep "^effort:" "$task_file" | cut -d'"' -f2)
+        
+        if [[ "$status_filter" != "all" ]] && [[ "$status" != "$status_filter" ]]; then
+            continue
+        fi
+        
+        ((count++))
+        printf "${CYAN}%-20s${NC} ${BOLD}%-50s${NC} ${YELLOW}%-10s${NC} ${GREEN}%-8s${NC} ${PURPLE}%-8s${NC}\n" \
+            "$task_id" "$name" "$status" "$priority" "$effort"
+    done
+    
+    echo
+    log_info "Total tasks: $count"
+}
+
+# Show task details
+show_task() {
+    local task_id="${1:-}"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    
+    if [[ -z "$task_id" ]]; then
+        log_error "Task ID required"
+        return 1
+    fi
+    
+    local task_file="$tasks_dir/${task_id}.yaml"
+    if [[ ! -f "$task_file" ]]; then
+        log_error "Task not found: $task_id"
+        return 1
+    fi
+    
+    echo
+    echo "════════════════════════════════════════════════════════════════"
+    echo "TASK DETAILS: $task_id"
+    echo "════════════════════════════════════════════════════════════════"
+    cat "$task_file"
+    echo "════════════════════════════════════════════════════════════════"
+}
+
+# Task assignment
+assign_task() {
+    local task_id="${1:-}"
+    local assignee="${2:-}"
+    local tasks_dir="$WORKFLOW_DIR/tasks"
+    
+    if [[ -z "$task_id" ]] || [[ -z "$assignee" ]]; then
+        log_error "Usage: assign_task task_id assignee"
+        return 1
+    fi
+    
+    local task_file="$tasks_dir/${task_id}.yaml"
+    if [[ ! -f "$task_file" ]]; then
+        log_error "Task not found: $task_id"
+        return 1
+    fi
+    
+    sed -i.bak "s/^assigned_to: .*/assigned_to: \"$assignee\"/" "$task_file"
+    sed -i.bak "s/^updated: .*/updated: \"$(date +%Y-%m-%dT%H:%M:%S%z)\"/" "$task_file"
+    rm "${task_file}.bak"
+    
+    log_success "Assigned task $task_id to: $assignee"
 }
 
 # Show workflow dashboard
@@ -1440,7 +1583,9 @@ EOF
     if [[ -f "$WORKFLOW_DIR/active_epics.json" ]]; then
         jq -r '.epics[] | [.name, .status, .created, .id] | @tsv' "$WORKFLOW_DIR/active_epics.json" 2>/dev/null | while IFS=$'\t' read -r name status created id; do
             local feature_count=$(jq -r --arg epic "$id" '.features[] | select(.epic == $epic) | .id' "$WORKFLOW_DIR/feature_registry.json" 2>/dev/null | wc -l || echo 0)
-            echo "<tr><td>$name</td><td><span class=\"status $status\">$status</span></td><td>$(echo "$created" | cut -d'T' -f1)</td><td>$feature_count</td></tr>" >> "$report_file"
+            local created_date=$(echo "$created" | cut -d'T' -f1)
+            printf '<tr><td>%s</td><td><span class="status %s">%s</span></td><td>%s</td><td>%s</td></tr>\n' \
+                "$name" "$status" "$status" "$created_date" "$feature_count" >> "$report_file"
         done
     fi
     
@@ -1459,15 +1604,15 @@ EOF
     # Add blocked features
     local blocked_count=$(get_blocked_features | wc -l)
     if [[ $blocked_count -gt 0 ]]; then
-        echo "<table><tr><th>Feature</th><th>Epic</th><th>Blocked Since</th></tr>" >> "$report_file"
+        printf '<table><tr><th>Feature</th><th>Epic</th><th>Blocked Since</th></tr>\n' >> "$report_file"
         get_blocked_features | while read fid; do
             local fname=$(jq -r --arg id "$fid" '.features[] | select(.id == $id) | .name' "$WORKFLOW_DIR/feature_registry.json" 2>/dev/null)
             local epic=$(jq -r --arg id "$fid" '.features[] | select(.id == $id) | .epic' "$WORKFLOW_DIR/feature_registry.json" 2>/dev/null)
-            echo "<tr><td>$fname</td><td>$epic</td><td>N/A</td></tr>" >> "$report_file"
+            printf '<tr><td>%s</td><td>%s</td><td>N/A</td></tr>\n' "$fname" "$epic" >> "$report_file"
         done
-        echo "</table>" >> "$report_file"
+        echo '</table>' >> "$report_file"
     else
-        echo "<p>✅ No blocked features!</p>" >> "$report_file"
+        echo '<p>✅ No blocked features!</p>' >> "$report_file"
     fi
     
     cat >> "$report_file" << EOF
@@ -1508,6 +1653,7 @@ COMMANDS:
     # Epic Management
     epic <name> [desc] [size]   Break down epic into features
     epics                       List all epics
+    ai-plan "requirement" ["context"] AI-powered epic planning from requirements
     
     # Feature Lifecycle
     feature <action> <id>       Manage feature lifecycle
@@ -1526,15 +1672,37 @@ COMMANDS:
     dashboard                   Show interactive dashboard
     report                      Generate HTML report
     
+    # Task Management
+    tasks list epic_id [status]  List tasks for an epic
+    tasks show task_id           Show task details
+    tasks update task_id status  Update task status
+    tasks assign task_id user    Assign task to user
+    
+    # Auto-Git Workflow
+    tasks start task_id          Start working (auto-branch + setup)
+    tasks commit task_id "msg"   Commit with enhanced context
+    tasks ship task_id ["title"] Create PR with task description
+    tasks complete task_id       Mark done and cleanup branch
+    
     # Integration
-    sync [action]              Sync with Linear (if available)
+    sync [action]              Sync local task tracking
         Actions: sync, create, update
 
 EXAMPLES:
-    # Break down a new epic
+    # AI-powered epic planning
+    $0 ai-plan "Build a real-time chat application with WebSocket support"
+    
+    # Break down a new epic manually
     $0 epic "User Authentication System" "Implement OAuth2 authentication" large
     
-    # Start feature development
+    # Complete AI → Git workflow
+    $0 ai-plan "Build user authentication"
+    $0 tasks start task_feat_epic123_auth_001
+    # ... make changes ...
+    $0 tasks commit task_feat_epic123_auth_001 "implement JWT middleware"
+    $0 tasks ship task_feat_epic123_auth_001
+    
+    # Start feature development manually
     $0 feature start feat_1234567890
     
     # Run orchestration suggestions
@@ -1550,7 +1718,7 @@ LIFECYCLE STAGES:
 
 ENVIRONMENT VARIABLES:
     WORKFLOW_MODE=auto         Set default orchestration mode
-    LINEAR_API_KEY=xxx         Enable Linear integration
+    WORKFLOW_MODE=local        Use local task management
     SLACK_WEBHOOK=xxx          Enable Slack notifications
 
 EOF
@@ -1570,21 +1738,21 @@ main() {
             ;;
         epics)
             if [[ -f "$WORKFLOW_DIR/active_epics.json" ]]; then
-                jq -r '.epics[] | "\(.id)\t\(.name)\t\(.status)"' "$WORKFLOW_DIR/active_epics.json"
+                jq -r '.epics[] | [.id, .name, .status] | @tsv' "$WORKFLOW_DIR/active_epics.json"
             else
                 log_warn "No epics found"
             fi
             ;;
         feature)
             if [[ $# -lt 3 ]]; then
-                log_error "Usage: feature <action> <feature_id>"
+                log_error "Usage: feature action feature_id"
                 exit 1
             fi
             manage_feature_lifecycle "$2" "$3" "${4:-}"
             ;;
         features)
             if [[ -f "$WORKFLOW_DIR/feature_registry.json" ]]; then
-                jq -r '.features[] | "\(.id)\t\(.name)\t\(.status)"' "$WORKFLOW_DIR/feature_registry.json"
+                jq -r '.features[] | [.id, .name, .status] | @tsv' "$WORKFLOW_DIR/feature_registry.json"
             else
                 log_warn "No features found"
             fi
@@ -1610,6 +1778,57 @@ main() {
             ;;
         sync)
             sync_with_linear "${2:-sync}"
+            ;;
+        ai-plan)
+            # AI-powered epic planning
+            if [[ $# -lt 2 ]]; then
+                log_error "Usage: ai-plan \"requirement description\" [\"additional context\"]"
+                log_info "Example: ai-plan \"Build user authentication with OAuth2\""
+                exit 1
+            fi
+            shift
+            "$SCRIPT_DIR/ai-epic-planner.sh" "$@"
+            ;;
+        tasks)
+            # New task management commands
+            case "${2:-list}" in
+                list)
+                    if [[ -n "${3:-}" ]]; then
+                        list_epic_tasks "$3" "${4:-all}"
+                    else
+                        log_error "Epic ID required. Usage: tasks list epic_id [status]"
+                    fi
+                    ;;
+                show)
+                    show_task "${3:-}"
+                    ;;
+                update)
+                    update_local_task_status "${3:-}" "${4:-in_progress}"
+                    ;;
+                assign)
+                    assign_task "${3:-}" "${4:-}"
+                    ;;
+                start)
+                    # Start working on a task with auto-git
+                    "$SCRIPT_DIR/auto-git-integration.sh" start "${3:-}"
+                    ;;
+                commit)
+                    # Commit with task context
+                    "$SCRIPT_DIR/auto-git-integration.sh" commit "${3:-}" "${4:-}"
+                    ;;
+                ship)
+                    # Create PR for task
+                    "$SCRIPT_DIR/auto-git-integration.sh" ship "${3:-}" "${4:-}"
+                    ;;
+                complete)
+                    # Complete task and cleanup
+                    "$SCRIPT_DIR/auto-git-integration.sh" complete "${3:-}"
+                    ;;
+                *)
+                    log_error "Unknown task command: $2"
+                    log_info "Available: list, show, update, assign, start, commit, ship, complete"
+                    ;;
+            esac
             ;;
         help|--help|-h)
             show_help

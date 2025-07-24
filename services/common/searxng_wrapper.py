@@ -55,7 +55,7 @@ class SearXNGWrapper:
         self.base_url = base_url.rstrip("/")
         self.search_endpoint = f"{self.base_url}/search"
 
-    def _cache_key(self, query: str, **params) -> str:
+    def _cache_key(self, query: str, **params: Any) -> str:
         """Generate cache key for search query"""
         key_data = f"{query}:{json.dumps(params, sort_keys=True)}"
         return hashlib.md5(key_data.encode()).hexdigest()
@@ -228,7 +228,7 @@ class TrendDetector:
             all_results.extend(results)
 
         # Analyze and score trends
-        trend_scores = {}
+        trend_scores: Dict[str, int] = {}
         for result in all_results:
             # Extract potential trend keywords from titles
             words = result.title.lower().split()
@@ -310,7 +310,7 @@ class CompetitiveAnalyzer:
             "with",
         }
         words = text.lower().split()
-        word_freq = {}
+        word_freq: Dict[str, int] = {}
 
         for word in words:
             if len(word) > 3 and word not in stopwords:
@@ -332,7 +332,7 @@ _competitive_analyzer = CompetitiveAnalyzer(_searxng)
 
 
 # Convenience functions
-def search(query: str, **kwargs) -> List[SearchResult]:
+def search(query: str, **kwargs: Any) -> List[SearchResult]:
     """Quick search function"""
     return _searxng.search(query, **kwargs)
 
@@ -348,7 +348,7 @@ def analyze_viral(topic: str, platform: str = "threads") -> List[Dict[str, Any]]
 
 
 # Async versions
-async def search_async(query: str, **kwargs) -> List[SearchResult]:
+async def search_async(query: str, **kwargs: Any) -> List[SearchResult]:
     """Async quick search"""
     return await _searxng.search_async(query, **kwargs)
 
