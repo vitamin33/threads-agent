@@ -413,6 +413,21 @@ ship MESSAGE NO_PR="false":
     else echo "ℹ︎  skip PR"; fi
     @./scripts/learning-system.sh workflow "ship-workflow" "pre-commit-fix,check,commit,push,pr" true "30.0" 2>/dev/null || true
 
+# ---------- CI Auto-Fix Monitoring ----------
+autofix-monitor DAYS="7": # monitor Claude Code CI auto-fix performance
+    @echo "🤖 Monitoring Claude Code Auto-Fix CI..."
+    ./scripts/monitor-auto-fix.sh {{DAYS}}
+
+autofix-status: # quick status of auto-fix system
+    @echo "🔍 Auto-Fix System Status:"
+    @gh run list --workflow="auto-fix-ci.yml" --limit=5 | head -6 || echo "No auto-fix runs found"
+
+autofix-trigger: # manually trigger auto-fix on current branch
+    @echo "🚀 Manually triggering auto-fix..."
+    @branch=$$(git branch --show-current); \
+    gh workflow run auto-fix-ci.yml --ref $$branch && \
+    echo "✅ Auto-fix triggered on branch: $$branch"
+
 # ---------- Context Management ----------
 ctx-save NAME:      # save current session context
     ./scripts/smart-queries.sh save-ctx {{NAME}}

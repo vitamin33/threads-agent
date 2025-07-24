@@ -18,17 +18,18 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
+from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from services.common.metrics import (
-    record_engagement_rate,
     record_business_metric,
+    record_engagement_rate,
     update_revenue_projection,
 )
+
 from .limiter import rate_limited_call
 
 app = FastAPI(title="threads-adaptor")
@@ -49,12 +50,25 @@ THREADS_PUBLISH_ENDPOINT = f"{THREADS_API_BASE}/{THREADS_USER_ID}/threads_publis
 
 # Database setup
 Base = declarative_base()
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Initialize database connection with fallback for test environments
+try:
+    engine = create_engine(DATABASE_URL)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+    # Test the connection - this will fail if postgres is not available
+    with engine.connect() as conn:
+        pass
+
+except Exception:
+    # Fallback for test environments or when postgres is not available
+    engine = None
+    SessionLocal = None
 
 
 class ThreadsPost(Base):
     """Database model for tracking published Threads posts."""
+
     __tablename__ = "threads_posts"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -75,15 +89,21 @@ class ThreadsPost(Base):
 # Pydantic models
 class PostRequest(BaseModel):
     """Request model for creating a Threads post."""
+
     topic: str
     content: str
     persona_id: str = Field(default="ai-jesus")
-    media_type: str = Field(default="TEXT", description="TEXT, IMAGE, VIDEO, or CAROUSEL")
-    media_urls: Optional[List[str]] = Field(default=None, description="URLs for media content")
+    media_type: str = Field(
+        default="TEXT", description="TEXT, IMAGE, VIDEO, or CAROUSEL"
+    )
+    media_urls: Optional[List[str]] = Field(
+        default=None, description="URLs for media content"
+    )
 
 
 class PostResponse(BaseModel):
     """Response model for a published Threads post."""
+
     status: str
     thread_id: str
     permalink: Optional[str] = None
@@ -92,6 +112,7 @@ class PostResponse(BaseModel):
 
 class EngagementMetrics(BaseModel):
     """Model for engagement metrics from Threads."""
+
     likes_count: int = 0
     comments_count: int = 0
     shares_count: int = 0
@@ -100,8 +121,9 @@ class EngagementMetrics(BaseModel):
     followers_count: int = 0
 
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Create tables (only in non-test environments)
+if engine is not None:
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/ping")
@@ -116,7 +138,7 @@ async def health() -> dict[str, str]:
     # Check if we have valid credentials
     if not all([THREADS_APP_ID, THREADS_ACCESS_TOKEN, THREADS_USER_ID]):
         return {"status": "unhealthy", "reason": "Missing Threads API credentials"}
-    
+
     # Try to validate token with a simple API call
     try:
         async with httpx.AsyncClient() as client:
@@ -124,26 +146,31 @@ async def health() -> dict[str, str]:
                 client.get,
                 f"{THREADS_API_BASE}/{THREADS_USER_ID}",
                 params={"access_token": THREADS_ACCESS_TOKEN, "fields": "id"},
-                timeout=5.0
+                timeout=5.0,
             )
             if response.status_code == 200:
                 return {"status": "ok"}
             else:
-                return {"status": "unhealthy", "reason": f"API returned {response.status_code}"}
+                return {
+                    "status": "unhealthy",
+                    "reason": f"API returned {response.status_code}",
+                }
     except Exception as e:
         return {"status": "unhealthy", "reason": str(e)}
 
 
 @app.post("/publish", response_model=PostResponse)
-async def publish_post(post: PostRequest, background_tasks: BackgroundTasks) -> PostResponse:
+async def publish_post(
+    post: PostRequest, background_tasks: BackgroundTasks
+) -> PostResponse:
     """
     Publish a post to Threads.
-    
+
     This replaces the fake-threads /publish endpoint with real Threads API integration.
     """
     if not THREADS_ACCESS_TOKEN:
         raise HTTPException(status_code=503, detail="Threads API not configured")
-    
+
     try:
         async with httpx.AsyncClient() as client:
             # Step 1: Create media container
@@ -152,7 +179,7 @@ async def publish_post(post: PostRequest, background_tasks: BackgroundTasks) -> 
                 "media_type": post.media_type,
                 "text": post.content,
             }
-            
+
             # Add media URLs if provided
             if post.media_urls and post.media_type != "TEXT":
                 if post.media_type == "IMAGE":
@@ -163,46 +190,43 @@ async def publish_post(post: PostRequest, background_tasks: BackgroundTasks) -> 
                     # Carousel requires child media containers
                     # This is more complex and would need separate implementation
                     pass
-            
+
             # Create the media container
             create_response = await rate_limited_call(
-                client.post,
-                THREADS_MEDIA_ENDPOINT,
-                params=create_params,
-                timeout=30.0
+                client.post, THREADS_MEDIA_ENDPOINT, params=create_params, timeout=30.0
             )
             create_data = create_response.json()
-            
+
             if "error" in create_data:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Failed to create media: {create_data['error']['message']}"
+                    detail=f"Failed to create media: {create_data['error']['message']}",
                 )
-            
+
             media_id = create_data["id"]
-            
+
             # Step 2: Publish the media container
             publish_params = {
                 "access_token": THREADS_ACCESS_TOKEN,
                 "creation_id": media_id,
             }
-            
+
             publish_response = await rate_limited_call(
                 client.post,
                 THREADS_PUBLISH_ENDPOINT,
                 params=publish_params,
-                timeout=30.0
+                timeout=30.0,
             )
             publish_data = publish_response.json()
-            
+
             if "error" in publish_data:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Failed to publish: {publish_data['error']['message']}"
+                    detail=f"Failed to publish: {publish_data['error']['message']}",
                 )
-            
+
             thread_id = publish_data["id"]
-            
+
             # Store in database
             db = SessionLocal()
             try:
@@ -217,22 +241,22 @@ async def publish_post(post: PostRequest, background_tasks: BackgroundTasks) -> 
                 db.commit()
             finally:
                 db.close()
-            
+
             # Schedule background task to fetch initial metrics after a delay
             background_tasks.add_task(
                 fetch_engagement_metrics_delayed,
                 thread_id,
                 post.persona_id,
-                delay_seconds=300  # Wait 5 minutes for initial engagement
+                delay_seconds=300,  # Wait 5 minutes for initial engagement
             )
-            
+
             return PostResponse(
                 status="published",
                 thread_id=thread_id,
                 permalink=f"https://www.threads.net/@{THREADS_USER_ID}/post/{thread_id}",
-                message="Post published successfully to Threads"
+                message="Post published successfully to Threads",
             )
-            
+
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=str(e))
     except Exception as e:
@@ -243,12 +267,17 @@ async def publish_post(post: PostRequest, background_tasks: BackgroundTasks) -> 
 async def list_published() -> List[Dict[str, Any]]:
     """
     List all published posts with their engagement metrics.
-    
+
     This replaces fake-threads /published endpoint with real data.
     """
     db = SessionLocal()
     try:
-        posts = db.query(ThreadsPost).order_by(ThreadsPost.published_at.desc()).limit(100).all()
+        posts = (
+            db.query(ThreadsPost)
+            .order_by(ThreadsPost.published_at.desc())
+            .limit(100)
+            .all()
+        )
         return [
             {
                 "thread_id": post.thread_id,
@@ -284,20 +313,18 @@ async def refresh_all_metrics(background_tasks: BackgroundTasks) -> Dict[str, st
     try:
         # Get posts from last 7 days
         cutoff_date = datetime.utcnow() - timedelta(days=7)
-        posts = db.query(ThreadsPost).filter(
-            ThreadsPost.published_at >= cutoff_date
-        ).all()
-        
+        posts = (
+            db.query(ThreadsPost).filter(ThreadsPost.published_at >= cutoff_date).all()
+        )
+
         for post in posts:
             background_tasks.add_task(
-                update_post_metrics,
-                post.thread_id,
-                post.persona_id
+                update_post_metrics, post.thread_id, post.persona_id
             )
-        
+
         return {
             "status": "refreshing",
-            "message": f"Refreshing metrics for {len(posts)} posts"
+            "message": f"Refreshing metrics for {len(posts)} posts",
         }
     finally:
         db.close()
@@ -307,7 +334,7 @@ async def fetch_post_metrics(thread_id: str) -> EngagementMetrics:
     """Fetch engagement metrics for a specific Threads post."""
     if not THREADS_ACCESS_TOKEN:
         return EngagementMetrics()
-    
+
     try:
         async with httpx.AsyncClient() as client:
             # Fetch post insights
@@ -318,22 +345,22 @@ async def fetch_post_metrics(thread_id: str) -> EngagementMetrics:
                     "access_token": THREADS_ACCESS_TOKEN,
                     "metric": "likes,replies,reposts,quotes,followers_count,impressions",
                 },
-                timeout=10.0
+                timeout=10.0,
             )
-            
+
             if response.status_code != 200:
                 return EngagementMetrics()
-            
+
             data = response.json()
             metrics_data = data.get("data", [])
-            
+
             # Parse metrics
             likes = 0
             comments = 0
             shares = 0
             impressions = 0
             followers = 0
-            
+
             for metric in metrics_data:
                 name = metric.get("name", "")
                 values = metric.get("values", [])
@@ -349,13 +376,13 @@ async def fetch_post_metrics(thread_id: str) -> EngagementMetrics:
                         impressions = value
                     elif name == "followers_count":
                         followers = value
-            
+
             # Calculate engagement rate
             if impressions > 0:
                 engagement_rate = (likes + comments + shares) / impressions
             else:
                 engagement_rate = 0.0
-            
+
             return EngagementMetrics(
                 likes_count=likes,
                 comments_count=comments,
@@ -364,7 +391,7 @@ async def fetch_post_metrics(thread_id: str) -> EngagementMetrics:
                 engagement_rate=engagement_rate,
                 followers_count=followers,
             )
-            
+
     except Exception as e:
         print(f"Error fetching metrics for {thread_id}: {e}")
         return EngagementMetrics()
@@ -373,7 +400,7 @@ async def fetch_post_metrics(thread_id: str) -> EngagementMetrics:
 async def update_post_metrics(thread_id: str, persona_id: str) -> None:
     """Update metrics for a post in the database."""
     metrics = await fetch_post_metrics(thread_id)
-    
+
     db = SessionLocal()
     try:
         post = db.query(ThreadsPost).filter(ThreadsPost.thread_id == thread_id).first()
@@ -386,17 +413,19 @@ async def update_post_metrics(thread_id: str, persona_id: str) -> None:
             post.engagement_data = metrics.model_dump()
             post.updated_at = datetime.utcnow()
             db.commit()
-            
+
             # Record metrics for Prometheus
             record_engagement_rate(persona_id, metrics.engagement_rate)
-            
+
             # Update business metrics
             if metrics.followers_count > 0:
                 # Estimate cost per follow based on post performance
                 # This is a simplified calculation
                 cost_per_follow = 0.05  # $0.05 estimated cost per follower
-                record_business_metric("cost_per_follow", cost_per_follow, {"persona_id": persona_id})
-                
+                record_business_metric(
+                    "cost_per_follow", persona_id=persona_id, cost=cost_per_follow
+                )
+
                 # Update revenue projection based on follower growth
                 # Assuming $1 per 1000 followers per month (simplified)
                 monthly_revenue_per_follower = 0.001
@@ -407,9 +436,7 @@ async def update_post_metrics(thread_id: str, persona_id: str) -> None:
 
 
 async def fetch_engagement_metrics_delayed(
-    thread_id: str,
-    persona_id: str,
-    delay_seconds: int = 300
+    thread_id: str, persona_id: str, delay_seconds: int = 300
 ) -> None:
     """Fetch engagement metrics after a delay to allow for initial engagement."""
     await asyncio.sleep(delay_seconds)
@@ -418,4 +445,5 @@ async def fetch_engagement_metrics_delayed(
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8080)

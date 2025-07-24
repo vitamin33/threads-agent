@@ -181,3 +181,22 @@ redis:
     requests:
       cpu: 100m
       memory: 128Mi
+
+# ───────── CI Monitor (disabled by default) ─────────
+ciMonitor:
+  enabled: false
+  image:
+    repository: ci-monitor
+    tag: local
+    pullPolicy: IfNotPresent
+  githubToken: ""
+  anthropicApiKey: ""
+  monitorInterval: "300"
+  autoApprove: "false"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi

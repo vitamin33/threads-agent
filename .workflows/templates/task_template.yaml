@@ -1,0 +1,55 @@
+task_id: "task_{feature_id}"
+feature_id: "{FEATURE_ID}"
+epic_id: "{EPIC_ID}"
+name: "{TASK_NAME}"
+description: |
+  {TASK_DESCRIPTION}
+  
+  ## Acceptance Criteria
+  - [ ] {CRITERION_1}
+  - [ ] {CRITERION_2}
+  
+  ## Technical Notes
+  {TECHNICAL_DETAILS}
+  
+priority: "{PRIORITY}"  # low, medium, high, urgent
+effort: "{EFFORT}"  # small (1-2h), medium (2-4h), large (4-8h), xl (8h+)
+status: "pending"  # pending, in_progress, blocked, completed, cancelled
+created: "{CREATED_DATE}"
+updated: "{UPDATED_DATE}"
+assigned_to: "{ASSIGNEE}"  # Username or empty string
+due_date: "{DUE_DATE}"  # Optional deadline
+
+# Task metadata
+labels:
+  - "feature"
+  - "{PRIORITY}"
+  - "{EFFORT}"
+  - "{CUSTOM_LABEL}"
+
+# Progress tracking
+progress: 0  # Percentage 0-100
+time_spent: 0  # Hours
+time_estimated: {HOURS}  # Estimated hours
+
+# Dependencies
+dependencies:
+  - task_id: "{DEPENDENT_TASK_ID}"
+    type: "blocks"  # blocks, blocked_by, related
+
+# Comments and history
+comments:
+  - author: "{AUTHOR}"
+    date: "{DATE}"
+    text: "{COMMENT_TEXT}"
+
+# Integration tracking
+branch_name: "{BRANCH_NAME}"
+pr_url: "{PR_URL}"
+commit_refs: []
+
+# Checklist items (detailed subtasks)
+checklist:
+  - item: "{CHECKLIST_ITEM}"
+    completed: false
+    completed_date: null

@@ -1,0 +1,71 @@
+name: CI Auto-Fix Trigger
+
+on:
+  workflow_run:
+    workflows: ["dev-ci"]
+    types:
+      - completed
+    branches:
+      - '**'
+      - '!main'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  trigger-autofix:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check if PR
+        id: check-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            if (run.event !== 'pull_request') {
+              console.log('Not a PR, skipping auto-fix');
+              return;
+            }
+            
+            // Get PR details
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: run.head_sha
+            });
+            
+            if (prs.data.length > 0) {
+              const pr = prs.data[0];
+              core.setOutput('should_fix', 'true');
+              core.setOutput('pr_number', pr.number);
+              core.setOutput('pr_branch', pr.head.ref);
+              
+              // Post comment on PR
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `🤖 **CI Failure Detected**\n\nThe CI pipeline has failed. An automatic fix attempt will be initiated.\n\n[View failed workflow run](${run.html_url})`
+              });
+            }
+      
+      - name: Trigger Auto-Fix Service
+        if: steps.check-pr.outputs.should_fix == 'true'
+        env:
+          AUTOFIX_WEBHOOK_URL: ${{ secrets.AUTOFIX_WEBHOOK_URL }}
+        run: |
+          if [ -n "$AUTOFIX_WEBHOOK_URL" ]; then
+            curl -X POST "$AUTOFIX_WEBHOOK_URL" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "pr_number": "${{ steps.check-pr.outputs.pr_number }}",
+                "branch": "${{ steps.check-pr.outputs.pr_branch }}",
+                "run_id": "${{ github.event.workflow_run.id }}",
+                "repository": "${{ github.repository }}"
+              }'
+          else
+            echo "Auto-fix webhook not configured"
+          fi
