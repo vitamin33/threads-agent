@@ -1,7 +1,10 @@
 The CI pipeline has failed. Please analyze the errors and fix them.
 
 Error Summary:
+Error: failed post-install: 1 error occurred:
 failed: 0, jobs succeeded: 0
+failed: Get "http://10.42.0.15:8080/health": dial tcp 10.42.0.15:8080: connect: connection refused
+FAILED: Can't locate revision identified by '001'
 
 Full logs are available in ci-failure-logs.txt
 
