@@ -178,7 +178,10 @@ jobs:
 
           # ➋ run the test suite (tests already hit localhost:8080)
           export PYTHONPATH=$PWD:$PYTHONPATH
-          pytest -q
+          # Disable langsmith to avoid pydantic v1 compatibility issues
+          export LANGCHAIN_TRACING_V2=false
+          export LANGSMITH_TRACING=false
+          pytest -q -p no:langsmith
 
           # ➌ tidy up
           kill $PF_ORCH $PF_THREADS $PF_QDRANT $PF_POSTGRES
