@@ -50,6 +50,13 @@ jobs:
       
       - name: Install deps
         run: |
+          # Install all service dependencies
+          pip install -r services/orchestrator/requirements.txt
+          pip install -r services/celery_worker/requirements.txt
+          pip install -r services/persona_runtime/requirements.txt
+          pip install -r services/fake_threads/requirements.txt
+          pip install -r services/viral_engine/requirements.txt
+          pip install -r services/threads_adaptor/requirements.txt
           pip install -r tests/requirements.txt
           
       - name: Run test group
