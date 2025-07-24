@@ -163,10 +163,23 @@ jobs:
           pip install -r tests/requirements.txt
           # Uninstall langsmith to prevent pytest plugin loading issues
           pip uninstall -y langsmith || true
-          # Mock langsmith module to prevent import errors
+          # Create a more complete mock langsmith module
           mkdir -p langsmith
-          echo "def get_tracing_context(): return None" > langsmith/run_helpers.py
-          echo "" > langsmith/__init__.py
+          cat > langsmith/__init__.py << 'EOF'
+          class RunTree:
+              def __init__(self, *args, **kwargs):
+                  pass
+          EOF
+          cat > langsmith/run_helpers.py << 'EOF'
+          def get_tracing_context():
+              return None
+          EOF
+          cat > langsmith/utils.py << 'EOF'
+          # Mock utils module
+          EOF
+          cat > langsmith/schemas.py << 'EOF'
+          # Mock schemas module
+          EOF
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites
