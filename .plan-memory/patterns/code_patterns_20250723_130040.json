@@ -1,0 +1,8 @@
+{
+  "timestamp": "2025-07-23T13:00:41+03:00",
+  "design_patterns": ["factory","observer","strategy"],
+  "architectural_patterns": ["microservices","event_driven","cqrs"],
+  "coding_patterns": ["dependency_injection","repository","mvc"],
+  "anti_patterns": ["god_object","hardcoded_values"],
+  "best_practices": {"type_hints_percentage": 75.75,"documentation_files":       19,"test_files":        7,"config_management": false,"overall_score": 75.00}
+}

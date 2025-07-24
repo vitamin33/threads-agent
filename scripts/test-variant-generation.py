@@ -6,8 +6,8 @@ Run this after deploying to verify the system works
 
 import asyncio
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Add services to path
 sys.path.append(str(Path(__file__).parent.parent))

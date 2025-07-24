@@ -1,0 +1,184 @@
+# Intelligent Epic: threads-viral-laboratory-v1
+name: "threads-viral-laboratory-v1"
+description: "threads-viral-laboratory-v1"
+generated: "2025-07-23T13:39:04+03:00"
+context_aware: true
+
+# Codebase Context
+codebase_context:
+  project_type: "microservices_k8s"
+  architecture_style: "microservices"
+  complexity: "complex"
+  focus_area: "viral_content"
+
+# Context-Aware Feature Breakdown
+features:
+  - name: "Service Architecture Design"
+    description: "Design service boundaries and communication patterns"
+    type: "architecture"
+    priority: "high"
+    effort: "medium"
+    context_considerations:
+      - "Existing service topology"
+      - "Inter-service communication patterns"
+      - "Data consistency requirements"
+    
+  - name: "API Contract Definition"
+    description: "Define service APIs and contracts"
+    type: "api_design"
+    priority: "high"
+    effort: "small"
+    context_considerations:
+      - "Existing API patterns"
+      - "Versioning strategy"
+      - "OpenAPI/Swagger documentation"
+    
+  - name: "Core Service Implementation"
+    description: "Implement main service functionality"
+    type: "development"
+    priority: "high"
+    effort: "large"
+    context_considerations:
+      - "Existing service patterns"
+      - "Shared libraries and utilities"
+      - "Error handling conventions"
+    
+  - name: "Service Integration"
+    description: "Integrate with existing services and infrastructure"
+    type: "integration"
+    priority: "medium"
+    effort: "medium"
+    context_considerations:
+      - "Service mesh configuration"
+      - "Database connections"
+      - "Message queue integration"
+    
+  - name: "Testing and Validation"
+    description: "Comprehensive testing across service boundaries"
+    type: "testing"
+    priority: "medium"
+    effort: "medium"
+    context_considerations:
+      - "Existing test infrastructure"
+      - "Contract testing"
+      - "End-to-end test scenarios"
+    
+  - name: "Deployment and Monitoring"
+    description: "Deploy service and implement monitoring"
+    type: "deployment"
+    priority: "low"
+    effort: "small"
+    context_considerations:
+      - "Kubernetes deployment patterns"
+      - "Helm chart templates"
+      - "Observability stack integration"
+
+# Implementation Strategy (Context-Aware)
+implementation_strategy:
+  approach: "incremental_service_deployment"
+  phases: ["research", "planning", "design", "proof_of_concept", "implementation", "integration", "testing", "deployment"]
+  dependencies: {}
+  risks: ["service_coordination","network_latency","data_consistency"]
+
+# Integration Points
+integration_points:
+  existing_services: [
+  {
+    "name": "celery_worker",
+    "type": "fastapi_service",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  },
+  {
+    "name": "common",
+    "type": "lambda_function",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  },
+  {
+    "name": "dashboard",
+    "type": "lambda_function",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": []
+  },
+  {
+    "name": "fake_threads",
+    "type": "fastapi_service",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  },
+  {
+    "name": "orchestrator",
+    "type": "fastapi_service",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  },
+  {
+    "name": "persona_runtime",
+    "type": "fastapi_service",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  },
+  {
+    "name": "threads_adaptor",
+    "type": "fastapi_service",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  },
+  {
+    "name": "viral_engine",
+    "type": "fastapi_service",
+    "endpoints": [
+      "API"
+    ],
+    "dependencies": [
+      "requirements"
+    ]
+  }
+]
+  apis: []
+  databases: []
+  infrastructure: {
+  "docker_compose": false,
+  "kubernetes": true,
+  "github_actions": true
+}
+
+# Quality Considerations
+quality_gates:
+  testing_strategy: "contract_testing_and_e2e"
+  code_review_requirements: ["peer_review", "architecture_review", "security_review"]
+  deployment_strategy: "rolling_deployment"
+  monitoring_requirements: ["metrics", "logging", "health_checks"]
+
+# Success Metrics
+success_metrics:
+  technical: ["code_coverage", "build_success", "deployment_frequency"]
+  business: ["feature_usage", "time_to_value", "business_impact"]
+  operational: ["uptime", "deployment_frequency", "mean_time_to_recovery"]

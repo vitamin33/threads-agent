@@ -210,7 +210,9 @@ async def _moderate(content: str) -> bool:
         input=content,
         timeout=30,
     )
-    cats: dict[str, bool] = mod.results[0].categories.model_dump()  # pyright: ignore[reportGeneralTypeIssues]
+    cats: dict[str, bool] = mod.results[
+        0
+    ].categories.model_dump()  # pyright: ignore[reportGeneralTypeIssues]
     return not any(cats.values())
 
 

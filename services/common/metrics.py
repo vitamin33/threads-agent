@@ -636,7 +636,9 @@ def record_error_rate_percentage(service: str, error_type: str, rate: float) -> 
     # For now, we will just record it as a gauge using the ERROR_RATE_BY_SERVICE metric
     ERROR_RATE_BY_SERVICE.labels(
         service=service, error_type=error_type, severity="warning"
-    ).inc(int(rate))  # Convert rate to count for counter metric
+    ).inc(
+        int(rate)
+    )  # Convert rate to count for counter metric
 
 
 def update_content_quality(persona_id: str, content_type: str, score: float) -> None:

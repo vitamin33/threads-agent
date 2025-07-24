@@ -1,0 +1,292 @@
+id: "epic_threads_lab_2025"
+name: "threads-viral-laboratory"
+description: "Transform Threads into a high-velocity content testing laboratory that generates and tests 100+ variants weekly, identifies viral patterns with 6%+ engagement, and scales proven winners to LinkedIn, Twitter, and other platforms within 48 hours"
+complexity: "large"
+created: "2025-07-23T13:40:00+03:00"
+status: "ready"
+lifecycle_stage: "development"
+
+# Business Context
+business_goals:
+  primary: "Use Threads as R&D lab for viral content discovery"
+  revenue_target: "$20k MRR through multi-platform scaling"
+  engagement_target: "6%+ on winners, 80% retention when scaled"
+  efficiency_target: "<$0.001 per test, <$0.01 per follower"
+
+# Epic Analysis
+estimated_effort: "4 weeks"
+risk_level: "low"
+expected_roi: "1322% annual"
+payback_period: "0.8 months"
+
+# Dependencies on existing system
+leverages:
+  - service: "viral_engine"
+    components: ["engagement_predictor", "hook_optimizer", "quality_gate"]
+  - service: "threads_adaptor"
+    components: ["publish_api", "metrics_tracking"]
+  - service: "orchestrator"
+    components: ["task_queue", "search_endpoints"]
+  - service: "persona_runtime"
+    components: ["content_generation", "search_enhancement"]
+
+# Feature Breakdown with Tasks
+features:
+  - id: "feat_variant_engine"
+    name: "High-Velocity Variant Generation Engine"
+    description: "Generate 5-10 variants per content idea using different hook patterns, emotions, and formats"
+    effort: "large"
+    priority: "critical"
+    week: 1
+    tasks:
+      - id: "task_hook_patterns"
+        name: "Implement 20+ hook pattern templates"
+        description: "Question hooks, number hooks, story hooks, how-to hooks, controversial hooks"
+        effort_hours: 8
+        files_to_modify:
+          - "services/viral_engine/hook_optimizer.py"
+          - "services/viral_engine/patterns.py" # new file
+      - id: "task_emotion_variants"
+        name: "Create emotion variation system"
+        description: "Generate variants targeting curiosity, fear, inspiration, humor, anger"
+        effort_hours: 6
+        files_to_modify:
+          - "services/viral_engine/emotion_engine.py" # new file
+      - id: "task_batch_generation"
+        name: "Build batch variant generation API"
+        description: "Endpoint to generate all variants for a topic in one call"
+        effort_hours: 4
+        files_to_modify:
+          - "services/orchestrator/main.py"
+          - "services/orchestrator/batch_endpoints.py" # new file
+      - id: "task_variant_storage"
+        name: "Create variant tracking database schema"
+        description: "Store all variants with their performance data"
+        effort_hours: 4
+        files_to_modify:
+          - "services/orchestrator/db/models.py"
+          - "services/orchestrator/db/alembic/versions/add_variants_table.py" # new migration
+
+  - id: "feat_ab_testing"
+    name: "Rapid A/B Testing Infrastructure"
+    description: "Test multiple variants simultaneously with statistical significance tracking"
+    effort: "large"
+    priority: "critical"
+    week: 1
+    tasks:
+      - id: "task_experiment_framework"
+        name: "Build experiment management system"
+        description: "Create, run, and monitor A/B tests"
+        effort_hours: 8
+        files_to_modify:
+          - "services/orchestrator/experiments.py" # new file
+          - "services/orchestrator/db/models.py"
+      - id: "task_posting_scheduler"
+        name: "Implement intelligent posting scheduler"
+        description: "Post variants at optimal times, avoid flooding"
+        effort_hours: 6
+        files_to_modify:
+          - "services/celery_worker/tasks.py"
+          - "services/orchestrator/scheduler.py" # new file
+      - id: "task_significance_calc"
+        name: "Add statistical significance calculator"
+        description: "Determine when we have enough data to declare a winner"
+        effort_hours: 4
+        files_to_modify:
+          - "services/orchestrator/statistics.py" # new file
+          - "services/common/metrics.py"
+      - id: "task_auto_stop"
+        name: "Build auto-stop for poor performers"
+        description: "Stop testing variants that clearly underperform"
+        effort_hours: 3
+        files_to_modify:
+          - "services/orchestrator/experiments.py"
+
+  - id: "feat_analytics"
+    name: "Deep Analytics & Pattern Recognition"
+    description: "Track why content succeeds and extract reusable patterns"
+    effort: "medium"
+    priority: "high"
+    week: 2
+    tasks:
+      - id: "task_metrics_collection"
+        name: "Enhance metrics collection"
+        description: "Track engagement by hook type, emotion, length, time"
+        effort_hours: 6
+        files_to_modify:
+          - "services/threads_adaptor/main.py"
+          - "services/common/metrics.py"
+      - id: "task_pattern_extractor"
+        name: "Build viral pattern extraction system"
+        description: "Identify common elements in top 10% posts"
+        effort_hours: 8
+        files_to_modify:
+          - "services/viral_engine/pattern_extractor.py" # new file
+          - "services/orchestrator/analytics.py" # new file
+      - id: "task_template_builder"
+        name: "Create success template library"
+        description: "Convert winning posts into reusable templates"
+        effort_hours: 6
+        files_to_modify:
+          - "services/viral_engine/template_library.py" # new file
+          - "services/orchestrator/db/models.py"
+      - id: "task_failure_analysis"
+        name: "Implement failure pattern detection"
+        description: "Learn what doesn't work to avoid repeating mistakes"
+        effort_hours: 4
+        files_to_modify:
+          - "services/orchestrator/failure_analysis.py" # new file
+
+  - id: "feat_platform_scaling"
+    name: "Multi-Platform Adaptation Engine"
+    description: "Automatically adapt Threads winners for LinkedIn, Twitter, and other platforms"
+    effort: "large"
+    priority: "high"
+    week: 3
+    tasks:
+      - id: "task_platform_abstraction"
+        name: "Create platform abstraction layer"
+        description: "Common interface for all social platforms"
+        effort_hours: 8
+        files_to_modify:
+          - "services/platform_adapter/" # new service
+          - "services/platform_adapter/base.py"
+      - id: "task_linkedin_adapter"
+        name: "Build LinkedIn adapter"
+        description: "Convert casual Threads content to professional LinkedIn posts"
+        effort_hours: 6
+        files_to_modify:
+          - "services/platform_adapter/linkedin.py"
+          - "services/platform_adapter/tone_converter.py"
+      - id: "task_twitter_adapter"
+        name: "Create Twitter thread converter"
+        description: "Break long posts into engaging Twitter threads"
+        effort_hours: 6
+        files_to_modify:
+          - "services/platform_adapter/twitter.py"
+          - "services/platform_adapter/thread_builder.py"
+      - id: "task_scaling_pipeline"
+        name: "Implement automated scaling pipeline"
+        description: "Auto-post winners to other platforms after 48 hours"
+        effort_hours: 8
+        files_to_modify:
+          - "services/orchestrator/scaling_pipeline.py" # new file
+          - "services/celery_worker/tasks.py"
+
+  - id: "feat_automation"
+    name: "Full Automation & Optimization"
+    description: "Make the system fully autonomous and self-improving"
+    effort: "medium"
+    priority: "medium"
+    week: 4
+    tasks:
+      - id: "task_learning_loop"
+        name: "Build continuous learning system"
+        description: "Automatically improve patterns based on results"
+        effort_hours: 8
+        files_to_modify:
+          - "services/viral_engine/learning_system.py" # new file
+      - id: "task_budget_optimizer"
+        name: "Create budget optimization engine"
+        description: "Allocate more resources to winning patterns"
+        effort_hours: 6
+        files_to_modify:
+          - "services/orchestrator/budget_optimizer.py" # new file
+      - id: "task_performance_predictor"
+        name: "Build cross-platform performance predictor"
+        description: "Estimate how Threads winners will perform on other platforms"
+        effort_hours: 6
+        files_to_modify:
+          - "services/viral_engine/performance_predictor.py" # new file
+      - id: "task_unified_dashboard"
+        name: "Create unified analytics dashboard"
+        description: "Single view of performance across all platforms"
+        effort_hours: 8
+        files_to_modify:
+          - "monitoring/grafana/dashboards/viral-lab-dashboard.json" # new
+
+# Milestones
+milestones:
+  - name: "Variant Testing Live"
+    target_date: "2025-07-30"
+    success_criteria:
+      - "Generating 100+ variants/week"
+      - "A/B testing infrastructure operational"
+      - "Real-time metrics collection working"
+    
+  - name: "Pattern Recognition Active"
+    target_date: "2025-08-06"
+    success_criteria:
+      - "Identifying viral patterns with 80% accuracy"
+      - "Template library has 20+ proven templates"
+      - "Failure patterns documented"
+    
+  - name: "Multi-Platform Scaling"
+    target_date: "2025-08-13"
+    success_criteria:
+      - "LinkedIn adapter converting successfully"
+      - "Twitter threads maintaining engagement"
+      - "48-hour scaling pipeline automated"
+    
+  - name: "Full Automation"
+    target_date: "2025-08-20"
+    success_criteria:
+      - "System running autonomously 24/7"
+      - "6%+ engagement rate achieved"
+      - "Scaling to 3+ platforms successfully"
+
+# Technical Architecture
+architecture:
+  new_services:
+    - name: "platform_adapter"
+      type: "FastAPI"
+      purpose: "Handle platform-specific content adaptation"
+      
+  database_changes:
+    - table: "content_variants"
+      fields: ["variant_id", "original_id", "variant_type", "hook_pattern", "emotion", "performance_score"]
+    - table: "experiments"
+      fields: ["experiment_id", "variant_a", "variant_b", "winner", "significance_level"]
+    - table: "viral_patterns"
+      fields: ["pattern_id", "pattern_template", "success_rate", "platform", "last_used"]
+    - table: "platform_posts"
+      fields: ["threads_id", "platform", "platform_id", "adapted_content", "performance"]
+      
+  api_endpoints:
+    - "POST /variants/generate-batch"
+    - "POST /experiments/create"
+    - "GET /experiments/{id}/results"
+    - "POST /patterns/extract"
+    - "POST /scale/to-platform"
+    - "GET /analytics/viral-report"
+
+# Success Metrics
+success_metrics:
+  technical:
+    - metric: "variant_generation_rate"
+      target: "100+ per week"
+    - metric: "test_velocity"
+      target: "20+ A/B tests concurrent"
+    - metric: "pattern_accuracy"
+      target: "80%+ viral prediction"
+      
+  business:
+    - metric: "viral_hit_rate"
+      target: "10%+ posts achieve 6%+ engagement"
+    - metric: "scaling_success_rate"
+      target: "80%+ maintain engagement cross-platform"
+    - metric: "cost_per_test"
+      target: "<$0.001"
+    - metric: "time_to_scale"
+      target: "<48 hours"
+    - metric: "platform_coverage"
+      target: "3+ platforms automated"
+
+# Risk Mitigation
+risks:
+  - risk: "Platform API changes"
+    mitigation: "Abstract all platform APIs behind adapters"
+  - risk: "Content fatigue"
+    mitigation: "Rotate patterns and topics, track exhaustion"
+  - risk: "Scaling quality loss"
+    mitigation: "Test adaptation quality before full rollout"

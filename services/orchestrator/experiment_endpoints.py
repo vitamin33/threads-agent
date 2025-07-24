@@ -373,9 +373,9 @@ async def get_next_scheduled_posts(hours: int = 1):
                 "persona_id": s.persona_id,
                 "scheduled_time": s.scheduled_time,
                 "priority": s.priority,
-                "content_preview": s.content[:100] + "..."
-                if len(s.content) > 100
-                else s.content,
+                "content_preview": (
+                    s.content[:100] + "..." if len(s.content) > 100 else s.content
+                ),
             }
             for s in scheduled
         ]
@@ -405,6 +405,7 @@ async def get_active_experiments():
 
     try:
         from sqlalchemy.orm import Session
+
         from services.orchestrator.db.models import Experiment
         from services.orchestrator.experiments import engine
 

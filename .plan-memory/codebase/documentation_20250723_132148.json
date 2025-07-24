@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-07-23T13:21:49+03:00",
+  "readme_analysis": {"exists": true,"word_count":      814,"line_count":      167,"has_installation": true,"has_usage": false,"has_api_docs": true},
+  "api_docs": services/fake_threads/main.py
+services/dashboard/realtime_dashboard.py
+services/persona_runtime/persona_hot_reload.py
+services/threads_adaptor/main.py
+services/orchestrator/main.py
+18
+0
+{"openapi": false,"documented_endpoints": 0,"total_endpoints": 0},
+  "code_comments": {"comment_lines": 0,"total_lines": 9091,"comment_ratio": 0},
+  "inline_docs": {"docstring_count": 0,"function_count": 0,"docstring_ratio": 0}
+}

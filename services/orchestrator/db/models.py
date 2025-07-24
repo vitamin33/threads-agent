@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Text, func, JSON
+from sqlalchemy import JSON, BigInteger, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from . import Base

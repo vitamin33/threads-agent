@@ -179,9 +179,9 @@ class TestHighVolumeRateLimiting:
         assert pause_count >= 5, f"Expected ≥5 pauses, got {pause_count}"
 
         # Verify test ran reasonably fast (with mocked sleep)
-        assert end_time - start_time < 1.0, (
-            "Test took too long, sleep mocking may have failed"
-        )
+        assert (
+            end_time - start_time < 1.0
+        ), "Test took too long, sleep mocking may have failed"
 
     @pytest.mark.asyncio
     async def test_burst_then_steady_rate(self) -> None:

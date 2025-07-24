@@ -1,0 +1,24 @@
+{
+  "date": "2025-07-23",
+  "timestamp": "2025-07-23T08:32:13Z",
+  "metrics_summary": {
+    "sessions_24h": 0,
+    "latest_pmf_score": 50.00,
+    "competitor_updates_24h": 0
+  },
+  "insights": [
+  {
+    "category": "warning",
+    "insight": "No user activity detected today",
+    "priority": "high",
+    "auto_generated": true
+  },
+  {
+    "category": "pmf",
+    "insight": "Strong PMF maintained (50.00%)",
+    "priority": "positive",
+    "auto_generated": true
+  }
+],
+  "auto_generated": true
+}

@@ -1,0 +1,42 @@
+id: "epic_1753266110"
+name: "viral-content-retention-v2"
+description: "Context-aware epic generated from codebase analysis"
+complexity: "complex"
+created: "2025-07-23T13:21:50+03:00"
+status: "planning"
+lifecycle_stage: "inception"
+
+# Epic Analysis
+estimated_effort: unknown
+risk_level: low
+dependencies: []
+
+# Feature Breakdown
+features:
+
+# Milestones
+milestones:
+  - name: "Planning Complete"
+    target_date: "2025-07-23"
+    criteria: ["Requirements finalized", "Architecture approved"]
+    
+  - name: "Core Development"
+    target_date: "2025-07-23"
+    criteria: ["Core features implemented", "Unit tests passing"]
+    
+  - name: "Integration Complete"
+    target_date: "2025-07-23"
+    criteria: ["All features integrated", "E2E tests passing"]
+    
+  - name: "Production Ready"
+    target_date: "2025-07-23"
+    criteria: ["Documentation complete", "Performance validated", "Security approved"]
+
+# Automation Configuration
+automation:
+  project_board: "linear"
+  branch_prefix: "viral-content-retent"
+  ci_pipeline: "full"
+  notifications:
+    - channel: "development"
+      events: ["milestone_reached", "blocker_detected"]

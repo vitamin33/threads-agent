@@ -194,9 +194,7 @@ class ExperimentScheduler:
             variants = (
                 session.query(ExperimentVariant)
                 .filter_by(experiment_id=experiment.experiment_id)
-                .filter(
-                    ExperimentVariant.traffic_allocation > 0  # Not disabled
-                )
+                .filter(ExperimentVariant.traffic_allocation > 0)  # Not disabled
                 .all()
             )
             session.expunge_all()

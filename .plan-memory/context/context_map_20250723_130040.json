@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-07-23T13:00:41+03:00",
+  "focus_area": "",
+  "codebase_summary": {"project_type": "microservices_k8s","architecture_style": "microservices","service_count": 8,"total_files":       66,"avg_file_size": 271,"complexity": "complex"},
+  "key_patterns": [],
+  "development_context": {"recent_activity":        0,"recent_issues":        0,"primary_workflow": "","current_branch": "main","uncommitted_changes":       29},
+  "technical_debt": {"large_files": 11,"todo_comments": 0,"potential_duplicates":        4,"debt_score": 15,"debt_level": "medium"},
+  "opportunities": [{"type":"testing","description":"Improve test coverage","priority":"medium"},{"type":"performance","description":"Async optimization potential","priority":"medium"},{"type":"security","description":"Review secret management","priority":"high"}]
+}

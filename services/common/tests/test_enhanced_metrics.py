@@ -94,9 +94,9 @@ def test_metrics_registration() -> None:
 
     for metric_name in expected_metrics:
         # The metric should be registered after being used
-        assert any(metric_name in name for name in metric_names), (
-            f"Missing metric: {metric_name} in {metric_names}"
-        )
+        assert any(
+            metric_name in name for name in metric_names
+        ), f"Missing metric: {metric_name} in {metric_names}"
 
 
 def test_business_metrics() -> None:

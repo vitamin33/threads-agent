@@ -37,7 +37,6 @@ batch_router = APIRouter(prefix="/variants", tags=["variants"])
 
 # Database setup
 engine = create_engine(DATABASE_URL)
-Base.metadata.create_all(bind=engine)
 
 
 # Request/Response Models

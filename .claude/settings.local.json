@@ -209,7 +209,12 @@
       "Bash(PYTHONPATH=$PWD python3 scripts/test-ab-testing.py)",
       "Bash(kubectl set env:*)",
       "Bash(kubectl cp:*)",
-      "Bash(PYTHONPATH=$PWD python3 test_thompson_sampling.py)"
+      "Bash(PYTHONPATH=$PWD python3 test_thompson_sampling.py)",
+      "Bash(gh workflow run:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ],
     "deny": []
   }

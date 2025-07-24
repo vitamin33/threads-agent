@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-07-23T13:21:48+03:00",
+  "project_type": "microservices_k8s",
+  "architecture_style": "microservices",
+  "services": [{"name":"celery_worker","type":"fastapi_service","endpoints":["API"],"dependencies":["requirements"]},{"name":"common","type":"lambda_function","endpoints":["API"],"dependencies":["requirements"]},{"name":"dashboard","type":"lambda_function","endpoints":["API"],"dependencies":[]},{"name":"fake_threads","type":"fastapi_service","endpoints":["API"],"dependencies":["requirements"]},{"name":"orchestrator","type":"fastapi_service","endpoints":["API"],"dependencies":["requirements"]},{"name":"persona_runtime","type":"fastapi_service","endpoints":["API"],"dependencies":["requirements"]},{"name":"threads_adaptor","type":"fastapi_service","endpoints":["API"],"dependencies":["requirements"]},{"name":"viral_engine","type":"fastapi_service","endpoints":["API"],"dependencies":["requirements"]}],
+  "layers": {"services":       66,"tests":        7,"scripts":       34,"documentation":        8,"infrastructure":       24},
+  "modules": [],
+  "entry_points": [],
+  "configuration": {"env_files":        0,"yaml_configs":       47,"json_configs":        3,"ini_configs":        3},
+  "infrastructure": {"docker_compose": false,"kubernetes": true,"github_actions": true}
+}

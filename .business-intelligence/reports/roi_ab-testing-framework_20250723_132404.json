@@ -1,0 +1,24 @@
+{
+  "feature": "ab-testing-framework",
+  "timestamp": "2025-07-23T10:24:04Z",
+  "investment": {
+    "dev_hours": 40,
+    "hourly_rate": 150,
+    "dev_cost": 6000,
+    "opportunity_cost": 3000,
+    "total_cost": 9000
+  },
+  "returns": {
+    "expected_monthly": 3000,
+    "adjusted_monthly": 4500.0,
+    "customer_impact": "medium",
+    "revenue_multiplier": 1.5
+  },
+  "roi": {
+    "monthly_percentage": 16.00,
+    "annual_percentage": 500.00,
+    "payback_months": 2.0,
+    "risk_level": "medium"
+  },
+  "recommendation": "MARGINAL - Consider alternatives or scope reduction"
+}

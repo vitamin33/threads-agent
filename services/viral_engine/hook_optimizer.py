@@ -400,9 +400,11 @@ class ViralHookEngine:
         selected_patterns = self._select_optimal_patterns(
             persona_id=persona_id,
             topic_category=topic_category,
-            variant_count=max(3, variant_count // 2)
-            if include_emotion_variants
-            else variant_count,
+            variant_count=(
+                max(3, variant_count // 2)
+                if include_emotion_variants
+                else variant_count
+            ),
         )
 
         variants = []
