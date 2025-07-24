@@ -238,7 +238,11 @@ jobs:
           kubectl rollout status deploy/persona-runtime  --timeout=120s &
           kubectl rollout status deploy/viral-engine     --timeout=120s &
           # Check revenue deployment if it exists (with release prefix)
-          kubectl get deploy/threads-revenue >/dev/null 2>&1 && kubectl rollout status deploy/threads-revenue --timeout=120s & || echo "Revenue deployment not found (may be disabled)"
+          if kubectl get deploy/threads-revenue >/dev/null 2>&1; then
+            kubectl rollout status deploy/threads-revenue --timeout=120s &
+          else
+            echo "Revenue deployment not found (may be disabled)"
+          fi
           kubectl rollout status sts/qdrant              --timeout=120s &
 
           # Wait for all background jobs to complete
