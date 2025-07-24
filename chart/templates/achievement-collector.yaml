@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-achievement-collector
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: achievement-collector
+spec:
+  replicas: {{ .Values.achievementCollector.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "threads-agent.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: achievement-collector
+  template:
+    metadata:
+      labels:
+        {{- include "threads-agent.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: achievement-collector
+    spec:
+      containers:
+      - name: achievement-collector
+        image: "{{ .Values.achievementCollector.image.repository }}:{{ .Values.achievementCollector.image.tag | default .Values.global.imageTag }}"
+        imagePullPolicy: {{ .Values.achievementCollector.image.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ include "threads-agent.fullname" . }}-postgresql:5432/{{ .Values.postgresql.auth.database }}"
+        - name: REDIS_URL
+          value: "redis://{{ include "threads-agent.fullname" . }}-redis:6379/0"
+        - name: OPENAI_API_KEY
+          value: "{{ .Values.openai.apiKey }}"
+        - name: GITHUB_WEBHOOK_SECRET
+          value: "{{ .Values.achievementCollector.github.webhookSecret }}"
+        - name: GITHUB_TOKEN
+          value: "{{ .Values.achievementCollector.github.token }}"
+        - name: PORTFOLIO_OUTPUT_DIR
+          value: "/data/portfolios"
+        {{- if .Values.achievementCollector.env }}
+        {{- toYaml .Values.achievementCollector.env | nindent 8 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.achievementCollector.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: portfolio-data
+          mountPath: /data/portfolios
+      volumes:
+      - name: portfolio-data
+        persistentVolumeClaim:
+          claimName: {{ include "threads-agent.fullname" . }}-achievement-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-achievement-collector
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: achievement-collector
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "threads-agent.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: achievement-collector
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-achievement-data
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: achievement-collector
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.achievementCollector.storage.size | default "10Gi" }}
+  {{- if .Values.achievementCollector.storage.className }}
+  storageClassName: {{ .Values.achievementCollector.storage.className }}
+  {{- end }}
+---
+{{- if .Values.achievementCollector.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-achievement-collector
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: achievement-collector
+  {{- with .Values.achievementCollector.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.achievementCollector.ingress.tls }}
+  tls:
+  {{- range .Values.achievementCollector.ingress.tls }}
+  - hosts:
+    {{- range .hosts }}
+    - {{ . | quote }}
+    {{- end }}
+    secretName: {{ .secretName }}
+  {{- end }}
+  {{- end }}
+  rules:
+  - host: {{ .Values.achievementCollector.ingress.host }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "threads-agent.fullname" . }}-achievement-collector
+            port:
+              number: 8000
+{{- end }}
