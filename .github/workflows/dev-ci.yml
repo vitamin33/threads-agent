@@ -161,14 +161,18 @@ jobs:
           pip install -r services/viral_engine/requirements.txt
           pip install -r services/revenue/requirements.txt
           pip install -r tests/requirements.txt
-          # Downgrade pydantic to avoid langsmith compatibility issues
-          pip install "pydantic<2.0"
 
       # ————————————————————————————————
       # 5.  Run unit + e2e suites
       # ————————————————————————————————
       - name: pytest (unit + e2e)
         id: tests
+        env:
+          # Disable all langchain tracing to avoid langsmith issues
+          LANGCHAIN_TRACING_V2: "false"
+          LANGSMITH_TRACING: "false"
+          LANGCHAIN_TRACING: "false"
+          LANGCHAIN_CALLBACKS_MANAGER: "false"
         run: |
           # ➊ start port-forwards in the background
           kubectl port-forward svc/orchestrator 8080:8080   & PF_ORCH=$!
@@ -180,10 +184,7 @@ jobs:
 
           # ➋ run the test suite (tests already hit localhost:8080)
           export PYTHONPATH=$PWD:$PYTHONPATH
-          # Disable langsmith to avoid pydantic v1 compatibility issues
-          export LANGCHAIN_TRACING_V2=false
-          export LANGSMITH_TRACING=false
-          pytest -q -p no:langsmith
+          pytest -q
 
           # ➌ tidy up
           kill $PF_ORCH $PF_THREADS $PF_QDRANT $PF_POSTGRES
