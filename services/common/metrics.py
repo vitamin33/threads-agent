@@ -433,9 +433,9 @@ def record_infrastructure_metric(
     elif metric_type == "vector_operations":
         # Map to cache operations for now
         CACHE_OPERATIONS_TOTAL.labels(
+            cache_type="qdrant",
             operation=kwargs.get("operation", "unknown"),
-            cache_name="qdrant",
-            status="success",
+            result="success",
         ).inc()
 
 
