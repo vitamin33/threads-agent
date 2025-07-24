@@ -94,19 +94,19 @@ async def get():
     <body>
         <h1>🔥 Persona Hot Reload</h1>
         <div class="status">Connected</div>
-        
+
         <div>
             <label>Test Input:</label>
             <input id="test-input" type="text" placeholder="Enter topic to test personas..." />
             <button onclick="testPersonas()">Test All Personas</button>
         </div>
-        
+
         <div id="personas"></div>
         <div id="output"></div>
-        
+
         <script>
             const ws = new WebSocket(`ws://localhost:8001/ws`);
-            
+
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'persona_reload') {
@@ -116,7 +116,7 @@ async def get():
                     showTestResult(data);
                 }
             };
-            
+
             function updatePersonas(personas) {
                 const container = document.getElementById('personas');
                 container.innerHTML = Object.entries(personas).map(([id, config]) => `
@@ -131,7 +131,7 @@ async def get():
                     </div>
                 `).join('');
             }
-            
+
             function testPersona(personaId) {
                 const input = document.getElementById('test-input').value;
                 ws.send(JSON.stringify({
@@ -140,7 +140,7 @@ async def get():
                     input: input
                 }));
             }
-            
+
             function testPersonas() {
                 const input = document.getElementById('test-input').value;
                 ws.send(JSON.stringify({
@@ -148,14 +148,14 @@ async def get():
                     input: input
                 }));
             }
-            
+
             function showTestResult(data) {
                 document.getElementById('output').innerHTML = `
                     <h3>Test Results</h3>
                     <pre>${JSON.stringify(data.results, null, 2)}</pre>
                 `;
             }
-            
+
             function showNotification(message) {
                 const status = document.querySelector('.status');
                 status.textContent = message;

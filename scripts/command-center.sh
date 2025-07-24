@@ -44,23 +44,23 @@ mkdir -p "$ACTIONS_DIR" "$FEEDBACK_DIR" "$DECISIONS_DIR" "$REPORTS_DIR" "$CACHE_
 
 gather_quality_gates_data() {
     local cache_file="$CACHE_DIR/quality_gates_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Gather latest quality metrics
     local coverage_score=85
     local lint_score=92
     local security_score=88
-    
+
     if [[ -f ".quality-gates/metrics/latest.json" ]]; then
         coverage_score=$(jq -r '.test_coverage // 85' ".quality-gates/metrics/latest.json" 2>/dev/null || echo "85")
         lint_score=$(jq -r '.lint_score // 92' ".quality-gates/metrics/latest.json" 2>/dev/null || echo "92")
         security_score=$(jq -r '.security_score // 88' ".quality-gates/metrics/latest.json" 2>/dev/null || echo "88")
     fi
-    
+
     cat > "$cache_file" <<EOF
 {
   "quality_score": $(( (coverage_score + lint_score + security_score) / 3 )),
@@ -70,26 +70,26 @@ gather_quality_gates_data() {
   "blockers": []
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
 gather_learning_system_data() {
     local cache_file="$CACHE_DIR/learning_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Gather learning insights
     local efficiency_score=75
     local pattern_count=12
-    
+
     if [[ -f ".learning-system/analysis/patterns.json" ]]; then
         pattern_count=$(jq -r '.patterns | length' ".learning-system/analysis/patterns.json" 2>/dev/null || echo "12")
     fi
-    
+
     cat > "$cache_file" <<EOF
 {
   "efficiency_score": $efficiency_score,
@@ -98,26 +98,26 @@ gather_learning_system_data() {
   "time_saved_weekly": 8.5
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
 gather_workflow_data() {
     local cache_file="$CACHE_DIR/workflow_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Gather workflow metrics
     local active_epics=2
     local features_in_progress=3
-    
+
     if [[ -f ".workflow-automation/epics/active.json" ]]; then
         active_epics=$(jq -r '.epics | length' ".workflow-automation/epics/active.json" 2>/dev/null || echo "2")
     fi
-    
+
     cat > "$cache_file" <<EOF
 {
   "active_epics": $active_epics,
@@ -126,18 +126,18 @@ gather_workflow_data() {
   "velocity_trend": "increasing"
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
 gather_memory_data() {
     local cache_file="$CACHE_DIR/memory_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Gather memory insights
     cat > "$cache_file" <<EOF
 {
@@ -147,27 +147,27 @@ gather_memory_data() {
   "suggested_improvements": 6
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
 gather_business_intelligence_data() {
     local cache_file="$CACHE_DIR/business_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Gather business metrics
     local mrr=0
     local runway_months=6
-    
+
     if [[ -f ".business-intelligence/metrics/latest.json" ]]; then
         mrr=$(jq -r '.mrr // 0' ".business-intelligence/metrics/latest.json" 2>/dev/null || echo "0")
         runway_months=$(jq -r '.runway_months // 6' ".business-intelligence/metrics/latest.json" 2>/dev/null || echo "6")
     fi
-    
+
     cat > "$cache_file" <<EOF
 {
   "mrr": $mrr,
@@ -177,26 +177,26 @@ gather_business_intelligence_data() {
   "top_roi_feature": "User Retention System"
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
 gather_customer_intelligence_data() {
     local cache_file="$CACHE_DIR/customer_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Gather customer metrics
     local pmf_score=50.0
     local churn_risk=0.667
-    
+
     if [[ -f ".customer-intelligence/metrics/pmf_scores.json" ]]; then
         pmf_score=$(jq -r '.current_score // 50.0' ".customer-intelligence/metrics/pmf_scores.json" 2>/dev/null || echo "50.0")
     fi
-    
+
     cat > "$cache_file" <<EOF
 {
   "pmf_score": $pmf_score,
@@ -206,27 +206,27 @@ gather_customer_intelligence_data() {
   "feature_requests": 23
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
 gather_customer_priority_data() {
     local cache_file="$CACHE_DIR/priority_$(date +%Y%m%d).json"
-    
+
     if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
         cat "$cache_file"
         return
     fi
-    
+
     # Get latest priority recommendation
     local priority_action="enhance_retention"
     local priority_score=90
-    
+
     if [[ -f ".customer-priority/priorities/latest.json" ]]; then
         priority_action=$(jq -r '.top_priority.action // "enhance_retention"' ".customer-priority/priorities/latest.json" 2>/dev/null || echo "enhance_retention")
         priority_score=$(jq -r '.top_priority.priority_score // 90' ".customer-priority/priorities/latest.json" 2>/dev/null || echo "90")
     fi
-    
+
     cat > "$cache_file" <<EOF
 {
   "top_priority": "$priority_action",
@@ -236,7 +236,7 @@ gather_customer_priority_data() {
   "timeline": "1-3 weeks"
 }
 EOF
-    
+
     cat "$cache_file"
 }
 
@@ -248,14 +248,14 @@ calculate_kpi_impact() {
     local action_type="$1"
     local estimated_effort="${2:-medium}"
     local current_metrics="$3"
-    
+
     # Base impact scores by action type
     local revenue_impact=0
     local retention_impact=0
     local acquisition_impact=0
     local efficiency_impact=0
     local quality_impact=0
-    
+
     case "$action_type" in
         "retention")
             retention_impact=85
@@ -291,7 +291,7 @@ calculate_kpi_impact() {
             quality_impact=50
             ;;
     esac
-    
+
     # Adjust for effort
     local effort_multiplier=1.0
     case "$estimated_effort" in
@@ -299,7 +299,7 @@ calculate_kpi_impact() {
         "medium") effort_multiplier=1.0 ;;
         "high") effort_multiplier=0.7 ;;
     esac
-    
+
     # Calculate composite KPI score
     local kpi_score=$(python3 -c "
 import json
@@ -331,7 +331,7 @@ score = (
 
 print(f'{score:.1f}')
 ")
-    
+
     echo "$kpi_score"
 }
 
@@ -342,9 +342,9 @@ print(f'{score:.1f}')
 generate_prioritized_actions() {
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local date_str=$(date +%Y%m%d_%H%M%S)
-    
+
     log_info "Generating unified action plan..."
-    
+
     # Gather data from all systems
     log_info "Gathering data from all systems..."
     local quality_data=$(gather_quality_gates_data)
@@ -361,7 +361,7 @@ generate_prioritized_actions() {
     log_info "Customer data gathered"
     local priority_data=$(gather_customer_priority_data)
     log_info "Priority data gathered"
-    
+
     # Combine all metrics
     local all_metrics=$(jq -n \
         --argjson quality "$quality_data" \
@@ -383,14 +383,14 @@ generate_prioritized_actions() {
             churn_risk: $customer.churn_risk,
             mrr: $business.mrr
         }')
-    
+
     # Generate actions based on system data
     local actions='[]'
-    
+
     # Priority 1: Customer Priority System recommendation
     local top_priority=$(echo "$priority_data" | jq -r '.top_priority')
     local priority_score=$(echo "$priority_data" | jq -r '.priority_score')
-    
+
     actions=$(echo "$actions" | jq --arg action "$top_priority" --arg score "$priority_score" \
         '. + [{
             id: "action_001",
@@ -408,7 +408,7 @@ generate_prioritized_actions() {
                 "Create re-activation emails"
             ]
         }]')
-    
+
     # Priority 2: Quality issues
     local quality_score=$(echo "$quality_data" | jq -r '.quality_score')
     if (( $(echo "$quality_score < 80" | bc -l 2>/dev/null || echo "0") )); then
@@ -430,7 +430,7 @@ generate_prioritized_actions() {
                 ]
             }]')
     fi
-    
+
     # Priority 3: High ROI features
     local top_roi_feature=$(echo "$business_data" | jq -r '.top_roi_feature')
     if [[ -n "$top_roi_feature" ]]; then
@@ -452,7 +452,7 @@ generate_prioritized_actions() {
                 ]
             }]')
     fi
-    
+
     # Priority 4: Performance optimizations
     local efficiency_score=$(echo "$learning_data" | jq -r '.efficiency_score')
     if (( $(echo "$efficiency_score < 70" | bc -l 2>/dev/null || echo "0") )); then
@@ -474,13 +474,13 @@ generate_prioritized_actions() {
                 ]
             }]')
     fi
-    
+
     # Calculate KPI impacts for each action
     actions=$(echo "$actions" | jq '
         map(. + {
             kpi_impact: (.kpi_impact // 50),
             projected_metrics: {
-                revenue_impact: (if .category == "retention" then "+15%" 
+                revenue_impact: (if .category == "retention" then "+15%"
                                elif .category == "feature" then "+10%"
                                elif .category == "growth" then "+20%"
                                else "+5%" end),
@@ -492,7 +492,7 @@ generate_prioritized_actions() {
                                   else "+5%" end)
             }
         })')
-    
+
     # Generate action plan
     local action_plan=$(jq -n \
         --arg timestamp "$timestamp" \
@@ -522,13 +522,13 @@ generate_prioritized_actions() {
                 {area: "Business Growth", score: 65, trend: "stable"}
             ]
         }')
-    
+
     # Save action plan
     echo "$action_plan" > "$ACTIONS_DIR/plan_$date_str.json"
-    
+
     # Also save as latest
     echo "$action_plan" > "$ACTIONS_DIR/latest.json"
-    
+
     echo "$action_plan"
 }
 
@@ -542,18 +542,18 @@ track_decision_feedback() {
     local impact_score="${3:-0}"   # 0-100
     local notes="${4:-}"
     local actual_effort="${5:-medium}"  # low, medium, high
-    
+
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local date_str=$(date +%Y%m%d_%H%M%S)
-    
+
     log_info "Tracking feedback for action: $action_id"
-    
+
     # Load action details
     local action_details="{}"
     if [[ -f "$ACTIONS_DIR/latest.json" ]]; then
         action_details=$(jq --arg id "$action_id" '.priorities[] | select(.id == $id)' "$ACTIONS_DIR/latest.json" 2>/dev/null || echo "{}")
     fi
-    
+
     # Create feedback entry
     local feedback=$(jq -n \
         --arg timestamp "$timestamp" \
@@ -575,7 +575,7 @@ track_decision_feedback() {
             notes: $notes,
             learnings: []
         }')
-    
+
     # Add learnings based on variance
     local variance=$(echo "$feedback" | jq -r '.impact_variance')
     if (( $(echo "$variance > 20" | bc -l) )); then
@@ -583,38 +583,38 @@ track_decision_feedback() {
     elif (( $(echo "$variance < -20" | bc -l) )); then
         feedback=$(echo "$feedback" | jq '.learnings += ["Impact below expectations - review assumptions"]')
     fi
-    
+
     # Save feedback
     echo "$feedback" > "$FEEDBACK_DIR/feedback_${action_id}_$date_str.json"
-    
+
     # Update decision history
     update_decision_history "$action_id" "$feedback"
-    
+
     log_success "Feedback tracked for action: $action_id"
 }
 
 update_decision_history() {
     local action_id="$1"
     local feedback="$2"
-    
+
     local history_file="$DECISIONS_DIR/history.json"
-    
+
     # Initialize history if needed
     if [[ ! -f "$history_file" ]]; then
         echo '{"decisions": [], "total_actions": 0, "success_rate": 0}' > "$history_file"
     fi
-    
+
     # Update history
     local updated_history=$(jq --argjson feedback "$feedback" '
         .decisions += [$feedback] |
         .total_actions = (.decisions | length) |
         .success_rate = (
-            (.decisions | map(select(.outcome == "completed")) | length) / 
+            (.decisions | map(select(.outcome == "completed")) | length) /
             (.decisions | length) * 100
         ) |
         .average_impact = (.decisions | map(.impact_score) | add / length)
     ' "$history_file")
-    
+
     echo "$updated_history" > "$history_file"
 }
 
@@ -625,7 +625,7 @@ update_decision_history() {
 generate_command_center_dashboard() {
     local action_plan="${1:-}"
     local output_format="${2:-terminal}"  # terminal or html
-    
+
     if [[ -z "$action_plan" ]]; then
         if [[ -f "$ACTIONS_DIR/latest.json" ]]; then
             action_plan=$(cat "$ACTIONS_DIR/latest.json")
@@ -633,7 +633,7 @@ generate_command_center_dashboard() {
             action_plan=$(generate_prioritized_actions)
         fi
     fi
-    
+
     if [[ "$output_format" == "html" ]]; then
         generate_html_dashboard "$action_plan"
     else
@@ -643,18 +643,18 @@ generate_command_center_dashboard() {
 
 generate_terminal_dashboard() {
     local action_plan="$1"
-    
+
     clear
     echo -e "${COLOR_BOLD}${COLOR_CYAN}"
     echo "╔══════════════════════════════════════════════════════════════════╗"
     echo "║             UNIFIED COMMAND CENTER - DAILY ACTION PLAN          ║"
     echo "╚══════════════════════════════════════════════════════════════════╝"
     echo -e "${COLOR_RESET}"
-    
+
     # Business Health Score
     local health_score=$(echo "$action_plan" | jq -r '.business_health_score | floor')
     echo -e "\n${COLOR_BOLD}Business Health Score: ${COLOR_GREEN}$health_score/100${COLOR_RESET}"
-    
+
     # Progress bar
     local filled=$((health_score / 5))
     local empty=$((20 - filled))
@@ -662,14 +662,14 @@ generate_terminal_dashboard() {
     printf "${COLOR_GREEN}%${filled}s${COLOR_RESET}" | tr ' ' '█'
     printf "%${empty}s" | tr ' ' '░'
     echo "]"
-    
+
     # Key Metrics
     echo -e "\n${COLOR_BOLD}📊 KEY METRICS${COLOR_RESET}"
     echo "$action_plan" | jq -r '.metrics_summary | to_entries[] | "   • \(.key): \(.value)"'
-    
+
     # Focus Areas
     echo -e "\n${COLOR_BOLD}🎯 FOCUS AREAS${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.focus_areas[] | 
+    echo "$action_plan" | jq -r '.focus_areas[] |
         "   • \(.area): \(.score)/100 [\(.trend)]"' | while read -r line; do
         if [[ "$line" == *"critical"* ]]; then
             echo -e "${COLOR_RED}$line${COLOR_RESET}"
@@ -679,24 +679,24 @@ generate_terminal_dashboard() {
             echo "$line"
         fi
     done
-    
+
     # Prioritized Actions
     echo -e "\n${COLOR_BOLD}📋 TODAY'S PRIORITIZED ACTIONS${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.priorities[] | 
+    echo "$action_plan" | jq -r '.priorities[] |
         "\n🔹 Priority \(.priority): \(.title)\n   Category: \(.category) | Impact: \(.kpi_impact)/100 | Timeline: \(.timeline)\n   📝 \(.description)\n   Tasks:\(.specific_tasks | map("     - " + .) | join("\n"))"'
-    
+
     # Projected Impact
     echo -e "\n${COLOR_BOLD}📈 PROJECTED IMPACT${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.priorities[0].projected_metrics | to_entries[] | 
+    echo "$action_plan" | jq -r '.priorities[0].projected_metrics | to_entries[] |
         "   • \(.key): \(.value)"'
-    
+
     # Quick Actions
     echo -e "\n${COLOR_BOLD}⚡ QUICK ACTIONS${COLOR_RESET}"
     echo "   • Review: just cc-review"
     echo "   • Feedback: just cc-feedback ACTION_ID"
     echo "   • Update: just cc-update"
     echo "   • Report: just cc-report"
-    
+
     echo -e "\n${COLOR_GRAY}Last updated: $(date)${COLOR_RESET}"
 }
 
@@ -704,7 +704,7 @@ generate_html_dashboard() {
     local action_plan="$1"
     local timestamp=$(date +%Y%m%d_%H%M%S)
     local output_file="$REPORTS_DIR/dashboard_$timestamp.html"
-    
+
     cat > "$output_file" <<'EOF'
 <!DOCTYPE html>
 <html lang="en">
@@ -874,31 +874,31 @@ generate_html_dashboard() {
             <p><span class="live-indicator"></span>Real-time Action Dashboard</p>
             <div class="health-score">HEALTH_SCORE/100</div>
         </div>
-        
+
         <div class="metrics-grid">
             <!-- Metrics will be inserted here -->
         </div>
-        
+
         <div class="chart-container">
             <h2>Business Health Overview</h2>
             <div class="progress-bar">
                 <div class="progress-fill" style="width: HEALTH_SCORE%;">HEALTH_SCORE%</div>
             </div>
         </div>
-        
+
         <div class="focus-grid">
             <!-- Focus areas will be inserted here -->
         </div>
-        
+
         <h2 style="margin-bottom: 1.5rem;">📋 Prioritized Action Plan</h2>
         <div id="actions-container">
             <!-- Actions will be inserted here -->
         </div>
     </div>
-    
+
     <script>
         const actionPlan = ACTION_PLAN_DATA;
-        
+
         // Populate metrics
         const metricsHtml = Object.entries(actionPlan.metrics_summary).map(([key, value]) => `
             <div class="metric-card">
@@ -907,7 +907,7 @@ generate_html_dashboard() {
             </div>
         `).join('');
         document.querySelector('.metrics-grid').innerHTML = metricsHtml;
-        
+
         // Populate focus areas
         const focusHtml = actionPlan.focus_areas.map(area => `
             <div class="focus-item">
@@ -916,7 +916,7 @@ generate_html_dashboard() {
             </div>
         `).join('');
         document.querySelector('.focus-grid').innerHTML = focusHtml;
-        
+
         // Populate actions
         const actionsHtml = actionPlan.priorities.map(action => `
             <div class="action-card">
@@ -930,18 +930,18 @@ generate_html_dashboard() {
             </div>
         `).join('');
         document.getElementById('actions-container').innerHTML = actionsHtml;
-        
+
         // Update health score
         document.body.innerHTML = document.body.innerHTML.replace(/HEALTH_SCORE/g, Math.floor(actionPlan.business_health_score));
     </script>
 </body>
 </html>
 EOF
-    
+
     # Insert action plan data
     local escaped_plan=$(echo "$action_plan" | sed 's/"/\\"/g' | tr '\n' ' ')
     sed -i '' "s|ACTION_PLAN_DATA|$escaped_plan|g" "$output_file"
-    
+
     log_success "HTML dashboard saved: $output_file"
     echo "$output_file"
 }
@@ -955,19 +955,19 @@ generate_weekly_report() {
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local week_start=$(date -v-7d +%Y-%m-%d)
     local week_end=$(date +%Y-%m-%d)
-    
+
     log_info "Generating weekly command center report..."
-    
+
     # Gather weekly metrics
     local total_actions=$(find "$ACTIONS_DIR" -name "plan_*.json" -mtime -7 2>/dev/null | wc -l | xargs)
     local completed_actions=$(find "$FEEDBACK_DIR" -name "feedback_*.json" -mtime -7 2>/dev/null | xargs -I {} cat {} | jq -s 'map(select(.outcome == "completed")) | length')
-    
+
     # Load decision history
     local history="{}"
     if [[ -f "$DECISIONS_DIR/history.json" ]]; then
         history=$(cat "$DECISIONS_DIR/history.json")
     fi
-    
+
     # Generate report
     local report=$(jq -n \
         --arg timestamp "$timestamp" \
@@ -990,13 +990,13 @@ generate_weekly_report() {
             lessons_learned: [],
             next_week_focus: []
         }')
-    
+
     # Save report
     local date_str=$(date +%Y%m%d)
     echo "$report" > "$REPORTS_DIR/weekly_report_$date_str.json"
-    
+
     log_success "Weekly report generated"
-    
+
     # Display summary
     echo -e "\n${COLOR_BOLD}📊 WEEKLY COMMAND CENTER REPORT${COLOR_RESET}"
     echo -e "Period: $week_start to $week_end"
@@ -1011,7 +1011,7 @@ generate_weekly_report() {
 main() {
     local command="${1:-dashboard}"
     shift
-    
+
     case "$command" in
         "dashboard")
             local format="${1:-terminal}"

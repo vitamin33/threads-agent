@@ -8,10 +8,10 @@ state:
   active_features:        4
   blocked_features:        1
   resource_capacity: 3
-  
+
 # Recommendations
 recommendations:
   - priority: "unblock_features"
     action: "Resolve blockers for stuck features"
     features:
-      - 
+      -

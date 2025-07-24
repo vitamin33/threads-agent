@@ -179,8 +179,8 @@ just cache-trends  # View trending topics
 #### Database Queries (No Port-Forwarding!)
 ```sql
 -- Direct PostgreSQL access via MCP
-SELECT persona_id, AVG(engagement_rate) 
-FROM posts 
+SELECT persona_id, AVG(engagement_rate)
+FROM posts
 WHERE created_at > NOW() - INTERVAL '7 days'
 GROUP BY persona_id;
 ```

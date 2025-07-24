@@ -24,7 +24,7 @@ just grow-business  # Analyze and activate growth
 ## 🚫 Commands to AVOID (Use Mega Commands Instead)
 
 DON'T use these individually:
-- `just bootstrap` → Use `just dev-start-multi` 
+- `just bootstrap` → Use `just dev-start-multi`
 - `just trend-check` + `just competitive-analysis` + `just search-enhanced-post` → Use `just create-viral`
 - `just check` + `just smart-deploy` + `just ship` → Use `just ship-it`
 - Multiple morning commands → Use `just work-day`

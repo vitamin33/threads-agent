@@ -60,9 +60,9 @@ check_orchestrator() {
 discover_trends() {
     local topic="$1"
     local timeframe="${2:-day}"
-    
+
     log "Discovering trends for: ${topic} (${timeframe})"
-    
+
     response=$(curl -s -X POST "${ORCHESTRATOR_URL}/search/trends" \
         -H "Content-Type: application/json" \
         -d "{
@@ -70,10 +70,10 @@ discover_trends() {
             \"timeframe\": \"${timeframe}\",
             \"limit\": 5
         }")
-    
+
     if [ $? -eq 0 ]; then
         echo "$response" | jq -r '.data.trends[] | "\(.topic) (score: \(.score))"'
-        
+
         # Save trends to file
         echo "$response" | jq '.data.trends' > "${TOPICS_FILE}.${topic// /_}.json"
         return 0
@@ -86,9 +86,9 @@ discover_trends() {
 # Analyze viral patterns
 analyze_viral() {
     local topic="$1"
-    
+
     log "Analyzing viral patterns for: ${topic}"
-    
+
     response=$(curl -s -X POST "${ORCHESTRATOR_URL}/search/competitive" \
         -H "Content-Type: application/json" \
         -d "{
@@ -96,7 +96,7 @@ analyze_viral() {
             \"platform\": \"threads\",
             \"analyze_patterns\": true
         }")
-    
+
     if [ $? -eq 0 ]; then
         echo "$response" | jq -r '.data.common_keywords[:5][]' 2>/dev/null || echo "No keywords found"
         return 0
@@ -110,9 +110,9 @@ analyze_viral() {
 generate_trending_content() {
     local persona="$1"
     local topic="$2"
-    
+
     log "Generating trending content for ${persona} on topic: ${topic}"
-    
+
     response=$(curl -s -X POST "${ORCHESTRATOR_URL}/search/enhanced-task" \
         -H "Content-Type: application/json" \
         -d "{
@@ -121,7 +121,7 @@ generate_trending_content() {
             \"enable_search\": true,
             \"trend_timeframe\": \"day\"
         }")
-    
+
     if [ $? -eq 0 ]; then
         task_id=$(echo "$response" | jq -r '.task_id')
         success "Created enhanced task: ${task_id}"
@@ -136,23 +136,23 @@ generate_trending_content() {
 # Main trend detection loop
 run_trend_detection() {
     local base_topics=("AI and technology" "Mental health and wellness" "Productivity tips" "Future predictions")
-    
+
     while true; do
         log "=== Starting Trend Detection Cycle ==="
-        
+
         # Check each base topic
         for topic in "${base_topics[@]}"; do
             echo -e "\n${YELLOW}Topic: ${topic}${NC}"
-            
+
             # Discover trends
             if trends=$(discover_trends "$topic" "day"); then
                 echo "Found trends:"
                 echo "$trends" | head -5
-                
+
                 # Analyze viral patterns
                 echo -e "\nViral keywords:"
                 analyze_viral "$topic"
-                
+
                 # Generate content for each persona based on top trend
                 top_trend=$(echo "$trends" | head -1 | cut -d' ' -f1)
                 if [ -n "$top_trend" ]; then
@@ -163,11 +163,11 @@ run_trend_detection() {
                     done
                 fi
             fi
-            
+
             echo -e "\n---"
             sleep 5  # Small delay between topics
         done
-        
+
         log "=== Trend Detection Cycle Complete ==="
         log "Next check in ${TREND_CHECK_INTERVAL} seconds..."
         sleep "$TREND_CHECK_INTERVAL"
@@ -180,18 +180,18 @@ show_dashboard() {
     echo -e "${BLUE}=== Threads-Agent Trend Dashboard ===${NC}"
     echo -e "Updated: $(date)"
     echo ""
-    
+
     # Check services
     check_searxng > /dev/null 2>&1 && searxng_status="${GREEN}✓${NC}" || searxng_status="${RED}✗${NC}"
     check_orchestrator > /dev/null 2>&1 && orch_status="${GREEN}✓${NC}" || orch_status="${RED}✗${NC}"
-    
+
     echo -e "Services: SearXNG $searxng_status | Orchestrator $orch_status"
     echo ""
-    
+
     # Show trends for each topic
     for topic in "AI and technology" "Mental health" "Productivity"; do
         echo -e "${YELLOW}${topic}:${NC}"
-        
+
         if [ -f "${TOPICS_FILE}.${topic// /_}.json" ]; then
             jq -r '.[] | "  • \(.topic) (score: \(.score))"' "${TOPICS_FILE}.${topic// /_}.json" 2>/dev/null | head -3
         else
@@ -199,7 +199,7 @@ show_dashboard() {
         fi
         echo ""
     done
-    
+
     # Show recent tasks
     echo -e "${YELLOW}Recent Enhanced Tasks:${NC}"
     # This would query actual task status in production
@@ -210,11 +210,11 @@ show_dashboard() {
 # Single trend check
 check_single_trend() {
     local topic="$1"
-    
+
     if ! check_searxng || ! check_orchestrator; then
         exit 1
     fi
-    
+
     discover_trends "$topic" "week"
     echo ""
     echo "Viral patterns:"
@@ -232,7 +232,7 @@ case "${1:-}" in
             exit 1
         fi
         ;;
-    
+
     "check")
         if [ -z "${2:-}" ]; then
             error "Usage: $0 check <topic>"
@@ -240,11 +240,11 @@ case "${1:-}" in
         fi
         check_single_trend "$2"
         ;;
-    
+
     "dashboard")
         show_dashboard
         ;;
-    
+
     "generate")
         if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
             error "Usage: $0 generate <persona> <topic>"
@@ -254,7 +254,7 @@ case "${1:-}" in
             generate_trending_content "$2" "$3"
         fi
         ;;
-    
+
     *)
         echo "Threads-Agent Trend Detection Workflow"
         echo ""

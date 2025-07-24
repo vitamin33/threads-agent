@@ -24,10 +24,10 @@ log_ai() { echo -e "${PURPLE}[AI-DEMO]${NC} $*"; }
 
 demo_ai_planning() {
     local requirement="$1"
-    
+
     log_ai "Demo: Planning epic for '$requirement'"
     log_info "In real mode, this would call OpenAI API..."
-    
+
     # Simulate AI thinking
     echo -n "🤖 AI is analyzing your requirement"
     for i in {1..3}; do
@@ -35,13 +35,13 @@ demo_ai_planning() {
         echo -n "."
     done
     echo " Done!"
-    
+
     # Create a demo epic based on the requirement
     local epic_id="epic_demo_$(date +%s)"
     local epic_name="Demo: $(echo "$requirement" | cut -c1-50)"
-    
+
     mkdir -p "$PROJECT_ROOT/.workflows/epics"
-    
+
     cat > "$PROJECT_ROOT/.workflows/epics/${epic_id}.yaml" << EOF
 id: "$epic_id"
 name: "$epic_name"
@@ -92,12 +92,12 @@ EOF
     if [[ ! -f "$PROJECT_ROOT/.workflows/active_epics.json" ]]; then
         echo '{"epics": []}' > "$PROJECT_ROOT/.workflows/active_epics.json"
     fi
-    
+
     jq --arg id "$epic_id" --arg name "$epic_name" --arg status "planning" --arg created "$(date +%Y-%m-%dT%H:%M:%S%z)" \
         '.epics += [{"id": $id, "name": $name, "status": $status, "created": $created}]' \
         "$PROJECT_ROOT/.workflows/active_epics.json" > "$PROJECT_ROOT/.workflows/active_epics.json.tmp" && \
         mv "$PROJECT_ROOT/.workflows/active_epics.json.tmp" "$PROJECT_ROOT/.workflows/active_epics.json"
-    
+
     log_success "Demo epic created: $epic_id"
     echo
     echo "📋 This is a demo epic. For real AI planning:"

@@ -23,7 +23,7 @@
       "avg_er": 0.089,
       "examples": [
         "The secret to productivity? It's not what you think.",
-        "The secret to networking? It's not what you think.", 
+        "The secret to networking? It's not what you think.",
         "The secret to getting hired? It's not what you think."
       ]
     },
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "id": "curiosity_004", 
+      "id": "curiosity_004",
       "template": "There's something {authority_figure} don't want you to know about {topic}:",
       "variables": ["authority_figure", "topic"],
       "avg_er": 0.087,

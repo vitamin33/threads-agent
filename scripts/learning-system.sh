@@ -36,21 +36,21 @@ log_suggest() { echo -e "${CYAN}[SUGGEST]${NC} $*"; }
 # Initialize learning system
 init_learning_system() {
     mkdir -p "$ANALYTICS_DIR" "$PATTERNS_DIR" "$SUGGESTIONS_DIR" "$MODELS_DIR"
-    
+
     # Initialize analytics database files
     touch "$ANALYTICS_DIR/commands.log"
-    touch "$ANALYTICS_DIR/workflows.log" 
+    touch "$ANALYTICS_DIR/workflows.log"
     touch "$ANALYTICS_DIR/failures.log"
     touch "$ANALYTICS_DIR/successes.log"
     touch "$ANALYTICS_DIR/timings.log"
     touch "$ANALYTICS_DIR/context.log"
-    
+
     # Initialize pattern files
     touch "$PATTERNS_DIR/command_sequences.json"
     touch "$PATTERNS_DIR/timing_patterns.json"
     touch "$PATTERNS_DIR/failure_patterns.json"
     touch "$PATTERNS_DIR/success_patterns.json"
-    
+
     log_info "Learning system initialized"
 }
 
@@ -88,14 +88,14 @@ track_command() {
     local exit_code="${2:-0}"
     local duration="${3:-0}"
     local context="${4:-}"
-    
+
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local git_ctx=$(get_git_context)
     local sys_ctx=$(get_system_context)
-    
+
     # Log command execution
     echo "$timestamp|$SESSION_ID|$command|$exit_code|$duration|$git_ctx|$sys_ctx|$context" >> "$ANALYTICS_DIR/commands.log"
-    
+
     # Track success/failure
     if [[ $exit_code -eq 0 ]]; then
         echo "$timestamp|$SESSION_ID|$command|$duration|$git_ctx|$context" >> "$ANALYTICS_DIR/successes.log"
@@ -104,7 +104,7 @@ track_command() {
         echo "$timestamp|$SESSION_ID|$command|$exit_code|$git_ctx|$context" >> "$ANALYTICS_DIR/failures.log"
         log_warn "Failure tracked: $command (exit $exit_code)"
     fi
-    
+
     # Track timing patterns
     echo "$timestamp|$command|$duration" >> "$ANALYTICS_DIR/timings.log"
 }
@@ -115,12 +115,12 @@ track_workflow() {
     local steps="$2"
     local success="${3:-true}"
     local duration="${4:-0}"
-    
+
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local git_ctx=$(get_git_context)
-    
+
     echo "$timestamp|$SESSION_ID|$workflow_name|$steps|$success|$duration|$git_ctx" >> "$ANALYTICS_DIR/workflows.log"
-    
+
     if [[ "$success" == "true" ]]; then
         log_success "Workflow tracked: $workflow_name (${duration}s)"
     else
@@ -131,25 +131,25 @@ track_workflow() {
 # Analyze command patterns
 analyze_command_patterns() {
     log_info "Analyzing command usage patterns..."
-    
+
     if [[ ! -s "$ANALYTICS_DIR/commands.log" ]]; then
         log_warn "No command data available for analysis"
         return 0
     fi
-    
+
     local analysis_file="$PATTERNS_DIR/command_analysis_$TIMESTAMP.json"
-    
+
     # Analyze most used commands
     local top_commands=$(tail -1000 "$ANALYTICS_DIR/commands.log" | cut -d'|' -f3 | sort | uniq -c | sort -nr | head -10)
-    
+
     # Analyze failure rates
     local total_commands=$(tail -1000 "$ANALYTICS_DIR/commands.log" | wc -l)
     local failed_commands=$(tail -1000 "$ANALYTICS_DIR/commands.log" | awk -F'|' '$4 != "0"' | wc -l)
     local failure_rate=$(echo "scale=2; $failed_commands * 100 / $total_commands" | bc -l 2>/dev/null || echo "0")
-    
+
     # Analyze timing patterns
     local avg_duration=$(tail -1000 "$ANALYTICS_DIR/timings.log" | awk -F'|' '{sum+=$3; count++} END {if(count>0) print sum/count; else print 0}')
-    
+
     # Generate JSON analysis
     cat > "$analysis_file" << EOF
 {
@@ -175,14 +175,14 @@ fi)
   ]
 }
 EOF
-    
+
     log_insight "Command analysis saved to: $analysis_file"
-    
+
     # Display key insights
     echo "$top_commands" | head -3 | while read count cmd; do
         log_insight "Top command: '$cmd' used $count times"
     done
-    
+
     if (( $(echo "$failure_rate > 5" | bc -l 2>/dev/null || echo 0) )); then
         log_warn "High failure rate: ${failure_rate}% - consider workflow optimization"
     fi
@@ -191,23 +191,23 @@ EOF
 # Analyze workflow patterns
 analyze_workflow_patterns() {
     log_info "Analyzing workflow patterns..."
-    
+
     if [[ ! -s "$ANALYTICS_DIR/workflows.log" ]]; then
         log_warn "No workflow data available for analysis"
         return 0
     fi
-    
+
     local patterns_file="$PATTERNS_DIR/workflow_patterns_$TIMESTAMP.json"
-    
+
     # Analyze successful workflows
     local successful_workflows=$(tail -500 "$ANALYTICS_DIR/workflows.log" | awk -F'|' '$5=="true"' | cut -d'|' -f3 | sort | uniq -c | sort -nr)
-    
+
     # Analyze failed workflows
     local failed_workflows=$(tail -500 "$ANALYTICS_DIR/workflows.log" | awk -F'|' '$5=="false"' | cut -d'|' -f3 | sort | uniq -c | sort -nr)
-    
+
     # Analyze workflow timing
     local avg_workflow_time=$(tail -500 "$ANALYTICS_DIR/workflows.log" | awk -F'|' '$5=="true" {sum+=$6; count++} END {if(count>0) print sum/count; else print 0}')
-    
+
     cat > "$patterns_file" << EOF
 {
   "timestamp": "$(date -Iseconds)",
@@ -223,14 +223,14 @@ $(echo "$successful_workflows" | head -1 | awk '{printf "    \"Most reliable wor
   ]
 }
 EOF
-    
+
     log_insight "Workflow patterns saved to: $patterns_file"
-    
+
     # Display insights
     echo "$successful_workflows" | head -3 | while read count workflow; do
         log_insight "Successful workflow: '$workflow' completed $count times"
     done
-    
+
     if [[ -n "$failed_workflows" ]]; then
         echo "$failed_workflows" | head -2 | while read count workflow; do
             log_warn "Problematic workflow: '$workflow' failed $count times"
@@ -241,20 +241,20 @@ EOF
 # Generate optimization suggestions
 generate_suggestions() {
     log_info "Generating optimization suggestions..."
-    
+
     local suggestions_file="$SUGGESTIONS_DIR/suggestions_$TIMESTAMP.md"
     local current_hour=$(date +%H)
     local git_ctx=$(get_git_context)
-    
+
     # Analyze recent patterns
     local recent_failures=$(tail -100 "$ANALYTICS_DIR/failures.log" 2>/dev/null | wc -l)
     local recent_commands=$(tail -100 "$ANALYTICS_DIR/commands.log" 2>/dev/null | wc -l)
     local recent_failure_rate=0
-    
+
     if [[ $recent_commands -gt 0 ]]; then
         recent_failure_rate=$(echo "scale=2; $recent_failures * 100 / $recent_commands" | bc -l 2>/dev/null || echo "0")
     fi
-    
+
     # Generate suggestions based on patterns
     cat > "$suggestions_file" << EOF
 # Development Optimization Suggestions
@@ -265,7 +265,7 @@ generate_suggestions() {
 
 **Recent Activity:**
 - Commands executed: $recent_commands
-- Failures: $recent_failures  
+- Failures: $recent_failures
 - Failure rate: ${recent_failure_rate}%
 - Git context: $git_ctx
 
@@ -273,12 +273,12 @@ generate_suggestions() {
 
 ### Immediate Optimizations
 EOF
-    
+
     # Time-based suggestions
     if [[ $current_hour -ge 18 || $current_hour -le 6 ]]; then
         echo "- 🌙 **Late hours detected** - Consider shorter, focused tasks to maintain code quality" >> "$suggestions_file"
     fi
-    
+
     # Failure-rate based suggestions
     if (( $(echo "$recent_failure_rate > 15" | bc -l 2>/dev/null || echo 0) )); then
         cat >> "$suggestions_file" << EOF
@@ -286,22 +286,22 @@ EOF
 - 🔄 **Break down workflows** - Consider splitting complex tasks into smaller steps
 EOF
     fi
-    
+
     # Git-based suggestions
     if echo "$git_ctx" | grep -q "changes:[^0]"; then
         echo "- 💾 **Uncommitted changes detected** - Consider \`just ship \"<message>\"\` to save progress" >> "$suggestions_file"
     fi
-    
+
     if echo "$git_ctx" | grep -q "behind:[^0]"; then
         echo "- ⬇️ **Behind remote** - Run \`git pull\` to sync latest changes" >> "$suggestions_file"
     fi
-    
+
     # Pattern-based suggestions
     local top_failed_cmd=$(tail -50 "$ANALYTICS_DIR/failures.log" 2>/dev/null | cut -d'|' -f3 | sort | uniq -c | sort -nr | head -1 | awk '{print $2}')
     if [[ -n "$top_failed_cmd" ]]; then
         echo "- 🚨 **Frequent failure:** \`$top_failed_cmd\` - Check logs or try alternative approach" >> "$suggestions_file"
     fi
-    
+
     cat >> "$suggestions_file" << EOF
 
 ### Workflow Optimizations
@@ -325,14 +325,14 @@ fi)
 ---
 *Learning system tracking $(wc -l < "$ANALYTICS_DIR/commands.log" 2>/dev/null || echo 0) total commands*
 EOF
-    
+
     log_suggest "Suggestions generated: $suggestions_file"
-    
+
     # Display key suggestions
     if (( $(echo "$recent_failure_rate > 10" | bc -l 2>/dev/null || echo 0) )); then
         log_suggest "High failure rate detected - run 'just pre-commit-fix' before complex operations"
     fi
-    
+
     if echo "$git_ctx" | grep -q "changes:[^0]"; then
         log_suggest "Uncommitted changes detected - consider saving progress with 'just ship'"
     fi
@@ -341,23 +341,23 @@ EOF
 # Analyze failure patterns
 analyze_failures() {
     log_info "Analyzing failure patterns..."
-    
+
     if [[ ! -s "$ANALYTICS_DIR/failures.log" ]]; then
         log_info "No failure data to analyze - system is performing well!"
         return 0
     fi
-    
+
     local failures_analysis="$PATTERNS_DIR/failure_analysis_$TIMESTAMP.json"
-    
+
     # Analyze most common failures
     local common_failures=$(tail -100 "$ANALYTICS_DIR/failures.log" | cut -d'|' -f3 | sort | uniq -c | sort -nr | head -5)
-    
+
     # Analyze failure by time of day
     local failure_hours=$(tail -100 "$ANALYTICS_DIR/failures.log" | cut -d'|' -f1 | cut -d' ' -f2 | cut -d':' -f1 | sort | uniq -c | sort -nr)
-    
+
     # Analyze failure by git context
     local failure_contexts=$(tail -100 "$ANALYTICS_DIR/failures.log" | cut -d'|' -f6 | sort | uniq -c | sort -nr | head -3)
-    
+
     cat > "$failures_analysis" << EOF
 {
   "timestamp": "$(date -Iseconds)",
@@ -378,14 +378,14 @@ $(echo "$failure_hours" | head -3 | awk '{printf "      {\"hour\": \"%s\", \"cou
   ]
 }
 EOF
-    
+
     log_insight "Failure analysis saved to: $failures_analysis"
-    
+
     # Display top insights
     echo "$common_failures" | head -3 | while read count cmd; do
         log_warn "Command '$cmd' failed $count times recently"
     done
-    
+
     if [[ -n "$failure_hours" ]]; then
         local peak_hour=$(echo "$failure_hours" | head -1 | awk '{print $2}')
         log_insight "Peak failure hour: ${peak_hour}:00"
@@ -395,15 +395,15 @@ EOF
 # Benchmark and performance tracking
 benchmark_performance() {
     log_info "Running performance benchmark..."
-    
+
     local benchmark_file="$ANALYTICS_DIR/benchmark_$TIMESTAMP.json"
     local start_time=$(date +%s.%N)
-    
+
     # Test common operations
     local lint_time=0
     local test_time=0
     local build_time=0
-    
+
     log_info "Benchmarking lint performance..."
     if command_exists ruff && [[ -f .venv/bin/activate ]]; then
         local lint_start=$(date +%s.%N)
@@ -411,7 +411,7 @@ benchmark_performance() {
         local lint_end=$(date +%s.%N)
         lint_time=$(echo "$lint_end - $lint_start" | bc -l)
     fi
-    
+
     log_info "Benchmarking test discovery..."
     if command_exists pytest && [[ -f .venv/bin/activate ]]; then
         local test_start=$(date +%s.%N)
@@ -419,7 +419,7 @@ benchmark_performance() {
         local test_end=$(date +%s.%N)
         test_time=$(echo "$test_end - $test_start" | bc -l)
     fi
-    
+
     # Git operations benchmark
     local git_status_time=0
     if git rev-parse --git-dir >/dev/null 2>&1; then
@@ -428,10 +428,10 @@ benchmark_performance() {
         local git_end=$(date +%s.%N)
         git_status_time=$(echo "$git_end - $git_start" | bc -l)
     fi
-    
+
     local total_time=$(date +%s.%N)
     total_time=$(echo "$total_time - $start_time" | bc -l)
-    
+
     cat > "$benchmark_file" << EOF
 {
   "timestamp": "$(date -Iseconds)",
@@ -458,33 +458,33 @@ fi)
   ]
 }
 EOF
-    
+
     log_success "Benchmark completed in ${total_time}s"
     log_insight "Results saved to: $benchmark_file"
-    
+
     # Display performance insights
     printf "Performance Summary:\n"
     printf "  Lint check: %.2fs\n" "$lint_time"
-    printf "  Test discovery: %.2fs\n" "$test_time" 
+    printf "  Test discovery: %.2fs\n" "$test_time"
     printf "  Git status: %.2fs\n" "$git_status_time"
 }
 
 # Generate comprehensive report
 generate_report() {
     log_info "Generating comprehensive learning report..."
-    
+
     local report_file="$LEARNING_DIR/learning_report_$TIMESTAMP.md"
     local total_commands=$(wc -l < "$ANALYTICS_DIR/commands.log" 2>/dev/null || echo 0)
     local total_sessions=$(cut -d'|' -f2 "$ANALYTICS_DIR/commands.log" 2>/dev/null | sort -u | wc -l || echo 0)
     local first_tracked=$(head -1 "$ANALYTICS_DIR/commands.log" 2>/dev/null | cut -d'|' -f1 || echo "N/A")
-    
+
     cat > "$report_file" << EOF
 # 🧠 Development Learning Report
 *Generated: $(date)*
 
 ## 📊 Overview
 - **Total Commands Tracked:** $total_commands
-- **Development Sessions:** $total_sessions  
+- **Development Sessions:** $total_sessions
 - **First Activity:** $first_tracked
 - **Learning Period:** Active tracking
 
@@ -540,7 +540,7 @@ fi)
 ## 🎓 Learning Recommendations
 
 1. **Focus Areas:** Optimize most-used commands and workflows
-2. **Automation:** Script repetitive tasks (3+ manual repetitions)  
+2. **Automation:** Script repetitive tasks (3+ manual repetitions)
 3. **Quality:** Maintain <5% failure rate through better practices
 4. **Monitoring:** Regular learning system analysis (weekly)
 
@@ -552,9 +552,9 @@ fi)
 ---
 *Learning system v1.0 - Continuous improvement through pattern analysis*
 EOF
-    
+
     log_success "Comprehensive report generated: $report_file"
-    
+
     # Display summary
     log_insight "Learning Summary:"
     log_insight "  Commands tracked: $total_commands"
@@ -569,9 +569,9 @@ EOF
 export_data() {
     local format="${1:-json}"
     local export_file="$LEARNING_DIR/export_$TIMESTAMP.$format"
-    
+
     log_info "Exporting learning data to $format format..."
-    
+
     case "$format" in
         json)
             cat > "$export_file" << EOF
@@ -596,7 +596,7 @@ EOF
             return 1
             ;;
     esac
-    
+
     log_success "Data exported to: $export_file"
 }
 
@@ -604,10 +604,10 @@ EOF
 cleanup_data() {
     local days="${1:-30}"
     log_info "Cleaning learning data older than $days days..."
-    
+
     local cutoff_date=$(date -d "$days days ago" '+%Y-%m-%d')
     local cleaned=0
-    
+
     # Clean analytics files
     for file in "$ANALYTICS_DIR"/*.log; do
         if [[ -f "$file" ]]; then
@@ -619,11 +619,11 @@ cleanup_data() {
             cleaned=$((cleaned + old_size - new_size))
         fi
     done
-    
+
     # Clean old pattern files
     find "$PATTERNS_DIR" -name "*_*.json" -mtime +$days -delete
     find "$SUGGESTIONS_DIR" -name "*_*.md" -mtime +$days -delete
-    
+
     log_success "Cleaned $cleaned old records"
 }
 
@@ -631,30 +631,30 @@ cleanup_data() {
 dashboard() {
     log_info "🎛️  Learning System Dashboard"
     echo
-    
+
     # Current status
     local total_commands=$(wc -l < "$ANALYTICS_DIR/commands.log" 2>/dev/null || echo 0)
     local recent_commands=$(tail -100 "$ANALYTICS_DIR/commands.log" 2>/dev/null | wc -l)
     local recent_failures=$(tail -100 "$ANALYTICS_DIR/failures.log" 2>/dev/null | wc -l)
-    
+
     printf "📊 Current Status:\n"
     printf "   Total commands tracked: %s\n" "$total_commands"
     printf "   Recent activity: %s commands\n" "$recent_commands"
     printf "   Recent failures: %s\n" "$recent_failures"
     echo
-    
+
     if [[ $total_commands -gt 10 ]]; then
         printf "🔥 Hot Commands:\n"
         tail -200 "$ANALYTICS_DIR/commands.log" | cut -d'|' -f3 | sort | uniq -c | sort -nr | head -5 | awk '{printf "   %s: %d uses\n", $2, $1}'
         echo
     fi
-    
+
     if [[ $recent_failures -gt 0 ]]; then
         printf "⚠️  Recent Issues:\n"
         tail -20 "$ANALYTICS_DIR/failures.log" | cut -d'|' -f3 | sort | uniq -c | sort -nr | head -3 | awk '{printf "   %s: %d failures\n", $2, $1}'
         echo
     fi
-    
+
     printf "🎯 Quick Actions:\n"
     printf "   learning-system.sh analyze    - Analyze all patterns\n"
     printf "   learning-system.sh suggest    - Get optimization suggestions\n"
@@ -675,7 +675,7 @@ COMMANDS:
     track <cmd> <exit> <time>  Track command execution
     workflow <name> <steps>    Track workflow completion
     analyze                    Analyze all patterns and generate insights
-    suggest                    Generate optimization suggestions  
+    suggest                    Generate optimization suggestions
     analyze-failures           Analyze failure patterns
     benchmark                  Run performance benchmarks
     report                     Generate comprehensive report
@@ -724,7 +724,7 @@ EOF
 # Main execution
 main() {
     cd "$PROJECT_ROOT"
-    
+
     case "${1:-help}" in
         init)
             init_learning_system

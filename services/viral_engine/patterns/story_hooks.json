@@ -1,5 +1,5 @@
 {
-  "category": "story_hooks", 
+  "category": "story_hooks",
   "description": "Narrative opening hooks that draw readers into personal stories",
   "avg_engagement_rate": 0.083,
   "best_times": ["evening", "weekend"],
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "id": "story_003", 
+      "id": "story_003",
       "template": "My {relationship} told me {advice}. I ignored it. Big mistake.",
       "variables": ["relationship", "advice"],
       "avg_er": 0.084,
@@ -52,7 +52,7 @@
     {
       "id": "story_005",
       "template": "I used to {old_behavior}. Then I discovered {revelation}. Everything changed.",
-      "variables": ["old_behavior", "revelation"],  
+      "variables": ["old_behavior", "revelation"],
       "avg_er": 0.087,
       "examples": [
         "I used to network constantly. Then I discovered quality over quantity. Everything changed.",

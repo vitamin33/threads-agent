@@ -20,7 +20,7 @@ jobs:
               console.log('Not a PR, skipping auto-fix');
               return;
             }
-            
+
             // Trigger auto-fix workflow
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
@@ -33,5 +33,5 @@ jobs:
                 run_id: context.payload.workflow_run.id.toString()
               }
             });
-            
+
             console.log(`Triggered auto-fix for PR #${pr.number}`);

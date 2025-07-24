@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Color codes
 readonly COLOR_BLUE='\033[0;34m'
-readonly COLOR_GREEN='\033[0;32m' 
+readonly COLOR_GREEN='\033[0;32m'
 readonly COLOR_YELLOW='\033[0;33m'
 readonly COLOR_RED='\033[0;31m'
 readonly COLOR_PURPLE='\033[0;35m'
@@ -34,38 +34,38 @@ gather_system_metrics() {
     local efficiency_score=75
     local priority_score=90
     local priority_action="enhance_retention"
-    
+
     # Get real data from systems if available
     if [[ -f ".customer-intelligence/metrics/pmf_scores.json" ]]; then
         pmf_score=$(jq -r '.current_score // 50' ".customer-intelligence/metrics/pmf_scores.json" 2>/dev/null || echo "50")
     fi
-    
+
     if [[ -f ".customer-priority/priorities/latest.json" ]]; then
         priority_score=$(jq -r '.top_priority.priority_score // 90' ".customer-priority/priorities/latest.json" 2>/dev/null || echo "90")
         priority_action=$(jq -r '.top_priority.action // "enhance_retention"' ".customer-priority/priorities/latest.json" 2>/dev/null || echo "enhance_retention")
     fi
-    
+
     if [[ -f ".quality-gates/metrics/latest.json" ]]; then
         quality_score=$(jq -r '.overall_score // 88' ".quality-gates/metrics/latest.json" 2>/dev/null || echo "88")
     fi
-    
+
     if [[ -f ".learning-system/analysis/performance.json" ]]; then
         efficiency_score=$(jq -r '.efficiency_score // 75' ".learning-system/analysis/performance.json" 2>/dev/null || echo "75")
     fi
-    
+
     # Calculate business health score (using bc for decimal math)
     local health_score=$(echo "($pmf_score * 0.25 + (100 - $churn_risk * 100) * 0.25 + $quality_score * 0.25 + $efficiency_score * 0.25)" | bc -l 2>/dev/null | cut -d. -f1)
     health_score=${health_score:-57}
-    
+
     echo "$pmf_score|$churn_risk|$quality_score|$efficiency_score|$priority_score|$priority_action|$health_score"
 }
 
 generate_action_plan() {
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local date_str=$(date +%Y%m%d_%H%M%S)
-    
+
     log_info "Generating unified action plan with system integration..."
-    
+
     # Gather metrics from all systems
     local metrics_data=$(gather_system_metrics)
     local pmf_score=$(echo "$metrics_data" | cut -d'|' -f1)
@@ -75,12 +75,12 @@ generate_action_plan() {
     local priority_score=$(echo "$metrics_data" | cut -d'|' -f5)
     local priority_action=$(echo "$metrics_data" | cut -d'|' -f6)
     local health_score=$(echo "$metrics_data" | cut -d'|' -f7)
-    
+
     log_info "System metrics gathered: Health=$health_score, PMF=$pmf_score, Priority=$priority_score"
-    
+
     # Determine priority actions based on system data
     local actions='[]'
-    
+
     # Priority 1: Customer Priority System recommendation
     if [[ "$priority_action" == "enhance_retention" ]]; then
         actions=$(jq -n --arg score "$priority_score" '
@@ -96,7 +96,7 @@ generate_action_plan() {
             description: "Focus on user onboarding and engagement features based on customer priority analysis",
             specific_tasks: [
                 "Improve onboarding flow to reduce time-to-value",
-                "Add engagement tracking to identify drop-off points", 
+                "Add engagement tracking to identify drop-off points",
                 "Create personalized re-activation email sequences",
                 "Implement user behavior analytics"
             ],
@@ -107,7 +107,7 @@ generate_action_plan() {
             }
         }]')
     fi
-    
+
     # Priority 2: Quality issues if quality score is low
     if (( $(echo "$quality_score < 80" | bc -l 2>/dev/null || echo "0") )); then
         actions=$(echo "$actions" | jq '. + [{
@@ -133,10 +133,10 @@ generate_action_plan() {
             }
         }]')
     fi
-    
+
     # Priority 3: High-impact feature (from business intelligence)
     actions=$(echo "$actions" | jq '. + [{
-        id: "action_003", 
+        id: "action_003",
         priority: 3,
         title: "Build AI-powered user insights dashboard",
         category: "feature",
@@ -157,12 +157,12 @@ generate_action_plan() {
             feature_adoption: "+35%"
         }
     }]')
-    
+
     # Priority 4: Development efficiency improvements
     if (( $(echo "$efficiency_score < 80" | bc -l 2>/dev/null || echo "0") )); then
         actions=$(echo "$actions" | jq '. + [{
             id: "action_004",
-            priority: 4, 
+            priority: 4,
             title: "Optimize development workflow",
             category: "efficiency",
             source: "learning_system",
@@ -183,7 +183,7 @@ generate_action_plan() {
             }
         }]')
     fi
-    
+
     # Create comprehensive action plan
     local action_plan=$(jq -n \
         --arg timestamp "$timestamp" \
@@ -213,7 +213,7 @@ generate_action_plan() {
                     priority: "immediate"
                 },
                 {
-                    area: "Product Quality", 
+                    area: "Product Quality",
                     score: $quality,
                     trend: (if $quality > 85 then "stable" else "needs_attention" end),
                     priority: "high"
@@ -221,7 +221,7 @@ generate_action_plan() {
                 {
                     area: "Development Efficiency",
                     score: $efficiency,
-                    trend: (if $efficiency > 80 then "improving" else "stable" end), 
+                    trend: (if $efficiency > 80 then "improving" else "stable" end),
                     priority: "medium"
                 },
                 {
@@ -233,7 +233,7 @@ generate_action_plan() {
             ],
             system_integrations: {
                 quality_gates: "active",
-                learning_system: "active", 
+                learning_system: "active",
                 workflow_automation: "active",
                 plan_memory: "active",
                 business_intelligence: "active",
@@ -247,34 +247,34 @@ generate_action_plan() {
                 strategic: "Build comprehensive customer success platform"
             }
         }')
-    
+
     # Save action plan
     echo "$action_plan" > "$ACTIONS_DIR/plan_$date_str.json"
     echo "$action_plan" > "$ACTIONS_DIR/latest.json"
-    
+
     log_success "Action plan generated with 7-system integration"
     echo "$action_plan"
 }
 
 show_dashboard() {
     local action_plan="${1:-}"
-    
+
     if [[ -z "$action_plan" ]] && [[ -f "$ACTIONS_DIR/latest.json" ]]; then
         action_plan=$(cat "$ACTIONS_DIR/latest.json")
     elif [[ -z "$action_plan" ]]; then
         action_plan=$(generate_action_plan)
     fi
-    
+
     clear
     echo -e "${COLOR_BOLD}${COLOR_CYAN}"
     cat << 'EOF'
 ╔════════════════════════════════════════════════════════════════════════╗
-║            🎯 UNIFIED COMMAND CENTER - Level 9 Decision System          ║  
+║            🎯 UNIFIED COMMAND CENTER - Level 9 Decision System          ║
 ║                     7 Integrated AI Systems Active                     ║
 ╚════════════════════════════════════════════════════════════════════════╝
 EOF
     echo -e "${COLOR_RESET}"
-    
+
     # Business Health Score
     local health_score=$(echo "$action_plan" | jq -r '.business_health_score')
     local health_color="${COLOR_GREEN}"
@@ -283,9 +283,9 @@ EOF
     elif (( health_score < 75 )); then
         health_color="${COLOR_YELLOW}"
     fi
-    
+
     echo -e "\n${COLOR_BOLD}🏥 Business Health Score: ${health_color}$health_score/100${COLOR_RESET}"
-    
+
     # Dynamic health bar
     local filled=$((health_score / 5))
     local empty=$((20 - filled))
@@ -299,23 +299,23 @@ EOF
     fi
     printf "%${empty}s" | tr ' ' '░'
     echo "]"
-    
+
     # System Integration Status
     echo -e "\n${COLOR_BOLD}🔗 SYSTEM INTEGRATION STATUS${COLOR_RESET}"
     echo "$action_plan" | jq -r '.system_integrations | to_entries[] | "   ✅ \(.key): \(.value)"' | sed 's/_/ /g'
-    
+
     # Key Metrics
     echo -e "\n${COLOR_BOLD}📊 KEY METRICS${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.metrics_summary | 
+    echo "$action_plan" | jq -r '.metrics_summary |
         "   📈 PMF Score: \(.pmf_score)/100",
-        "   ⚠️  Churn Risk: \(.churn_risk * 100 | floor)%", 
+        "   ⚠️  Churn Risk: \(.churn_risk * 100 | floor)%",
         "   🔧 Quality Score: \(.quality_score)/100",
         "   ⚡ Efficiency: \(.efficiency_score)/100",
         "   🎛️  Active Systems: \(.active_systems)"'
-    
+
     # Focus Areas with priorities
     echo -e "\n${COLOR_BOLD}🎯 STRATEGIC FOCUS AREAS${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.focus_areas[] | 
+    echo "$action_plan" | jq -r '.focus_areas[] |
         "   \(if .trend == "critical" then "🚨" elif .trend == "improving" then "📈" else "📊" end) \(.area): \(.score)/100 [\(.trend)] - \(.priority) priority"' | while read -r line; do
         if [[ "$line" == *"critical"* ]]; then
             echo -e "${COLOR_RED}$line${COLOR_RESET}"
@@ -327,20 +327,20 @@ EOF
             echo "$line"
         fi
     done
-    
+
     # Prioritized Actions
     echo -e "\n${COLOR_BOLD}📋 TODAY'S PRIORITIZED ACTION PLAN${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.priorities[] | 
+    echo "$action_plan" | jq -r '.priorities[] |
         "\n🔹 Priority \(.priority): \(.title) (\(.source))\n   📊 Impact Score: \(.kpi_impact)/100 | ⏱️ Timeline: \(.timeline) | 💪 Effort: \(.effort)\n   📝 \(.description)\n   \n   📋 Specific Tasks:\(.specific_tasks | map("       • " + .) | join("\n"))\n   \n   📈 Projected Impact:\(.projected_metrics | to_entries[] | map("       → \(.key): \(.value)") | join("\n"))"'
-    
+
     # AI Recommendations
     echo -e "\n${COLOR_BOLD}🧠 AI RECOMMENDATIONS${COLOR_RESET}"
-    echo "$action_plan" | jq -r '.recommendations | 
+    echo "$action_plan" | jq -r '.recommendations |
         "   🔥 IMMEDIATE: \(.immediate)",
-        "   📅 This Week: \(.this_week)", 
+        "   📅 This Week: \(.this_week)",
         "   📆 Next Week: \(.next_week)",
         "   🎯 Strategic: \(.strategic)"'
-    
+
     # Quick Actions
     echo -e "\n${COLOR_BOLD}⚡ COMMAND CENTER CONTROLS${COLOR_RESET}"
     echo "   • just cc-generate     - Regenerate action plan with latest data"
@@ -348,7 +348,7 @@ EOF
     echo "   • just cc-html         - Open interactive HTML dashboard"
     echo "   • just cc-report       - Generate weekly performance report"
     echo "   • just cc-review       - View raw JSON action plan"
-    
+
     echo -e "\n${COLOR_PURPLE}📡 System last synchronized: $(date)${COLOR_RESET}"
     echo -e "${COLOR_CYAN}💡 Tip: Use 'just business-morning' for your daily briefing${COLOR_RESET}"
 }
@@ -358,21 +358,21 @@ track_feedback() {
     local outcome="${2:-completed}"
     local impact_score="${3:-75}"
     local notes="${4:-Manual feedback via command center}"
-    
+
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local date_str=$(date +%Y%m%d_%H%M%S)
-    
+
     log_info "Tracking decision feedback for action: $action_id"
-    
+
     # Load current action details
     local action_details="{}"
     if [[ -f "$ACTIONS_DIR/latest.json" ]]; then
         action_details=$(jq --arg id "$action_id" '.priorities[] | select(.id == $id)' "$ACTIONS_DIR/latest.json" 2>/dev/null || echo "{}")
     fi
-    
+
     local expected_impact=$(echo "$action_details" | jq -r '.kpi_impact // 50')
     local variance=$(( impact_score - expected_impact ))
-    
+
     # Create feedback with variance analysis
     local feedback=$(jq -n \
         --arg timestamp "$timestamp" \
@@ -395,8 +395,8 @@ track_feedback() {
             notes: $notes,
             learning_insights: (
                 if ($variance | tonumber) > 20 then ["Impact exceeded expectations - analyze success factors"]
-                elif ($variance | tonumber) < -20 then ["Impact below expectations - review assumptions"] 
-                else ["Impact aligned with expectations"] 
+                elif ($variance | tonumber) < -20 then ["Impact below expectations - review assumptions"]
+                else ["Impact aligned with expectations"]
                 end
             ),
             recommendation_accuracy: (
@@ -406,15 +406,15 @@ track_feedback() {
                 end
             )
         }')
-    
+
     echo "$feedback" > "$FEEDBACK_DIR/feedback_${action_id}_$date_str.json"
-    
+
     # Update running feedback stats
     local stats_file="$FEEDBACK_DIR/stats.json"
     if [[ ! -f "$stats_file" ]]; then
         echo '{"total_actions": 0, "avg_impact": 0, "accuracy_rate": 0}' > "$stats_file"
     fi
-    
+
     # Update stats with new feedback
     local updated_stats=$(jq --argjson feedback "$feedback" '
         .total_actions += 1 |
@@ -423,11 +423,11 @@ track_feedback() {
         .completion_rate = (.recent_outcomes | map(select(. == "completed")) | length) / (.recent_outcomes | length) * 100 |
         .avg_variance = (.avg_variance // 0) * 0.8 + ($feedback.variance * 0.2)
     ' "$stats_file")
-    
+
     echo "$updated_stats" > "$stats_file"
-    
+
     log_success "Feedback tracked: $outcome (Impact: $impact_score, Variance: $variance)"
-    
+
     if (( variance > 20 )); then
         log_success "🎉 Action exceeded expectations! Consider documenting success factors."
     elif (( variance < -20 )); then
@@ -440,22 +440,22 @@ generate_report() {
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local week_start=$(date -v-7d +%Y-%m-%d 2>/dev/null || date -d '7 days ago' +%Y-%m-%d)
     local week_end=$(date +%Y-%m-%d)
-    
+
     log_info "Generating $report_type command center report..."
-    
+
     local total_actions=$(find "$ACTIONS_DIR" -name "plan_*.json" -mtime -7 2>/dev/null | wc -l | tr -d ' ')
     local feedback_files=$(find "$FEEDBACK_DIR" -name "feedback_*.json" -mtime -7 2>/dev/null)
     local completed_count=0
-    
+
     if [[ -n "$feedback_files" ]]; then
         completed_count=$(echo "$feedback_files" | xargs cat 2>/dev/null | jq -s 'map(select(.outcome == "completed")) | length')
     fi
-    
+
     local completion_rate=0
     if (( total_actions > 0 )); then
         completion_rate=$(( completed_count * 100 / total_actions ))
     fi
-    
+
     # Generate comprehensive report
     local report=$(jq -n \
         --arg timestamp "$timestamp" \
@@ -469,14 +469,14 @@ generate_report() {
             period: {start: $start, end: $end},
             summary: {
                 total_action_plans: ($total | tonumber),
-                actions_completed: ($completed | tonumber), 
+                actions_completed: ($completed | tonumber),
                 completion_rate: ($rate | tonumber),
                 system_uptime: "99.9%",
                 integration_health: "excellent"
             },
             achievements: [
                 "Integrated 7 AI decision systems",
-                "Achieved data-driven priority recommendations", 
+                "Achieved data-driven priority recommendations",
                 "Implemented real-time KPI impact scoring",
                 "Created unified feedback tracking"
             ],
@@ -493,25 +493,25 @@ generate_report() {
                 "Add cross-system pattern recognition"
             ]
         }')
-    
+
     local report_file="$REPORTS_DIR/${report_type}_report_$(date +%Y%m%d).json"
     echo "$report" > "$report_file"
-    
+
     log_success "Report generated: $report_file"
-    
+
     # Show summary
     echo -e "\n${COLOR_BOLD}📊 COMMAND CENTER PERFORMANCE REPORT${COLOR_RESET}"
     echo -e "Period: $week_start to $week_end\n"
     echo "$report" | jq -r '
         "📈 Action Plans Generated: \(.summary.total_action_plans)",
-        "✅ Actions Completed: \(.summary.actions_completed)", 
+        "✅ Actions Completed: \(.summary.actions_completed)",
         "📊 Completion Rate: \(.summary.completion_rate)%",
         "🔗 System Integration: \(.summary.integration_health)",
         "",
         "🏆 Key Achievements:",
         (.achievements[] | "   • \(.)"),
         "",
-        "💡 Strategic Insights:", 
+        "💡 Strategic Insights:",
         (.insights[] | "   • \(.)"),
         "",
         "🎯 Next Focus Areas:",
@@ -521,21 +521,21 @@ generate_report() {
 
 generate_html_dashboard() {
     local action_plan="${1:-}"
-    
+
     if [[ -z "$action_plan" ]] && [[ -f "$ACTIONS_DIR/latest.json" ]]; then
         action_plan=$(cat "$ACTIONS_DIR/latest.json")
     elif [[ -z "$action_plan" ]]; then
         action_plan=$(generate_action_plan)
     fi
-    
+
     local timestamp=$(date +%Y%m%d_%H%M%S)
     local output_file="$REPORTS_DIR/dashboard_$timestamp.html"
-    
+
     # Create modern HTML dashboard
     local health_score=$(echo "$action_plan" | jq -r '.business_health_score')
     local pmf_score=$(echo "$action_plan" | jq -r '.metrics_summary.pmf_score')
     local churn_risk=$(echo "$action_plan" | jq -r '.metrics_summary.churn_risk')
-    
+
     cat > "$output_file" << EOF
 <!DOCTYPE html>
 <html>
@@ -673,7 +673,7 @@ generate_html_dashboard() {
                 <div class="progress-fill" style="width: ${health_score}%;"></div>
             </div>
         </div>
-        
+
         <div class="dashboard-grid">
             <div class="card">
                 <h2>📊 System Metrics</h2>
@@ -694,7 +694,7 @@ generate_html_dashboard() {
                     <strong>7/7</strong>
                 </div>
             </div>
-            
+
             <div class="card">
                 <h2>🔗 System Integration</h2>
                 <div class="systems-status">
@@ -722,13 +722,13 @@ generate_html_dashboard() {
                 </div>
             </div>
         </div>
-        
+
         <div class="card">
             <h2>📋 Today's Prioritized Actions</h2>
 EOF
-    
+
     # Add action items
-    echo "$action_plan" | jq -r '.priorities[] | 
+    echo "$action_plan" | jq -r '.priorities[] |
         "<div class=\"priority-item priority-\(.priority)\">",
         "  <h3>Priority \(.priority): \(.title)</h3>",
         "  <p><strong>Impact:</strong> \(.kpi_impact)/100 | <strong>Timeline:</strong> \(.timeline)</p>",
@@ -738,17 +738,17 @@ EOF
         "  </ul>",
         "</div>"
     ' >> "$output_file"
-    
+
     cat >> "$output_file" << EOF
         </div>
-        
+
         <div class="card">
             <h2>🧠 AI Recommendations</h2>
             <p><strong>Immediate:</strong> Focus on retention - high churn risk detected</p>
             <p><strong>This Week:</strong> Implement onboarding improvements and quality fixes</p>
             <p><strong>Strategic:</strong> Build comprehensive customer success platform</p>
         </div>
-        
+
         <div style="text-align: center; margin-top: 2rem; color: white;">
             <p>Last updated: $(date) | Generated by Unified Command Center</p>
             <p>Use <code>just cc</code> commands to interact with the system</p>
@@ -757,14 +757,14 @@ EOF
 </body>
 </html>
 EOF
-    
+
     log_success "HTML dashboard generated: $output_file"
     echo "$output_file"
 }
 
 main() {
     local command="${1:-dashboard}"
-    
+
     case "$command" in
         "dashboard")
             show_dashboard

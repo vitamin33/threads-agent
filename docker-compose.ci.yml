@@ -1,0 +1,43 @@
+# Docker Compose for CI with BuildKit caching
+version: '3.8'
+
+x-build-args: &build-args
+  BUILDKIT_INLINE_CACHE: 1
+
+x-cache-from: &cache-from
+  - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/orchestrator:cache
+  - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/orchestrator:main
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
+      args:
+        <<: *build-args
+      cache_from: *cache-from
+      cache_to:
+        - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/orchestrator:cache,mode=max
+    image: orchestrator:local
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: services/celery_worker/Dockerfile
+      args:
+        <<: *build-args
+      cache_from:
+        - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/celery-worker:cache
+        - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/celery-worker:main
+    image: celery-worker:local
+
+  persona_runtime:
+    build:
+      context: .
+      dockerfile: services/persona_runtime/Dockerfile
+      args:
+        <<: *build-args
+      cache_from:
+        - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/persona-runtime:cache
+        - type=registry,ref=ghcr.io/${GITHUB_REPOSITORY}/persona-runtime:main
+    image: persona-runtime:local

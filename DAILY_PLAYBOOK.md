@@ -8,7 +8,7 @@
 # Morning - Start EVERYTHING with one command
 just work-day
 
-# Work - Create viral content with AI assistance  
+# Work - Create viral content with AI assistance
 just create-viral ai-jesus "trending topic"
 
 # Evening - Analyze, commit, and optimize
@@ -98,7 +98,7 @@ What do I want to do?
 # Monday morning
 just make-money
 
-# Friday afternoon  
+# Friday afternoon
 just analyze-money
 # Profit! 💰
 ```

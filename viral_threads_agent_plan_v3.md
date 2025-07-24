@@ -34,7 +34,7 @@ Build a production-grade AI agent platform that **guarantees 6% engagement rate*
 ```python
 ViraLSystem:
   - HookOptimizer: 500+ proven patterns
-  - EngagementPredictor: ML scoring model  
+  - EngagementPredictor: ML scoring model
   - MultiVariantEngine: 10-variant testing
   - ReplyMagnetizer: Conversation starters
   - ViralPatternMiner: Continuous learning
@@ -295,7 +295,7 @@ class EngagementPredictor:
     def __init__(self):
         self.model = load_model("viral_bert_v2")
         self.min_quality_score = 0.7
-        
+
     def score_content(self, post):
         features = {
             "readability": flesch_reading_ease(post),
@@ -307,7 +307,7 @@ class EngagementPredictor:
             "share_triggers": self.count_share_elements(post),
             "reply_magnets": self.count_conversation_starters(post)
         }
-        
+
         return self.model.predict(features)
 ```
 
@@ -316,20 +316,20 @@ class EngagementPredictor:
 class ViralVariantEngine:
     def generate_variants(self, base_content, target_er=0.08):
         variants = []
-        
+
         # Generate 10 variants with different strategies
         for strategy in self.viral_strategies:
             variant = self.apply_strategy(base_content, strategy)
             predicted_er = self.predictor.score(variant)
-            
+
             if predicted_er >= target_er * 0.8:  # 80% of target
                 variants.append({
                     'content': variant,
                     'predicted_er': predicted_er,
                     'strategy': strategy
                 })
-        
-        return sorted(variants, key=lambda x: x['predicted_er'], 
+
+        return sorted(variants, key=lambda x: x['predicted_er'],
                      reverse=True)[:10]
 ```
 

@@ -1,7 +1,7 @@
 # CLAUDE.md - Threads-Agent Stack Development Guide
 
 > **🚀 AI-Powered Development**: From idea to shipped code in minutes with GPT-4 planning + auto-git workflow.
-> 
+>
 > **Quick Start**: `export OPENAI_API_KEY=your-key && ./scripts/workflow-automation.sh ai-plan "your idea"`
 
 ## 🎯 **Your Daily Development Workflow**
@@ -146,7 +146,7 @@ services/
 - **Monitoring**: Prometheus, OpenTelemetry, Jaeger, Grafana, AlertManager
 - **AI/ML**: OpenAI API, optional LoRA support via PEFT
 - **Search**: SearXNG (self-hosted metasearch engine)
-- **MCP Servers**: 
+- **MCP Servers**:
   - **Slack** - Real-time alerts to #alerts channel
   - **SearXNG** - Free search for trends and competitive analysis
   - **Redis** - Fast caching for trends, search results, metrics
@@ -160,7 +160,7 @@ services/
 
 ### Prerequisites
 - Docker >= 24
-- k3d >= 5.6  
+- k3d >= 5.6
 - Helm >= 3.14
 - Python 3.12+
 - just (command runner)
@@ -183,7 +183,7 @@ See **[DAILY_PLAYBOOK.md](./DAILY_PLAYBOOK.md)** for your daily cheat sheet.
 **The Only 3 Commands You Need Daily**:
 ```bash
 just work-day        # Morning: Start everything + dashboards
-just create-viral    # Work: AI creates viral content 
+just create-viral    # Work: AI creates viral content
 just end-day        # Evening: Analyze + deploy + optimize
 ```
 
@@ -199,7 +199,7 @@ just create-viral ai-jesus "AI ethics"
 # Output: Researches trends → Creates content → Tests → Ready to deploy!
 
 # Ship a new feature
-just ship-it "feat: added engagement tracking"  
+just ship-it "feat: added engagement tracking"
 # Output: Runs tests → Deploys safely → Creates PR
 
 # Check your business metrics
@@ -375,7 +375,7 @@ just ship "feat: implemented trend-aware content generation"
 - `just mcp-k8s-test` - Test Kubernetes MCP access
 - `just mcp-postgres-test` - Test PostgreSQL MCP queries
 
-#### Testing  
+#### Testing
 - `just unit` - Run unit tests only (`pytest -m "not e2e"`)
 - `just e2e` - Run end-to-end tests with automatic port forwarding (`pytest -m e2e`)
 - `just test-watch [SERVICE]` - Watch mode testing
@@ -399,7 +399,7 @@ just ship "feat: implemented trend-aware content generation"
 
 ### Environment Files
 - `chart/values-dev.yaml` - Local k3d development
-- `chart/values-ci.yaml` - CI/testing environment  
+- `chart/values-ci.yaml` - CI/testing environment
 - `chart/values-prod.yaml` - Production configuration
 
 ## Testing Strategy
@@ -437,13 +437,13 @@ services/*/tests/     # Service-specific unit tests
 class Post(Base):
     id: int (BigInteger, PK)
     persona_id: str
-    hook: str  
+    hook: str
     body: str
     tokens_used: int
     ts: datetime (default=NOW())
 
 class Task(Base):
-    id: int (BigInteger, PK) 
+    id: int (BigInteger, PK)
     payload: dict[str, Any]
     status: str (default="queued")
 ```
@@ -472,7 +472,7 @@ class Task(Base):
   - **NEW** `POST /search/enhanced-task` - Create search-powered content
 - **Dependencies**: PostgreSQL, RabbitMQ, Qdrant, SearXNG
 
-### Celery Worker (`services/celery_worker/`)  
+### Celery Worker (`services/celery_worker/`)
 - **Purpose**: Background task processing with SSE updates
 - **Tasks**: `tasks.queue_post` - Full content generation pipeline
 - **Features**: Server-Sent Events for real-time progress
@@ -489,7 +489,7 @@ class Task(Base):
 
 ### Fake Threads (`services/fake_threads/`)
 - **Purpose**: Mock Threads API for development/testing
-- **Endpoints**: 
+- **Endpoints**:
   - `POST /publish` - Accept generated content
   - `GET /published` - List all published content
   - `GET /ping` - Health check
@@ -506,13 +506,13 @@ class Task(Base):
 
 #### Orchestrator
 - `RABBITMQ_URL` - Celery broker connection
-- `PERSONA_RUNTIME_URL` - Service-to-service communication  
+- `PERSONA_RUNTIME_URL` - Service-to-service communication
 - `DATABASE_URL` - PostgreSQL connection
 - `QDRANT_URL` - Vector store connection
 - `SEARXNG_URL` - SearXNG search engine URL (default: http://localhost:8888)
 - `SEARCH_TIMEOUT` - Search request timeout in seconds (default: 10)
 
-#### Persona Runtime  
+#### Persona Runtime
 - `OPENAI_API_KEY` - OpenAI API access (use "test" for offline mode)
 - `HOOK_MODEL` - Model for hook generation (default: gpt-4o)
 - `BODY_MODEL` - Model for body generation (default: gpt-3.5-turbo-0125)
@@ -534,9 +534,9 @@ class Task(Base):
 
 ### Helm Configuration
 - **Chart**: Single mono-chart in `chart/`
-- **Values Hierarchy**: 
+- **Values Hierarchy**:
   1. `values.yaml` (base/production)
-  2. `values-dev.yaml` (local overrides)  
+  2. `values-dev.yaml` (local overrides)
   3. `values-dev.local.yaml` (personal, gitignored)
 - **Components**: All services + PostgreSQL + RabbitMQ + Qdrant
 
@@ -548,7 +548,7 @@ class Task(Base):
 
 #### Pipeline Steps
 1. **Setup**: Checkout + BuildX cache
-2. **Infrastructure**: Create k3d cluster  
+2. **Infrastructure**: Create k3d cluster
 3. **Build**: Docker images with cache optimization
 4. **Deploy**: Helm install with CI values + secret injection
 5. **Test**: Unit + E2E test suite with port forwarding
@@ -580,7 +580,7 @@ class Task(Base):
   - **NEW** `search_enhanced_posts_total{persona_id,enhancement_type}` - Enhanced content tracking
   - **NEW** `search_cache_operations{operation,result}` - Cache performance
   - **NEW** `trend_relevance_score{topic,persona_id}` - Trend quality scoring
-- **Helpers**: 
+- **Helpers**:
   - `services.common.metrics.record_latency()`
   - `services.common.metrics.record_business_metric()`
   - `services.common.metrics.record_engagement_rate()`
@@ -610,7 +610,7 @@ class Task(Base):
   - `CeleryQueueDepthHigh` - Queue >1000 messages
   - `DiskSpaceHigh` - Disk usage >85%
   - `PodCrashLooping` - Pod restarts >5 in 1 hour
-  
+
 - **Warning Alerts** (⚠️ Slack):
   - `HighLatency` - P95 >2s for 10 minutes
   - `HighTokenCost` - OpenAI costs >$5/hour
@@ -675,7 +675,7 @@ class Task(Base):
 - **Pre-commit**: Enforced via `just ship` command
 - **Testing**: High coverage with unit + integration + e2e
 
-### Git Workflow  
+### Git Workflow
 - **Branching**: `feat/<epic>-<slug>` pattern (general features)
 - **Task Branches**: `task-{epic-id}-{kebab-case-title}` pattern (local tasks)
 - **Protection**: `main` branch requires PR + CI passing + code owner review
@@ -836,7 +836,7 @@ Example: `threads-agent-jordan-kim-bc9e97`
 ```python
 _PERSONA_DB = {
     "ai-jesus": SimpleNamespace(emoji="🙏", temperament="kind"),
-    "ai-elon": SimpleNamespace(emoji="🚀", temperament="hype"), 
+    "ai-elon": SimpleNamespace(emoji="🚀", temperament="hype"),
 }
 ```
 
@@ -845,7 +845,7 @@ _PERSONA_DB = {
 #### Standard Pipeline
 1. **Ingest**: Clean and validate user input
 2. **Hook Generation**: Create engaging opening with gpt-4o
-3. **Body Generation**: Expand with gpt-3.5-turbo-0125  
+3. **Body Generation**: Expand with gpt-3.5-turbo-0125
 4. **Guardrail**: Content moderation + safety checks
 5. **Format**: Apply persona styling + emojis
 
@@ -873,7 +873,7 @@ just k3d-nuke-all  # Nuclear reset
 just bootstrap     # Fresh start
 ```
 
-#### "Helm deployment timeout"  
+#### "Helm deployment timeout"
 ```bash
 kubectl get pods -A              # Check pod status
 kubectl get events --sort-by='.lastTimestamp' | tail -20  # Recent events
@@ -897,7 +897,7 @@ curl localhost:8080/health       # Verify connectivity
 # Postgres access
 kubectl port-forward svc/postgres 5432:5432
 
-# Fake Threads API  
+# Fake Threads API
 kubectl port-forward svc/fake-threads 9009:9009
 curl localhost:9009/ping  # Health check
 
@@ -985,7 +985,7 @@ just redis-cli ZADD "trending:topics" 95 "AI productivity"
 ```sql
 -- Direct queries without port-forwarding
 SELECT persona_id, AVG(engagement_rate) as avg_engagement
-FROM posts 
+FROM posts
 WHERE created_at > NOW() - INTERVAL '7 days'
 GROUP BY persona_id;
 ```
@@ -1126,7 +1126,7 @@ just token-viral       # Template-based creation (50% savings)
 ```bash
 # Traditional approach: 10,000 tokens/day ($0.20/day)
 just create-viral (x5)  # 5,000 tokens
-just ai-biz (x5)       # 2,500 tokens  
+just ai-biz (x5)       # 2,500 tokens
 just analyze-money (x5) # 2,500 tokens
 
 # Optimized approach: 2,000 tokens/day ($0.04/day - 80% less!)
@@ -1156,6 +1156,6 @@ just cached-trends     # 0 tokens (cached)
 
 ---
 
-**Last Updated**: 2025-07-22  
-**Repository**: https://github.com/threads-agent-stack/threads-agent  
+**Last Updated**: 2025-07-22
+**Repository**: https://github.com/threads-agent-stack/threads-agent
 **Documentation**: This file serves as the authoritative development guide for future Claude instances working on this codebase.

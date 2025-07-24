@@ -22,7 +22,7 @@ features:
       - "Existing service topology"
       - "Inter-service communication patterns"
       - "Data consistency requirements"
-    
+
   - name: "API Contract Definition"
     description: "Define service APIs and contracts"
     type: "api_design"
@@ -32,7 +32,7 @@ features:
       - "Existing API patterns"
       - "Versioning strategy"
       - "OpenAPI/Swagger documentation"
-    
+
   - name: "Core Service Implementation"
     description: "Implement main service functionality"
     type: "development"
@@ -42,7 +42,7 @@ features:
       - "Existing service patterns"
       - "Shared libraries and utilities"
       - "Error handling conventions"
-    
+
   - name: "Service Integration"
     description: "Integrate with existing services and infrastructure"
     type: "integration"
@@ -52,7 +52,7 @@ features:
       - "Service mesh configuration"
       - "Database connections"
       - "Message queue integration"
-    
+
   - name: "Testing and Validation"
     description: "Comprehensive testing across service boundaries"
     type: "testing"
@@ -62,7 +62,7 @@ features:
       - "Existing test infrastructure"
       - "Contract testing"
       - "End-to-end test scenarios"
-    
+
   - name: "Deployment and Monitoring"
     description: "Deploy service and implement monitoring"
     type: "deployment"

@@ -25,7 +25,7 @@ The Claude Code Auto-Fix CI system automatically detects and fixes CI failures i
 ## Supported Fix Types
 
 - ✅ **Test Failures**: Unit and integration test fixes
-- ✅ **Linting Errors**: Ruff, Black, isort formatting issues  
+- ✅ **Linting Errors**: Ruff, Black, isort formatting issues
 - ✅ **Type Checking**: MyPy type annotation fixes
 - ✅ **Import Errors**: Missing or incorrect imports
 - ✅ **Syntax Errors**: Python syntax issues

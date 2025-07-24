@@ -31,12 +31,12 @@ log_git() { echo -e "${CYAN}[GIT]${NC} $*"; }
 get_task_info() {
     local task_id="$1"
     local task_file="$TASKS_DIR/${task_id}.yaml"
-    
+
     if [[ ! -f "$task_file" ]]; then
         log_error "Task file not found: $task_file"
         return 1
     fi
-    
+
     # Extract key information
     local task_name=$(grep "^name:" "$task_file" | cut -d'"' -f2)
     local epic_id=$(grep "^epic_id:" "$task_file" | cut -d'"' -f2)
@@ -44,7 +44,7 @@ get_task_info() {
     local description=$(grep "^description:" "$task_file" | cut -d'"' -f2)
     local priority=$(grep "^priority:" "$task_file" | cut -d'"' -f2)
     local effort=$(grep "^effort:" "$task_file" | cut -d'"' -f2)
-    
+
     # Export for use by other functions
     export TASK_NAME="$task_name"
     export EPIC_ID="$epic_id"
@@ -59,46 +59,46 @@ generate_branch_name() {
     local task_id="$1"
     local epic_part=""
     local task_part=""
-    
+
     # Get epic identifier (last part of epic ID)
     if [[ -n "$EPIC_ID" ]]; then
         epic_part=$(echo "$EPIC_ID" | sed 's/.*_//')
     fi
-    
+
     # Clean task name for branch
     task_part=$(echo "$TASK_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-\|-$//g' | cut -c1-40)
-    
+
     echo "task-${epic_part}-${task_part}"
 }
 
 # Start working on a task - create branch and update status
 start_task() {
     local task_id="$1"
-    
+
     log_info "Starting work on task: $task_id"
-    
+
     # Get task information
     get_task_info "$task_id"
-    
+
     # Check if we're in a git repository
     if ! git rev-parse --git-dir >/dev/null 2>&1; then
         log_error "Not in a git repository"
         return 1
     fi
-    
+
     # Ensure we're on main and up to date
     log_git "Ensuring main branch is up to date..."
     local current_branch=$(git branch --show-current)
-    
+
     if [[ "$current_branch" != "main" ]]; then
         git checkout main
     fi
-    
+
     git pull origin main
-    
+
     # Generate branch name
     local branch_name=$(generate_branch_name "$task_id")
-    
+
     # Check if branch already exists
     if git show-ref --verify --quiet "refs/heads/$branch_name"; then
         log_info "Branch $branch_name already exists, checking out..."
@@ -108,17 +108,17 @@ start_task() {
         git checkout -b "$branch_name"
         git push -u origin "$branch_name"
     fi
-    
+
     # Update task status
     update_task_status "$task_id" "in_progress"
-    
+
     # Set up commit template
     setup_commit_template "$task_id"
-    
+
     log_success "Ready to work on: $TASK_NAME"
     log_info "Branch: $branch_name"
     log_info "Task: $TASK_DESCRIPTION"
-    
+
     # Show next steps
     echo
     echo "🚀 Next steps:"
@@ -132,24 +132,24 @@ update_task_status() {
     local task_id="$1"
     local new_status="$2"
     local task_file="$TASKS_DIR/${task_id}.yaml"
-    
+
     if [[ ! -f "$task_file" ]]; then
         log_error "Task file not found: $task_file"
         return 1
     fi
-    
+
     # Update status and timestamp
     sed -i.bak "s/^status: .*/status: \"$new_status\"/" "$task_file"
     sed -i.bak "s/^updated: .*/updated: \"$(date +%Y-%m-%dT%H:%M:%S%z)\"/" "$task_file"
     rm "${task_file}.bak"
-    
+
     log_success "Updated task $task_id status: $new_status"
 }
 
 # Setup commit message template for the task
 setup_commit_template() {
     local task_id="$1"
-    
+
     cat > .gitmessage << EOF
 # Task: $TASK_NAME ($task_id)
 # Epic: $EPIC_ID
@@ -162,7 +162,7 @@ setup_commit_template() {
 #
 # Example: feat: implement JWT authentication middleware (closes $task_id)
 EOF
-    
+
     git config commit.template .gitmessage
     log_info "Commit template set up for task context"
 }
@@ -171,9 +171,9 @@ EOF
 commit_with_task() {
     local task_id="$1"
     local commit_message="$2"
-    
+
     get_task_info "$task_id"
-    
+
     # Enhance commit message with task context
     local enhanced_message="$commit_message
 
@@ -182,18 +182,18 @@ Epic: $EPIC_ID
 Priority: $TASK_PRIORITY
 
 Co-authored-by: AI Planning System <ai@threads-agent.dev>"
-    
+
     # Stage all changes
     git add -A
-    
+
     # Commit with enhanced message
     git commit -m "$enhanced_message"
-    
+
     # Push to remote
     git push
-    
+
     log_success "Committed and pushed changes for task: $task_id"
-    
+
     # Update task progress (could be automated based on file changes)
     prompt_task_progress "$task_id"
 }
@@ -201,7 +201,7 @@ Co-authored-by: AI Planning System <ai@threads-agent.dev>"
 # Prompt user to update task progress
 prompt_task_progress() {
     local task_id="$1"
-    
+
     echo
     echo "📊 Update task progress?"
     echo "1) 25% - Getting started"
@@ -209,9 +209,9 @@ prompt_task_progress() {
     echo "3) 75% - Almost complete"
     echo "4) 100% - Ready for review"
     echo "5) Skip"
-    
+
     read -p "Choose (1-5): " choice
-    
+
     case $choice in
         1) update_task_progress "$task_id" 25 ;;
         2) update_task_progress "$task_id" 50 ;;
@@ -227,10 +227,10 @@ update_task_progress() {
     local task_id="$1"
     local progress="$2"
     local task_file="$TASKS_DIR/${task_id}.yaml"
-    
+
     sed -i.bak "s/^progress: .*/progress: $progress/" "$task_file"
     rm "${task_file}.bak"
-    
+
     log_success "Updated task progress: $progress%"
 }
 
@@ -238,21 +238,21 @@ update_task_progress() {
 ship_task() {
     local task_id="$1"
     local pr_title="${2:-}"
-    
+
     get_task_info "$task_id"
-    
+
     # Default PR title if not provided
     if [[ -z "$pr_title" ]]; then
         pr_title="$TASK_NAME"
     fi
-    
+
     # Generate PR description from task info
     local pr_description=$(generate_pr_description "$task_id")
-    
+
     # Check if gh CLI is available
     if command -v gh >/dev/null 2>&1; then
         log_git "Creating PR with GitHub CLI..."
-        
+
         # Create PR
         local pr_url=$(gh pr create \
             --title "$pr_title" \
@@ -260,14 +260,14 @@ ship_task() {
             --label "task" \
             --label "$TASK_PRIORITY" \
             --label "$TASK_EFFORT" 2>/dev/null || echo "")
-        
+
         if [[ -n "$pr_url" ]]; then
             log_success "PR created: $pr_url"
-            
+
             # Update task with PR info
             echo "pr_url: \"$pr_url\"" >> "$TASKS_DIR/${task_id}.yaml"
             update_task_status "$task_id" "review"
-            
+
             # Open PR in browser if possible
             if command -v open >/dev/null 2>&1; then
                 open "$pr_url"
@@ -285,12 +285,12 @@ ship_task() {
 # Generate PR description from task
 generate_pr_description() {
     local task_id="$1"
-    
+
     cat << EOF
 ## 📋 Task: $TASK_NAME
 
-**Task ID:** \`$task_id\`  
-**Epic:** \`$EPIC_ID\`  
+**Task ID:** \`$task_id\`
+**Epic:** \`$EPIC_ID\`
 **Priority:** $TASK_PRIORITY | **Effort:** $TASK_EFFORT
 
 ### Description
@@ -321,48 +321,48 @@ EOF
 manual_pr_instructions() {
     local task_id="$1"
     local branch_name=$(git branch --show-current)
-    
+
     echo
     echo "📝 Manual PR Creation:"
     echo "1. Go to: https://github.com/$(git remote get-url origin | sed 's/.*github.com[:/]\([^.]*\).*/\1/')/compare/$branch_name?expand=1"
     echo "2. Title: $TASK_NAME"
     echo "3. Use description from: generate_pr_description $task_id"
     echo
-    
+
     update_task_status "$task_id" "review"
 }
 
 # Complete a task - merge and cleanup
 complete_task() {
     local task_id="$1"
-    
+
     get_task_info "$task_id"
-    
+
     # Update task status
     update_task_status "$task_id" "completed"
     update_task_progress "$task_id" 100
-    
+
     # Add completion timestamp
     echo "completed_date: \"$(date +%Y-%m-%dT%H:%M:%S%z)\"" >> "$TASKS_DIR/${task_id}.yaml"
-    
+
     # Switch back to main
     git checkout main
     git pull origin main
-    
+
     # Optional: Delete the feature branch (user choice)
     local branch_name=$(generate_branch_name "$task_id")
     echo
     echo "🧹 Clean up feature branch?"
     read -p "Delete branch '$branch_name'? (y/N): " delete_branch
-    
+
     if [[ "$delete_branch" =~ ^[Yy]$ ]]; then
         git branch -d "$branch_name" 2>/dev/null || true
         git push origin --delete "$branch_name" 2>/dev/null || true
         log_success "Cleaned up branch: $branch_name"
     fi
-    
+
     log_success "Task completed: $TASK_NAME"
-    
+
     # Show next available tasks
     show_next_tasks "$EPIC_ID"
 }
@@ -370,32 +370,32 @@ complete_task() {
 # Show next available tasks from the same epic
 show_next_tasks() {
     local epic_id="$1"
-    
+
     echo
     echo "🎯 Next available tasks from this epic:"
-    
+
     local count=0
     for task_file in "$TASKS_DIR"/task_*.yaml; do
         [[ -f "$task_file" ]] || continue
-        
+
         local file_epic=$(grep "^epic_id:" "$task_file" | cut -d'"' -f2)
         local file_status=$(grep "^status:" "$task_file" | cut -d'"' -f2)
-        
+
         if [[ "$file_epic" == "$epic_id" ]] && [[ "$file_status" == "pending" ]]; then
             local file_task_id=$(basename "$task_file" .yaml)
             local file_name=$(grep "^name:" "$task_file" | cut -d'"' -f2)
             local file_priority=$(grep "^priority:" "$task_file" | cut -d'"' -f2)
-            
+
             echo "   $file_task_id: $file_name [$file_priority]"
             ((count++))
-            
+
             if [[ $count -ge 3 ]]; then
                 echo "   ... (use 'tasks list $epic_id' for full list)"
                 break
             fi
         fi
     done
-    
+
     if [[ $count -eq 0 ]]; then
         echo "   🎉 No pending tasks! Epic might be complete."
     fi
@@ -433,10 +433,10 @@ FEATURES:
 EXAMPLES:
     # Start working on authentication task
     $0 start task_feat_epic123_45678
-    
+
     # Commit progress with context
     $0 commit task_feat_epic123_45678 "add JWT middleware and validation"
-    
+
     # Ship for review
     $0 ship task_feat_epic123_45678 "feat: implement JWT authentication"
 
@@ -446,7 +446,7 @@ EOF
 # Main execution
 main() {
     cd "$PROJECT_ROOT"
-    
+
     case "${1:-help}" in
         start)
             if [[ $# -lt 2 ]]; then

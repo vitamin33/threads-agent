@@ -14,7 +14,7 @@
       "description": "Focus on user onboarding and engagement features",
       "specific_tasks": [
         "Improve onboarding flow",
-        "Add engagement tracking", 
+        "Add engagement tracking",
         "Create re-activation emails"
       ],
       "projected_metrics": {
@@ -28,7 +28,7 @@
       "priority": 2,
       "title": "Build User Retention System",
       "category": "feature",
-      "source": "business_intelligence", 
+      "source": "business_intelligence",
       "kpi_impact": 68,
       "effort": "high",
       "timeline": "Next 2 weeks",
