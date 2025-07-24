@@ -178,7 +178,16 @@ jobs:
           # Mock utils module
           EOF
           cat > langsmith/schemas.py << 'EOF'
-          # Mock schemas module
+          from enum import Enum
+          
+          class RunTypeEnum(str, Enum):
+              chain = "chain"
+              llm = "llm"
+              tool = "tool"
+              retriever = "retriever"
+              embedding = "embedding"
+              prompt = "prompt"
+              parser = "parser"
           EOF
 
       # ————————————————————————————————
