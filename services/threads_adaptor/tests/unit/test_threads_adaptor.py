@@ -2,7 +2,6 @@
 """Unit tests for threads_adaptor service."""
 
 import asyncio
-from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -283,7 +282,10 @@ class TestMetricsEndpoint:
         """Test that metrics endpoint returns prometheus format."""
         response = client.get("/metrics")
         assert response.status_code == 200
-        assert response.headers["content-type"] == "text/plain; version=0.0.4; charset=utf-8"
+        assert (
+            response.headers["content-type"]
+            == "text/plain; version=0.0.4; charset=utf-8"
+        )
         # Should contain some prometheus metrics
         assert "# HELP" in response.text
         assert "# TYPE" in response.text

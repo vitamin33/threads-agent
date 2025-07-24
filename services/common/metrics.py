@@ -616,6 +616,7 @@ REVENUE_TOTAL_USD = _safe_metric(
     ["type", "source"],
 )
 
+
 # ───── Legacy Functions for Backward Compatibility ──────────────────────────────────────
 def record_celery_task(task_name: str, status: str, duration: float = 0.0) -> None:
     """Record Celery task execution metrics."""
