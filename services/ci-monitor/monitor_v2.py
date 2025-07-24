@@ -387,9 +387,9 @@ if __name__ == "__main__":
                             print(
                                 f"Errors not auto-fixable for PR #{run_info['pr_number']}"
                             )
-                            self.attempted_fixes[
-                                str(run_info["run_id"])
-                            ] = datetime.now()
+                            self.attempted_fixes[str(run_info["run_id"])] = (
+                                datetime.now()
+                            )
                             continue
 
                         # Get fix plan from Claude
@@ -398,9 +398,9 @@ if __name__ == "__main__":
 
                         if not fix_plan:
                             print("Failed to get fix plan from Claude")
-                            self.attempted_fixes[
-                                str(run_info["run_id"])
-                            ] = datetime.now()
+                            self.attempted_fixes[str(run_info["run_id"])] = (
+                                datetime.now()
+                            )
                             continue
 
                         # Apply fixes

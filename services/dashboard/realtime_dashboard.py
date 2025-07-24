@@ -162,9 +162,9 @@ async def dashboard():
         <title>Threads-Agent Real-Time Dashboard</title>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <style>
-            body { 
-                font-family: Arial, sans-serif; 
-                margin: 0; 
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
                 padding: 20px;
                 background: #1a1a1a;
                 color: #fff;
@@ -234,7 +234,7 @@ async def dashboard():
     </head>
     <body>
         <h1>🚀 Threads-Agent Real-Time Dashboard</h1>
-        
+
         <div class="grid">
             <div class="metric-card">
                 <div class="metric-value" id="engagement-rate">--%</div>
@@ -249,12 +249,12 @@ async def dashboard():
                 <div class="metric-label">Monthly Revenue Projection</div>
             </div>
         </div>
-        
+
         <div class="chart">
             <h3>Performance Trends</h3>
             <div id="performance-chart"></div>
         </div>
-        
+
         <div class="grid">
             <div class="trends">
                 <h3>🔥 Trending Topics</h3>
@@ -269,64 +269,64 @@ async def dashboard():
                 <div id="active-personas"></div>
             </div>
         </div>
-        
+
         <div class="recommendations">
             <h3>🤖 AI Recommendations</h3>
             <div id="recommendations"></div>
         </div>
-        
+
         <script>
             const ws = new WebSocket('ws://localhost:8002/ws');
-            
+
             let metricsHistory = {
                 timestamps: [],
                 engagement: [],
                 cost: [],
                 posts: []
             };
-            
+
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 updateDashboard(data);
             };
-            
+
             function updateDashboard(data) {
                 // Update metric cards
-                document.getElementById('engagement-rate').textContent = 
+                document.getElementById('engagement-rate').textContent =
                     (data.business.engagement_rate * 100).toFixed(2) + '%';
-                document.getElementById('cost-per-follow').textContent = 
+                document.getElementById('cost-per-follow').textContent =
                     '$' + data.business.cost_per_follow.toFixed(3);
-                document.getElementById('revenue-projection').textContent = 
+                document.getElementById('revenue-projection').textContent =
                     '$' + Math.round(data.business.revenue_projection).toLocaleString();
-                
+
                 // Update history
                 metricsHistory.timestamps.push(new Date(data.timestamp));
                 metricsHistory.engagement.push(data.business.engagement_rate * 100);
                 metricsHistory.cost.push(data.business.cost_per_follow);
                 metricsHistory.posts.push(data.business.posts_per_hour);
-                
+
                 // Keep last 50 points
                 if (metricsHistory.timestamps.length > 50) {
                     Object.keys(metricsHistory).forEach(key => {
                         metricsHistory[key] = metricsHistory[key].slice(-50);
                     });
                 }
-                
+
                 // Update chart
                 updateChart();
-                
+
                 // Update trends
                 updateTrends(data.trends);
-                
+
                 // Update service health
                 updateServiceHealth(data.services);
-                
+
                 // Update recommendations
                 if (data.analysis && data.analysis.recommendations) {
                     updateRecommendations(data.analysis.recommendations);
                 }
             }
-            
+
             function updateChart() {
                 const traces = [
                     {
@@ -345,7 +345,7 @@ async def dashboard():
                         line: { color: '#ff9800' }
                     }
                 ];
-                
+
                 const layout = {
                     paper_bgcolor: '#2a2a2a',
                     plot_bgcolor: '#2a2a2a',
@@ -354,10 +354,10 @@ async def dashboard():
                     yaxis: { title: 'Engagement %', side: 'left' },
                     yaxis2: { title: 'Cost (cents)', side: 'right', overlaying: 'y' }
                 };
-                
+
                 Plotly.newPlot('performance-chart', traces, layout);
             }
-            
+
             function updateTrends(trends) {
                 const container = document.getElementById('trending-topics');
                 container.innerHTML = trends.map(t => `
@@ -367,7 +367,7 @@ async def dashboard():
                     </div>
                 `).join('');
             }
-            
+
             function updateServiceHealth(services) {
                 const container = document.getElementById('service-health');
                 container.innerHTML = Object.entries(services).map(([name, status]) => `
@@ -377,7 +377,7 @@ async def dashboard():
                     </div>
                 `).join('');
             }
-            
+
             function updateRecommendations(recommendations) {
                 const container = document.getElementById('recommendations');
                 container.innerHTML = recommendations.map(rec => `

@@ -28,18 +28,18 @@ class AITestGenerator:
     def __init__(self):
         self.test_generation_prompt = """
         Generate comprehensive test cases for AI persona content generation.
-        
+
         Persona: {persona_id}
         Sample Input: {sample_input}
         Sample Output: {sample_output}
-        
+
         Generate 5 test cases that verify:
         1. Persona voice consistency
         2. Content quality standards
         3. Safety guardrails
         4. Engagement optimization
         5. Edge case handling
-        
+
         Return as JSON with format:
         {{
             "test_cases": [
@@ -92,20 +92,20 @@ class AITestGenerator:
         """Validate output against test case using AI"""
         validation_prompt = f"""
         Validate this AI-generated content against test criteria:
-        
+
         Test Case: {test_case.name}
         Expected Patterns: {test_case.expected_patterns}
         Forbidden Patterns: {test_case.forbidden_patterns}
         Quality Threshold: {test_case.quality_threshold}
-        
+
         Actual Output: {actual_output}
-        
+
         Evaluate:
         1. Pattern matching (are expected patterns present?)
         2. Safety (are forbidden patterns absent?)
         3. Quality score (0-1)
         4. Specific issues found
-        
+
         Return as JSON:
         {{
             "passed": boolean,
@@ -144,23 +144,23 @@ from services.persona_runtime.runtime import PersonaRuntime
 async def {tc.name}():
     """Auto-generated test: {tc.name}"""
     runtime = PersonaRuntime("{tc.persona_id}")
-    
+
     state = {{
         "user_topic": "{tc.input}",
         "messages": []
     }}
-    
+
     result = await runtime.graph.ainvoke(state)
     output = result.get("full_text", "")
-    
+
     # Check expected patterns
     for pattern in {tc.expected_patterns}:
         assert pattern.lower() in output.lower(), f"Missing expected pattern: {{pattern}}"
-    
+
     # Check forbidden patterns
     for pattern in {tc.forbidden_patterns}:
         assert pattern.lower() not in output.lower(), f"Found forbidden pattern: {{pattern}}"
-    
+
     # Validate quality
     quality_score = await validate_quality(output)
     assert quality_score >= {tc.quality_threshold}, f"Quality below threshold: {{quality_score}}"
@@ -182,17 +182,17 @@ class ContinuousTestLearning:
         """Learn from test failures to generate better tests"""
         learning_prompt = f"""
         A test failed. Help improve future test generation.
-        
+
         Test Case: {test_case.name}
         Input: {test_case.input}
         Output: {output}
         Failure: {failure_reason}
-        
+
         Suggest:
         1. Better test patterns
         2. More specific validation criteria
         3. Edge cases to cover
-        
+
         Return as JSON:
         {{
             "improved_patterns": [],

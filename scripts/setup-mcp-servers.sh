@@ -37,18 +37,18 @@ check_cluster() {
 # Deploy Redis if not already deployed
 deploy_redis() {
     log "Checking Redis deployment..."
-    
+
     if kubectl get svc redis &>/dev/null; then
         success "Redis is already deployed"
     else
         log "Deploying Redis..."
         helm upgrade --install threads-agent ./chart -f chart/values-dev.yaml
-        
+
         # Wait for Redis to be ready
         kubectl wait --for=condition=ready pod -l app=redis --timeout=60s
         success "Redis deployed successfully"
     fi
-    
+
     # Set up port forwarding
     if ! lsof -i:6379 &>/dev/null; then
         log "Setting up Redis port forwarding..."
@@ -61,10 +61,10 @@ deploy_redis() {
 # Configure PostgreSQL access
 setup_postgres() {
     log "Setting up PostgreSQL access..."
-    
+
     if kubectl get svc postgres &>/dev/null; then
         success "PostgreSQL is running"
-        
+
         # Set up port forwarding if not already active
         if ! lsof -i:5432 &>/dev/null; then
             kubectl port-forward svc/postgres 5432:5432 > /dev/null 2>&1 &
@@ -80,7 +80,7 @@ setup_postgres() {
 # Create MCP test scripts
 create_test_scripts() {
     log "Creating MCP test scripts..."
-    
+
     # Redis test script
     cat > ./scripts/test-redis-mcp.sh << 'EOF'
 #!/bin/bash
@@ -94,7 +94,7 @@ echo "ZADD trending:topics 95 'AI productivity'"
 
 echo "Test complete. Check Redis for stored values."
 EOF
-    
+
     # Kubernetes test script
     cat > ./scripts/test-k8s-mcp.sh << 'EOF'
 #!/bin/bash
@@ -112,7 +112,7 @@ kubectl get deployments
 
 echo "Test complete."
 EOF
-    
+
     # PostgreSQL test script
     cat > ./scripts/test-postgres-mcp.sh << 'EOF'
 #!/bin/bash
@@ -120,13 +120,13 @@ echo "Testing PostgreSQL MCP..."
 
 # Test query
 PGPASSWORD=postgres psql -h localhost -U postgres -d threads_agent -c "
-SELECT persona_id, COUNT(*) as post_count 
-FROM posts 
+SELECT persona_id, COUNT(*) as post_count
+FROM posts
 GROUP BY persona_id;"
 
 echo "Test complete."
 EOF
-    
+
     chmod +x ./scripts/test-*-mcp.sh
     success "Test scripts created"
 }
@@ -134,7 +134,7 @@ EOF
 # Update justfile with MCP commands
 update_justfile() {
     log "Adding MCP commands to justfile..."
-    
+
     # Check if MCP section already exists
     if grep -q "# ---------- MCP Server Management ----------" justfile; then
         success "MCP commands already in justfile"
@@ -175,22 +175,22 @@ main() {
     echo -e "${BLUE}=== MCP Server Setup ===${NC}"
     echo "Setting up Redis, Kubernetes, PostgreSQL, and OpenAI MCP servers..."
     echo ""
-    
+
     # Check prerequisites
     if ! check_cluster; then
         exit 1
     fi
-    
+
     # Deploy and configure services
     deploy_redis
     setup_postgres
-    
+
     # Create test scripts
     create_test_scripts
-    
+
     # Update justfile
     update_justfile
-    
+
     echo ""
     echo -e "${GREEN}=== MCP Setup Complete! ===${NC}"
     echo ""

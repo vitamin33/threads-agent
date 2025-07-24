@@ -31,7 +31,7 @@ get_current_cluster() {
 display_cluster_info() {
     local cluster_name=$1
     local meta_file="$CLUSTER_META_DIR/${cluster_name}.json"
-    
+
     if [ -f "$meta_file" ]; then
         local repo=$(jq -r '.repository' "$meta_file")
         local dev=$(jq -r '.developer' "$meta_file")
@@ -40,7 +40,7 @@ display_cluster_info() {
         local api_port=$(jq -r '.api_port' "$meta_file")
         local created=$(jq -r '.created_at' "$meta_file")
         local shared=$(jq -r '.shared' "$meta_file")
-        
+
         echo -e "${CYAN}Cluster:${NC} $cluster_name"
         echo -e "  ${BLUE}Repository:${NC} $repo"
         echo -e "  ${BLUE}Developer:${NC} $dev <$email>"
@@ -56,18 +56,18 @@ display_cluster_info() {
 # List all clusters
 list_clusters() {
     local current_cluster=$(get_current_cluster)
-    
+
     echo "Available k3d clusters:"
     echo ""
-    
+
     local clusters=$(k3d cluster list -o json | jq -r '.[].name' 2>/dev/null || echo "")
-    
+
     if [ -z "$clusters" ]; then
         warn "No k3d clusters found"
         echo "Run 'just bootstrap-multi' to create a cluster"
         return
     fi
-    
+
     for cluster in $clusters; do
         if [ "$cluster" = "$current_cluster" ]; then
             echo -e "${GREEN}● Active:${NC}"
@@ -84,7 +84,7 @@ list_clusters() {
 switch_cluster() {
     local cluster_name=$1
     local meta_file="$CLUSTER_META_DIR/${cluster_name}.json"
-    
+
     # Check if cluster exists
     if ! k3d cluster list | grep -q "^$cluster_name "; then
         error "Cluster '$cluster_name' not found"
@@ -92,16 +92,16 @@ switch_cluster() {
         k3d cluster list | grep -v NAME | awk '{print "  - " $1}'
         exit 1
     fi
-    
+
     # Get cluster info
     if [ -f "$meta_file" ]; then
         local kubeconfig=$(jq -r '.kubeconfig' "$meta_file")
         local lb_port=$(jq -r '.lb_port' "$meta_file")
-        
+
         if [ -f "$kubeconfig" ]; then
             export KUBECONFIG="$kubeconfig"
             kubectl config use-context "k3d-${cluster_name}" &>/dev/null
-            
+
             success "Switched to cluster '$cluster_name'"
             echo ""
             display_cluster_info "$cluster_name"
@@ -130,47 +130,47 @@ switch_cluster() {
 # Delete a cluster
 delete_cluster() {
     local cluster_name=$1
-    
+
     read -p "Are you sure you want to delete cluster '$cluster_name'? (y/N) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "Cancelled"
         return
     fi
-    
+
     log "Deleting cluster '$cluster_name'..."
     k3d cluster delete "$cluster_name"
-    
+
     # Remove metadata
     rm -f "$CLUSTER_META_DIR/${cluster_name}.json"
-    
+
     success "Cluster '$cluster_name' deleted"
 }
 
 # Show cluster resources
 show_resources() {
     local cluster_name=${1:-$(get_current_cluster)}
-    
+
     if [ "$cluster_name" = "none" ]; then
         error "No active cluster. Use 'cluster-manager switch <name>' first"
         exit 1
     fi
-    
+
     echo "Resources in cluster '$cluster_name':"
     echo ""
-    
+
     echo -e "${CYAN}Nodes:${NC}"
     kubectl get nodes -o wide
     echo ""
-    
+
     echo -e "${CYAN}Namespaces:${NC}"
     kubectl get namespaces
     echo ""
-    
+
     echo -e "${CYAN}Deployments (all namespaces):${NC}"
     kubectl get deployments -A
     echo ""
-    
+
     echo -e "${CYAN}Services (all namespaces):${NC}"
     kubectl get services -A
 }
@@ -178,7 +178,7 @@ show_resources() {
 # Clean up orphaned clusters
 cleanup() {
     log "Checking for orphaned cluster metadata..."
-    
+
     for meta_file in "$CLUSTER_META_DIR"/*.json; do
         if [ -f "$meta_file" ]; then
             cluster_name=$(basename "$meta_file" .json)
@@ -188,7 +188,7 @@ cleanup() {
             fi
         fi
     done
-    
+
     success "Cleanup complete"
 }
 
@@ -197,7 +197,7 @@ case "${1:-help}" in
     list|ls)
         list_clusters
         ;;
-    
+
     switch|use)
         if [ -z "${2:-}" ]; then
             error "Usage: $0 switch <cluster-name>"
@@ -205,7 +205,7 @@ case "${1:-help}" in
         fi
         switch_cluster "$2"
         ;;
-    
+
     current)
         current=$(get_current_cluster)
         if [ "$current" = "none" ]; then
@@ -214,7 +214,7 @@ case "${1:-help}" in
             display_cluster_info "$current"
         fi
         ;;
-    
+
     delete|rm)
         if [ -z "${2:-}" ]; then
             error "Usage: $0 delete <cluster-name>"
@@ -222,15 +222,15 @@ case "${1:-help}" in
         fi
         delete_cluster "$2"
         ;;
-    
+
     resources|res)
         show_resources "${2:-}"
         ;;
-    
+
     cleanup)
         cleanup
         ;;
-    
+
     info)
         if [ -z "${2:-}" ]; then
             error "Usage: $0 info <cluster-name>"
@@ -238,7 +238,7 @@ case "${1:-help}" in
         fi
         display_cluster_info "$2"
         ;;
-    
+
     *)
         echo "Threads-Agent Cluster Manager"
         echo ""

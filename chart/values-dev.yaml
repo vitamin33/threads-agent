@@ -87,7 +87,7 @@ threadsAdaptor:
     # Get these from Meta Developer Dashboard
     # See docs/threads-api-setup.md for instructions
     appId: ""                          # Your Threads App ID
-    appSecret: ""                      # Your Threads App Secret  
+    appSecret: ""                      # Your Threads App Secret
     accessToken: ""                    # User Access Token
     userId: ""                         # Your Threads User ID
   resources:

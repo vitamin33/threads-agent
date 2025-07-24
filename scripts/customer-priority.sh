@@ -31,7 +31,7 @@ NC='\033[0m' # No Color
 # Initialize system
 init_customer_priority() {
     mkdir -p "$PRIORITY_DIR" "$RETENTION_DIR" "$STRATEGIC_DIR"
-    
+
     # Initialize configuration
     [[ ! -f "$CP_DIR/config.json" ]] && cat > "$CP_DIR/config.json" <<EOF
 {
@@ -53,12 +53,12 @@ init_customer_priority() {
   "focus_areas": ["retention", "growth", "product_market_fit"]
 }
 EOF
-    
+
     # Initialize data files
     [[ ! -f "$PRIORITY_DIR/recommendations.json" ]] && echo '{"recommendations": []}' > "$PRIORITY_DIR/recommendations.json"
     [[ ! -f "$RETENTION_DIR/analysis.json" ]] && echo '{"churn_risks": [], "retention_opportunities": []}' > "$RETENTION_DIR/analysis.json"
     [[ ! -f "$STRATEGIC_DIR/reviews.json" ]] && echo '{"reviews": []}' > "$STRATEGIC_DIR/reviews.json"
-    
+
     log_info "Customer priority system initialized"
 }
 
@@ -77,22 +77,22 @@ log_retention() { echo -e "${CYAN}[RETENTION]${NC} $1"; }
 
 calculate_next_customer_priority() {
     local focus_area="${1:-all}"
-    
+
     log_info "Calculating next customer priority for focus: $focus_area"
-    
+
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     local recommendations_file="$PRIORITY_DIR/next_priority_$(date +%Y%m%d_%H%M%S).json"
-    
+
     # Gather data from all intelligence systems
     local pmf_score=$(get_latest_pmf_score)
     local user_activity=$(get_user_activity_trend)
     local competitive_threats=$(get_competitive_threat_level)
     local churn_risk=$(calculate_churn_risk)
     local revenue_opportunities=$(get_revenue_opportunities)
-    
+
     # Calculate priority scores for different actions
     local priorities="[]"
-    
+
     # 1. Product-Market Fit Improvement
     local pmf_priority=$(calculate_pmf_priority "$pmf_score")
     priorities=$(echo "$priorities" | jq ". += [{
@@ -104,7 +104,7 @@ calculate_next_customer_priority() {
         \"estimated_impact\": \"high\",
         \"time_investment\": \"2-4 weeks\"
     }]")
-    
+
     # 2. User Retention Enhancement
     local retention_priority=$(calculate_retention_priority "$churn_risk" "$user_activity")
     priorities=$(echo "$priorities" | jq ". += [{
@@ -116,7 +116,7 @@ calculate_next_customer_priority() {
         \"estimated_impact\": \"high\",
         \"time_investment\": \"1-3 weeks\"
     }]")
-    
+
     # 3. Customer Acquisition Optimization
     local acquisition_priority=$(calculate_acquisition_priority "$user_activity" "$competitive_threats")
     priorities=$(echo "$priorities" | jq ". += [{
@@ -128,7 +128,7 @@ calculate_next_customer_priority() {
         \"estimated_impact\": \"medium\",
         \"time_investment\": \"2-5 weeks\"
     }]")
-    
+
     # 4. Revenue Optimization
     local revenue_priority=$(calculate_revenue_priority "$revenue_opportunities")
     priorities=$(echo "$priorities" | jq ". += [{
@@ -140,7 +140,7 @@ calculate_next_customer_priority() {
         \"estimated_impact\": \"high\",
         \"time_investment\": \"1-2 weeks\"
     }]")
-    
+
     # 5. Competitive Response
     local competitive_priority=$(calculate_competitive_priority "$competitive_threats")
     priorities=$(echo "$priorities" | jq ". += [{
@@ -152,16 +152,16 @@ calculate_next_customer_priority() {
         \"estimated_impact\": \"medium\",
         \"time_investment\": \"1-3 weeks\"
     }]")
-    
+
     # Sort by priority score and get top recommendation
     local sorted_priorities=$(echo "$priorities" | jq 'sort_by(.priority_score) | reverse')
     local top_priority=$(echo "$sorted_priorities" | jq '.[0]')
     local top_action=$(echo "$top_priority" | jq -r '.action')
     local top_score=$(echo "$top_priority" | jq -r '.priority_score')
-    
+
     # Generate specific recommendations based on top priority
     local specific_recommendations=$(generate_specific_recommendations "$top_action" "$pmf_score" "$churn_risk")
-    
+
     # Create comprehensive priority report
     cat > "$recommendations_file" <<EOF
 {
@@ -180,7 +180,7 @@ calculate_next_customer_priority() {
   "success_metrics": $(define_success_metrics "$top_action")
 }
 EOF
-    
+
     # Display results
     echo
     log_strategic "=== NEXT CUSTOMER PRIORITY RECOMMENDATION ==="
@@ -195,11 +195,11 @@ EOF
     echo "$specific_recommendations" | jq -r '.[] | "   • \(.)"'
     echo
     log_success "Priority analysis saved: $recommendations_file"
-    
+
     # Update main recommendations file
     local updated=$(jq ".recommendations += [$(cat "$recommendations_file")]" "$PRIORITY_DIR/recommendations.json")
     echo "$updated" > "$PRIORITY_DIR/recommendations.json"
-    
+
     echo "$recommendations_file"
 }
 
@@ -209,20 +209,20 @@ EOF
 
 analyze_code_for_retention() {
     local retention_focus="${1:-engagement}"
-    
+
     log_retention "Analyzing retention-focused development opportunities..."
-    
+
     local analysis_file="$RETENTION_DIR/code_analysis_$(date +%Y%m%d_%H%M%S).json"
-    
+
     # Analyze current user behavior patterns
     local avg_session_duration=$(get_avg_session_duration)
     local bounce_rate=$(calculate_bounce_rate)
     local feature_adoption=$(analyze_feature_adoption)
     local user_journey_friction=$(detect_user_journey_friction)
-    
+
     # Calculate retention impact of different code changes
     local retention_opportunities="[]"
-    
+
     # 1. Onboarding Optimization
     local onboarding_impact=$(calculate_retention_impact "onboarding" "$bounce_rate")
     retention_opportunities=$(echo "$retention_opportunities" | jq ". += [{
@@ -233,7 +233,7 @@ analyze_code_for_retention() {
         \"expected_retention_lift\": \"15-25%\",
         \"development_effort\": \"medium\"
     }]")
-    
+
     # 2. Core Feature Stickiness
     local stickiness_impact=$(calculate_retention_impact "stickiness" "$feature_adoption")
     retention_opportunities=$(echo "$retention_opportunities" | jq ". += [{
@@ -244,7 +244,7 @@ analyze_code_for_retention() {
         \"expected_retention_lift\": \"20-30%\",
         \"development_effort\": \"high\"
     }]")
-    
+
     # 3. Performance Optimization
     local performance_impact=$(calculate_retention_impact "performance" "$avg_session_duration")
     retention_opportunities=$(echo "$retention_opportunities" | jq ". += [{
@@ -255,7 +255,7 @@ analyze_code_for_retention() {
         \"expected_retention_lift\": \"10-20%\",
         \"development_effort\": \"low\"
     }]")
-    
+
     # 4. Notification and Engagement
     local engagement_impact=$(calculate_retention_impact "engagement" "$user_journey_friction")
     retention_opportunities=$(echo "$retention_opportunities" | jq ". += [{
@@ -266,14 +266,14 @@ analyze_code_for_retention() {
         \"expected_retention_lift\": \"25-35%\",
         \"development_effort\": \"medium\"
     }]")
-    
+
     # Sort by retention impact
     local sorted_opportunities=$(echo "$retention_opportunities" | jq 'sort_by(.retention_impact) | reverse')
     local top_opportunity=$(echo "$sorted_opportunities" | jq '.[0]')
-    
+
     # Generate code-specific recommendations
     local code_recommendations=$(generate_code_recommendations "$(echo "$top_opportunity" | jq -r '.code_area')")
-    
+
     # Create retention analysis report
     cat > "$analysis_file" <<EOF
 {
@@ -292,7 +292,7 @@ analyze_code_for_retention() {
   "success_tracking": $(define_retention_metrics)
 }
 EOF
-    
+
     # Display results
     echo
     log_retention "=== CODE FOR RETENTION ANALYSIS ==="
@@ -309,7 +309,7 @@ EOF
     echo "$code_recommendations" | jq -r '.[] | "   • \(.)"'
     echo
     log_success "Retention analysis saved: $analysis_file"
-    
+
     echo "$analysis_file"
 }
 
@@ -319,37 +319,37 @@ EOF
 
 generate_weekly_strategic_review() {
     local week_focus="${1:-comprehensive}"
-    
+
     log_strategic "Generating weekly strategic review..."
-    
+
     local review_file="$STRATEGIC_DIR/weekly_review_$(date +%Y%m%d).json"
     local week_start=$(date -v-7d +%Y-%m-%d)
     local week_end=$(date +%Y-%m-%d)
-    
+
     # Collect comprehensive data from all systems
     local customer_metrics=$(collect_customer_metrics)
     local business_metrics=$(collect_business_metrics)
     local development_metrics=$(collect_development_metrics)
     local competitive_intelligence=$(collect_competitive_intelligence)
-    
+
     # Analyze week-over-week changes
     local growth_analysis=$(analyze_weekly_growth "$customer_metrics")
     local pmf_progression=$(analyze_pmf_progression)
     local retention_trends=$(analyze_retention_trends)
     local competitive_movements=$(analyze_competitive_movements)
-    
+
     # Generate strategic insights
     local strategic_insights=$(generate_strategic_insights "$growth_analysis" "$pmf_progression" "$competitive_movements")
-    
+
     # Calculate business health score
     local health_score=$(calculate_business_health_score "$customer_metrics" "$business_metrics")
-    
+
     # Identify strategic opportunities
     local opportunities=$(identify_strategic_opportunities "$week_focus")
-    
+
     # Generate next week priorities
     local next_week_priorities=$(plan_next_week_priorities "$opportunities" "$strategic_insights")
-    
+
     # Create comprehensive strategic review
     cat > "$review_file" <<EOF
 {
@@ -378,10 +378,10 @@ generate_weekly_strategic_review() {
   "recommendations": $(generate_strategic_recommendations "$health_score" "$opportunities")
 }
 EOF
-    
+
     # Generate HTML report
     generate_strategic_html_report "$review_file"
-    
+
     # Display executive summary
     echo
     log_strategic "=== WEEKLY STRATEGIC REVIEW SUMMARY ==="
@@ -400,11 +400,11 @@ EOF
     echo
     log_success "Strategic review saved: $review_file"
     log_success "HTML report: ${review_file%.json}.html"
-    
+
     # Update main reviews file
     local updated=$(jq ".reviews += [$(cat "$review_file")]" "$STRATEGIC_DIR/reviews.json")
     echo "$updated" > "$STRATEGIC_DIR/reviews.json"
-    
+
     echo "$review_file"
 }
 
@@ -414,67 +414,67 @@ EOF
 
 enhanced_business_evening() {
     local evening_focus="${1:-customer_centric}"
-    
+
     log_info "Running enhanced customer-focused evening review..."
-    
+
     echo "🌙 ENHANCED BUSINESS EVENING REVIEW"
     echo "=================================="
     echo
-    
+
     # Customer-focused daily summary
     echo "👥 CUSTOMER INTELLIGENCE SUMMARY"
     echo "-------------------------------"
-    
+
     # Get today's customer metrics
     local todays_sessions=$(get_todays_sessions)
     local pmf_changes=$(get_pmf_changes)
     local customer_feedback_count=$(get_todays_feedback_count)
     local churn_alerts=$(get_churn_alerts)
-    
+
     log_metric "📊 Today's Sessions: $todays_sessions"
     log_metric "🎯 PMF Status: $pmf_changes"
     log_metric "💬 Customer Feedback: $customer_feedback_count new responses"
-    
+
     if [[ "$churn_alerts" -gt 0 ]]; then
         log_warning "⚠️  Churn Risk Alerts: $churn_alerts users at risk"
     fi
-    
+
     echo
     echo "🎯 CUSTOMER PRIORITY INSIGHTS"
     echo "-----------------------------"
-    
+
     # Generate next priority recommendation
     local next_priority_file=$(calculate_next_customer_priority "evening_review")
     local top_action=$(jq -r '.top_priority.action' "$next_priority_file")
     local priority_score=$(jq -r '.top_priority.priority_score' "$next_priority_file")
-    
+
     log_metric "🚀 Tomorrow's Top Priority: $(echo "$top_action" | tr '_' ' ' | sed 's/\b\w/\U&/g')"
     log_metric "📊 Priority Score: ${priority_score}/100"
-    
+
     echo
     echo "📈 RETENTION OPPORTUNITIES"
     echo "-------------------------"
-    
+
     # Quick retention analysis
     local retention_file=$(analyze_code_for_retention "evening_check")
     local retention_opportunity=$(jq -r '.top_opportunity.code_area' "$retention_file")
     local retention_lift=$(jq -r '.top_opportunity.expected_retention_lift' "$retention_file")
-    
+
     log_metric "💡 Best Retention Opportunity: $(echo "$retention_opportunity" | tr '_' ' ' | sed 's/\b\w/\U&/g')"
     log_metric "📈 Expected Impact: $retention_lift retention improvement"
-    
+
     echo
     echo "🔮 TOMORROW'S CUSTOMER FOCUS"
     echo "---------------------------"
-    
+
     # Generate specific tomorrow actions
     local tomorrow_actions=$(generate_tomorrow_customer_actions "$next_priority_file" "$retention_file")
     echo "$tomorrow_actions" | jq -r '.[] | "   • \(.)"'
-    
+
     echo
     echo "📊 WEEK AHEAD PREPARATION"
     echo "------------------------"
-    
+
     # Determine if weekly review is needed
     local days_since_review=$(get_days_since_strategic_review)
     if [[ "$days_since_review" -ge 7 ]]; then
@@ -482,14 +482,14 @@ enhanced_business_evening() {
     else
         log_metric "📅 Next strategic review in $((7 - days_since_review)) days"
     fi
-    
+
     # Show key metrics to track
     log_info "📊 Key metrics to track tomorrow:"
     echo "   • User session duration and engagement"
     echo "   • PMF survey responses"
     echo "   • Customer feedback on priority features"
     echo "   • Competitive intelligence updates"
-    
+
     echo
     log_success "🌟 Enhanced evening review complete! Ready for tomorrow's customer focus."
 }
@@ -545,15 +545,15 @@ calculate_retention_priority() {
     local churn_risk="$1"
     local activity_trend="$2"
     local base_score=60
-    
+
     if (( $(echo "$churn_risk > 0.3" | bc -l 2>/dev/null || echo "0") )); then
         base_score=$((base_score + 30))
     fi
-    
+
     if [[ "$activity_trend" == "decreasing" ]]; then
         base_score=$((base_score + 20))
     fi
-    
+
     echo "$base_score"
 }
 
@@ -561,28 +561,28 @@ calculate_acquisition_priority() {
     local activity_trend="$1"
     local competitive_threat="$2"
     local base_score=50
-    
+
     if [[ "$activity_trend" == "increasing" ]]; then
         base_score=$((base_score + 20))
     fi
-    
+
     if [[ "$competitive_threat" == "high" ]]; then
         base_score=$((base_score + 15))
     fi
-    
+
     echo "$base_score"
 }
 
 calculate_revenue_priority() {
     local opportunities="$1"
     local base_score=40
-    
+
     if (( $(echo "$opportunities > 50" | bc -l 2>/dev/null || echo "0") )); then
         base_score=$((base_score + 35))
     elif (( $(echo "$opportunities > 20" | bc -l 2>/dev/null || echo "0") )); then
         base_score=$((base_score + 20))
     fi
-    
+
     echo "$base_score"
 }
 
@@ -608,7 +608,7 @@ generate_specific_recommendations() {
     local action="$1"
     local pmf_score="$2"
     local churn_risk="$3"
-    
+
     case "$action" in
         "improve_pmf")
             echo '["Conduct 5 more PMF surveys this week", "Analyze user feedback for common pain points", "A/B test core value proposition messaging"]'
@@ -633,7 +633,7 @@ generate_specific_recommendations() {
 
 generate_next_actions() {
     local action="$1"
-    
+
     case "$action" in
         "improve_pmf")
             echo '[{"action": "Send PMF survey to recent users", "timeline": "Today"}, {"action": "Review and categorize user feedback", "timeline": "Tomorrow"}, {"action": "Plan product improvements", "timeline": "This week"}]'
@@ -649,7 +649,7 @@ generate_next_actions() {
 
 define_success_metrics() {
     local action="$1"
-    
+
     case "$action" in
         "improve_pmf")
             echo '[{"metric": "PMF score", "target": ">60%", "timeline": "4 weeks"}, {"metric": "User satisfaction", "target": "4.5/5", "timeline": "6 weeks"}]'
@@ -667,9 +667,9 @@ define_success_metrics() {
 calculate_retention_impact() {
     local area="$1"
     local metric="$2"
-    
+
     case "$area" in
-        "onboarding") 
+        "onboarding")
             if (( $(echo "$metric > 0.5" | bc -l 2>/dev/null || echo "0") )); then echo "85"
             else echo "65"; fi
             ;;
@@ -690,7 +690,7 @@ calculate_retention_impact() {
 
 generate_code_recommendations() {
     local code_area="$1"
-    
+
     case "$code_area" in
         "onboarding")
             echo '["Add progress indicators to signup flow", "Implement guided tutorial system", "Create quick-win features for new users", "Add time-to-value metrics tracking"]'
@@ -759,9 +759,9 @@ analyze_competitive_movements() {
 
 generate_strategic_insights() {
     local growth="$1"
-    local pmf="$2" 
+    local pmf="$2"
     local competitive="$3"
-    
+
     echo '[{"insight": "User retention is the top priority based on current metrics", "confidence": "high", "category": "retention"}, {"insight": "PMF score indicates product readiness for growth", "confidence": "medium", "category": "growth"}]'
 }
 
@@ -795,12 +795,12 @@ generate_strategic_recommendations() {
 generate_strategic_html_report() {
     local json_file="$1"
     local html_file="${json_file%.json}.html"
-    
+
     cat > "$html_file" <<'EOF'
 <!DOCTYPE html>
 <html><head><title>Weekly Strategic Review</title>
 <style>body{font-family:Arial,sans-serif;margin:40px;background:#f5f5f5}.container{max-width:1200px;margin:0 auto;background:white;padding:30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1,h2{color:#333}.metric{background:#f8f9fa;padding:15px;margin:10px;border-radius:5px}</style>
-</head><body><div class="container"><h1>Weekly Strategic Review</h1><p>Generated: 
+</head><body><div class="container"><h1>Weekly Strategic Review</h1><p>Generated:
 EOF
     echo "$(date)</p>" >> "$html_file"
     echo "<h2>Business Health Score: 72/100</h2><h2>Key Insights</h2><ul><li>User retention is the top priority</li><li>PMF score indicates product readiness</li></ul></div></body></html>" >> "$html_file"
@@ -831,7 +831,7 @@ get_churn_alerts() {
 generate_tomorrow_customer_actions() {
     local priority_file="$1"
     local retention_file="$2"
-    
+
     echo '["Track user engagement on core features", "Send PMF survey to 3 recent users", "Analyze competitor pricing strategy", "Plan retention feature implementation"]'
 }
 
@@ -875,7 +875,7 @@ USAGE:
 
 COMMANDS:
     init                              Initialize customer priority system
-    
+
     next-priority [focus]             Calculate next customer priority
     code-for-retention [focus]        Analyze retention-focused development
     weekly-strategic-review [focus]   Generate comprehensive weekly review
@@ -896,7 +896,7 @@ EOF
 # Main execution
 main() {
     local cmd="${1:-next-priority}"
-    
+
     case "$cmd" in
         init)
             init_customer_priority

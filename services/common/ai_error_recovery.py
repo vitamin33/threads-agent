@@ -58,16 +58,16 @@ class AIErrorRecovery:
         # For complex errors, use AI analysis (in production)
         f"""
         Analyze this error and suggest recovery strategy:
-        
+
         Error Type: {error_info["type"]}
         Message: {error_info["message"]}
         Context: {json.dumps(context, indent=2)}
-        
+
         Suggest:
         1. Root cause
         2. Recovery strategy
         3. Preventive measures
-        
+
         Return as JSON:
         {{
             "root_cause": "explanation",

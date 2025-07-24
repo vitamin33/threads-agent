@@ -17,9 +17,9 @@ save_context() {
         echo "Usage: save_context <name>"
         return 1
     fi
-    
+
     local ctx_file="$CONTEXT_DIR/${name}.ctx"
-    
+
     # Save current working state
     {
         echo "# Threads-Agent Context: $name"
@@ -40,7 +40,7 @@ save_context() {
         echo "# Active pods"
         kubectl get pods --no-headers 2>/dev/null | head -10 || echo "No pods"
     } > "$ctx_file"
-    
+
     # Set as current session
     cp "$ctx_file" "$CURRENT_SESSION"
     echo "Context saved: $name"
@@ -54,19 +54,19 @@ load_context() {
         ls -1 "$CONTEXT_DIR"/*.ctx 2>/dev/null | xargs -n1 basename | sed 's/\.ctx$//' || echo "No saved contexts"
         return 1
     fi
-    
+
     local ctx_file="$CONTEXT_DIR/${name}.ctx"
     if [ ! -f "$ctx_file" ]; then
         echo "Context not found: $name"
         return 1
     fi
-    
+
     # Load and display context
     echo "Loading context: $name"
     echo "===================="
     cat "$ctx_file"
     echo "===================="
-    
+
     # Set as current session
     cp "$ctx_file" "$CURRENT_SESSION"
     echo "Context loaded. Use 'show_context' to reference in queries."
@@ -77,7 +77,7 @@ show_context() {
         echo "No active context. Use 'save_context <name>' to create one."
         return 1
     fi
-    
+
     echo "Current session context:"
     echo "========================"
     cat "$CURRENT_SESSION"

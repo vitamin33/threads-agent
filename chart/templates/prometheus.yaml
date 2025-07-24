@@ -107,12 +107,12 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
-    
+
     {{- if .Values.monitoring.alertmanager.enabled }}
     # Rule files specify a list of paths from which rules are read
     rule_files:
       - "/etc/prometheus/rules/*.yml"
-    
+
     # Alertmanager configuration
     alerting:
       alertmanagers:
@@ -120,32 +120,32 @@ data:
             - targets:
               - alertmanager:9093
     {{- end }}
-    
+
     scrape_configs:
     - job_name: 'threads-agent-orchestrator'
       static_configs:
       - targets: ['orchestrator:9090']
       metrics_path: '/metrics'
       scrape_interval: 15s
-    
+
     - job_name: 'threads-agent-celery-worker'
       static_configs:
       - targets: ['celery-worker:9090']
       metrics_path: '/metrics'
       scrape_interval: 15s
-    
+
     - job_name: 'threads-agent-persona-runtime'
       static_configs:
       - targets: ['persona-runtime:9090']
       metrics_path: '/metrics'
       scrape_interval: 15s
-    
+
     - job_name: 'threads-agent-fake-threads'
       static_configs:
       - targets: ['fake-threads:9090']
       metrics_path: '/metrics'
       scrape_interval: 15s
-      
+
     # Kubernetes metrics (if available)
     - job_name: 'kubernetes-pods'
       kubernetes_sd_configs:

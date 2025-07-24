@@ -124,7 +124,7 @@ morning:
 work:
   just token-batch       # 1500 tokens (week's content)
   just cached-analyze    # 0 tokens
-  
+
 evening:
   just token-status      # 0 tokens
 

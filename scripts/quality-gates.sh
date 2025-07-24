@@ -52,7 +52,7 @@ run_quality_check() {
     local name="$1"
     local cmd="$2"
     local timeout="${3:-300}" # 5 minutes default
-    
+
     log_info "Running $name..."
     # Use gtimeout on macOS if available, otherwise run without timeout
     local timeout_cmd=""
@@ -61,7 +61,7 @@ run_quality_check() {
     elif command_exists timeout; then
         timeout_cmd="timeout $timeout"
     fi
-    
+
     if [[ -n "$timeout_cmd" ]]; then
         if $timeout_cmd bash -c "$cmd"; then
             log_success "$name passed"
@@ -85,7 +85,7 @@ run_quality_check() {
 phase_code_quality() {
     log_info "=== Phase 1: Code Quality Checks ==="
     local failed=0
-    
+
     # Format check (skip if we just ran lint, as indicated by SKIP_FORMAT_CHECK)
     if [[ "${SKIP_FORMAT_CHECK:-}" != "true" ]]; then
         if ! run_quality_check "Ruff format check" "cd '$PROJECT_ROOT' && ruff format --check ."; then
@@ -96,25 +96,25 @@ phase_code_quality() {
     else
         log_info "Skipping format check (already formatted)"
     fi
-    
+
     # Lint check
     if ! run_quality_check "Ruff lint check" "cd '$PROJECT_ROOT' && ruff check ."; then
         failed=$((failed + 1))
         log_warn "Run 'ruff check --fix .' to fix linting issues"
     fi
-    
+
     # Import sorting check (using same profile as justfile)
     if ! run_quality_check "isort check" "cd '$PROJECT_ROOT' && isort --check-only --diff --profile black ."; then
         failed=$((failed + 1))
         log_warn "Run 'isort . --profile black' to fix import sorting"
         log_warn "Alternatively, run 'just pre-commit-fix' to auto-fix and validate"
     fi
-    
+
     # Type checking
     if ! run_quality_check "mypy type checking" "cd '$PROJECT_ROOT' && mypy ."; then
         failed=$((failed + 1))
     fi
-    
+
     return $failed
 }
 
@@ -122,7 +122,7 @@ phase_code_quality() {
 phase_security() {
     log_info "=== Phase 2: Security Checks ==="
     local failed=0
-    
+
     # Security scanning with bandit (if available)
     if command_exists bandit; then
         if ! run_quality_check "Security scan (bandit)" "cd '$PROJECT_ROOT' && bandit -r services/ -f json -o '$QUALITY_LOG_DIR/bandit-$TIMESTAMP.json' || bandit -r services/"; then
@@ -131,7 +131,7 @@ phase_security() {
     else
         log_warn "bandit not found - install with: pip install bandit"
     fi
-    
+
     # Dependency vulnerability check with safety (if available)
     if command_exists safety; then
         if ! run_quality_check "Dependency vulnerability scan" "cd '$PROJECT_ROOT' && safety check --json --output '$QUALITY_LOG_DIR/safety-$TIMESTAMP.json' || safety check"; then
@@ -140,13 +140,13 @@ phase_security() {
     else
         log_warn "safety not found - install with: pip install safety"
     fi
-    
+
     # Secret scanning (basic patterns)
     if ! run_quality_check "Secret pattern check" "cd '$PROJECT_ROOT' && ! grep -r -E '(password|secret|key|token)\s*=\s*[\"'][^\"']{8,}[\"']' --include='*.py' --include='*.yaml' --include='*.yml' services/ chart/ || true"; then
         failed=$((failed + 1))
         log_error "Potential secrets found in code"
     fi
-    
+
     return $failed
 }
 
@@ -154,18 +154,18 @@ phase_security() {
 phase_test_quality() {
     log_info "=== Phase 3: Test Quality ==="
     local failed=0
-    
+
     # Unit tests with coverage
     if ! run_quality_check "Unit tests with coverage" "cd '$PROJECT_ROOT' && python -m pytest -m 'not e2e' --cov=services --cov-report=html:$QUALITY_LOG_DIR/coverage-$TIMESTAMP --cov-report=term --cov-fail-under=70"; then
         failed=$((failed + 1))
         log_warn "Coverage report available at: $QUALITY_LOG_DIR/coverage-$TIMESTAMP/index.html"
     fi
-    
+
     # Test structure validation
     if ! run_quality_check "Test structure validation" "cd '$PROJECT_ROOT' && python -c 'import pytest; pytest.main([\"--collect-only\", \"-q\"])'"; then
         failed=$((failed + 1))
     fi
-    
+
     return $failed
 }
 
@@ -173,20 +173,20 @@ phase_test_quality() {
 phase_claude_review() {
     log_info "=== Phase 4: Claude Code Automated Review ==="
     local failed=0
-    
+
     # Check if claude command is available
     if ! command_exists claude; then
         log_warn "Claude Code not found - skipping automated review"
         log_info "Install Claude Code: https://docs.anthropic.com/en/docs/claude-code"
         return 0
     fi
-    
+
     # Skip Claude review if no claude command or if explicitly disabled
     if [[ "${SKIP_CLAUDE_REVIEW:-}" == "true" ]]; then
         log_info "Claude review skipped (SKIP_CLAUDE_REVIEW=true)"
         return 0
     fi
-    
+
     # Get changed files instead of full diff to avoid parsing issues
     local changed_files
     if git diff --cached --quiet; then
@@ -194,12 +194,12 @@ phase_claude_review() {
     else
         changed_files=$(git diff --cached --name-only)
     fi
-    
+
     if [[ -z "$changed_files" ]]; then
         log_info "No files changed for Claude review"
         return 0
     fi
-    
+
     local review_file="$CLAUDE_REVIEW_DIR/review-$TIMESTAMP.md"
     local review_prompt="Perform a comprehensive code review of the following changed files:
 
@@ -207,40 +207,40 @@ $(echo "$changed_files" | head -10)
 
 Focus on:
 1. Security vulnerabilities and best practices
-2. Performance implications and optimizations  
+2. Performance implications and optimizations
 3. Code maintainability and readability
 4. Testing coverage and quality
 5. Architecture patterns and consistency
 6. Error handling and edge cases
 
 Provide specific, actionable feedback and rate overall quality 1-10."
-    
+
     # Write prompt to temp file to avoid shell escaping issues
     local prompt_file="$CLAUDE_REVIEW_DIR/prompt-$TIMESTAMP.txt"
     echo "$review_prompt" > "$prompt_file"
-    
+
     if ! run_quality_check "Claude Code automated review" "cd '$PROJECT_ROOT' && claude < '$prompt_file' > '$review_file' 2>&1"; then
         failed=$((failed + 1))
         log_error "Claude Code review failed - check $review_file for details"
     else
         log_success "Claude Code review completed: $review_file"
-        
+
         # Extract quality score if present
         if grep -q "score\|rating\|quality.*[0-9]" "$review_file" 2>/dev/null; then
             local score=$(grep -i "score\|rating\|quality.*[0-9]" "$review_file" | head -1)
             log_info "Quality assessment: $score"
         fi
-        
+
         # Check for critical issues
         if grep -qi "critical\|security.*issue\|vulnerability\|major.*problem" "$review_file" 2>/dev/null; then
             log_error "Critical issues found in Claude review - check $review_file"
             failed=$((failed + 1))
         fi
     fi
-    
+
     # Cleanup temp file
     rm -f "$prompt_file"
-    
+
     return $failed
 }
 
@@ -248,13 +248,13 @@ Provide specific, actionable feedback and rate overall quality 1-10."
 phase_infrastructure() {
     log_info "=== Phase 5: Infrastructure Validation ==="
     local failed=0
-    
+
     # Validate Helm chart
     if command_exists helm; then
         if ! run_quality_check "Helm chart validation" "cd '$PROJECT_ROOT' && helm lint chart/"; then
             failed=$((failed + 1))
         fi
-        
+
         # Validate chart template rendering
         if ! run_quality_check "Helm template rendering" "cd '$PROJECT_ROOT' && helm template test-release chart/ --values chart/values-dev.yaml > /dev/null"; then
             failed=$((failed + 1))
@@ -262,7 +262,7 @@ phase_infrastructure() {
     else
         log_warn "helm not found - skipping chart validation"
     fi
-    
+
     # Validate Kubernetes manifests
     if command_exists kubectl; then
         # Dry-run validation
@@ -272,7 +272,7 @@ phase_infrastructure() {
     else
         log_warn "kubectl not found - skipping Kubernetes validation"
     fi
-    
+
     # Docker build validation
     if command_exists docker; then
         for service in orchestrator celery_worker persona_runtime fake_threads; do
@@ -285,7 +285,7 @@ phase_infrastructure() {
     else
         log_warn "docker not found - skipping Docker validation"
     fi
-    
+
     return $failed
 }
 
@@ -293,23 +293,23 @@ phase_infrastructure() {
 phase_performance() {
     log_info "=== Phase 6: Performance & Resource Validation ==="
     local failed=0
-    
+
     # Check for performance anti-patterns
     if ! run_quality_check "Performance pattern check" "cd '$PROJECT_ROOT' && ! grep -r -E '(time\.sleep\([^0][0-9]*\)|requests\.get\([^)]*timeout.*=.*None|while True.*:.*time\.sleep)' --include='*.py' services/ || true"; then
         failed=$((failed + 1))
         log_error "Performance anti-patterns detected"
     fi
-    
+
     # Memory usage patterns
     if ! run_quality_check "Memory pattern check" "cd '$PROJECT_ROOT' && ! grep -r -E '(\.load\(\)|pickle\.loads|json\.loads.*large|pd\.read_csv.*chunksize.*=.*None)' --include='*.py' services/ || true"; then
         log_warn "Potential memory usage issues detected"
     fi
-    
+
     # Resource limit validation in Helm charts
     if ! run_quality_check "Resource limits check" "cd '$PROJECT_ROOT' && grep -r 'resources:' chart/ && grep -A 10 'resources:' chart/ | grep -E '(limits|requests):'"; then
         log_warn "Resource limits should be defined in Helm charts"
     fi
-    
+
     return $failed
 }
 
@@ -318,28 +318,28 @@ pre_commit() {
     log_info "🚀 Running Pre-Commit Quality Gates"
     setup_environment
     init_quality_logging
-    
+
     local total_failed=0
-    
+
     # Run lightweight checks for pre-commit
     phase_code_quality
     local code_result=$?
     total_failed=$((total_failed + code_result))
-    
+
     phase_security
     local security_result=$?
     total_failed=$((total_failed + security_result))
-    
+
     # Quick unit tests only (skip e2e for speed)
     if ! run_quality_check "Quick unit tests" "cd '$PROJECT_ROOT' && python -m pytest -m 'not e2e' --tb=short -x"; then
         total_failed=$((total_failed + 1))
     fi
-    
+
     # Claude review for staged changes
     phase_claude_review
     local claude_result=$?
     total_failed=$((total_failed + claude_result))
-    
+
     if [[ $total_failed -gt 0 ]]; then
         log_error "Pre-commit quality gates failed: $total_failed checks failed"
         log_info "Check logs: $QUALITY_LOG"
@@ -355,9 +355,9 @@ pre_deploy() {
     log_info "🚀 Running Pre-Deploy Quality Gates"
     setup_environment
     init_quality_logging
-    
+
     local total_failed=0
-    
+
     # Run all quality phases
     phase_code_quality; total_failed=$((total_failed + $?))
     phase_security; total_failed=$((total_failed + $?))
@@ -365,7 +365,7 @@ pre_deploy() {
     phase_claude_review; total_failed=$((total_failed + $?))
     phase_infrastructure; total_failed=$((total_failed + $?))
     phase_performance; total_failed=$((total_failed + $?))
-    
+
     # E2E tests (if infrastructure is available)
     if kubectl cluster-info >/dev/null 2>&1 && kubectl get nodes >/dev/null 2>&1; then
         if ! run_quality_check "End-to-end tests" "cd '$PROJECT_ROOT' && python -m pytest -m e2e --tb=short" 900; then # 15 minutes timeout
@@ -375,10 +375,10 @@ pre_deploy() {
         log_warn "Kubernetes cluster not available - skipping E2E tests"
         log_info "Run 'just bootstrap' to set up k3d cluster for full validation"
     fi
-    
+
     # Generate quality report
     generate_quality_report "$total_failed"
-    
+
     if [[ $total_failed -gt 0 ]]; then
         log_error "Pre-deploy quality gates failed: $total_failed checks failed"
         log_info "Check logs: $QUALITY_LOG"
@@ -395,7 +395,7 @@ pre_deploy() {
 generate_quality_report() {
     local failed_count="$1"
     local report_file="$QUALITY_LOG_DIR/quality-report-$TIMESTAMP.html"
-    
+
     cat > "$report_file" << EOF
 <!DOCTYPE html>
 <html>
@@ -418,7 +418,7 @@ generate_quality_report() {
         <p><strong>Status:</strong> $([ "$failed_count" -eq 0 ] && echo '<span class="pass">✅ PASSED</span>' || echo '<span class="fail">❌ FAILED</span>')</p>
         <p><strong>Failed Checks:</strong> $failed_count</p>
     </div>
-    
+
     <div class="section">
         <h2>Files Generated</h2>
         <ul>
@@ -428,7 +428,7 @@ generate_quality_report() {
             $([ -f "$QUALITY_LOG_DIR/bandit-$TIMESTAMP.json" ] && echo "<li>Security Scan: <code>$QUALITY_LOG_DIR/bandit-$TIMESTAMP.json</code></li>")
         </ul>
     </div>
-    
+
     <div class="section">
         <h2>Quality Log</h2>
         <pre>$(tail -50 "$QUALITY_LOG" | sed 's/\x1b\[[0-9;]*m//g')</pre>
@@ -436,7 +436,7 @@ generate_quality_report() {
 </body>
 </html>
 EOF
-    
+
     log_info "Quality report generated: $report_file"
 }
 
@@ -473,10 +473,10 @@ ENVIRONMENT VARIABLES:
 INTEGRATION:
     # Git pre-commit hook
     echo "$0 pre-commit" > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
-    
-    # Justfile integration  
+
+    # Justfile integration
     just quality-gate pre-deploy
-    
+
     # CI/CD integration
     ./scripts/quality-gates.sh pre-deploy
 
@@ -486,7 +486,7 @@ EOF
 # Main execution
 main() {
     cd "$PROJECT_ROOT"
-    
+
     case "${1:-help}" in
         pre-commit)
             pre_commit

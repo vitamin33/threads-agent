@@ -22,7 +22,7 @@ case "${1:-help}" in
         echo "PID: $HOT_PID"
         echo $HOT_PID > .hot-reload.pid
         ;;
-    
+
     auto-test)
         log "Generating AI-powered tests..."
         python -c "
@@ -34,7 +34,7 @@ print(f'Tests generated for {persona}')
 "
         success "Tests generated in tests/auto_generated/"
         ;;
-    
+
     dashboard)
         log "Starting Real-time Dashboard..."
         cd services/dashboard
@@ -46,19 +46,19 @@ print(f'Tests generated for {persona}')
         sleep 2
         open http://localhost:8002 || xdg-open http://localhost:8002
         ;;
-    
+
     smart-deploy)
         log "Starting Smart Deployment..."
         ./scripts/smart-deploy.sh ${2:-canary}
         ;;
-    
+
     stop-all)
         log "Stopping all AI dev tools..."
         [ -f .hot-reload.pid ] && kill $(cat .hot-reload.pid) && rm .hot-reload.pid
         [ -f .dashboard.pid ] && kill $(cat .dashboard.pid) && rm .dashboard.pid
         success "All tools stopped"
         ;;
-    
+
     *)
         echo "AI Development Enhancement Tools"
         echo ""

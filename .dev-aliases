@@ -4,12 +4,12 @@
 
 # Context management shortcuts
 alias ctx-save='just ctx-save'
-alias ctx-load='just ctx-load' 
+alias ctx-load='just ctx-load'
 alias ctx-show='just ctx-show'
 alias ctx-list='just ctx-list'
 alias ctx-clean='just ctx-clean'
 
-# Session continuity shortcuts  
+# Session continuity shortcuts
 alias save='just save'
 alias load='just load'
 alias context='just context'
@@ -33,7 +33,7 @@ alias feature-start='function _feature_start() { git checkout -b "${1}" && just 
 alias feature-save='function _feature_save() { just save "feature-$(git branch --show-current)"; }; _feature_save'
 alias feature-load='function _feature_load() { just load "feature-${1}"; }; _feature_load'
 
-# Debug context preservation  
+# Debug context preservation
 alias debug-save='function _debug_save() { just save "debug-${1:-$(date +%H%M)}"; echo "Debug context saved"; }; _debug_save'
 alias debug-load='just load'
 alias debug-list='just ctx-list | grep debug'
@@ -59,7 +59,7 @@ alias ta='threads-dev'  # short alias for threads-agent
 # Smart query shortcuts with context
 alias q-schema='./scripts/smart-queries.sh schema-code'
 alias q-api='./scripts/smart-queries.sh api-from-model'
-alias q-test='./scripts/smart-queries.sh test-current' 
+alias q-test='./scripts/smart-queries.sh test-current'
 alias q-deploy='./scripts/smart-queries.sh deploy-check'
 alias q-infra='./scripts/smart-queries.sh infra-status'
 

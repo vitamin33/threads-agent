@@ -4,7 +4,7 @@ set -euo pipefail
 
 generate_simple_plan() {
     local timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-    
+
     # Create simple JSON using jq
     jq -n \
         --arg timestamp "$timestamp" \
@@ -35,7 +35,7 @@ show_dashboard() {
     echo "=== UNIFIED COMMAND CENTER ==="
     echo ""
     echo "🎯 TOP PRIORITY: Implement retention improvements"
-    echo "📊 Priority Score: 90/100" 
+    echo "📊 Priority Score: 90/100"
     echo "⏱️ Timeline: This week"
     echo ""
     echo "📋 FOCUS:"

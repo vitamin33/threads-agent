@@ -13,7 +13,7 @@ tasks:
       - "Create technical design"
       - "Identify dependencies"
       - "Review with stakeholders"
-    
+
   - name: "Implementation"
     type: "development"
     checklist:
@@ -21,7 +21,7 @@ tasks:
       - "Implement core functionality"
       - "Write unit tests"
       - "Handle edge cases"
-    
+
   - name: "Testing and validation"
     type: "testing"
     checklist:
@@ -29,7 +29,7 @@ tasks:
       - "Integration testing"
       - "Performance validation"
       - "User acceptance testing"
-    
+
   - name: "Documentation"
     type: "documentation"
     checklist:
