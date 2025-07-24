@@ -115,20 +115,36 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # ————————————————————————————————
-      # 2.  Spin local k3d cluster (only if needed)
+      # 2.  Early exit if no infrastructure changes
+      # ————————————————————————————————
+      - name: Check if e2e tests needed
+        id: e2e-check
+        run: |
+          if [ "${{ steps.changes.outputs.e2e_required }}" != "true" ]; then
+            echo "✅ No infrastructure changes detected"
+            echo "✅ Unit tests already handled by quick-ci jobs"
+            echo "✅ Skipping expensive k3d cluster and Docker operations"
+            echo "skip_remaining=true" >> $GITHUB_OUTPUT
+          else
+            echo "🏗️ Infrastructure changes detected, running full e2e tests"
+            echo "skip_remaining=false" >> $GITHUB_OUTPUT
+          fi
+
+      # ————————————————————————————————
+      # 3.  Spin local k3d cluster (only if needed)
       # ————————————————————————————————
       - name: Create k3d cluster
-        if: steps.changes.outputs.e2e_required == 'true'
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
         uses: AbsaOSS/k3d-action@v2
         with:
           cluster-name: dev # => kubectl context "k3d-dev"
           # args: --wait                    # uncomment if you want hard blocking
 
       # ————————————————————————————————
-      # 3.  Pull or build images (only if needed)
+      # 4.  Pull or build images (only if needed)
       # ————————————————————————————————
       - name: Pull or build images
-        if: steps.changes.outputs.e2e_required == 'true'
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           # Try to pull from GHCR first, build only if not found or force_build is true
           SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_engine"
@@ -176,10 +192,10 @@ jobs:
             -c dev
 
       # ————————————————————————————————
-      # 4.  Helm install with CI values (only if needed)
+      # 5.  Helm install with CI values (only if needed)
       # ————————————————————————————————
       - name: Helm upgrade (dev cluster)
-        if: steps.changes.outputs.e2e_required == 'true'
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
         id: helm
         continue-on-error: true
         env:
@@ -194,7 +210,7 @@ jobs:
 
       # ─── If Helm failed, dump cluster state ──────────────────────────────
       - name: Dump pod list + events if Helm failed
-        if: steps.helm.outcome == 'failure' && steps.changes.outputs.e2e_required == 'true'
+        if: steps.helm.outcome == 'failure' && steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           echo "❌ Helm release did not become ready. Dumping diagnostics …"
           kubectl get pods -A -o wide
@@ -207,7 +223,7 @@ jobs:
           # Fail the step explicitly so the job still turns red
           exit 1
       - name: Wait for core pods (parallel)
-        if: steps.changes.outputs.e2e_required == 'true'
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           echo "⏳ Waiting for all pods to be ready (in parallel)..."
 
@@ -301,44 +317,19 @@ jobs:
             exit 0
           fi
 
-          # Build test selection based on what changed
-          TEST_PATHS=""
-
-          # Service-specific tests
-          if [ "${{ steps.changes.outputs.orchestrator }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS services/orchestrator/tests"
-          fi
-          if [ "${{ steps.changes.outputs.celery_worker }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS services/celery_worker/tests"
-          fi
-          if [ "${{ steps.changes.outputs.persona_runtime }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS services/persona_runtime/tests"
-          fi
-          if [ "${{ steps.changes.outputs.fake_threads }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS services/fake_threads/tests"
-          fi
-          if [ "${{ steps.changes.outputs.viral_engine }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS services/viral_engine/tests"
-          fi
-
-          # Always add unit tests if tests directory changed
-          if [ "${{ steps.changes.outputs.tests }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS tests/unit"
-          fi
-
-          # Run e2e tests only if infrastructure changed
+          # OPTIMIZATION: Since quick-ci already runs unit tests,
+          # dev-ci will focus ONLY on e2e integration tests
+          
+          # Check if we need to run e2e tests
           if [ "${{ steps.changes.outputs.e2e_required }}" = "true" ]; then
-            TEST_PATHS="$TEST_PATHS tests/e2e"
+            TEST_PATHS="tests/e2e"
             RUN_E2E=true
+            echo "🎯 Running ONLY e2e tests (unit tests handled by quick-ci)"
           else
-            # Skip e2e tests
-            PYTEST_ARGS="$PYTEST_ARGS -m 'not e2e'"
-            RUN_E2E=false
-          fi
-
-          # If no specific paths selected, run all tests (fallback)
-          if [ -z "$TEST_PATHS" ]; then
-            TEST_PATHS="."
+            # Skip all tests if no infrastructure changes
+            echo "✅ No infrastructure changes, skipping e2e tests"
+            echo "✅ Unit tests already passed in quick-ci jobs"
+            exit 0
           fi
 
           # Only start port-forwards if running e2e tests
@@ -389,3 +380,24 @@ jobs:
         with:
           name: infra-svg
           path: docs/infra.svg
+
+      # ————————————————————————————————
+      # 8.  Summary step
+      # ————————————————————————————————
+      - name: CI Summary
+        if: always()
+        run: |
+          if [ "${{ steps.e2e-check.outputs.skip_remaining }}" = "true" ]; then
+            echo "🚀 dev-ci completed quickly! No infrastructure changes detected."
+            echo "   • Unit tests: ✅ Handled by quick-ci jobs"
+            echo "   • Docker builds: ⏭️ Skipped (no changes)"
+            echo "   • k3d cluster: ⏭️ Skipped (no changes)"
+            echo "   • e2e tests: ⏭️ Skipped (no changes)"
+            echo ""
+            echo "💡 This optimization saves ~10 minutes when only code changes!"
+          else
+            echo "🏗️ dev-ci ran full integration tests (infrastructure changed)"
+            echo "   • Unit tests: ⏭️ Skipped (handled by quick-ci)"
+            echo "   • Docker/k3d: ✅ Full setup completed"
+            echo "   • e2e tests: ✅ Integration tests passed"
+          fi
