@@ -303,23 +303,6 @@ searxng-test query:
 	curl -s "http://localhost:8888/search?q={{query}}&format=json" | jq '.results[0:3] | .[] | {title, url, content}'
 
 # Search & Trend Detection
-trend-check topic:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	echo "📈 Checking trends for: {{topic}}"
-	
-	# Check if orchestrator is running
-	if ! curl -s http://localhost:8080/health >/dev/null 2>&1; then
-		echo "⚠️  Orchestrator not accessible, starting port-forward..."
-		kubectl port-forward svc/orchestrator 8080:8080 &
-		sleep 3
-	fi
-	
-	# Query trends endpoint
-	curl -s -X POST http://localhost:8080/search/trends \
-		-H "Content-Type: application/json" \
-		-d '{"topic": "{{topic}}", "timeframe": "7d", "limit": 5}' | \
-		jq '.trends[] | {title: .title, relevance: .relevance_score, source: .source}'
 
 trend-dashboard:
 	#!/usr/bin/env bash
