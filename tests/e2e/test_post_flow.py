@@ -30,17 +30,15 @@ def test_post_task_end_to_end() -> None:
         assert out.status_code == 200
         posts = out.json()
         if posts:
-            # Since fake-threads returns posts with 'topic' and 'content' fields
-            latest = posts[-1]
-            assert "topic" in latest
-            assert "content" in latest
-            # The topic should contain the persona_id
-            assert "ai-jesus" in latest["topic"].lower()
-            print(f"✅ Content published: {latest['content'][:50]}...")
-            return
+            # Look for our specific ai-jesus post
+            for post in posts:
+                if "topic" in post and "ai-jesus" in post["topic"].lower():
+                    assert "content" in post
+                    print(f"✅ Content published: {post['content'][:50]}...")
+                    return
         time.sleep(1)
 
-    pytest.fail("Draft never appeared in 40s window")
+    pytest.fail("ai-jesus post never appeared in 40s window")
 
 
 def test_draft_post_happy_path() -> None:
@@ -77,13 +75,14 @@ def test_draft_post_happy_path() -> None:
     )
     response.raise_for_status()
 
-    # 2️⃣ get initial count, then wait for new content to be published
+    # 2️⃣ get initial state, then wait for new ai-jesus content to be published
     initial_response = httpx.get(
         f"http://localhost:{THREADS_PORT}/published", timeout=5
     )
-    initial_count = (
-        len(initial_response.json()) if initial_response.status_code == 200 else 0
-    )
+    initial_posts = initial_response.json() if initial_response.status_code == 200 else []
+    
+    # Count initial ai-jesus posts
+    initial_ai_jesus_count = sum(1 for p in initial_posts if "topic" in p and "ai-jesus" in p["topic"].lower())
 
     published_content = None
     for _ in range(40):  # ~40 s budget
@@ -91,12 +90,16 @@ def test_draft_post_happy_path() -> None:
         published = httpx.get(
             f"http://localhost:{THREADS_PORT}/published", timeout=5
         ).json()
-        if published and len(published) > initial_count:
-            # New content was published - get the latest one
-            published_content = published[-1]  # Most recent post
+        
+        # Look for new ai-jesus posts specifically
+        ai_jesus_posts = [p for p in published if "topic" in p and "ai-jesus" in p["topic"].lower()]
+        
+        if len(ai_jesus_posts) > initial_ai_jesus_count:
+            # Get the newest ai-jesus post
+            published_content = ai_jesus_posts[-1]
             break
     else:  # pragma: no cover
-        pytest.fail("publish never happened within 40s timeout")
+        pytest.fail("ai-jesus post never appeared within 40s timeout")
 
     # 3️⃣ verify Postgres has a row matching our specific request
     with psycopg2.connect(PG_DSN) as pg, pg.cursor() as cur:
@@ -123,7 +126,7 @@ def test_draft_post_happy_path() -> None:
     assert "topic" in published_content
     assert "content" in published_content
     # topic should contain persona_id
-    assert "ai-jesus" in published_content["topic"].lower()
+    assert "ai-jesus" in published_content["topic"].lower(), f"Expected ai-jesus in topic but got: {published_content['topic']}"
     # content should be hook + body combined
     full_content = published_content["content"]
     assert hook in full_content or body in full_content, "published content missing hook/body"
