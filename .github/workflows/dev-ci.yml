@@ -371,6 +371,8 @@ jobs:
           export LANGSMITH_TRACING=false
 
           echo "🧪 Running tests for: $TEST_PATHS"
+          # Uninstall langsmith to avoid pydantic conflicts
+          pip uninstall -y langsmith langchain langchain-core langchain-community 2>/dev/null || true
           pytest $PYTEST_ARGS $TEST_PATHS -x  # -x stops on first failure
 
           # ➌ tidy up port-forwards if started
