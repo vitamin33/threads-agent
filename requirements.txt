@@ -1,7 +1,8 @@
 # requirements.txt
 fastapi~=0.111           # tiny health stub
 uvicorn[standard]~=0.29  # ASGI server
-pydantic~=2.7            # data models (FastAPI peer)
+pydantic>=2.7.0          # data models (FastAPI peer) - v2 for compatibility
+pydantic-settings>=2.0.0 # Settings management
 requests>=2.31           # already used by linear_mark_done.py
 celery~=5.4
 kombu~=5.3
