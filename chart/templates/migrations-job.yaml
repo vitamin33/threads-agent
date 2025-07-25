@@ -12,9 +12,9 @@ spec:
     spec:
       restartPolicy: OnFailure
 
-      # 1️⃣  Wait until the super-user works
+      # 1️⃣  Wait until the super-user works and create database
       initContainers:
-      - name: wait-pg
+      - name: wait-pg-and-create-db
         image: bitnami/postgresql:16
         env:
         - name: POSTGRES_PASSWORD
@@ -25,12 +25,23 @@ spec:
         command: ["sh","-ec",
           "echo '⏳ waiting for Postgres super-user …'; \
            for i in $(seq 1 60); do \
-             PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h postgres -U postgres -c 'select 1' >/dev/null 2>&1 && exit 0; \
+             PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h postgres -U postgres -c 'select 1' >/dev/null 2>&1 && break; \
              sleep 2; \
            done; \
-           echo '💥 postgres still locked'; exit 1"]
+           if [ $i -eq 60 ]; then echo '💥 postgres still locked'; exit 1; fi; \
+           echo '✅ Postgres is ready'; \
+           echo 'Checking if threads_agent database exists...'; \
+           if ! PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'threads_agent'\" | grep -q 1; then \
+             echo 'Creating threads_agent database...'; \
+             PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h postgres -U postgres -c 'CREATE DATABASE threads_agent;'; \
+           else \
+             echo 'threads_agent database already exists'; \
+           fi; \
+           echo 'Verifying database creation...'; \
+           PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -h postgres -U postgres -lqt | cut -d \| -f 1 | grep -qw threads_agent || exit 1; \
+           echo '✅ Database ready'"]
 
-      # 2️⃣  Create database and run Alembic
+      # 2️⃣  Run Alembic migrations
       containers:
       - name: alembic
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -40,21 +51,8 @@ spec:
           - /bin/sh
           - -c
           - |
-              # First, create the threads_agent database if it doesn't exist
-              echo "Checking if threads_agent database exists..."
-              if ! PGPASSWORD="${POSTGRES_PASSWORD}" psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1; then
-                echo "Creating threads_agent database..."
-                PGPASSWORD="${POSTGRES_PASSWORD}" psql -h postgres -U postgres -c "CREATE DATABASE threads_agent;"
-              else
-                echo "threads_agent database already exists"
-              fi
-              
-              # Verify database was created
-              echo "Verifying database creation..."
-              PGPASSWORD="${POSTGRES_PASSWORD}" psql -h postgres -U postgres -lqt | cut -d \| -f 1 | grep -qw threads_agent || exit 1
-              
-              # Then run migrations on threads_agent database
-              echo "Running migrations..."
+              # Database is already created by initContainer
+              echo "Running migrations on threads_agent database..."
               export POSTGRES_DSN="postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres:5432/threads_agent"
               alembic -c /app/services/orchestrator/db/alembic.ini upgrade head
 {{- end }}
