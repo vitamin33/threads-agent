@@ -1,22 +1,29 @@
 # Achievement Collector Service - Main Application
 
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, Dict
 
-from api.routes import achievements, analysis, portfolio, webhooks
-from core.config import settings
-from core.logging import setup_logging
-from db.config import engine
-from db.models import Base
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import make_asgi_app
+
+from services.achievement_collector.api.routes import (
+    achievements,
+    analysis,
+    portfolio,
+    webhooks,
+)
+from services.achievement_collector.core.config import settings
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.config import engine
+from services.achievement_collector.db.models import Base
 
 # Setup logging
 logger = setup_logging(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan events"""
     # Startup
     logger.info("Starting Achievement Collector Service")
@@ -60,7 +67,7 @@ app.mount("/metrics", metrics_app)
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint"""
     return {
         "status": "healthy",
@@ -70,7 +77,7 @@ async def health_check():
 
 
 @app.get("/")
-async def root():
+async def root() -> Dict[str, Any]:
     """Root endpoint"""
     return {
         "service": "Achievement Collector",

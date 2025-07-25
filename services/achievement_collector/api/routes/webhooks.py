@@ -4,14 +4,14 @@ import hashlib
 import hmac
 import json
 
-from api.schemas import WebhookResponse
-from core.config import settings
-from core.logging import setup_logging
-from db.config import get_db
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from services.github_processor import GitHubProcessor
+from services.achievement_collector.api.schemas import WebhookResponse
+from services.achievement_collector.core.config import settings
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.config import get_db
+from services.achievement_collector.services.github_processor import GitHubProcessor
 
 logger = setup_logging(__name__)
 router = APIRouter()

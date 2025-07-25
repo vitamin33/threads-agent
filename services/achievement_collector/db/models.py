@@ -19,7 +19,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 Base = declarative_base()
 
@@ -94,9 +94,9 @@ class Achievement(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    git_commits = relationship("GitCommit", back_populates="achievement")
-    github_prs = relationship("GitHubPR", back_populates="achievement")
-    ci_runs = relationship("CIRun", back_populates="achievement")
+    git_commits: Mapped[list["GitCommit"]] = relationship("GitCommit", back_populates="achievement")
+    github_prs: Mapped[list["GitHubPR"]] = relationship("GitHubPR", back_populates="achievement")
+    ci_runs: Mapped[list["CIRun"]] = relationship("CIRun", back_populates="achievement")
 
     # Indexes
     __table_args__ = (
@@ -132,7 +132,7 @@ class GitCommit(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    achievement = relationship("Achievement", back_populates="git_commits")
+    achievement: Mapped["Achievement"] = relationship("Achievement", back_populates="git_commits")
 
 
 class GitHubPR(Base):
@@ -165,7 +165,7 @@ class GitHubPR(Base):
     code_coverage_pct = Column(Float)
 
     # Relationships
-    achievement = relationship("Achievement", back_populates="github_prs")
+    achievement: Mapped["Achievement"] = relationship("Achievement", back_populates="github_prs")
 
 
 class CIRun(Base):
@@ -196,7 +196,7 @@ class CIRun(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    achievement = relationship("Achievement", back_populates="ci_runs")
+    achievement: Mapped["Achievement"] = relationship("Achievement", back_populates="ci_runs")
 
 
 class AchievementTemplate(Base):
@@ -239,7 +239,7 @@ class PortfolioSnapshot(Base):
 
     # Content
     content = Column(Text, nullable=False)
-    metadata = Column(JSON, default=dict)
+    snapshot_metadata = Column(JSON, default=dict)
 
     # Stats at time of generation
     total_achievements = Column(Integer, default=0)

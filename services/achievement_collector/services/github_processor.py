@@ -2,11 +2,12 @@
 
 import re
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
-from core.logging import setup_logging
-from db.models import Achievement, GitCommit, GitHubPR
 from sqlalchemy.orm import Session
+
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.models import Achievement, GitCommit, GitHubPR
 
 logger = setup_logging(__name__)
 
@@ -14,7 +15,7 @@ logger = setup_logging(__name__)
 class GitHubProcessor:
     """Process GitHub webhook events into achievements"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Patterns for identifying significant changes
         self.significant_patterns = [
             r"feat\b",
@@ -46,7 +47,7 @@ class GitHubProcessor:
 
     async def process_pull_request(
         self,
-        payload: Dict,
+        payload: Dict[str, Any],
         db: Session,
     ) -> Optional[Achievement]:
         """Process pull request events"""
@@ -80,7 +81,7 @@ class GitHubProcessor:
             category=category,
             started_at=created_at,
             completed_at=merged_at,
-            duration_hours=review_time,
+            duration_hours=review_time,  # type: ignore[arg-type]
             source_type="github",
             source_id=str(pr["number"]),
             source_url=pr["html_url"],
@@ -107,7 +108,7 @@ class GitHubProcessor:
             state="merged",
             created_at=created_at,
             merged_at=merged_at,
-            review_time_hours=review_time,
+            review_time_hours=review_time,  # type: ignore[arg-type]
             comments_count=pr.get("comments", 0) + pr.get("review_comments", 0),
             commits_count=pr.get("commits", 0),
             files_changed=pr.get("changed_files", 0),
@@ -124,7 +125,7 @@ class GitHubProcessor:
 
     async def process_workflow_run(
         self,
-        payload: Dict,
+        payload: Dict[str, Any],
         db: Session,
     ) -> Optional[Achievement]:
         """Process CI/CD workflow events"""
@@ -151,7 +152,7 @@ class GitHubProcessor:
             category="infrastructure",
             started_at=started_at,
             completed_at=completed_at,
-            duration_hours=duration,
+            duration_hours=duration,  # type: ignore[arg-type]
             source_type="ci",
             source_id=str(run["id"]),
             source_url=run["html_url"],
@@ -174,7 +175,7 @@ class GitHubProcessor:
 
     async def process_push(
         self,
-        payload: Dict,
+        payload: Dict[str, Any],
         db: Session,
     ) -> Optional[Achievement]:
         """Process push events for significant commits"""
@@ -226,7 +227,7 @@ class GitHubProcessor:
 
     async def process_issue(
         self,
-        payload: Dict,
+        payload: Dict[str, Any],
         db: Session,
     ) -> Optional[Achievement]:
         """Process issue events"""
@@ -271,7 +272,7 @@ class GitHubProcessor:
             category=category,
             started_at=created_at,
             completed_at=closed_at,
-            duration_hours=duration,
+            duration_hours=duration,  # type: ignore[arg-type]
             source_type="github",
             source_id=f"issue-{issue['number']}",
             source_url=issue["html_url"],
@@ -291,7 +292,7 @@ class GitHubProcessor:
 
         return achievement
 
-    def _determine_category(self, title: str, labels: list) -> str:
+    def _determine_category(self, title: str, labels: list[Dict[str, Any]]) -> str:
         """Determine achievement category from PR title and labels"""
 
         title_lower = title.lower()
@@ -329,7 +330,7 @@ class GitHubProcessor:
 
         return "feature"  # Default
 
-    def _extract_tags(self, pr: Dict) -> list:
+    def _extract_tags(self, pr: Dict[str, Any]) -> list[str]:
         """Extract tags from PR data"""
 
         tags = []
@@ -366,7 +367,7 @@ class GitHubProcessor:
 
         return list(set(tags))  # Remove duplicates
 
-    def _extract_skills(self, pr: Dict) -> list:
+    def _extract_skills(self, pr: Dict[str, Any]) -> list[str]:
         """Extract demonstrated skills from PR"""
 
         skills = []
@@ -412,7 +413,7 @@ class GitHubProcessor:
 
         return list(set(skills))  # Remove duplicates
 
-    def _skills_from_labels(self, labels: list) -> list:
+    def _skills_from_labels(self, labels: list[Dict[str, Any]]) -> list[str]:
         """Extract skills from issue labels"""
 
         skill_map = {
@@ -429,7 +430,7 @@ class GitHubProcessor:
         skills = []
 
         for label in labels:
-            label_lower = label.lower()
+            label_lower = label.get("name", "").lower()
             for key, skill_list in skill_map.items():
                 if key in label_lower:
                     skills.extend(skill_list)

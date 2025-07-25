@@ -3,12 +3,13 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, List
+from typing import Any, Dict, List, Union
 
 import markdown
-from core.logging import setup_logging
-from db.models import Achievement
 from jinja2 import Environment, FileSystemLoader
+
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.models import Achievement
 
 logger = setup_logging(__name__)
 
@@ -28,7 +29,7 @@ class PortfolioGenerator:
         self,
         achievements: List[Achievement],
         format: str = "markdown",
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Generate portfolio in specified format"""
 
         start_time = datetime.utcnow()
@@ -37,6 +38,7 @@ class PortfolioGenerator:
         version = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
 
         # Generate content based on format
+        content: Union[str, bytes]
         if format == "markdown":
             content = await self._generate_markdown(achievements)
         elif format == "html":
@@ -55,11 +57,11 @@ class PortfolioGenerator:
         if format == "pdf":
             # PDF is binary
             with open(file_path, "wb") as f:
-                f.write(content)
+                f.write(content)  # type: ignore[arg-type]
         else:
             # Text formats
             with open(file_path, "w") as f:
-                f.write(content)
+                f.write(content)  # type: ignore[arg-type]
 
         # Calculate generation time
         generation_time = (datetime.utcnow() - start_time).total_seconds()
@@ -111,7 +113,7 @@ class PortfolioGenerator:
             md_lines.append("")
 
             for achievement in sorted(
-                items, key=lambda x: x.impact_score, reverse=True
+                items, key=lambda x: x.impact_score or 0.0, reverse=True
             ):
                 md_lines.extend(
                     [
@@ -123,7 +125,7 @@ class PortfolioGenerator:
                         f"- **Business Value**: ${achievement.business_value:,.2f}",
                         f"- **Time Saved**: {achievement.time_saved_hours:.0f} hours/month",
                         f"- **Duration**: {achievement.duration_hours:.1f} hours",
-                        f"- **Date**: {achievement.completed_at.strftime('%B %Y')}",
+                        f"- **Date**: {achievement.completed_at.strftime('%B %Y') if achievement.completed_at else 'N/A'}",
                         "",
                     ]
                 )
@@ -218,11 +220,11 @@ class PortfolioGenerator:
                         "category": a.category,
                         "impact_score": a.impact_score,
                         "complexity_score": a.complexity_score,
-                        "business_value": float(a.business_value),
+                        "business_value": float(a.business_value) if a.business_value else 0.0,
                         "time_saved_hours": a.time_saved_hours,
                         "duration_hours": a.duration_hours,
-                        "started_at": a.started_at.isoformat(),
-                        "completed_at": a.completed_at.isoformat(),
+                        "started_at": a.started_at.isoformat() if a.started_at else None,
+                        "completed_at": a.completed_at.isoformat() if a.completed_at else None,
                         "tags": a.tags,
                         "skills": a.skills_demonstrated,
                         "summary": a.ai_summary,
@@ -254,15 +256,16 @@ class PortfolioGenerator:
     ) -> Dict[str, List[Achievement]]:
         """Group achievements by category"""
 
-        grouped = {}
+        grouped: Dict[str, List[Achievement]] = {}
         for achievement in achievements:
-            if achievement.category not in grouped:
-                grouped[achievement.category] = []
-            grouped[achievement.category].append(achievement)
+            category = achievement.category or "uncategorized"
+            if category not in grouped:
+                grouped[category] = []
+            grouped[category].append(achievement)
 
         return grouped
 
-    def _calculate_stats(self, achievements: List[Achievement]) -> Dict:
+    def _calculate_stats(self, achievements: List[Achievement]) -> Dict[str, Any]:
         """Calculate portfolio statistics"""
 
         if not achievements:
@@ -276,10 +279,10 @@ class PortfolioGenerator:
 
         return {
             "total": len(achievements),
-            "total_value": sum(float(a.business_value) for a in achievements),
-            "total_time_saved": sum(a.time_saved_hours for a in achievements),
-            "avg_impact": sum(a.impact_score for a in achievements) / len(achievements),
-            "avg_complexity": sum(a.complexity_score for a in achievements)
+            "total_value": sum(float(a.business_value) if a.business_value else 0.0 for a in achievements),
+            "total_time_saved": sum(a.time_saved_hours or 0.0 for a in achievements),
+            "avg_impact": sum(a.impact_score or 0.0 for a in achievements) / len(achievements),
+            "avg_complexity": sum(a.complexity_score or 0.0 for a in achievements)
             / len(achievements),
             "by_category": {
                 cat: len(items)

@@ -2,18 +2,19 @@
 
 from typing import Optional
 
-from api.schemas import (
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
+from services.achievement_collector.api.schemas import (
     Achievement,
     AchievementCreate,
     AchievementList,
     AchievementUpdate,
 )
-from core.logging import setup_logging
-from db.config import get_db
-from db.models import Achievement as AchievementModel
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func
-from sqlalchemy.orm import Session
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.config import get_db
+from services.achievement_collector.db.models import Achievement as AchievementModel
 
 logger = setup_logging(__name__)
 router = APIRouter()

@@ -5,9 +5,10 @@ from decimal import Decimal
 from typing import List
 
 import httpx
-from api.schemas import AnalysisResponse
-from core.logging import setup_logging
-from db.models import Achievement
+
+from services.achievement_collector.api.schemas import AnalysisResponse
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.models import Achievement
 
 logger = setup_logging(__name__)
 

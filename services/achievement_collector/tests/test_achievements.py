@@ -3,12 +3,13 @@
 from datetime import datetime, timedelta
 
 import pytest
-from db.config import get_db
-from db.models import Base
 from fastapi.testclient import TestClient
-from main import app
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from services.achievement_collector.db.config import get_db
+from services.achievement_collector.db.models import Base
+from services.achievement_collector.main import app
 
 # Test database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"

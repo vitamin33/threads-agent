@@ -11,7 +11,7 @@ from sqlalchemy import engine_from_config, pool
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # Import models to ensure they're registered
-from db.models import Base
+from services.achievement_collector.db.models import Base
 
 # this is the Alembic Config object
 config = context.config

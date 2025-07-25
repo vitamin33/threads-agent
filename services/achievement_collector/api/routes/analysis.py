@@ -1,14 +1,14 @@
 # Achievement Analysis Routes
 
-from api.schemas import AnalysisRequest, AnalysisResponse
-from core.config import settings
-from core.logging import setup_logging
-from db.config import get_db
-from db.models import Achievement
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from services.ai_analyzer import AchievementAnalyzer
+from services.achievement_collector.api.schemas import AnalysisRequest, AnalysisResponse
+from services.achievement_collector.core.config import settings
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.config import get_db
+from services.achievement_collector.db.models import Achievement
+from services.achievement_collector.services.ai_analyzer import AchievementAnalyzer
 
 logger = setup_logging(__name__)
 router = APIRouter()

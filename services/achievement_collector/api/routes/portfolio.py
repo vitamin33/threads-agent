@@ -2,17 +2,22 @@
 
 import os
 
-from api.schemas import PortfolioRequest, PortfolioResponse
-from core.config import settings
-from core.logging import setup_logging
-from db.config import get_db
-from db.models import Achievement, PortfolioSnapshot
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
-from services.portfolio_generator import PortfolioGenerator
+from services.achievement_collector.api.schemas import (
+    PortfolioRequest,
+    PortfolioResponse,
+)
+from services.achievement_collector.core.config import settings
+from services.achievement_collector.core.logging import setup_logging
+from services.achievement_collector.db.config import get_db
+from services.achievement_collector.db.models import Achievement, PortfolioSnapshot
+from services.achievement_collector.services.portfolio_generator import (
+    PortfolioGenerator,
+)
 
 logger = setup_logging(__name__)
 router = APIRouter()
