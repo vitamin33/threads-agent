@@ -1,7 +1,6 @@
 """Test-specific pytest configuration."""
 
 import os
-import sys
 import warnings
 
 
