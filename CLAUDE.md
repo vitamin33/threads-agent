@@ -1,12 +1,11 @@
 # CLAUDE.md - Threads-Agent Stack Development Guide
 
 > **🚀 AI-Powered Development**: From idea to shipped code in minutes with GPT-4 planning + auto-git workflow.
->
 > **Quick Start**: `export OPENAI_API_KEY=your-key && ./scripts/workflow-automation.sh ai-plan "your idea"`
 
-## 🎯 Quick Reference
+## 🎯 Daily Development Workflow
 
-### Essential Commands (Only 4 you need)
+### Essential Commands (4 Core Commands)
 | Command | Purpose | Example |
 |---------|---------|---------|
 | `ai-plan` | AI creates project plan | `./scripts/workflow-automation.sh ai-plan "user auth"` |
@@ -14,99 +13,119 @@
 | `tasks commit` | Enhanced commit + push | `./scripts/workflow-automation.sh tasks commit task_001 "add middleware"` |
 | `tasks ship` | Create PR automatically | `./scripts/workflow-automation.sh tasks ship task_001` |
 
-### Development Quick Start
+### Complete Workflow Example
 ```bash
-# One-time setup
-just dev-start        # Starts everything locally
-just dev-start-multi  # Multiple developers on same machine
+# 1. Plan feature
+./scripts/workflow-automation.sh ai-plan "Build payment processing"
 
-# Daily workflow
-just work-day         # Morning: Start everything + dashboards
-just create-viral     # Work: AI creates viral content
-just ship-it          # Deploy: Test + Deploy + PR
-just end-day          # Evening: Analyze + optimize
+# 2. Start task
+./scripts/workflow-automation.sh tasks start task_001
+
+# 3. Code + commit
+./scripts/workflow-automation.sh tasks commit task_001 "implement stripe"
+
+# 4. Ship & complete
+./scripts/workflow-automation.sh tasks ship task_001
+./scripts/workflow-automation.sh tasks complete task_001
 ```
 
 ## Project Overview
 
-**Threads-Agent Stack** is a production-grade, multi-persona AI agent system that:
-- Generates AI-powered Threads content with trend research
-- Uses microservices on Kubernetes (k3d locally)
-- Implements LangGraph workflows with OpenAI integration
-- Goal: 6%+ engagement rate, $0.01 cost/follow, $20k MRR
+**Threads-Agent Stack**: Production-grade AI agent system for content generation
+- **Architecture**: Microservices on Kubernetes with LangGraph + OpenAI
+- **Goal**: 6%+ engagement, $0.01/follow, $20k MRR
+- **Tech**: Python 3.12+, FastAPI, Celery, k3d, PostgreSQL, Qdrant
 
-### Architecture
+### KPIs
+- Engagement Rate: 6%+ (`posts_engagement_rate`)
+- Cost/Follow: $0.01 (`cost_per_follow_dollars`)
+- Monthly Revenue: $20k MRR (`revenue_projection_monthly`)
+
+## Architecture
+
+### Services
 ```
 services/
-├── orchestrator/        # FastAPI + Celery dispatcher + Search APIs
-├── celery_worker/      # Background tasks + SSE
-├── persona_runtime/    # LangGraph DAG + LLM calls + Search
-├── fake_threads/       # Mock Threads API
-└── common/            # Shared utilities
+├── orchestrator/    # FastAPI coordinator + Search APIs
+├── celery_worker/   # Background processor + SSE
+├── persona_runtime/ # LangGraph with LLM + Search
+├── fake_threads/    # Mock API for testing
+└── common/         # Shared utilities
 ```
 
-### Core Technologies
-- **Language**: Python 3.12+
-- **Frameworks**: FastAPI, Celery, LangGraph, SQLAlchemy
+### Core Stack
 - **Infrastructure**: k3d, Kubernetes, Helm
-- **Databases**: PostgreSQL, Qdrant
+- **Data**: PostgreSQL, Qdrant, RabbitMQ
 - **Monitoring**: Prometheus, Grafana, Jaeger, AlertManager
-- **Search**: SearXNG (free metasearch)
-- **MCP Servers**: Redis, PostgreSQL, Kubernetes, OpenAI, SearXNG
+- **AI**: OpenAI API, SearXNG search
+- **MCP Servers**: Redis, K8s, PostgreSQL, Slack, GitHub
 
-## Development Workflow
+## Quick Start
 
-### Prerequisites
-- Docker >= 24, k3d >= 5.6, Helm >= 3.14
-- Python 3.12+, just, npm
+```bash
+git clone git@github.com:threads-agent-stack/threads-agent.git
+cd threads-agent
+just dev-start  # Starts everything!
+```
 
-### Key Commands (justfile)
+### 🎯 MEGA Commands (80/20 Rule)
+```bash
+just work-day       # Morning: Start env + dashboards
+just create-viral   # Work: AI creates viral content
+just ship-it        # Deploy: Test + Deploy + PR
+just end-day        # Evening: Analyze + optimize
+just make-money     # Autopilot mode
+```
 
-#### Development
-- `just bootstrap[-multi]` - Create k3d cluster
-- `just images` - Build Docker images
-- `just deploy-dev` - Helm install
+### Key Development Commands
+- `just dev-start` - Bootstrap + Deploy + MCP + Dashboard
 - `just logs` - View service logs
-- `just unit` / `just e2e` - Run tests
-- `just check` - Full quality gate
-- `just ship "message"` - Commit → push → PR
+- `just unit` - Run unit tests
+- `just e2e` - Run integration tests
+- `just ship "message"` - Commit + push + PR
+- `just reset-hard` - Nuclear reset
 
-#### Productivity Mega Commands
-- `just dev-start` - One command full setup
-- `just persona-hot-reload` - Instant persona testing
-- `just ai-test-gen` - Generate tests automatically
-- `just smart-deploy` - Deploy with auto-rollback
-- `just trend-check` - Find trending topics
-- `just search-enhanced-post` - Generate trend-aware content
+### Search & Trends
+- `just trend-check "topic"` - Find trends
+- `just competitive-analysis "topic"` - Analyze viral patterns
+- `just search-enhanced-post "persona" "topic"` - Generate with trends
 
-#### MCP & Search
-- `just mcp-setup` - Setup all MCP servers
-- `just cache-set/get` - Redis operations
-- `just searxng-start` - Start search engine
-- `just competitive-analysis` - Analyze viral patterns
+### MCP Usage
+```bash
+just cache-set "key" "value"    # Redis cache
+just cache-get "key"            # Retrieve data
+just mcp-setup                  # Setup all servers
+```
 
 ## Testing Strategy
 
+### Organization
 ```
 tests/
-├── e2e/              # Integration tests (k3d required)
-├── unit/             # Cross-service unit tests
-└── test_sanity.py    # Smoke tests
+├── e2e/        # Integration tests
+├── unit/       # Cross-service tests
+└── test_sanity.py
 
-services/*/tests/     # Service-specific tests
+services/*/tests/  # Service-specific tests
 ```
 
-- **Markers**: `@pytest.mark.e2e` for slow tests
-- **Patterns**: E2E uses port-forwarding, unit uses test doubles
+### Markers
+- `@pytest.mark.e2e` - Tests requiring k3d cluster
+- Default - Fast unit tests
 
 ## Database & Models
 
-### PostgreSQL
+### PostgreSQL (Centralized Migrations)
+- **Location**: `services/orchestrator/db/alembic/`
+- **Pattern**: ALL migrations in orchestrator service
+- **Convention**: `add_{service}_tables.py`
+
+### Models
 ```python
-class Post(Base):
+class Post:
     id, persona_id, hook, body, tokens_used, ts
-    
-class Task(Base):
+
+class Task:
     id, payload, status
 ```
 
@@ -116,106 +135,128 @@ class Task(Base):
 
 ## Service Details
 
-### Orchestrator Routes
+### Orchestrator
 - `POST /task` - Queue generation
-- `GET /health`, `/metrics`
-- `POST /search/trends` - Trending topics
-- `POST /search/competitive` - Viral analysis
-- `POST /search/enhanced-task` - Search-powered content
+- `POST /search/trends` - Find trends
+- `GET /metrics` - Prometheus
 
-### Content Pipeline
-1. **Standard**: ingest → hook → body → guardrail → format
-2. **Enhanced**: ingest → trend_research → competitive_analysis → hook → body → guardrail → format
+### Celery Worker
+- Task: `queue_post`
+- Features: SSE progress updates
+
+### Persona Runtime
+- Workflow: ingest → trend_research → hook → body → guardrail → format
+- Models: `HOOK_MODEL` (gpt-4o), `BODY_MODEL` (gpt-3.5-turbo)
 
 ### Environment Variables
 ```bash
-# Orchestrator
-RABBITMQ_URL, DATABASE_URL, QDRANT_URL, SEARXNG_URL
+# Core
+OPENAI_API_KEY      # Use "test" for offline
+RABBITMQ_URL        # Celery broker
+DATABASE_URL        # PostgreSQL
+QDRANT_URL          # Vector store
+SEARXNG_URL         # Search engine
 
-# Persona Runtime
-OPENAI_API_KEY="test"  # Offline mode
-HOOK_MODEL="gpt-4o"
-BODY_MODEL="gpt-3.5-turbo-0125"
+# Models
+HOOK_MODEL          # Default: gpt-4o
+BODY_MODEL          # Default: gpt-3.5-turbo-0125
 ```
-
-## CI/CD Pipeline
-
-- **Triggers**: PRs to main
-- **Steps**: Setup → k3d → Build → Deploy → Test → Artifacts
-- **Quality Gates**: Tests, mypy, formatting, Helm success
 
 ## Monitoring
 
 ### Prometheus Metrics
 - `request_latency_seconds` - Pipeline timing
-- `posts_engagement_rate` - KPI tracking
-- `revenue_projection_monthly` - Business metrics
+- `posts_engagement_rate` - Engagement tracking
+- `cost_per_follow_dollars` - Cost efficiency
 - `search_requests_total` - Search usage
-- `trend_relevance_score` - Content quality
 
-### Grafana Dashboards
-- Business KPIs (revenue, engagement)
-- Technical Metrics (latency, errors)
-- Infrastructure (CPU, memory, network)
+### Dashboards
+- `just grafana` - Business & technical metrics
+- `just jaeger-ui` - Distributed tracing
 
-### AlertManager
-- **Critical** → PagerDuty (service down, high errors)
-- **Warning** → Slack (latency, costs)
-- **Business** → Email (engagement, revenue)
+### Alerts (AlertManager)
+- **Critical**: PagerDuty (service down, high errors)
+- **Warning**: Slack (latency, costs)
+- **Business**: Email (engagement, revenue)
 
-## AI Workflow System
+## Development Best Practices
 
+### Git Workflow
+- Branch: `task-{epic-id}-{title}`
+- Protection: PR + CI required
+- Automation: `just ship` handles all
+
+### AI-Powered Planning
 ```bash
-# AI Planning
-./scripts/workflow-automation.sh ai-plan "Build feature X"
+# Create epic with AI
+./scripts/workflow-automation.sh ai-plan "feature idea"
 
-# Git Integration (all automated)
-./scripts/workflow-automation.sh tasks start task_12345
-./scripts/workflow-automation.sh tasks commit task_12345 "implement feature"
-./scripts/workflow-automation.sh tasks ship task_12345
-./scripts/workflow-automation.sh tasks complete task_12345
+# Auto-git integration
+./scripts/workflow-automation.sh tasks start task_001
+./scripts/workflow-automation.sh tasks commit task_001 "changes"
+./scripts/workflow-automation.sh tasks ship task_001
 ```
 
-**Directory**: `.workflows/` contains epics, features, tasks in YAML
+### Code Quality
+- Type checking: mypy strict
+- Formatting: ruff + black + isort
+- Pre-commit: via `just ship`
 
 ## Troubleshooting
 
+### Common Issues
 ```bash
-# Common fixes
-just k3d-nuke-all && just bootstrap    # Reset cluster
-kubectl get pods -A                    # Check pod status
-just e2e-prepare                       # Full test setup
+# k3d issues
+just k3d-nuke-all && just bootstrap
 
-# Port forwards
-kubectl port-forward svc/postgres 5432:5432
+# Test failures
+just e2e-prepare
+
+# Port forwarding
 kubectl port-forward svc/orchestrator 8080:8080
 ```
 
-## Key Features
+## Productivity Features
 
-### 🚀 MCP Servers
-- Redis: Instant caching (saves 2-3 hrs/week)
-- Kubernetes: Direct cluster access (saves 3-4 hrs/week)
-- PostgreSQL: No port-forwarding (saves 1-2 hrs/week)
-- SearXNG: Free search ($500+/month savings)
+### Time Saved (Per Week)
+1. **MCP Servers**: 10-12 hours
+2. **Search Integration**: 5-6 hours
+3. **AI Tools**: 8-10 hours
+4. **Monitoring**: 2-3 hours
 
-### 🔍 Search Integration
-- Trend detection for 2-3x engagement
-- Competitive analysis for viral patterns
-- Zero API costs with SearXNG
-- Automated trend monitoring
+### Essential Commands
+```bash
+# Development
+just dev-start
+just persona-hot-reload
+just ai-test-gen
 
-### 💡 Productivity Summary
-- **Total Time Saved**: 25-31 hours/week
-- **Key Tools**: Hot-reload, AI tests, smart deploy
-- **Business Impact**: Path to $20k MRR with automation
+# Deployment
+just smart-deploy canary
+just grafana
+```
+
+## AI Token Efficiency
+
+### Optimization
+```bash
+just token-optimize  # Enable all optimizations
+just cached-analyze  # 0 tokens (cached)
+just token-batch     # Batch processing (80% savings)
+```
+
+### Strategies
+1. Smart Caching (60-70% savings)
+2. Batch Processing (30-40% savings)
+3. Template Generation (40-50% savings)
 
 ## Resources
-- [DAILY_PLAYBOOK.md](./DAILY_PLAYBOOK.md) - Daily cheat sheet
-- [PRODUCTIVITY_GUIDE.md](./PRODUCTIVITY_GUIDE.md) - Complete guide
-- [docs/](./docs/) - Detailed documentation
+
+- **[DAILY_PLAYBOOK.md](./DAILY_PLAYBOOK.md)** - Daily cheat sheet
+- **[PRODUCTIVITY_GUIDE.md](./PRODUCTIVITY_GUIDE.md)** - Full productivity guide
+- **[docs/](./docs/)** - Additional documentation
 
 ---
 
 **Repository**: https://github.com/threads-agent-stack/threads-agent
-**Last Updated**: 2025-07-25
+**Last Updated**: 2025-01-25
