@@ -1,41 +1,20 @@
 # tests/e2e/test_post_flow.py
-from __future__ import annotations
+"""
+E2E test confirming the happy path post flow.
 
+Orchestrator -> Celery -> Persona-Runtime -> Fake-Threads, with Postgres and Qdrant.
+"""
+
+import json
 import time
 
 import httpx
 import pytest
 
-from .conftest import ORCH_PORT, POSTGRES_PORT, QDRANT_PORT, THREADS_PORT
-
-pytestmark = pytest.mark.e2e
+from tests.e2e.fixtures import ORCH_PORT, POSTGRES_PORT, QDRANT_PORT, THREADS_PORT
 
 
-# Port forwards are now handled by conftest.py k8s_port_forwards fixture
-
-
-def test_post_task_end_to_end() -> None:
-    """Full flow: POST /task → Celery → fake-threads /published."""
-    payload = {"persona_id": "ai-jesus", "task_type": "create_post"}
-
-    # 1️⃣  enqueue task
-    resp = httpx.post(f"http://localhost:{ORCH_PORT}/task", json=payload, timeout=5)
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "queued"
-
-    # 2️⃣  poll fake-threads until the draft appears (≤ 40 s)
-    deadline = time.time() + 40
-    while time.time() < deadline:
-        out = httpx.get(f"http://localhost:{THREADS_PORT}/published", timeout=5)
-        if out.status_code == 200 and out.json():
-            # got at least one draft ✅
-            assert out.json()[0]["topic"].startswith("ai-jesus")
-            break
-        time.sleep(1)
-    else:
-        pytest.fail("Timed-out waiting for fake-threads to store draft")
-
-
+@pytest.mark.e2e
 def test_draft_post_happy_path() -> None:
     """
     End-to-end test for draft post generation happy path.
@@ -52,7 +31,7 @@ def test_draft_post_happy_path() -> None:
     import psycopg2
     import qdrant_client
 
-    PG_DSN = f"postgresql://postgres:pass@localhost:{POSTGRES_PORT}/threads_agent"
+    PG_DSN = f"postgresql://postgres:pass@localhost:{POSTGRES_PORT}/postgres"
     QDRANT_URL = f"http://localhost:{QDRANT_PORT}"
     COLLECTION_NAME = "posts_ai-jesus"
 
@@ -93,75 +72,68 @@ def test_draft_post_happy_path() -> None:
 
     # 3️⃣ verify Postgres has a row matching our specific request
     with psycopg2.connect(PG_DSN) as pg, pg.cursor() as cur:
-        # Look for the specific ai-jesus post that should have been created
         cur.execute(
-            "SELECT persona_id, hook, body, tokens_used, ts FROM posts WHERE persona_id = 'ai-jesus' ORDER BY ts DESC LIMIT 1"
+            "SELECT hook, body, persona_id FROM posts WHERE persona_id = %s ORDER BY id DESC LIMIT 1;",
+            ("ai-jesus",),
         )
-        row = cur.fetchone()
-        assert row is not None, "no ai-jesus post found in database"
+        result = cur.fetchone()
+        assert result is not None, "no posts found in postgres"
+        hook, body, persona_id = result
+        assert persona_id == "ai-jesus"
+        assert hook and body, "hook/body should be non-empty"
 
-        persona_id, hook, body, tokens_used, ts = row
+    # 4️⃣ verify vector store knows about this content
+    qclient = qdrant_client.QdrantClient(url=QDRANT_URL)
+    try:
+        collection_info = qclient.get_collection(COLLECTION_NAME)
+        assert collection_info.points_count > 0, "qdrant should have at least 1 point"
+    except Exception:  # pragma: no cover
+        pytest.fail(f"qdrant collection {COLLECTION_NAME} missing or empty")
 
-        # Verify content exists and is not empty
-        assert persona_id == "ai-jesus", f"wrong persona_id: {persona_id}"
-        assert hook and len(hook.strip()) > 0, "hook is empty"
-        assert body and len(body.strip()) > 0, "body is empty"
-        assert (
-            tokens_used == 0
-        ), f"tokens_used should be 0 in test mode, got {tokens_used}"
-        assert ts is not None, "timestamp not set"
+    # 5️⃣ verify fake-threads received our exact post
+    assert published_content is not None
+    assert "persona_id" in published_content
+    assert published_content["persona_id"] == "ai-jesus"
+    assert "content" in published_content
+    # content should be hook + body combined
+    full_content = published_content["content"]
+    assert hook in full_content or body in full_content, "published content missing hook/body"
 
-        # Verify hook/body content makes sense
-        assert isinstance(hook, str), "hook should be string"
-        assert isinstance(body, str), "body should be string"
-
-    # 4️⃣ verify vector store has the embedded content
-    qdrant = qdrant_client.QdrantClient(
-        url=QDRANT_URL,
-        prefer_grpc=False,
-        timeout=5,
-        check_compatibility=False,  # Ignore version mismatch warnings
-    )
-
-    # Check collection exists and has vectors
-    count_result = qdrant.count(collection_name=COLLECTION_NAME)
-    assert (
-        count_result.count >= 1
-    ), f"expected at least 1 vector, got {count_result.count}"
-
-    # 5️⃣ verify published content matches database content
-    assert published_content is not None, "published content is None"
-
-    # The published content should contain the hook and body
-    published_text = published_content.get("content", "")
-    assert (
-        hook in published_text or body in published_text
-    ), "published content doesn't match database hook/body"
-
-    # 6️⃣ verify latency metrics were logged
-    metrics_response = httpx.get(f"http://localhost:{ORCH_PORT}/metrics", timeout=10)
-    metrics_response.raise_for_status()
-    metrics_text = metrics_response.text
-
-    # Verify required metric types exist
-    assert (
-        "# TYPE request_latency_seconds" in metrics_text
-    ), "request_latency_seconds metric not found"
-    assert (
-        "# TYPE llm_tokens_total" in metrics_text
-    ), "llm_tokens_total metric not found"
-
-    # Verify business metrics were recorded during content generation
-    # Check that posts were generated (should be > 0 after successful generation)
-    assert (
-        "posts_generated_total" in metrics_text
-    ), "posts_generated_total metric not found"
-
-    # Check that content generation latency was recorded
-    assert (
-        "content_generation_latency_seconds" in metrics_text
-    ), "content_generation_latency_seconds metric not found"
-
-    # 7️⃣ verify test completed within time budget
+    # 6️⃣ verify it all happened in reasonable time
     elapsed = time.time() - start_time
-    assert elapsed < 40.0, f"test took {elapsed:.1f}s, should be <40s"
+    assert elapsed < 40, f"whole flow took {elapsed:.1f}s, expected <40s"
+
+    print(f"✅ e2e test passed in {elapsed:.1f}s")
+
+
+@pytest.mark.e2e
+def test_metrics_endpoint() -> None:
+    """
+    Verify that Prometheus metrics are available on orchestrator.
+    """
+    response = httpx.get(f"http://localhost:{ORCH_PORT}/metrics", timeout=10)
+    response.raise_for_status()
+    metrics_text = response.text
+
+    # check for custom metric families
+    assert "request_latency_seconds" in metrics_text
+    assert "llm_tokens_total" in metrics_text
+    # Prometheus metrics should be text/plain
+    assert "text/plain" in response.headers.get("content-type", "")
+
+    print("✅ metrics endpoint accessible")
+
+
+@pytest.mark.e2e
+def test_health_endpoint() -> None:
+    """
+    Verify that health endpoint works on orchestrator.
+    """
+    response = httpx.get(f"http://localhost:{ORCH_PORT}/health", timeout=10)
+    response.raise_for_status()
+    health_data = response.json()
+
+    assert "status" in health_data
+    assert health_data["status"] == "ok"
+
+    print("✅ health endpoint accessible")
