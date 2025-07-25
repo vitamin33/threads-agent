@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "add_achievement_collector_tables"
-down_revision: Union[str, None] = "threads_posts_001"
+down_revision: Union[str, None] = "simple_test"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -63,6 +63,31 @@ threadsAdaptor:
   credentials:
     appId: ""                      # Threads App ID
     appSecret: ""                  # Threads App Secret
+
+revenue:
+  enabled: false                   # turn ON to enable revenue infrastructure
+  image:
+    repository: revenue
+    tag: "local"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  stripe:
+    apiKey: ""                     # Stripe API key (sk_test_... or sk_live_...)
+    webhookSecret: ""              # Stripe webhook endpoint secret
+    priceBasic: ""                 # Stripe price ID for basic tier
+    pricePro: ""                   # Stripe price ID for pro tier
+    priceEnterprise: ""            # Stripe price ID for enterprise tier
+  affiliateId: "viral123"          # Default affiliate tracking ID
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+threadsAdaptor:
+  credentials:
     accessToken: ""                # Threads Access Token
     userId: ""                     # Threads User ID
   resources:

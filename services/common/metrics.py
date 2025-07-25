@@ -559,6 +559,64 @@ def update_system_health(component: str, service: str, healthy: bool) -> None:
     )
 
 
+# Revenue-specific metrics
+AFFILIATE_CLICKS_TOTAL = _safe_metric(
+    Counter,
+    "affiliate_clicks_total",
+    "Total affiliate link clicks",
+    ["merchant", "category"],
+)
+
+AFFILIATE_CONVERSIONS_TOTAL = _safe_metric(
+    Counter,
+    "affiliate_conversions_total",
+    "Total affiliate conversions",
+    ["merchant", "category"],
+)
+
+AFFILIATE_REVENUE_USD = _safe_metric(
+    Counter,
+    "affiliate_revenue_usd",
+    "Total affiliate revenue in USD",
+    ["merchant", "category"],
+)
+
+LEADS_CAPTURED_TOTAL = _safe_metric(
+    Counter,
+    "leads_captured_total",
+    "Total leads captured",
+    ["source", "converted"],
+)
+
+LEAD_SCORE_AVERAGE = _safe_metric(
+    Gauge,
+    "lead_score_average",
+    "Average lead score",
+    ["source"],
+)
+
+SUBSCRIPTIONS_CREATED_TOTAL = _safe_metric(
+    Counter,
+    "subscriptions_created_total",
+    "Total subscriptions created",
+    ["tier", "status"],
+)
+
+MRR_USD = _safe_metric(
+    Gauge,
+    "mrr_usd",
+    "Monthly Recurring Revenue in USD",
+    ["tier"],
+)
+
+REVENUE_TOTAL_USD = _safe_metric(
+    Counter,
+    "revenue_total_usd",
+    "Total revenue in USD",
+    ["type", "source"],
+)
+
+
 # ───── Legacy Functions for Backward Compatibility ──────────────────────────────────────
 def record_celery_task(task_name: str, status: str, duration: float = 0.0) -> None:
     """Record Celery task execution metrics."""
@@ -636,9 +694,7 @@ def record_error_rate_percentage(service: str, error_type: str, rate: float) -> 
     # For now, we will just record it as a gauge using the ERROR_RATE_BY_SERVICE metric
     ERROR_RATE_BY_SERVICE.labels(
         service=service, error_type=error_type, severity="warning"
-    ).inc(
-        int(rate)
-    )  # Convert rate to count for counter metric
+    ).inc(int(rate))  # Convert rate to count for counter metric
 
 
 def update_content_quality(persona_id: str, content_type: str, score: float) -> None:

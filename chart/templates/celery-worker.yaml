@@ -16,6 +16,7 @@ spec:
       containers:
         - name: celery-worker
           image: "{{ tpl .Values.celeryWorker.image.repository $ }}:{{ tpl .Values.celeryWorker.image.tag $ }}"
+          imagePullPolicy: {{ .Values.celeryWorker.image.pullPolicy | default "IfNotPresent" }}
           env:
             - name: RABBITMQ_URL
               value: {{ .Values.rabbitmq.url }}
@@ -28,7 +29,9 @@ spec:
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
               {{- end }}
             - name: POSTGRES_DSN
-              value: "postgresql://postgres:pass@postgres:5432/postgres"
+              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
             - name: QDRANT_URL
               value: "http://qdrant:6333"
           envFrom:

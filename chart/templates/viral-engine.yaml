@@ -17,7 +17,7 @@ spec:
       containers:
         - name: viral-engine
           image: "{{ tpl .Values.viralEngine.image.repository $ }}:{{ tpl .Values.viralEngine.image.tag $ }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.viralEngine.image.pullPolicy | default "IfNotPresent" }}
 
           # ───── ports ─────
           ports:

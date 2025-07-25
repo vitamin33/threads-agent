@@ -227,9 +227,9 @@ class TestPerformance:
         duration_ms = (end_time - start_time) * 1000
 
         # Should complete within 100ms requirement
-        assert (
-            duration_ms < 100
-        ), f"Optimization took {duration_ms:.2f}ms, should be <100ms"
+        assert duration_ms < 100, (
+            f"Optimization took {duration_ms:.2f}ms, should be <100ms"
+        )
 
     @pytest.mark.asyncio
     async def test_variant_generation_speed(self, hook_engine, sample_base_content):

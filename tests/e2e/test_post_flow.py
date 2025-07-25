@@ -57,7 +57,7 @@ def test_draft_post_happy_path() -> None:
     import psycopg2
     import qdrant_client
 
-    PG_DSN = f"postgresql://postgres:pass@localhost:{POSTGRES_PORT}/postgres"
+    PG_DSN = f"postgresql://postgres:pass@localhost:{POSTGRES_PORT}/threads_agent"
     QDRANT_URL = f"http://localhost:{QDRANT_PORT}"
     COLLECTION_NAME = "posts_ai-jesus"
 
@@ -79,10 +79,14 @@ def test_draft_post_happy_path() -> None:
     initial_response = httpx.get(
         f"http://localhost:{THREADS_PORT}/published", timeout=5
     )
-    initial_posts = initial_response.json() if initial_response.status_code == 200 else []
-    
+    initial_posts = (
+        initial_response.json() if initial_response.status_code == 200 else []
+    )
+
     # Count initial ai-jesus posts
-    initial_ai_jesus_count = sum(1 for p in initial_posts if "topic" in p and "ai-jesus" in p["topic"].lower())
+    initial_ai_jesus_count = sum(
+        1 for p in initial_posts if "topic" in p and "ai-jesus" in p["topic"].lower()
+    )
 
     published_content = None
     for _ in range(40):  # ~40 s budget
@@ -90,10 +94,12 @@ def test_draft_post_happy_path() -> None:
         published = httpx.get(
             f"http://localhost:{THREADS_PORT}/published", timeout=5
         ).json()
-        
+
         # Look for new ai-jesus posts specifically
-        ai_jesus_posts = [p for p in published if "topic" in p and "ai-jesus" in p["topic"].lower()]
-        
+        ai_jesus_posts = [
+            p for p in published if "topic" in p and "ai-jesus" in p["topic"].lower()
+        ]
+
         if len(ai_jesus_posts) > initial_ai_jesus_count:
             # Get the newest ai-jesus post
             published_content = ai_jesus_posts[-1]
@@ -126,10 +132,14 @@ def test_draft_post_happy_path() -> None:
     assert "topic" in published_content
     assert "content" in published_content
     # topic should contain persona_id
-    assert "ai-jesus" in published_content["topic"].lower(), f"Expected ai-jesus in topic but got: {published_content['topic']}"
+    assert "ai-jesus" in published_content["topic"].lower(), (
+        f"Expected ai-jesus in topic but got: {published_content['topic']}"
+    )
     # content should be hook + body combined
     full_content = published_content["content"]
-    assert hook in full_content or body in full_content, "published content missing hook/body"
+    assert hook in full_content or body in full_content, (
+        "published content missing hook/body"
+    )
 
     # 6️⃣ verify it all happened in reasonable time
     elapsed = time.time() - start_time

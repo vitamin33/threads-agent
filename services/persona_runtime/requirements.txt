@@ -1,7 +1,11 @@
 # services/persona_runtime/requirements.txt
 fastapi==0.111.0
 uvicorn[standard]==0.30.0
-langgraph>=0.5.3,<0.6
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+# langsmith>=0.4.8  # Temporarily disabled for CI Python 3.12 compatibility
+pydantic>=2.7.0
 python-dotenv>=1.0
 sse-starlette>=1.6
 regex>=2024.5
