@@ -314,6 +314,10 @@ jobs:
             pip install --no-deps -r tests/requirements.txt
           fi
 
+          # Remove langsmith completely to avoid Python 3.12 compatibility issues in CI
+          echo "🔧 Removing langsmith to prevent pydantic v1 conflicts in CI..."
+          pip uninstall -y langsmith || true
+
           # Show what's installed
           pip list
 
