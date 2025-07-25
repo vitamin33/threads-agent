@@ -448,10 +448,42 @@ class Task(Base):
 - Purpose: Semantic similarity search for content deduplication
 - Configuration: `services/orchestrator/vector.py`
 
-### Migrations
+### Migrations (IMPORTANT: Centralized Pattern)
 - **Tool**: Alembic (SQLAlchemy-based)
-- **Location**: `services/orchestrator/db/alembic/`
+- **Location**: `services/orchestrator/db/alembic/` (ALL services use this!)
+- **Pattern**: CENTRALIZED - All database migrations go in orchestrator service
 - **Auto-run**: Kubernetes init container in Helm chart
+
+#### 🚨 Migration Guidelines
+1. **ALL services share the same PostgreSQL database**
+2. **ALL migrations must be added to `services/orchestrator/db/alembic/versions/`**
+3. **DO NOT create separate alembic configs in individual services**
+4. **Naming convention**: `add_{service_name}_tables.py` or `update_{service_name}_{feature}.py`
+
+#### Creating a New Migration
+```bash
+# 1. Navigate to orchestrator service
+cd services/orchestrator
+
+# 2. Create migration (example for new service)
+alembic revision -m "add_achievement_collector_tables"
+
+# 3. Edit the generated file in db/alembic/versions/
+# 4. Follow existing patterns for table prefixes and structure
+```
+
+#### Why Centralized Migrations?
+- **Single source of truth** for database schema
+- **Prevents conflicts** between services trying to migrate simultaneously
+- **Easier versioning** and rollback management
+- **Simpler deployment** (one migration job in Kubernetes)
+- **Better for shared tables** and foreign key relationships
+
+#### Service-Specific Best Practices
+- Prefix tables with service name (e.g., `achievement_*`, `viral_*`)
+- Document table ownership in migration files
+- Keep service models in their own directories
+- Use the same SQLAlchemy Base from orchestrator
 
 ## Service Architecture Details
 
