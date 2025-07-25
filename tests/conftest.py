@@ -1,7 +1,9 @@
 """Test-specific pytest configuration."""
 
 import os
+import sys
 import warnings
+
 
 # Disable langsmith/langchain tracing before any imports
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
