@@ -13,20 +13,21 @@ from services.revenue.db.models import Base
 
 
 @pytest.fixture(scope="module")
-def test_engine():
+def test_engine(worker_id):
     """Create test engine with thread safety for SQLite"""
     # Use check_same_thread=False for SQLite in tests
-    # Use a persistent database file to avoid in-memory issues
+    # Use a unique database file per test worker for parallel execution
+    db_file = f"test_revenue_{worker_id}.db" if worker_id else "test_revenue.db"
     engine = create_engine(
-        "sqlite:///test_revenue.db", connect_args={"check_same_thread": False}
+        f"sqlite:///{db_file}", connect_args={"check_same_thread": False}
     )
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     yield engine
     engine.dispose()
     # Clean up the test database file
-    if os.path.exists("test_revenue.db"):
-        os.remove("test_revenue.db")
+    if os.path.exists(db_file):
+        os.remove(db_file)
 
 
 @pytest.fixture
