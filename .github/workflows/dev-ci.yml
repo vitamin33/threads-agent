@@ -141,7 +141,9 @@ jobs:
         uses: AbsaOSS/k3d-action@v2
         with:
           cluster-name: dev # => kubectl context "k3d-dev"
-          # args: --wait                    # uncomment if you want hard blocking
+          args: >-
+            --agents 1
+            --registry-create k3d-dev-registry:0.0.0.0:5111
 
       # ————————————————————————————————
       # 4.  Pull or build images (only if needed)

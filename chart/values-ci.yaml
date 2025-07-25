@@ -4,19 +4,19 @@
 image:
   repository: orchestrator   # <— matches docker build tag
   tag: "local"
-  pullPolicy: Never  # Use locally imported images
+  pullPolicy: IfNotPresent  # Will use local if available, pull if not
 
 celeryWorker:
   image:
     repository: celery-worker
     tag: "local"
-    pullPolicy: Never  # Use locally imported images
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
 
 personaRuntime:
   image:
     repository: persona-runtime
     tag: "local"
-    pullPolicy: Never  # Use locally imported images
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
   env:
     - name: HOOK_MODEL
       value: gpt-4o
@@ -34,7 +34,7 @@ fakeThreads:
   image:
     repository: fake-threads
     tag: "local"
-    pullPolicy: Never  # Use locally imported images
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
   port: 9009
 
 threadsService:
@@ -77,7 +77,7 @@ viralEngine:
   image:
     repository: viral-engine
     tag: "local"
-    pullPolicy: Never  # Use locally imported images
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
 
 # Revenue service for monetization
 revenue:
@@ -85,7 +85,7 @@ revenue:
   image:
     repository: revenue
     tag: "local"
-    pullPolicy: Never  # Use locally imported images
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
   stripe:
     apiKey: "test_key"  # Dummy key for CI
     webhookSecret: "test_webhook_secret"
