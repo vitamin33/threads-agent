@@ -560,7 +560,7 @@ analyze-money:
 	@just cost-analysis
 	@just cache-get "revenue:projection" || echo "Revenue: $0"
 	@echo "📊 Grafana: http://localhost:3000"
-	@kubectl exec deploy/postgres -- psql -U postgres -d threads_agent -c "SELECT persona_id, COUNT(*) as posts, AVG(engagement_rate) as avg_engagement, SUM(revenue_impact) as revenue FROM posts WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY persona_id ORDER BY revenue DESC;" 2>/dev/null || echo "No database data yet"
+	@kubectl exec deploy/postgres -- psql -U postgres -d postgres -c "SELECT persona_id, COUNT(*) as posts, AVG(engagement_rate) as avg_engagement, SUM(revenue_impact) as revenue FROM posts WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY persona_id ORDER BY persona_id;" 2>/dev/null || echo "No database data yet"
 
 overnight-optimize:
 	@echo "🌙 Running overnight optimizations..."

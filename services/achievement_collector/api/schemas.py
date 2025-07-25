@@ -29,12 +29,37 @@ class AchievementBase(BaseModel):
     skills_demonstrated: List[str] = []
 
 
-class AchievementCreate(AchievementBase):
+class AchievementCreate(BaseModel):
     """Schema for creating achievement"""
+
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1)
+    category: str = Field(
+        ...,
+        pattern="^(feature|optimization|bugfix|infrastructure|documentation|testing|security|performance|architecture)$",
+    )
+
+    started_at: datetime
+    completed_at: datetime
+    # duration_hours is calculated automatically from dates
+
+    source_type: str = Field(..., pattern="^(git|github|ci|manual|api)$")
+    source_id: Optional[str] = None
+    source_url: Optional[str] = None
+
+    tags: List[str] = []
+    skills_demonstrated: List[str] = []
 
     evidence: Optional[Dict[str, Any]] = {}
     metrics_before: Optional[Dict[str, Any]] = {}
     metrics_after: Optional[Dict[str, Any]] = {}
+
+    # Optional fields that can be set
+    impact_score: Optional[float] = Field(None, ge=0, le=100)
+    complexity_score: Optional[float] = Field(None, ge=0, le=100)
+    business_value: Optional[Decimal] = Field(None, ge=0)
+    time_saved_hours: Optional[float] = Field(None, ge=0)
+    portfolio_ready: Optional[bool] = False
 
 
 class AchievementUpdate(BaseModel):

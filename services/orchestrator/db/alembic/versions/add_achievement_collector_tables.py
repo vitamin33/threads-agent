@@ -1,7 +1,7 @@
 """Add achievement collector tables
 
 Revision ID: add_achievement_collector_tables
-Revises: f7a3888941f4
+Revises: threads_posts_001
 Create Date: 2025-01-24 23:30:00.000000
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "add_achievement_collector_tables"
-down_revision: Union[str, None] = "f7a3888941f4"
+down_revision: Union[str, None] = "threads_posts_001"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

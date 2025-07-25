@@ -21,8 +21,8 @@ case "${1:-dashboard}" in
         log "🤖 AI Revenue Optimization Analysis"
 
         # Get current metrics
-        engagement=$(kubectl exec deploy/postgres -- psql -U postgres -d threads_agent -t -c "SELECT AVG(engagement_rate) FROM posts WHERE created_at > NOW() - INTERVAL '24 hours';" 2>/dev/null | tr -d ' ' || echo "0")
-        posts_today=$(kubectl exec deploy/postgres -- psql -U postgres -d threads_agent -t -c "SELECT COUNT(*) FROM posts WHERE created_at > NOW() - INTERVAL '24 hours';" 2>/dev/null | tr -d ' ' || echo "0")
+        engagement=$(kubectl exec deploy/postgres -- psql -U postgres -d postgres -t -c "SELECT AVG(engagement_rate) FROM posts WHERE created_at > NOW() - INTERVAL '24 hours';" 2>/dev/null | tr -d ' ' || echo "0")
+        posts_today=$(kubectl exec deploy/postgres -- psql -U postgres -d postgres -t -c "SELECT COUNT(*) FROM posts WHERE created_at > NOW() - INTERVAL '24 hours';" 2>/dev/null | tr -d ' ' || echo "0")
 
         # Calculate projections
         revenue_per_post=0.50  # $0.50 per post average
@@ -60,7 +60,7 @@ case "${1:-dashboard}" in
     persona-performance)
         log "🎭 AI Persona Performance Analysis"
 
-        kubectl exec deploy/postgres -- psql -U postgres -d threads_agent -c "
+        kubectl exec deploy/postgres -- psql -U postgres -d postgres -c "
         SELECT
             persona_id,
             COUNT(*) as posts_7d,

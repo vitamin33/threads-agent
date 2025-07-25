@@ -40,7 +40,7 @@ THREADS_APP_SECRET = os.getenv("THREADS_APP_SECRET", "")
 THREADS_ACCESS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID", "")
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/threads_agent"
+    "DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/postgres"
 )
 
 # API endpoints
