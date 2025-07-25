@@ -168,3 +168,10 @@ monitoring:
 # Redis cache for trend data and search results
 redis:
   enabled: true
+
+# Achievement Collector for professional portfolio
+achievementCollector:
+  enabled: true
+  github:
+    webhookSecret: "dev-webhook-secret"
+    token: "test-github-token"

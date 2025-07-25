@@ -200,3 +200,31 @@ ciMonitor:
     requests:
       cpu: 200m
       memory: 256Mi
+
+# ───────── Achievement Collector (disabled by default) ─────────
+achievementCollector:
+  enabled: false                   # turn ON in dev/prod values
+  replicas: 1
+  image:
+    repository: achievement-collector
+    tag: "local"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  storage:
+    size: 10Gi
+    className: ""                  # Use default storage class
+  github:
+    webhookSecret: ""             # Set in secrets
+    token: ""                     # GitHub PAT for API access
+  ingress:
+    enabled: false
+    host: achievements.example.com
+    annotations: {}
+    tls: []
+  env: []
