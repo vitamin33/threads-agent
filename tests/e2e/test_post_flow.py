@@ -1,20 +1,43 @@
 # tests/e2e/test_post_flow.py
-"""
-E2E test confirming the happy path post flow.
+from __future__ import annotations
 
-Orchestrator -> Celery -> Persona-Runtime -> Fake-Threads, with Postgres and Qdrant.
-"""
-
-import json
 import time
 
 import httpx
 import pytest
 
-from tests.e2e.fixtures import ORCH_PORT, POSTGRES_PORT, QDRANT_PORT, THREADS_PORT
+from .conftest import ORCH_PORT, POSTGRES_PORT, QDRANT_PORT, THREADS_PORT
+
+pytestmark = pytest.mark.e2e
 
 
-@pytest.mark.e2e
+# Port forwards are now handled by conftest.py k8s_port_forwards fixture
+
+
+def test_post_task_end_to_end() -> None:
+    """Full flow: POST /task → Celery → fake-threads /published."""
+    payload = {"persona_id": "ai-jesus", "task_type": "create_post"}
+
+    response = httpx.post(f"http://localhost:{ORCH_PORT}/task", json=payload, timeout=10)
+    response.raise_for_status()
+    task_data = response.json()
+    assert "task_id" in task_data
+
+    # Wait for background processing
+    time.sleep(15)
+
+    # Check fake-threads for published content
+    published_response = httpx.get(f"http://localhost:{THREADS_PORT}/published", timeout=5)
+    published_response.raise_for_status()
+    published = published_response.json()
+
+    assert len(published) > 0, "No content published"
+    latest_post = published[-1]
+    assert latest_post["persona_id"] == "ai-jesus"
+    assert "content" in latest_post
+    print(f"✅ Post published: {latest_post['content'][:50]}...")
+
+
 def test_draft_post_happy_path() -> None:
     """
     End-to-end test for draft post generation happy path.
