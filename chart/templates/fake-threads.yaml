@@ -25,7 +25,7 @@ spec:
       containers:
         - name: fake-threads
           image: "{{ tpl .Values.fakeThreads.image.repository $ }}:{{ tpl .Values.fakeThreads.image.tag $ }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.fakeThreads.image.pullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: {{ .Values.fakeThreads.port }}
           readinessProbe:                      # ——— health checks ———

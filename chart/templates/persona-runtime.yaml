@@ -17,7 +17,7 @@ spec:
       containers:
         - name: persona-runtime
           image: "{{ tpl .Values.personaRuntime.image.repository $ }}:{{ tpl .Values.personaRuntime.image.tag $ }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.personaRuntime.image.pullPolicy | default "IfNotPresent" }}
 
           # ───── ports ─────
           ports:
