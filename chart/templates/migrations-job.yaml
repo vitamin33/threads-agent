@@ -30,7 +30,7 @@ spec:
            done; \
            echo '💥 postgres still locked'; exit 1"]
 
-      # 2️⃣  Run Alembic
+      # 2️⃣  Create database and run Alembic
       containers:
       - name: alembic
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -40,6 +40,11 @@ spec:
           - /bin/sh
           - -c
           - |
-              export POSTGRES_DSN="postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres"
+              # First, create the threads_agent database if it doesn't exist
+              PGPASSWORD="${POSTGRES_PASSWORD}" psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1 || \
+              PGPASSWORD="${POSTGRES_PASSWORD}" psql -h postgres -U postgres -c "CREATE DATABASE threads_agent;"
+              
+              # Then run migrations on threads_agent database
+              export POSTGRES_DSN="postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres:5432/threads_agent"
               alembic -c /app/services/orchestrator/db/alembic.ini upgrade head
 {{- end }}

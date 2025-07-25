@@ -29,6 +29,10 @@ spec:
               value: {{ .Values.rabbitmq.url }}
             - name: THREADS_BASE_URL
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+            - name: POSTGRES_DSN
+              value: "postgresql+psycopg2://postgres:pass@postgres:5432/threads_agent"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
           envFrom:
             - secretRef:
                 name: openai-secret

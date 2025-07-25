@@ -52,7 +52,7 @@ def test_draft_post_happy_path() -> None:
     import psycopg2
     import qdrant_client
 
-    PG_DSN = f"postgresql://postgres:pass@localhost:{POSTGRES_PORT}/postgres"
+    PG_DSN = f"postgresql://postgres:pass@localhost:{POSTGRES_PORT}/threads_agent"
     QDRANT_URL = f"http://localhost:{QDRANT_PORT}"
     COLLECTION_NAME = "posts_ai-jesus"
 

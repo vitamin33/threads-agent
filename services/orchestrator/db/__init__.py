@@ -9,7 +9,7 @@ load_dotenv()
 
 PG_DSN = os.getenv(
     "POSTGRES_DSN",
-    "postgresql+psycopg2://user:pass@postgres:5432/threads",
+    "postgresql+psycopg2://postgres:pass@postgres:5432/threads_agent",
 )
 
 engine = create_engine(PG_DSN, pool_pre_ping=True, pool_size=5)
