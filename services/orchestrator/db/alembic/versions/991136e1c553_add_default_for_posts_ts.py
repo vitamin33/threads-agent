@@ -18,10 +18,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TABLE posts ALTER COLUMN ts SET DEFAULT now();")
-    pass
+    # Use SQLAlchemy to generate database-agnostic SQL
+    op.execute("ALTER TABLE posts ALTER COLUMN ts SET DEFAULT CURRENT_TIMESTAMP;")
 
 
 def downgrade() -> None:
     op.execute("ALTER TABLE posts ALTER COLUMN ts DROP DEFAULT;")
-    pass
