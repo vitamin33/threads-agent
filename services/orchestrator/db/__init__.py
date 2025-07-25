@@ -7,18 +7,31 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 load_dotenv()
 
-PG_DSN = os.getenv(
-    "POSTGRES_DSN",
-    "postgresql+psycopg2://postgres:pass@postgres:5432/threads_agent",
-)
-
-engine = create_engine(PG_DSN, pool_pre_ping=True, pool_size=5)
-
-Session = sessionmaker(engine, expire_on_commit=False)
-
 
 class Base(DeclarativeBase):
     pass
 
 
-__all__ = ["Base", "engine", "Session"]
+# Only create engine and session when needed, not on import
+def get_engine():
+    """Get database engine, creating it lazily."""
+    pg_dsn = os.getenv(
+        "POSTGRES_DSN",
+        "postgresql+psycopg2://postgres:pass@postgres:5432/threads_agent",
+    )
+    return create_engine(pg_dsn, pool_pre_ping=True, pool_size=5)
+
+
+def get_session():
+    """Get database session class, creating it lazily."""
+    return sessionmaker(get_engine(), expire_on_commit=False)
+
+
+# For backward compatibility, create these when accessed
+engine = None
+Session = None
+
+# Note: engine and Session will be None until explicitly created
+# This prevents database connection attempts during import
+
+__all__ = ["Base", "get_engine", "get_session"]

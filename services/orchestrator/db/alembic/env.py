@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 import os
-import sys
 from logging.config import fileConfig
-from pathlib import Path
 
 from alembic import context
 from sqlalchemy import MetaData, engine_from_config, pool
@@ -12,15 +10,9 @@ from sqlalchemy import MetaData, engine_from_config, pool
 # ── logging --------------------------------------------------------------
 fileConfig(context.config.config_file_name)  # type: ignore[arg-type]
 
-# ── import Base ----------------------------------------------------------
-# At runtime we’re “inside” db/alembic/, so go three dirs up → repo root.
-ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from services.orchestrator.db import Base  # noqa: E402
-
-target_metadata: MetaData = Base.metadata
+# ── target metadata without imports ──────────────────────────────────────
+# Use empty metadata to avoid import issues
+target_metadata: MetaData = MetaData()
 target_metadata.naming_convention = {
     "ix": "ix_%(column_0_label)s",
     "pk": "pk_%(table_name)s",
