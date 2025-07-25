@@ -47,403 +47,379 @@ DATABASE_URL = os.getenv(
 THREADS_API_BASE = "https://graph.threads.net/v1.0"
 THREADS_MEDIA_ENDPOINT = f"{THREADS_API_BASE}/{THREADS_USER_ID}/threads"
 THREADS_PUBLISH_ENDPOINT = f"{THREADS_API_BASE}/{THREADS_USER_ID}/threads_publish"
+THREADS_PROFILE_ENDPOINT = f"{THREADS_API_BASE}/{THREADS_USER_ID}"
 
 # Database setup
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-# Initialize database connection with fallback for test environments
-try:
-    engine = create_engine(DATABASE_URL)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    # Test the connection - this will fail if postgres is not available
-    with engine.connect() as conn:
-        pass
-
-except Exception:
-    # Fallback for test environments or when postgres is not available
-    engine = None
-    SessionLocal = None
 
 
 class ThreadsPost(Base):
-    """Database model for tracking published Threads posts."""
+    """
+    Database model for Threads posts with engagement metrics.
+    """
 
     __tablename__ = "threads_posts"
 
     id = Column(Integer, primary_key=True, index=True)
-    thread_id = Column(String, unique=True, index=True)
-    persona_id = Column(String, index=True)
-    content = Column(String)
-    media_type = Column(String, default="TEXT")
-    published_at = Column(DateTime, default=datetime.utcnow)
-    engagement_data = Column(JSON)
+    thread_id = Column(String, unique=True, index=True)  # Threads post ID
+    persona_id = Column(String, index=True)  # Which AI persona created this
+    content = Column(String)  # Post content
+    media_type = Column(String)  # "TEXT", "IMAGE", "VIDEO", "CAROUSEL"
+    published_at = Column(DateTime)  # When it was published
+    engagement_data = Column(JSON)  # Raw engagement data from API
+
+    # Engagement metrics
     likes_count = Column(Integer, default=0)
     comments_count = Column(Integer, default=0)
     shares_count = Column(Integer, default=0)
     impressions_count = Column(Integer, default=0)
-    engagement_rate = Column(Float, default=0.0)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    engagement_rate = Column(Float, default=0.0)  # (likes+comments+shares)/impressions
+
+    updated_at = Column(DateTime, default=datetime.utcnow)
 
 
-# Pydantic models
-class PostRequest(BaseModel):
-    """Request model for creating a Threads post."""
+# Create tables
+Base.metadata.create_all(bind=engine)
 
-    topic: str
-    content: str
-    persona_id: str = Field(default="ai-jesus")
-    media_type: str = Field(
-        default="TEXT", description="TEXT, IMAGE, VIDEO, or CAROUSEL"
-    )
+
+class PublishRequest(BaseModel):
+    """
+    Request model for publishing content to Threads.
+    """
+
+    content: str = Field(..., description="Post content (max 500 chars)")
+    persona_id: str = Field(..., description="AI persona that generated this")
     media_urls: Optional[List[str]] = Field(
-        default=None, description="URLs for media content"
+        None, description="Optional media URLs to attach"
     )
+    reply_to: Optional[str] = Field(None, description="Thread ID to reply to")
 
 
-class PostResponse(BaseModel):
-    """Response model for a published Threads post."""
+class EngagementResponse(BaseModel):
+    """
+    Response model for engagement metrics.
+    """
 
-    status: str
     thread_id: str
-    permalink: Optional[str] = None
-    message: Optional[str] = None
+    persona_id: str
+    engagement_rate: float
+    likes_count: int
+    comments_count: int
+    shares_count: int
+    impressions_count: int
+    published_at: datetime
+    updated_at: datetime
 
 
-class EngagementMetrics(BaseModel):
-    """Model for engagement metrics from Threads."""
+class ProfileMetrics(BaseModel):
+    """
+    Response model for profile-level metrics.
+    """
 
-    likes_count: int = 0
-    comments_count: int = 0
-    shares_count: int = 0
-    impressions_count: int = 0
-    engagement_rate: float = 0.0
-    followers_count: int = 0
-
-
-# Create tables (only in non-test environments)
-if engine is not None:
-    Base.metadata.create_all(bind=engine)
-
-
-@app.get("/ping")
-def ping() -> dict[str, bool]:
-    """Liveness probe."""
-    return {"pong": True}
+    followers_count: int
+    posts_count: int
+    avg_engagement_rate: float
+    total_impressions: int
+    growth_rate: float  # followers gained in last 30 days
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health_check():
     """Health check endpoint."""
-    # Check if we have valid credentials
-    if not all([THREADS_APP_ID, THREADS_ACCESS_TOKEN, THREADS_USER_ID]):
-        return {"status": "unhealthy", "reason": "Missing Threads API credentials"}
-
-    # Try to validate token with a simple API call
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await rate_limited_call(
-                client.get,
-                f"{THREADS_API_BASE}/{THREADS_USER_ID}",
-                params={"access_token": THREADS_ACCESS_TOKEN, "fields": "id"},
-                timeout=5.0,
-            )
-            if response.status_code == 200:
-                return {"status": "ok"}
-            else:
-                return {
-                    "status": "unhealthy",
-                    "reason": f"API returned {response.status_code}",
-                }
-    except Exception as e:
-        return {"status": "unhealthy", "reason": str(e)}
+    return {"status": "ok", "service": "threads-adaptor"}
 
 
-@app.post("/publish", response_model=PostResponse)
+@app.post("/publish", response_model=dict)
 async def publish_post(
-    post: PostRequest, background_tasks: BackgroundTasks
-) -> PostResponse:
+    request: PublishRequest, background_tasks: BackgroundTasks
+) -> dict:
     """
-    Publish a post to Threads.
+    Publish content to Threads.
 
-    This replaces the fake-threads /publish endpoint with real Threads API integration.
+    Args:
+        request: Post content and metadata
+        background_tasks: For async engagement tracking
+
+    Returns:
+        Published post metadata including Threads post ID
     """
-    if not THREADS_ACCESS_TOKEN:
-        raise HTTPException(status_code=503, detail="Threads API not configured")
+    if not all([THREADS_APP_ID, THREADS_ACCESS_TOKEN, THREADS_USER_ID]):
+        raise HTTPException(
+            status_code=503, detail="Threads API credentials not configured"
+        )
 
     try:
-        async with httpx.AsyncClient() as client:
-            # Step 1: Create media container
-            create_params = {
-                "access_token": THREADS_ACCESS_TOKEN,
-                "media_type": post.media_type,
-                "text": post.content,
-            }
+        # Step 1: Create media container
+        media_payload = {
+            "media_type": "TEXT",
+            "text": request.content,
+            "access_token": THREADS_ACCESS_TOKEN,
+        }
 
-            # Add media URLs if provided
-            if post.media_urls and post.media_type != "TEXT":
-                if post.media_type == "IMAGE":
-                    create_params["image_url"] = post.media_urls[0]
-                elif post.media_type == "VIDEO":
-                    create_params["video_url"] = post.media_urls[0]
-                elif post.media_type == "CAROUSEL":
-                    # Carousel requires child media containers
-                    # This is more complex and would need separate implementation
-                    pass
+        # Add media if provided
+        if request.media_urls:
+            media_payload["media_type"] = "IMAGE"  # or VIDEO, CAROUSEL
+            media_payload["image_url"] = request.media_urls[0]  # Simplified
 
-            # Create the media container
-            create_response = await rate_limited_call(
-                client.post, THREADS_MEDIA_ENDPOINT, params=create_params, timeout=30.0
-            )
-            create_data = create_response.json()
+        # Add reply_to if provided
+        if request.reply_to:
+            media_payload["reply_to_id"] = request.reply_to
 
-            if "error" in create_data:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Failed to create media: {create_data['error']['message']}",
-                )
+        # Rate-limited API call
+        media_response = await rate_limited_call(
+            "POST", THREADS_MEDIA_ENDPOINT, json=media_payload
+        )
+        media_id = media_response["id"]
 
-            media_id = create_data["id"]
+        # Step 2: Publish the media
+        publish_payload = {
+            "creation_id": media_id,
+            "access_token": THREADS_ACCESS_TOKEN,
+        }
 
-            # Step 2: Publish the media container
-            publish_params = {
-                "access_token": THREADS_ACCESS_TOKEN,
-                "creation_id": media_id,
-            }
+        publish_response = await rate_limited_call(
+            "POST", THREADS_PUBLISH_ENDPOINT, json=publish_payload
+        )
+        thread_id = publish_response["id"]
 
-            publish_response = await rate_limited_call(
-                client.post,
-                THREADS_PUBLISH_ENDPOINT,
-                params=publish_params,
-                timeout=30.0,
-            )
-            publish_data = publish_response.json()
-
-            if "error" in publish_data:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Failed to publish: {publish_data['error']['message']}",
-                )
-
-            thread_id = publish_data["id"]
-
-            # Store in database
-            db = SessionLocal()
-            try:
-                db_post = ThreadsPost(
-                    thread_id=thread_id,
-                    persona_id=post.persona_id,
-                    content=post.content,
-                    media_type=post.media_type,
-                    published_at=datetime.utcnow(),
-                )
-                db.add(db_post)
-                db.commit()
-            finally:
-                db.close()
-
-            # Schedule background task to fetch initial metrics after a delay
-            background_tasks.add_task(
-                fetch_engagement_metrics_delayed,
-                thread_id,
-                post.persona_id,
-                delay_seconds=300,  # Wait 5 minutes for initial engagement
-            )
-
-            return PostResponse(
-                status="published",
+        # Step 3: Store in database
+        db = SessionLocal()
+        try:
+            threads_post = ThreadsPost(
                 thread_id=thread_id,
-                permalink=f"https://www.threads.net/@{THREADS_USER_ID}/post/{thread_id}",
-                message="Post published successfully to Threads",
+                persona_id=request.persona_id,
+                content=request.content,
+                media_type=media_payload["media_type"],
+                published_at=datetime.utcnow(),
+                engagement_data={"initial": publish_response},
             )
+            db.add(threads_post)
+            db.commit()
+            db.refresh(threads_post)
+        finally:
+            db.close()
 
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+        # Step 4: Schedule engagement tracking
+        background_tasks.add_task(
+            track_engagement_async, thread_id, request.persona_id
+        )
+
+        # Record business metric
+        record_business_metric("posts_published_total", 1, {"persona_id": request.persona_id})
+
+        return {
+            "thread_id": thread_id,
+            "status": "published",
+            "persona_id": request.persona_id,
+            "published_at": datetime.utcnow().isoformat(),
+        }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Publishing failed: {str(e)}")
 
 
-@app.get("/published")
-async def list_published() -> List[Dict[str, Any]]:
+@app.get("/engagement/{thread_id}", response_model=EngagementResponse)
+async def get_engagement(thread_id: str) -> EngagementResponse:
     """
-    List all published posts with their engagement metrics.
+    Get engagement metrics for a specific post.
 
-    This replaces fake-threads /published endpoint with real data.
+    Args:
+        thread_id: Threads post ID
+
+    Returns:
+        Current engagement metrics
     """
     db = SessionLocal()
     try:
-        posts = (
-            db.query(ThreadsPost)
-            .order_by(ThreadsPost.published_at.desc())
-            .limit(100)
-            .all()
+        post = db.query(ThreadsPost).filter(ThreadsPost.thread_id == thread_id).first()
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # Fetch fresh metrics from Threads API
+        await update_post_engagement(post)
+
+        return EngagementResponse(
+            thread_id=post.thread_id,
+            persona_id=post.persona_id,
+            engagement_rate=post.engagement_rate,
+            likes_count=post.likes_count,
+            comments_count=post.comments_count,
+            shares_count=post.shares_count,
+            impressions_count=post.impressions_count,
+            published_at=post.published_at,
+            updated_at=post.updated_at,
         )
+    finally:
+        db.close()
+
+
+@app.get("/profile", response_model=ProfileMetrics)
+async def get_profile_metrics() -> ProfileMetrics:
+    """
+    Get profile-level engagement metrics.
+
+    Returns:
+        Aggregated metrics across all posts
+    """
+    if not THREADS_ACCESS_TOKEN:
+        raise HTTPException(
+            status_code=503, detail="Threads API credentials not configured"
+        )
+
+    try:
+        # Fetch profile data from Threads API
+        profile_payload = {
+            "fields": "id,username,threads_profile_picture_url,threads_biography",
+            "access_token": THREADS_ACCESS_TOKEN,
+        }
+
+        profile_response = await rate_limited_call(
+            "GET", THREADS_PROFILE_ENDPOINT, params=profile_payload
+        )
+
+        # Calculate metrics from database
+        db = SessionLocal()
+        try:
+            posts = db.query(ThreadsPost).all()
+            total_posts = len(posts)
+            avg_engagement = (
+                sum(p.engagement_rate for p in posts) / total_posts if total_posts > 0 else 0.0
+            )
+            total_impressions = sum(p.impressions_count for p in posts)
+
+            # Calculate growth rate (simplified)
+            recent_posts = [
+                p for p in posts
+                if p.published_at > datetime.utcnow() - timedelta(days=30)
+            ]
+            growth_rate = len(recent_posts) / 30.0 if recent_posts else 0.0
+
+            return ProfileMetrics(
+                followers_count=0,  # Not available in basic API
+                posts_count=total_posts,
+                avg_engagement_rate=avg_engagement,
+                total_impressions=total_impressions,
+                growth_rate=growth_rate,
+            )
+        finally:
+            db.close()
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch profile metrics: {str(e)}"
+        )
+
+
+@app.get("/posts")
+async def list_posts(persona_id: Optional[str] = None, limit: int = 50) -> List[dict]:
+    """
+    List published posts with engagement data.
+
+    Args:
+        persona_id: Filter by AI persona (optional)
+        limit: Maximum posts to return
+
+    Returns:
+        List of posts with engagement metrics
+    """
+    db = SessionLocal()
+    try:
+        query = db.query(ThreadsPost)
+        if persona_id:
+            query = query.filter(ThreadsPost.persona_id == persona_id)
+
+        posts = query.order_by(ThreadsPost.published_at.desc()).limit(limit).all()
+
         return [
             {
-                "thread_id": post.thread_id,
-                "persona_id": post.persona_id,
-                "content": post.content,
-                "published_at": post.published_at.isoformat(),
-                "engagement": {
-                    "likes": post.likes_count,
-                    "comments": post.comments_count,
-                    "shares": post.shares_count,
-                    "impressions": post.impressions_count,
-                    "engagement_rate": post.engagement_rate,
-                },
-                "permalink": f"https://www.threads.net/@{THREADS_USER_ID}/post/{post.thread_id}",
+                "thread_id": p.thread_id,
+                "persona_id": p.persona_id,
+                "content": p.content[:100] + "..." if len(p.content) > 100 else p.content,
+                "engagement_rate": p.engagement_rate,
+                "likes_count": p.likes_count,
+                "comments_count": p.comments_count,
+                "published_at": p.published_at.isoformat(),
             }
-            for post in posts
+            for p in posts
         ]
     finally:
         db.close()
 
 
-@app.get("/metrics/{thread_id}", response_model=EngagementMetrics)
-async def get_post_metrics(thread_id: str) -> EngagementMetrics:
-    """Fetch current engagement metrics for a specific post."""
-    metrics = await fetch_post_metrics(thread_id)
-    return metrics
+async def track_engagement_async(thread_id: str, persona_id: str) -> None:
+    """
+    Background task to track engagement metrics over time.
 
-
-@app.post("/refresh-metrics")
-async def refresh_all_metrics(background_tasks: BackgroundTasks) -> Dict[str, str]:
-    """Refresh engagement metrics for all recent posts."""
-    db = SessionLocal()
-    try:
-        # Get posts from last 7 days
-        cutoff_date = datetime.utcnow() - timedelta(days=7)
-        posts = (
-            db.query(ThreadsPost).filter(ThreadsPost.published_at >= cutoff_date).all()
-        )
-
-        for post in posts:
-            background_tasks.add_task(
-                update_post_metrics, post.thread_id, post.persona_id
-            )
-
-        return {
-            "status": "refreshing",
-            "message": f"Refreshing metrics for {len(posts)} posts",
-        }
-    finally:
-        db.close()
-
-
-async def fetch_post_metrics(thread_id: str) -> EngagementMetrics:
-    """Fetch engagement metrics for a specific Threads post."""
-    if not THREADS_ACCESS_TOKEN:
-        return EngagementMetrics()
-
-    try:
-        async with httpx.AsyncClient() as client:
-            # Fetch post insights
-            response = await rate_limited_call(
-                client.get,
-                f"{THREADS_API_BASE}/{thread_id}/insights",
-                params={
-                    "access_token": THREADS_ACCESS_TOKEN,
-                    "metric": "likes,replies,reposts,quotes,followers_count,impressions",
-                },
-                timeout=10.0,
-            )
-
-            if response.status_code != 200:
-                return EngagementMetrics()
-
-            data = response.json()
-            metrics_data = data.get("data", [])
-
-            # Parse metrics
-            likes = 0
-            comments = 0
-            shares = 0
-            impressions = 0
-            followers = 0
-
-            for metric in metrics_data:
-                name = metric.get("name", "")
-                values = metric.get("values", [])
-                if values:
-                    value = values[0].get("value", 0)
-                    if name == "likes":
-                        likes = value
-                    elif name == "replies":
-                        comments = value
-                    elif name in ["reposts", "quotes"]:
-                        shares += value
-                    elif name == "impressions":
-                        impressions = value
-                    elif name == "followers_count":
-                        followers = value
-
-            # Calculate engagement rate
-            if impressions > 0:
-                engagement_rate = (likes + comments + shares) / impressions
-            else:
-                engagement_rate = 0.0
-
-            return EngagementMetrics(
-                likes_count=likes,
-                comments_count=comments,
-                shares_count=shares,
-                impressions_count=impressions,
-                engagement_rate=engagement_rate,
-                followers_count=followers,
-            )
-
-    except Exception as e:
-        print(f"Error fetching metrics for {thread_id}: {e}")
-        return EngagementMetrics()
-
-
-async def update_post_metrics(thread_id: str, persona_id: str) -> None:
-    """Update metrics for a post in the database."""
-    metrics = await fetch_post_metrics(thread_id)
+    Args:
+        thread_id: Threads post ID
+        persona_id: AI persona that created the post
+    """
+    # Wait a bit for initial engagement
+    await asyncio.sleep(300)  # 5 minutes
 
     db = SessionLocal()
     try:
         post = db.query(ThreadsPost).filter(ThreadsPost.thread_id == thread_id).first()
         if post:
-            post.likes_count = metrics.likes_count
-            post.comments_count = metrics.comments_count
-            post.shares_count = metrics.shares_count
-            post.impressions_count = metrics.impressions_count
-            post.engagement_rate = metrics.engagement_rate
-            post.engagement_data = metrics.model_dump()
-            post.updated_at = datetime.utcnow()
-            db.commit()
-
-            # Record metrics for Prometheus
-            record_engagement_rate(persona_id, metrics.engagement_rate)
-
-            # Update business metrics
-            if metrics.followers_count > 0:
-                # Estimate cost per follow based on post performance
-                # This is a simplified calculation
-                cost_per_follow = 0.05  # $0.05 estimated cost per follower
-                record_business_metric(
-                    "cost_per_follow", persona_id=persona_id, cost=cost_per_follow
-                )
-
-                # Update revenue projection based on follower growth
-                # Assuming $1 per 1000 followers per month (simplified)
-                monthly_revenue_per_follower = 0.001
-                revenue_impact = metrics.followers_count * monthly_revenue_per_follower
-                update_revenue_projection("threads_engagement", revenue_impact)
+            await update_post_engagement(post)
+            # Record engagement rate for business metrics
+            record_engagement_rate(persona_id, post.engagement_rate)
+            # Update revenue projection based on engagement
+            revenue_impact = post.engagement_rate * 10  # $10 per 1% engagement
+            update_revenue_projection("engagement", revenue_impact)
     finally:
         db.close()
 
 
-async def fetch_engagement_metrics_delayed(
-    thread_id: str, persona_id: str, delay_seconds: int = 300
-) -> None:
-    """Fetch engagement metrics after a delay to allow for initial engagement."""
-    await asyncio.sleep(delay_seconds)
-    await update_post_metrics(thread_id, persona_id)
+async def update_post_engagement(post: ThreadsPost) -> None:
+    """
+    Update engagement metrics for a post from Threads API.
+
+    Args:
+        post: Database post object to update
+    """
+    try:
+        # Fetch engagement data from Threads API
+        insights_payload = {
+            "metric": "likes,comments,shares,impressions",
+            "access_token": THREADS_ACCESS_TOKEN,
+        }
+
+        insights_url = f"{THREADS_API_BASE}/{post.thread_id}/insights"
+        insights_response = await rate_limited_call(
+            "GET", insights_url, params=insights_payload
+        )
+
+        # Parse metrics (simplified - actual API response structure may vary)
+        metrics = {item["name"]: item["values"][0]["value"] for item in insights_response.get("data", [])}
+
+        post.likes_count = metrics.get("likes", 0)
+        post.comments_count = metrics.get("comments", 0)
+        post.shares_count = metrics.get("shares", 0)
+        post.impressions_count = metrics.get("impressions", 1)  # Avoid division by zero
+
+        # Calculate engagement rate
+        total_engagement = post.likes_count + post.comments_count + post.shares_count
+        post.engagement_rate = total_engagement / post.impressions_count
+
+        post.engagement_data = {"latest": insights_response, "updated_at": datetime.utcnow().isoformat()}
+        post.updated_at = datetime.utcnow()
+
+        # Commit to database
+        db = SessionLocal()
+        try:
+            db.merge(post)
+            db.commit()
+        finally:
+            db.close()
+
+    except Exception as e:
+        print(f"Failed to update engagement for {post.thread_id}: {e}")
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8070)

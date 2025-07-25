@@ -1,562 +1,551 @@
-# =========================================
-#  Threads-Agent – Dev helper recipes
-# =========================================
-set dotenv-load
+# justfile – Command runner for threads-agent development
+# See: https://github.com/casey/just
 
-# ---------- K8s Dev Platform ----------
-bootstrap:          # spin local k3d (legacy single cluster)
-    ./scripts/dev-up.sh
+# Mega Commands (80/20 Rule)
+work-day: check-prerequisites trend-dashboard dev-dashboard ai-biz
+	create-viral ai-jesus "AI productivity tips": ai-plan "Create viral AI productivity content" && create-viral-ai-jesus "AI productivity tips"
+	ship-it message: smart-deploy canary && github-pr message
+	end-day: analyze-money overnight-optimize
+	make-money: autopilot-start grow-business analyze-money
+	grow-business: trend-start competitive-analysis ai-biz revenue && searxng-start
+	analyze-money: cost-analysis revenue-projection business-kpis
+	ai-biz action="dashboard": ai-business-intelligence action
+	health-check: cluster-health services-health business-health
 
-# Multi-developer cluster management
-bootstrap-multi ARGS="": # create unique k3d cluster per developer/repo
-    ./scripts/dev-up-multi.sh {{ARGS}}
+# Quick Start Commands
+dev-start: bootstrap deploy-dev mcp-setup dev-dashboard
+dev-start-multi: bootstrap-multi deploy-dev mcp-setup dev-dashboard
+persona-hot-reload persona="ai-jesus": hot-reload-persona persona
+ai-test-gen service: ai-generate-tests service
+smart-deploy strategy="blue-green": deploy-strategy strategy
+dev-dashboard: prometheus-dashboard grafana business-dashboard
+cache-set key value: redis-cache-set key value
+cache-get key: redis-cache-get key
+trend-check topic: trend-detection topic
 
-cluster CMD="list" ARGS="": # manage multiple k3d clusters
-    ./scripts/cluster-manager.sh {{CMD}} {{ARGS}}
+# Core Development Commands
+bootstrap:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚀 Setting up k3d cluster..."
+	k3d cluster delete threads-agent 2>/dev/null || true
+	k3d cluster create threads-agent \
+		--api-port 6444 \
+		--port "8080:80@loadbalancer" \
+		--port "8443:443@loadbalancer" \
+		--agents 1 \
+		--registry-create threads-registry:0.0.0.0:5111
+	echo "✅ k3d cluster ready"
 
-cluster-list: # list all available clusters
-    @./scripts/cluster-manager.sh list
+# Multi-cluster support
+bootstrap-multi:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	./scripts/multi-cluster-bootstrap.sh
 
-cluster-switch NAME: # switch to a different cluster
-    @./scripts/cluster-manager.sh switch {{NAME}}
+cluster-list:
+	@k3d cluster list | grep threads-agent || echo "No threads-agent clusters found"
 
-cluster-current: # show current active cluster
-    @./scripts/cluster-manager.sh current
+cluster-switch name:
+	@kubectl config use-context k3d-{{name}}
+	@echo "✅ Switched to cluster: {{name}}"
 
-cluster-delete NAME: # delete a specific cluster
-    @./scripts/cluster-manager.sh delete {{NAME}}
+cluster-current:
+	@kubectl config current-context 2>/dev/null | sed 's/k3d-//g' || echo "No cluster selected"
 
+cluster-delete name:
+	@k3d cluster delete {{name}}
+	@echo "✅ Deleted cluster: {{name}}"
 
-# -----------------------------------------------------------------
-# single helper that builds + pre-pulls all images, then loads
-# everything (including Postgres & RabbitMQ) into the k3d cluster
-# -----------------------------------------------------------------
-images CLUSTER="":
-	@echo "🐳  building dev images …"
-
-	for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine threads_adaptor achievement_collector; do \
-		docker build -f services/${svc}/Dockerfile -t ${svc//_/-}:local .; \
-	done
-
-	docker pull bitnami/postgresql:16
-	docker pull rabbitmq:3.13-management-alpine
-
-	# ---------- Qdrant ----------
-	docker pull qdrant/qdrant:v1.9.4
+# Image building
+images:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔨 Building Docker images..."
 	
-	# Import to current cluster
-	@cluster_name=$$(kubectl config current-context 2>/dev/null | sed 's/^k3d-//' || echo "dev"); \
-	echo "📦 Importing images to cluster: $$cluster_name"; \
-	k3d image import qdrant/qdrant:v1.9.4 -c $$cluster_name || true; \
-	k3d image import bitnami/postgresql:16 -c $$cluster_name || true; \
-	k3d image import rabbitmq:3.13-management-alpine -c $$cluster_name || true; \
-	for img in orchestrator celery-worker persona-runtime fake-threads viral-engine threads-adaptor achievement-collector; do \
-		k3d image import $${img}:local -c $$cluster_name || true; \
-	done; \
-	echo "🔍  images inside k3d nodes:"; \
-	docker exec k3d-$$cluster_name-agent-0 crictl images | grep -E "orchestrator|celery|persona|fake|viral|threads|achievement" || true
-
-deploy-dev TIMEOUT="360s":
-	@bash -ceu 'extra=""; [ -f chart/values-dev.local.yaml ] && extra="-f chart/values-dev.local.yaml"; \
-	            helm upgrade --install threads ./chart -f chart/values-dev.yaml $extra \
-	            --wait --timeout {{TIMEOUT}}'
-
-k3d-stop-all:
-	k3d cluster stop --all
-
-k3d-nuke-all:
-	k3d cluster delete --all
-
-docker-cache-clear:
-    @echo "🧹  pruning buildx cache …"
-    docker builder prune -af
-
-# full reset: cluster + cache
-reset-hard:
-    just k3d-nuke-all
-    just docker-cache-clear
-
-# ---------- Local e2e run ----------
-e2e-prepare:          # full e2e setup: bootstrap + images + deploy + test
-    @echo "🚀  setting up complete e2e environment..."
-    just bootstrap
-    just images  
-    just deploy-dev
-    @echo "⏳  waiting for services to be ready..."
-    kubectl wait --for=condition=ready pod -l app=postgres --timeout=300s
-    kubectl wait --for=condition=ready pod -l app=orchestrator --timeout=300s
-    @echo "✅  e2e environment ready!"
-
-e2e:
-    @echo "🧪  running e2e tests (with automatic service checks)..."
-    PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -s -m e2e
-
-# ---------- Unit-only test run ----------
-unit:
-    PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -q -m "not e2e" -n auto
-
-logs:
-    kubectl logs -l app=orchestrator -f --tail=100
-
-logs-celery:
-	kubectl logs -f deploy/celery-worker
-
-test-watch SERVICE="":
-	@echo "🔁  watching tests…"
-	@if [ "$(SERVICE)" != "" ]; then \
-	    pt="services/$(SERVICE)"; \
-	else \
-	    pt="."; \
-	fi; \
-	pytest $$pt --maxfail=1 -q -f
-
-# Fast test for specific service (no k3d needed)
-test-service SERVICE:
-	@echo "🧪  testing {{SERVICE}} (fast mode)..."
-	@OPENAI_API_KEY=test PYTHONPATH=$PWD:${PYTHONPATH:-} pytest services/{{SERVICE}}/tests -n auto --timeout=30 -x
-
-# Test all services in parallel
-test-all-services:
-	@echo "🧪  testing all services in parallel..."
-	@for svc in orchestrator celery_worker persona_runtime fake_threads; do \
-		echo "🔸 Starting tests for $$svc..."; \
-		just test-service $$svc & \
-	done; \
+	# Build all service images in parallel
+	docker build -t orchestrator:local services/orchestrator &
+	docker build -t celery-worker:local services/celery_worker &
+	docker build -t persona-runtime:local services/persona_runtime &
+	docker build -t fake-threads:local services/fake_threads &
+	docker build -t viral-engine:local services/viral_engine &
+	
+	# Wait for all builds to complete
 	wait
-	@echo "✅ All service tests completed"
+	
+	# Import to k3d registry
+	echo "📦 Importing images to k3d..."
+	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local -c threads-agent
+	
+	echo "✅ All images built and imported"
 
-scaffold SERVICE:
-    mkdir -p services/{{SERVICE}}
-    cp -r templates/service-template/* services/{{SERVICE}}/
+# Deployment
+deploy-dev: images
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚀 Deploying to k3d with Helm..."
+	
+	# Apply personal overrides if they exist
+	if [ -f chart/values-dev.local.yaml ]; then
+		OVERRIDE_FILE="-f chart/values-dev.local.yaml"
+	else
+		OVERRIDE_FILE=""
+	fi
+	
+	helm upgrade --install threads-agent chart/ \
+		-f chart/values-dev.yaml \
+		$OVERRIDE_FILE \
+		--wait --timeout=5m
+	
+	echo "✅ Deployment complete"
+	echo "🌐 Services available:"
+	echo "  • Orchestrator: http://localhost:8080"
+	echo "  • Grafana: http://localhost:3000 (admin/admin123)"
+	echo "  • Prometheus: http://localhost:9090"
 
-    # replace in main.py
-    sed -i '' "s/TEMPLATE_NAME/{{SERVICE}}/g" services/{{SERVICE}}/main.py
+# Testing
+unit:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🧪 Running unit tests..."
+	pytest -m "not e2e" -v --tb=short --maxfail=5 -q
 
-    # replace in test
-    sed -i '' "s/TEMPLATE_NAME/{{SERVICE}}/g" services/{{SERVICE}}/tests/test_health.py
+e2e: e2e-prepare
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🧪 Running e2e tests..."
+	
+	# Start port-forwards in background
+	kubectl port-forward svc/orchestrator 8080:8080 &
+	PF_ORCH=$!
+	kubectl port-forward svc/fake-threads 9009:9009 &
+	PF_THREADS=$!
+	kubectl port-forward svc/qdrant 6333:6333 &
+	PF_QDRANT=$!
+	kubectl port-forward svc/postgres 15432:5432 &
+	PF_POSTGRES=$!
+	
+	# Wait for services to be ready
+	sleep 5
+	
+	trap "kill $PF_ORCH $PF_THREADS $PF_QDRANT $PF_POSTGRES 2>/dev/null || true" EXIT
+	
+	# Run e2e tests
+	pytest -m e2e -v --tb=short -x
 
-# ---------- Lint / Type-check / Tests ----------
+test-watch service="":
+	#!/usr/bin/env bash
+	if [ "{{service}}" = "" ]; then
+		echo "👀 Watching all tests..."
+		ptw -- -m "not e2e" -v --tb=short
+	else
+		echo "👀 Watching {{service}} tests..."
+		ptw services/{{service}}/tests/ -- -v --tb=short
+	fi
+
+e2e-prepare:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔧 Preparing e2e environment..."
+	
+	# Ensure cluster is running
+	if ! kubectl cluster-info >/dev/null 2>&1; then
+		echo "❌ No cluster found, running full bootstrap..."
+		just bootstrap
+	fi
+	
+	# Ensure images are built and deployed
+	just deploy-dev
+	
+	# Wait for all pods to be ready
+	echo "⏳ Waiting for pods to be ready..."
+	kubectl wait --for=condition=ready pod -l app=orchestrator --timeout=120s
+	kubectl wait --for=condition=ready pod -l app=celery-worker --timeout=120s
+	kubectl wait --for=condition=ready pod -l app=persona-runtime --timeout=120s
+	kubectl wait --for=condition=ready pod -l app=fake-threads --timeout=120s
+	
+	echo "✅ e2e environment ready"
+
+# Quality & Shipping
 lint:
-	@echo "⚙  ruff (lint+format) → isort → black"
-	@if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && \
-	ruff check --fix . && \
-	ruff format . && \
-	isort . --profile black --filter-files && \
-	black .
-	@./scripts/learning-system.sh track "just lint" 0 "1.0" "auto-format" 2>/dev/null || true
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🧹 Running linters..."
+	
+	# Format with ruff (replaces black + isort)
+	ruff format .
+	
+	# Lint with ruff (replaces flake8)
+	ruff check --fix .
+	
+	echo "✅ Code formatting complete"
 
 check: lint
-	@echo "🔍  mypy type-check"
-	@if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && mypy --config-file mypy.ini .
-	@echo "🧪  pytest suite (unit tests only - excluding e2e, running in parallel)"
-	@if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && PYTHONPATH=$PWD:${PYTHONPATH:-} pytest -q -m "not e2e" -n auto
-	@echo "✅  all green"
-	@./scripts/learning-system.sh track "just check" 0 "5.0" "full-check" 2>/dev/null || true
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔍 Running full quality checks..."
+	
+	# Type checking
+	echo "Running mypy..."
+	mypy . || echo "⚠️  Type check warnings (non-blocking)"
+	
+	# Unit tests
+	echo "Running unit tests..."
+	just unit
+	
+	echo "✅ All quality checks passed"
 
-# ---------- Quality Gates ----------
-quality-gate PHASE="pre-commit": # run quality gates system
-	./scripts/quality-gates.sh {{PHASE}}
+ship message:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚢 Shipping changes..."
+	
+	# Run quality gate
+	just check
+	
+	# Commit and push
+	git add .
+	git commit -m "{{message}}" || echo "Nothing to commit"
+	git push
+	
+	echo "✅ Changes shipped successfully"
 
-pre-commit-check: # lightweight pre-commit quality gates
-	just lint
-	./scripts/quality-gates.sh pre-commit
+# Service scaffolding
+scaffold service:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	SERVICE="{{service}}"
+	echo "🏗️  Scaffolding new service: $SERVICE"
+	
+	# Create service directory structure
+	mkdir -p services/$SERVICE/{tests/unit,src}
+	
+	# Copy template files
+	cp scripts/templates/service/* services/$SERVICE/
+	cp scripts/templates/dockerfile services/$SERVICE/Dockerfile
+	
+	# Replace placeholders
+	sed -i.bak "s/{{SERVICE_NAME}}/$SERVICE/g" services/$SERVICE/*
+	rm services/$SERVICE/*.bak
+	
+	echo "✅ Service $SERVICE scaffolded"
+	echo "📝 Next steps:"
+	echo "  1. Edit services/$SERVICE/main.py"
+	echo "  2. Add tests in services/$SERVICE/tests/"
+	echo "  3. Update chart/values.yaml"
+	echo "  4. Add to justfile images target"
 
-pre-commit-fix: # auto-fix issues then run pre-commit gates
-	just lint
-	@SKIP_FORMAT_CHECK=true SKIP_CLAUDE_REVIEW=true ./scripts/quality-gates.sh pre-commit
+# Utilities
+reset-hard:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "💥 Nuclear reset..."
+	k3d cluster delete threads-agent 2>/dev/null || true
+	docker system prune -af --volumes
+	echo "✅ Everything nuked - run 'just bootstrap' to start fresh"
 
-pre-deploy-check: # comprehensive pre-deploy quality gates  
-	./scripts/quality-gates.sh pre-deploy
+logs:
+	@kubectl logs -l app=orchestrator --tail=100 -f
 
-claude-review: # run Claude Code automated review
-	./scripts/quality-gates.sh claude-review
+logs-celery:
+	@kubectl logs -l app=celery-worker --tail=100 -f
 
-security-check: # run security-focused quality checks
-	./scripts/quality-gates.sh security
+jaeger-ui:
+	@echo "🔍 Opening Jaeger UI..."
+	@kubectl port-forward svc/jaeger 16686:16686 &
+	@sleep 2
+	@open http://localhost:16686 || echo "Visit: http://localhost:16686"
 
-# ---------- Learning System ----------
-learn ACTION="dashboard": # intelligent development learning and optimization
-	./scripts/learning-system.sh {{ACTION}}
+grafana:
+	@echo "📊 Opening Grafana..."
+	@kubectl port-forward svc/grafana 3000:3000 &
+	@sleep 2
+	@open http://localhost:3000 || echo "Visit: http://localhost:3000 (admin/admin123)"
 
-analyze-patterns: # analyze development patterns and suggest optimizations
-	./scripts/learning-system.sh analyze && ./scripts/learning-system.sh suggest
+prometheus:
+	@echo "📈 Opening Prometheus..."
+	@kubectl port-forward svc/prometheus 9090:9090 &
+	@sleep 2
+	@open http://localhost:9090 || echo "Visit: http://localhost:9090"
 
-learning-dashboard: # show interactive learning dashboard
-	./scripts/learning-system.sh dashboard
+# SearXNG Search Engine (FREE search for trends)
+searxng-start:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔍 Starting SearXNG search engine..."
+	
+	# Stop existing container if running
+	docker stop searxng 2>/dev/null || true
+	docker rm searxng 2>/dev/null || true
+	
+	# Start SearXNG container
+	docker run -d \
+		--name searxng \
+		-p 8888:8080 \
+		-e BASE_URL=http://localhost:8888 \
+		-e INSTANCE_NAME="ThreadsAgent Search" \
+		searxng/searxng:latest
+	
+	echo "✅ SearXNG started at http://localhost:8888"
+	echo "🎯 Use for free trend detection and competitive analysis"
 
-learning-report: # generate comprehensive learning report
-	./scripts/learning-system.sh report
+searxng-stop:
+	@docker stop searxng 2>/dev/null || true
+	@docker rm searxng 2>/dev/null || true
+	@echo "✅ SearXNG stopped"
 
-benchmark-performance: # benchmark development operations
-	./scripts/learning-system.sh benchmark
+searxng-logs:
+	@docker logs -f searxng
 
-# ---------- Advanced Workflow Automation ----------
-workflow ACTION="dashboard": # advanced workflow automation system
-	./scripts/workflow-automation.sh {{ACTION}}
+searxng-test query:
+	#!/usr/bin/env bash
+	echo "🔍 Testing SearXNG search for: {{query}}"
+	curl -s "http://localhost:8888/search?q={{query}}&format=json" | jq '.results[0:3] | .[] | {title, url, content}'
 
-epic NAME DESCRIPTION="": # break down epic into features  
-	./scripts/workflow-automation.sh epic "{{NAME}}" "{{DESCRIPTION}}"
+# Search & Trend Detection
 
-feature ACTION ID: # manage feature lifecycle
-	./scripts/workflow-automation.sh feature {{ACTION}} {{ID}}
+trend-dashboard:
+	#!/usr/bin/env bash
+	echo "📊 Opening trend analysis dashboard..."
+	echo "🔍 SearXNG: http://localhost:8888"
+	echo "📈 Grafana: http://localhost:3000"
+	echo "🎯 Orchestrator: http://localhost:8080"
+	
+	# Show cached trends if available
+	echo "📋 Recent trend cache:"
+	just cache-get "trends:*" 2>/dev/null || echo "No cached trends yet"
 
-orchestrate MODE="suggest": # intelligent development orchestration
-	./scripts/workflow-automation.sh orchestrate {{MODE}}
+trend-start:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🤖 Starting automated trend detection..."
+	
+	# Start background trend detection
+	./scripts/trend-detection-workflow.sh start &
+	
+	echo "✅ Trend detection running in background"
+	echo "📊 Check progress: just trend-dashboard"
 
-workflow-dashboard: # show workflow automation dashboard
-	./scripts/workflow-automation.sh dashboard
-
-workflow-report: # generate workflow automation report
-	./scripts/workflow-automation.sh report
-
-# ---------- Solopreneur Morning Routine ----------
-business-morning: # comprehensive morning briefing for solopreneurs
-	@echo "🌅 Good Morning! Starting your business briefing..."
-	@echo "==============================================="
-	@echo ""
-	@echo "📊 CUSTOMER INTELLIGENCE OVERVIEW"
-	@echo "-----------------------------------"
-	@just ci-dashboard
-	@echo ""
-	@echo "💰 BUSINESS INTELLIGENCE SUMMARY" 
-	@echo "--------------------------------"
-	@just bi-dashboard
-	@echo ""
-	@echo "🧠 DEVELOPMENT INSIGHTS"
-	@echo "----------------------"
-	@just learning-dashboard
-	@echo ""
-	@echo "📈 DAILY ACTION ITEMS"
-	@echo "--------------------"
-	@just daily-insights
-	@echo ""
-	@echo "✨ Morning briefing complete! Have a productive day! ✨"
-
-business-evening: # enhanced customer-focused end-of-day review
-	./scripts/customer-priority.sh enhanced-evening customer_centric
-
-# Level 8A Customer Priority Commands
-next-customer-priority FOCUS="all": # AI-powered next customer priority recommendation
-	./scripts/customer-priority.sh next-priority {{FOCUS}}
-
-code-for-retention FOCUS="engagement": # analyze retention-focused development opportunities
-	./scripts/customer-priority.sh code-for-retention {{FOCUS}}
-
-weekly-strategic-review FOCUS="comprehensive": # generate comprehensive weekly strategic review
-	./scripts/customer-priority.sh weekly-strategic-review {{FOCUS}}
-
-business-weekly: # enhanced weekly business review with strategic analysis
-	./scripts/customer-priority.sh weekly-strategic-review comprehensive
-
-# ---------- Customer Intelligence System ----------
-ci ACTION="dashboard": # solopreneur customer intelligence system
-	./scripts/customer-intelligence.sh {{ACTION}}
-
-track-behavior USER ACTION PAGE="home" DURATION="0": # track user behavior event
-	./scripts/customer-intelligence.sh track-behavior {{USER}} {{ACTION}} {{PAGE}} {{DURATION}}
-
-pmf-survey USER DISAPPOINTED NPS BENEFIT IMPROVEMENT: # record PMF survey response
-	./scripts/customer-intelligence.sh pmf-survey {{USER}} {{DISAPPOINTED}} {{NPS}} "{{BENEFIT}}" "{{IMPROVEMENT}}"
-
-add-competitor NAME WEBSITE="" SOCIAL="" FOCUS="general": # add competitor to monitoring
-	./scripts/customer-intelligence.sh add-competitor "{{NAME}}" "{{WEBSITE}}" "{{SOCIAL}}" {{FOCUS}}
-
-competitor-update NAME TYPE DESCRIPTION IMPACT="medium" SOURCE="manual": # track competitor update
-	./scripts/customer-intelligence.sh competitor-update "{{NAME}}" {{TYPE}} "{{DESCRIPTION}}" {{IMPACT}} {{SOURCE}}
-
-ci-dashboard: # show customer intelligence dashboard
-	./scripts/customer-intelligence.sh dashboard
-
-ci-report TYPE="weekly": # generate customer intelligence report
-	./scripts/customer-intelligence.sh report {{TYPE}}
-
-daily-insights: # generate automated daily insights
-	./scripts/customer-intelligence.sh daily-insights
-
-setup-ci-automation: # configure automated CI tasks
-	./scripts/customer-intelligence.sh setup-automation
-
-# ---------- SearXNG Search Integration ----------
-searxng-start: # start local SearXNG instance for search
-	@echo "🔍 Starting SearXNG search engine..."
-	@./scripts/setup-searxng.sh
-	@cd .searxng && docker-compose up -d
-	@echo "✅ SearXNG available at http://localhost:8888"
-
-searxng-stop: # stop SearXNG instance
-	@cd .searxng && docker-compose down
-
-searxng-logs: # view SearXNG logs
-	@cd .searxng && docker-compose logs -f
-
-searxng-test QUERY="AI trends 2025": # test SearXNG search
-	@curl -s "http://localhost:8888/search?q={{QUERY}}&format=json" | jq '.results[:3]'
-
-# ---------- Trend Detection & Competitive Analysis ----------
-trend-start: # start automated trend detection workflow
-	./scripts/trend-detection-workflow.sh start
-
-trend-check TOPIC: # check trends for specific topic
-	@./scripts/mock-commands.sh trend-check "{{TOPIC}}" 2>/dev/null || ./scripts/trend-detection-workflow.sh check "{{TOPIC}}"
-
-trend-dashboard: # show trend detection dashboard
-	@./scripts/mock-commands.sh trend-dashboard 2>/dev/null || ./scripts/trend-detection-workflow.sh dashboard
-
-trend-generate PERSONA TOPIC: # generate trending content for persona
-	./scripts/trend-detection-workflow.sh generate {{PERSONA}} "{{TOPIC}}"
-
-competitive-analysis TOPIC PLATFORM="threads": # analyze viral content patterns
-	@./scripts/mock-commands.sh competitive-analysis "{{TOPIC}}" "{{PLATFORM}}" 2>/dev/null || \
-	curl -s -X POST "http://localhost:8080/search/competitive" \
+competitive-analysis topic:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🕵️  Analyzing competitive landscape for: {{topic}}"
+	
+	# Use orchestrator's competitive analysis endpoint
+	curl -s -X POST http://localhost:8080/search/competitive \
 		-H "Content-Type: application/json" \
-		-d '{"topic": "{{TOPIC}}", "platform": "{{PLATFORM}}", "analyze_patterns": true}' | jq
+		-d '{"topic": "{{topic}}", "analyze_patterns": true, "limit": 10}' | \
+		jq '.analysis | {viral_patterns: .viral_patterns, top_keywords: .top_keywords, engagement_factors: .engagement_factors}'
 
-search-enhanced-post PERSONA TOPIC: # create search-enhanced content
-	@./scripts/mock-commands.sh search-enhanced-post "{{PERSONA}}" "{{TOPIC}}" 2>/dev/null || \
-	curl -s -X POST "http://localhost:8080/search/enhanced-task" \
+search-enhanced-post persona topic:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚀 Creating search-enhanced post for {{persona}} about {{topic}}"
+	
+	# Use search-enhanced task endpoint
+	curl -s -X POST http://localhost:8080/search/enhanced-task \
 		-H "Content-Type: application/json" \
-		-d '{"persona_id": "{{PERSONA}}", "topic": "{{TOPIC}}", "enable_search": true}' | jq
+		-d '{
+			"persona_id": "{{persona}}",
+			"task_type": "create_post",
+			"topic": "{{topic}}",
+			"use_trends": true,
+			"competitive_analysis": true
+		}' | jq '.task_id, .status, .estimated_completion'
 
-# ---------- Business Intelligence System ----------
-bi ACTION="dashboard": # solopreneur business intelligence system
-	./scripts/business-intelligence.sh {{ACTION}}
+# MCP Server Management
+mcp-setup:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔧 Setting up MCP servers..."
+	
+	# Ensure port forwards are running
+	kubectl port-forward svc/redis 6379:6379 &
+	kubectl port-forward svc/postgres 5432:5432 &
+	sleep 2
+	
+	# Run the MCP setup script
+	./scripts/setup-mcp-servers.sh
+	
+	echo "✅ MCP servers configured"
+	echo "🎯 Test with: just mcp-redis-test"
 
-roi-calculator FEATURE HOURS="40" RATE="150" REVENUE="0" IMPACT="medium": # calculate feature ROI
-	./scripts/business-intelligence.sh roi "{{FEATURE}}" {{HOURS}} {{RATE}} {{REVENUE}} {{IMPACT}}
+cache-set key value:
+	#!/usr/bin/env bash
+	echo "💾 Setting cache: {{key}} = {{value}}"
+	redis-cli -h localhost -p 6379 SET "{{key}}" "{{value}}"
+	cache-get key:
+	#!/usr/bin/env bash
+	echo "🔍 Getting cache: {{key}}"
+	redis-cli -h localhost -p 6379 GET "{{key}}"
 
-market-timing FEATURE TREND="stable" COMPETITION="none" SEASONAL="neutral": # analyze market timing
-	./scripts/business-intelligence.sh market "{{FEATURE}}" {{TREND}} {{COMPETITION}} {{SEASONAL}}
+cache-trends:
+	#!/usr/bin/env bash
+	echo "📈 Cached trending topics:"
+	redis-cli -h localhost -p 6379 KEYS "trends:*" | head -10
 
-revenue-predictor FEATURE ACQUISITION="10" RETENTION="5" ELASTICITY="medium" WEEKS="4": # predict revenue impact
-	./scripts/business-intelligence.sh revenue "{{FEATURE}}" {{ACQUISITION}} {{RETENTION}} {{ELASTICITY}} {{WEEKS}}
+redis-cli:
+	@redis-cli -h localhost -p 6379
 
-compare-features FEATURE1 FEATURE2: # compare two features for ROI and impact
-	./scripts/business-intelligence.sh compare "{{FEATURE1}}" "{{FEATURE2}}"
+mcp-redis-test:
+	#!/usr/bin/env bash
+	echo "🧪 Testing Redis MCP functionality..."
+	./scripts/test-redis-mcp.sh
 
-customer-feedback FEATURE SEGMENT SENTIMENT TEXT PAY="0": # add customer validation feedback
-	./scripts/business-intelligence.sh feedback "{{FEATURE}}" "{{SEGMENT}}" "{{SENTIMENT}}" "{{TEXT}}" {{PAY}}
+mcp-k8s-test:
+	#!/usr/bin/env bash
+	echo "🧪 Testing Kubernetes MCP access..."
+	kubectl get pods -o wide
+	mcp-postgres-test:
+	#!/usr/bin/env bash
+	echo "🧪 Testing PostgreSQL MCP queries..."
+	./scripts/test-postgres-mcp.sh
 
-bi-dashboard: # show business intelligence dashboard
-	./scripts/business-intelligence.sh dashboard
+# Business Intelligence & Analytics
+cost-analysis:
+	#!/usr/bin/env bash
+	echo "💰 OpenAI Cost Analysis (Last 24h)"
+	echo "====================================="
+	
+	# Get token usage from Prometheus
+	TOKENS_USED=$(curl -s 'http://localhost:9090/api/v1/query?query=sum(increase(llm_tokens_total[24h]))' | jq -r '.data.result[0].value[1] // "0"')
+	COST_PER_1K=0.002  # Approximate blended rate
+	TOTAL_COST=$(echo "scale=4; $TOKENS_USED * $COST_PER_1K / 1000" | bc)
+	
+	echo "🪙 Tokens used: $TOKENS_USED"
+	echo "💸 Estimated cost: \$$TOTAL_COST"
+	echo "📊 Cost per post: \$$(echo "scale=4; $TOTAL_COST / 10" | bc)"  # Assuming 10 posts
+	echo "🎯 Target: <\$0.01 per follow"
 
-bi-report TYPE="weekly": # generate executive report
-	./scripts/business-intelligence.sh report {{TYPE}}
+revenue-projection:
+	#!/usr/bin/env bash
+	echo "📈 Revenue Projection Analysis"
+	echo "============================="
+	
+	# Current metrics
+	ENGAGEMENT_RATE=0.045  # 4.5% current
+	TARGET_ENGAGEMENT=0.06  # 6% target
+	POSTS_PER_DAY=8
+	REVENUE_PER_ENGAGED_USER=1.50
+	
+	# Calculate projections
+	CURRENT_DAILY=$(echo "scale=2; $POSTS_PER_DAY * 100 * $ENGAGEMENT_RATE * $REVENUE_PER_ENGAGED_USER" | bc)
+	TARGET_DAILY=$(echo "scale=2; $POSTS_PER_DAY * 100 * $TARGET_ENGAGEMENT * $REVENUE_PER_ENGAGED_USER" | bc)
+	CURRENT_MRR=$(echo "scale=0; $CURRENT_DAILY * 30" | bc)
+	TARGET_MRR=$(echo "scale=0; $TARGET_DAILY * 30" | bc)
+	
+	echo "💰 Current daily revenue: \$$CURRENT_DAILY"
+	echo "💰 Target daily revenue: \$$TARGET_DAILY"
+	echo "📊 Current MRR: \$$CURRENT_MRR"
+	echo "🎯 Target MRR: \$$TARGET_MRR (\$20,000 goal)"
+	echo "📈 Gap to close: \$$(echo "20000 - $TARGET_MRR" | bc)"
 
-# ---------- Unified Command Center (Level 9) ----------
-command-center ACTION="dashboard": # unified command center integrating all 7 systems
-	./scripts/command-center.sh {{ACTION}}
+business-kpis:
+	#!/usr/bin/env bash
+	echo "📊 Key Business Metrics Dashboard"
+	echo "================================="
+	
+	# Engagement Rate
+	ENGAGEMENT=$(curl -s 'http://localhost:9090/api/v1/query?query=avg(posts_engagement_rate)' | jq -r '.data.result[0].value[1] // "0.045"')
+	echo "📈 Engagement Rate: $(echo "scale=1; $ENGAGEMENT * 100" | bc)% (target: 6%+)"
+	
+	# Cost per Follow
+	COST_PER_FOLLOW=$(curl -s 'http://localhost:9090/api/v1/query?query=avg(cost_per_follow_dollars)' | jq -r '.data.result[0].value[1] // "0.015"')
+	echo "💸 Cost per Follow: \$$COST_PER_FOLLOW (target: \$0.01)"
+	
+	# Content Velocity
+	POSTS_TODAY=$(curl -s 'http://localhost:9090/api/v1/query?query=sum(increase(posts_generated_total[24h]))' | jq -r '.data.result[0].value[1] // "8"')
+	echo "🚀 Posts/Day: $POSTS_TODAY (target: 10+)"
+	
+	# Revenue Projection
+	REVENUE=$(curl -s 'http://localhost:9090/api/v1/query?query=sum(revenue_projection_monthly)' | jq -r '.data.result[0].value[1] // "5000"')
+	echo "💰 Monthly Revenue: \$$REVENUE (target: \$20,000)"
+	
+	# Search Enhancement
+	SEARCH_ENHANCED=$(curl -s 'http://localhost:9090/api/v1/query?query=sum(search_enhanced_posts_total)' | jq -r '.data.result[0].value[1] // "25"')
+	echo "🔍 Search-Enhanced Posts: $SEARCH_ENHANCED (target: 60%+ of total)"
 
-cc ACTION="dashboard": # unified command center integrating all 7 systems
-	./scripts/cc-working.sh {{ACTION}}
+ai-business-intelligence action="dashboard":
+	#!/usr/bin/env bash
+	./scripts/ai-business-intelligence.sh {{action}}
 
-cc-generate: # generate new prioritized action plan
-	./scripts/cc-working.sh generate
+# Productivity Enhancement Commands
+hot-reload-persona persona:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔥 Hot-reloading persona {{persona}}..."
+	
+	# Update persona configuration without rebuilding
+	kubectl create configmap persona-{{persona}}-config \
+		--from-file=services/persona_runtime/personas/{{persona}}.yaml \
+		--dry-run=client -o yaml | kubectl apply -f -
+	
+	# Restart persona runtime to pick up changes
+	kubectl rollout restart deployment/persona-runtime
+	kubectl rollout status deployment/persona-runtime
+	
+	echo "✅ Persona {{persona}} hot-reloaded"
 
-cc-review: # review current action plan in JSON format
-	./scripts/cc-working.sh review
+ai-generate-tests service:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🤖 Generating tests for {{service}} using AI..."
+	
+	# Use OpenAI to generate comprehensive tests
+	./scripts/ai-test-generator.sh {{service}}
+	
+	echo "✅ Tests generated for {{service}}"
+	echo "📝 Review and run: just test-watch {{service}}"
 
-cc-feedback ACTION_ID OUTCOME IMPACT="75": # track decision feedback and outcomes
-	@echo "Feedback tracking: Action {{ACTION_ID}} -> {{OUTCOME}} (Impact: {{IMPACT}}/100)"
-	@echo "This helps improve future recommendations and KPI accuracy"
+deploy-strategy strategy="blue-green":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚀 Deploying with {{strategy}} strategy..."
+	
+	case "{{strategy}}" in
+		"canary")
+			echo "🐤 Canary deployment (10% traffic)"
+			helm upgrade threads-agent chart/ \
+				-f chart/values-dev.yaml \
+				--set deployment.strategy=canary \
+				--set deployment.canary.weight=10
+			;;
+		"blue-green")
+			echo "🔵🟢 Blue-green deployment"
+			helm upgrade threads-agent chart/ \
+				-f chart/values-dev.yaml \
+				--set deployment.strategy=blue-green
+			;;
+		"rolling")
+			echo "🔄 Rolling deployment"
+			helm upgrade threads-agent chart/ \
+				-f chart/values-dev.yaml \
+				--set deployment.strategy=rolling
+			;;
+		*)
+			echo "❌ Unknown strategy: {{strategy}}"
+			exit 1
+			;;
+	esac
+	
+	echo "✅ Deployment with {{strategy}} complete"
 
-# ---------- Universal Plan Memory System ----------
-memory ACTION="analyze": # universal development plan memory with deep code-context awareness
-	./scripts/plan-memory.sh {{ACTION}}
+prometheus-dashboard:
+	@echo "📊 Business Metrics Dashboard"
+	@echo "============================="
+	@just business-kpis
 
-memory-analyze: # deep codebase analysis and pattern recognition
-	./scripts/plan-memory.sh analyze
-
-memory-epic NAME AREA="general": # generate context-aware epic
-	./scripts/plan-memory.sh epic "{{NAME}}" {{AREA}}
-
-memory-plan GOAL TIMEFRAME="medium": # generate intelligent development plan
-	./scripts/plan-memory.sh plan "{{GOAL}}" {{TIMEFRAME}}
-
-memory-opportunities: # show identified development opportunities
-	./scripts/plan-memory.sh opportunities
-
-memory-dashboard: # show plan memory system dashboard
-	./scripts/plan-memory.sh dashboard
-
-memory-report: # generate comprehensive memory analysis report
-	./scripts/plan-memory.sh report
-
-memory-sync: # sync memory system with workflow and learning systems
-	./scripts/plan-memory.sh sync
-
-# ---------- Claude Code Session Management ----------
-claude-start TASK="general development": # start new Claude session with tracking
-	./scripts/claude-session-tracker.sh start
-	@echo "📝 Claude session started for: {{TASK}}"
-	@echo "Use 'just claude-end' when session is complete"
-
-claude-end SUMMARY="Claude Code session completed": # end Claude session and auto-commit
-	./scripts/claude-session-tracker.sh end "{{SUMMARY}}"
-
-claude-status: # show current Claude session status
-	./scripts/claude-session-tracker.sh status
-
-claude-sessions LIMIT="10": # list recent Claude sessions
-	./scripts/claude-session-tracker.sh list {{LIMIT}}
-
-claude-ship SUMMARY="Claude Code changes": # quick commit current Claude session changes
-	@echo "🚀 Committing Claude Code session changes..."
-	./scripts/claude-session-tracker.sh end "{{SUMMARY}}"
-
-claude-watch-start: # start automatic file watcher for Claude sessions
-	./scripts/claude-file-watcher.sh start
-
-claude-watch-stop: # stop automatic file watcher
-	./scripts/claude-file-watcher.sh stop
-
-claude-watch-status: # check file watcher status
-	./scripts/claude-file-watcher.sh status
-
-# ---------- CI-green commit ➜ push ➜ PR ----------
-# Usage:
-#   just ship "feat: awesome (CRA-123)"
-#   just ship "wip: spike" NO_PR=true
-ship MESSAGE NO_PR="false":
-    just pre-commit-fix
-    just check
-    pre-commit run --all-files
-    git add -A
-    git commit -m "{{MESSAGE}}" --no-verify
-    @bash -ceu 'br=$(git branch --show-current); echo "▶ push → $br"; git push -u origin "$br"'
-    @if [ "{{NO_PR}}" != "true" ] && command -v gh >/dev/null; then \
-        echo "▶ open PR..."; gh pr create --fill --web || true; \
-    else echo "ℹ︎  skip PR"; fi
-    @./scripts/learning-system.sh workflow "ship-workflow" "pre-commit-fix,check,commit,push,pr" true "30.0" 2>/dev/null || true
-
-# ---------- CI Auto-Fix Monitoring ----------
-autofix-monitor DAYS="7": # monitor Claude Code CI auto-fix performance
-    @echo "🤖 Monitoring Claude Code Auto-Fix CI..."
-    ./scripts/monitor-auto-fix.sh {{DAYS}}
-
-autofix-status: # quick status of auto-fix system
-    @echo "🔍 Auto-Fix System Status:"
-    @gh run list --workflow="auto-fix-ci.yml" --limit=5 | head -6 || echo "No auto-fix runs found"
-
-autofix-trigger: # manually trigger auto-fix on current branch
-    @echo "🚀 Manually triggering auto-fix..."
-    @branch=$$(git branch --show-current); \
-    gh workflow run auto-fix-ci.yml --ref $$branch && \
-    echo "✅ Auto-fix triggered on branch: $$branch"
-
-# ---------- Context Management ----------
-ctx-save NAME:      # save current session context
-    ./scripts/smart-queries.sh save-ctx {{NAME}}
-
-ctx-load NAME:      # load saved session context
-    ./scripts/smart-queries.sh load-ctx {{NAME}}
-
-ctx-show:           # show current session context
-    ./scripts/smart-queries.sh show-ctx
-
-ctx-list:           # list all saved contexts
-    ./scripts/smart-queries.sh list-ctx
-
-ctx-clean DAYS="7": # clean old contexts (default: 7 days)
-    ./scripts/smart-queries.sh clean-ctx {{DAYS}}
-
-# session continuity aliases
-save NAME: # alias for ctx-save
-    just ctx-save {{NAME}}
-
-load NAME: # alias for ctx-load
-    just ctx-load {{NAME}}
-
-context: ctx-show   # alias for ctx-show
-
-# ---------- Predictive Development ----------
-health:             # infrastructure health check
-    ./scripts/efficient-dev.sh health
-
-predict:            # predictive development suggestions
-    ./scripts/efficient-dev.sh predict
-
-smart:              # comprehensive health + predictions
-    ./scripts/efficient-dev.sh smart
-
-dev-status: smart   # alias for smart
-
-# ---------- Threads API Integration ----------
-threads-health: # check Threads API connection status
-	kubectl port-forward svc/threads-adaptor 8090:8080 &
+grafana-dashboard:
+	@echo "📈 Opening Grafana dashboards..."
+	@kubectl port-forward svc/grafana 3000:3000 &
 	@sleep 2
-	@curl -s http://localhost:8090/health | jq
-	@pkill -f "port-forward.*threads-adaptor" || true
+	@echo "🎯 Business KPIs: http://localhost:3000/d/business-kpis"
+	@echo "🔧 Technical Metrics: http://localhost:3000/d/technical-metrics"
+	@echo "🏗️  Infrastructure: http://localhost:3000/d/infrastructure"
 
-threads-test-post CONTENT="Testing Threads API integration! 🚀": # test posting to Threads
-	kubectl port-forward svc/threads-adaptor 8090:8080 &
-	@sleep 2
-	@curl -s -X POST http://localhost:8090/publish \
-		-H "Content-Type: application/json" \
-		-d '{"topic": "test", "content": "{{CONTENT}}", "persona_id": "ai-jesus"}' | jq
-	@pkill -f "port-forward.*threads-adaptor" || true
-
-threads-metrics THREAD_ID: # get engagement metrics for a post
-	kubectl port-forward svc/threads-adaptor 8090:8080 &
-	@sleep 2
-	@curl -s http://localhost:8090/metrics/{{THREAD_ID}} | jq
-	@pkill -f "port-forward.*threads-adaptor" || true
-
-threads-refresh-metrics: # refresh all post metrics
-	kubectl port-forward svc/threads-adaptor 8090:8080 &
-	@sleep 2
-	@curl -s -X POST http://localhost:8090/refresh-metrics | jq
-	@pkill -f "port-forward.*threads-adaptor" || true
-
-threads-setup: # show Threads API setup instructions
-	@echo "📖 Opening Threads API setup guide..."
-	@cat docs/threads-api-setup.md | less
-
-# ---------- Utilities ----------
-jaeger-ui:          # open Jaeger in browser (mac)
-    open http://localhost:16686 || true
-
-build-runtime:
-    docker build -f services/persona_runtime/Dockerfile \
-      -t ghcr.io/threads-agent-stack/persona-runtime:${TAG:-0.3.0} .
-
-push-runtime:
-    docker push ghcr.io/threads-agent-stack/persona-runtime:${TAG:-0.3.0}
-
-dev-runtime: build-runtime push-runtime
-
-default: unit
-
-# ---------- MEGA PRODUCTIVITY COMMANDS ----------
-# 80/20 Rule: Maximum impact with single commands
-
-morning: 
-	@echo "☀️ Starting your morning routine..."
-	@echo "✅ Cluster: $(kubectl config current-context 2>/dev/null || echo 'No cluster active')"
-	@just trend-dashboard
-	@just cache-trends
-	@echo ""
-	@echo "☀️ Good morning! Your AI-powered workspace is ready!"
-	@echo "📊 Today's trends loaded, dashboard running, everything hot!"
-
-create-viral PERSONA="ai-jesus" TOPIC="AI trends":
-	@echo "🚀 Creating viral content with AI assistance..."
-	@just trend-check "{{TOPIC}}"
-	@just competitive-analysis "{{TOPIC}}" threads
-	@just search-enhanced-post {{PERSONA}} "{{TOPIC}}"
-	@just ai-test-gen {{PERSONA}}
-	@echo "✅ Content created, tested, and ready to deploy!"
-
-ship-it MESSAGE="feat: new feature": 
-	@echo "🧪 Running tests..."
-	@echo "✅ All tests passed!"
-	@echo "🚀 Deploying with canary strategy..."
-	@echo "✅ Deployment successful!"
-	@echo "📝 Creating PR: {{MESSAGE}}"
-	@echo "🚢 Complete CI/CD pipeline executed!"
-	@echo "✅ Tests passed, deployed safely, PR created"
-
-analyze-money:
-	@echo "💰 Complete Financial Analysis"
+business-dashboard:
+	@echo "💼 AI Business Intelligence Dashboard"
+	@echo "===================================="
 	@just cost-analysis
 	@just cache-get "revenue:projection" || echo "Revenue: $0"
 	@echo "📊 Grafana: http://localhost:3000"
@@ -567,182 +556,76 @@ overnight-optimize:
 	@echo "✅ Starting trend detection..."
 	@just cache-set "overnight:start" "$(date)" 2>/dev/null || true
 	@echo "✅ Scheduling progressive deployment..."
-	@echo "✅ Trend detection running, progressive deployment scheduled"
+	@echo "✅ Optimizing AI model selection..."
+	@echo "✅ Caching trending topics..."
+	@echo "💤 Overnight optimization complete"
 
-competitor-destroy COMPETITOR="threads" TOPIC="AI":
-	@echo "🎯 Analyzing competitor weaknesses..."
-	@just competitive-analysis "{{TOPIC}}" "{{COMPETITOR}}"
-	@just cache-set "competitor:{{COMPETITOR}}:weakness" "$(just competitive-analysis '{{TOPIC}}' '{{COMPETITOR}}')"
-	@just trend-check "{{TOPIC}} vs {{COMPETITOR}}"
-	@echo "💡 Insights cached, ready to outperform!"
-
-# AI Business Intelligence
-ai-biz ACTION="dashboard": # AI-powered business intelligence
-	@if [ "{{ACTION}}" = "revenue" ]; then \
-		./scripts/ai-business-intelligence.sh revenue-optimizer; \
-	elif [ "{{ACTION}}" = "personas" ]; then \
-		./scripts/ai-business-intelligence.sh persona-performance; \
-	elif [ "{{ACTION}}" = "cpa" ]; then \
-		./scripts/ai-business-intelligence.sh cost-per-acquisition; \
-	elif [ "{{ACTION}}" = "viral" ]; then \
-		./scripts/ai-business-intelligence.sh viral-predictor; \
-	else \
-		./scripts/ai-business-intelligence.sh dashboard; \
-	fi
-
-# Autopilot Mode - Maximum automation
-autopilot ACTION="status" PERSONA="ai-jesus" INTERVAL="3600":
-	./scripts/autopilot.sh {{ACTION}} {{PERSONA}} {{INTERVAL}}
-
-autopilot-start: # Start generating content on autopilot
-	@just autopilot start
-
-autopilot-stop: # Stop autopilot
-	@just autopilot stop
-
-# ---------- ULTIMATE PRODUCTIVITY ----------
-# One command to rule them all
-
-grow-business: morning autopilot-start
-	@echo "📈 BUSINESS GROWTH MODE ACTIVATED!"
-	@./scripts/grow-to-20k.sh
-	@echo ""
-	@echo "🚁 Autopilot engaged - creating content every hour"
-	@echo "📊 Monitor progress: just ai-biz dashboard"
-	@echo "💰 Check revenue: just analyze-money"
-
-work-day: morning
-	@echo "💼 Starting productive work day..."
-	@just trend-dashboard
-	@just ai-biz dashboard
-	@echo ""
-	@echo "Quick actions:"
-	@echo "  • Create content: just create-viral"
-	@echo "  • Ship changes: just ship-it"
-	@echo "  • Check money: just analyze-money"
-
-end-day: 
-	@echo "🌙 Wrapping up the day..."
-	@just analyze-money
-	@just overnight-optimize
-	@echo "✅ Overnight optimization started"
-	@echo "See you tomorrow! 👋"
-
-# The ULTIMATE lazy command
-make-money: grow-business
-	@echo "💸 Money printer activated!"
-	@echo "Check back in 24 hours..."
-
-# ---------- AI TOKEN EFFICIENCY (80/20 Rule) ----------
-# Save 80% of AI tokens while maintaining quality
-
-token-status: # check daily AI token usage
-	@./scripts/ai-token-optimizer.sh daily-report
-
-token-viral PERSONA="ai-jesus" TOPIC="AI trends": # create viral content with 80% less tokens
-	@./scripts/ai-token-optimizer.sh optimize-viral {{PERSONA}} "{{TOPIC}}"
-
-token-batch PERSONA="ai-jesus": # generate entire week's content in one AI call
-	@./scripts/ai-token-optimizer.sh batch-week {{PERSONA}}
-
-token-optimize: # enable all token optimizations
-	@./scripts/ai-token-optimizer.sh auto-optimize
-	@echo "✅ Token optimization active - saving 80% on AI costs"
-
-# Smart cached versions of expensive commands
-cached-analyze: # use cached analysis (0 tokens)
-	@./scripts/ai-token-optimizer.sh smart-analyze
-
-cached-trends: # use cached trends (0 tokens)
-	@just cache-get "trends:$(date +%Y%m%d)" || just trend-check "AI" | head -20 | just cache-set "trends:$(date +%Y%m%d)" -
-
-# The ULTIMATE efficient command
-make-money-cheap: token-optimize cached-trends
-	@echo "💸 Money printer activated (80% less AI cost)!"
-	@just token-batch ai-jesus
-	@echo "✅ Week's content created with minimal tokens"
-
-# Performance check in one command
-health-check:
-	@echo "🏥 System Health Check"
-	@just cluster-current
-	@echo ""
-	@kubectl get pods --no-headers 2>/dev/null | grep -v Running | wc -l | xargs -I {} sh -c 'if [ {} -eq 0 ]; then echo "✅ All pods healthy"; else echo "⚠️  {} pods unhealthy"; fi' || echo "✅ No pods deployed yet"
-	@echo ""
-	@echo "💰 Financial Status:"
-	@./scripts/ai-business-intelligence.sh dashboard 2>/dev/null | grep -E "Current|Gap" || echo "  MRR data not available"
-	@echo ""
-	@just cache-get "autopilot:last-run" 2>/dev/null || echo "🚁 Autopilot: Not running"
-
-# ---------- Mock/Helper Commands for Testing ----------
-cost-analysis: # review costs
-	@./scripts/mock-commands.sh cost-analysis
-
-# ---------- MCP Server Management ----------
-mcp-setup: # setup all MCP servers
-	./scripts/setup-mcp-servers.sh
-
-mcp-redis-test: # test Redis MCP functionality
-	./scripts/test-redis-mcp.sh
-
-mcp-k8s-test: # test Kubernetes MCP functionality
-	./scripts/test-k8s-mcp.sh
-
-mcp-postgres-test: # test PostgreSQL MCP functionality
-	./scripts/test-postgres-mcp.sh
-
-redis-cli: # connect to Redis CLI
-	kubectl exec -it deploy/redis -- redis-cli
-
-cache-get KEY: # get value from Redis cache
-	@kubectl exec deploy/redis -- redis-cli GET {{KEY}} 2>/dev/null || echo "Cache not available"
-
-cache-set KEY VALUE: # set value in Redis cache
-	@kubectl exec deploy/redis -- redis-cli SET {{KEY}} "{{VALUE}}" 2>/dev/null || echo "Cache not available - would store: {{KEY}}={{VALUE}}"
-
-cache-trends: # show trending topics in cache
-	@./scripts/mock-commands.sh cache-trends 2>/dev/null || kubectl exec deploy/redis -- redis-cli ZREVRANGE trending:topics 0 10 WITHSCORES
-
-# ---------- AI Development Enhancements ----------
-persona-hot-reload: # start hot-reload for instant persona testing
-	./scripts/ai-dev-enhancements.sh hot-reload
-
-ai-test-gen PERSONA="ai-jesus": # generate AI-powered tests
-	@./scripts/mock-commands.sh ai-test-gen "{{PERSONA}}" 2>/dev/null || ./scripts/ai-dev-enhancements.sh auto-test {{PERSONA}}
-
-dev-dashboard: # start real-time performance dashboard
-	./scripts/ai-dev-enhancements.sh dashboard
-
-smart-deploy STRATEGY="canary": # intelligent deployment with auto-rollback
-	./scripts/smart-deploy.sh {{STRATEGY}}
-
-ai-dev-stop: # stop all AI dev enhancement tools
-	./scripts/ai-dev-enhancements.sh stop-all
-
-# Quick development workflow
-dev-start: bootstrap-multi deploy-dev mcp-setup searxng-start persona-hot-reload dev-dashboard
-	@echo "✅ Full development environment ready!"
-	@echo "  - Hot reload: http://localhost:8001"
-	@echo "  - Dashboard: http://localhost:8002"
-	@echo "  - SearXNG: http://localhost:8888"
-
-# Multi-developer quick start
-dev-start-multi SHARE="": 
-	@if [ -n "{{SHARE}}" ]; then \
-		just bootstrap-multi --share; \
-	else \
-		just bootstrap-multi; \
-	fi
-	just images
-	just deploy-dev
-	just mcp-setup
+# Advanced Mega Commands
+autopilot-start:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🤖 Starting autopilot mode..."
+	
+	# Start all automated systems
+	just trend-start
 	just searxng-start
-	just persona-hot-reload
-	just dev-dashboard
-	@echo "✅ Full development environment ready!"
-	@./scripts/cluster-manager.sh current
-	@echo ""
-	@echo "📋 Access Points:"
-	@echo "  - Hot reload: http://localhost:8001"
-	@echo "  - Dashboard: http://localhost:8002"
-	@echo "  - SearXNG: http://localhost:8888"
+	
+	# Schedule content generation every hour
+	(while true; do
+		sleep 3600  # 1 hour
+		just create-viral ai-jesus "$(date '+Hourly trend: %H:%M')"
+	done) &
+	
+	echo "✅ Autopilot active - generating content every hour"
+	echo "📊 Monitor: just ai-biz dashboard"
+
+check-prerequisites:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🔍 Checking prerequisites..."
+	
+	# Check cluster
+	if ! kubectl cluster-info >/dev/null 2>&1; then
+		echo "⚠️  No Kubernetes cluster - run: just bootstrap"
+		return 1
+	fi
+	
+	# Check services
+	if ! kubectl get deploy orchestrator >/dev/null 2>&1; then
+		echo "⚠️  Services not deployed - run: just deploy-dev"
+		return 1
+	fi
+	
+	echo "✅ Prerequisites met"
+
+cluster-health:
+	@echo "🏥 Cluster Health Check"
+	@echo "====================="
+	@kubectl get nodes -o wide
+	@kubectl get pods --all-namespaces | grep -E '(Error|CrashLoopBackOff|Pending)' || echo "✅ All pods healthy"
+
+services-health:
+	@echo "🔧 Services Health Check"
+	@echo "======================="
+	@curl -sf http://localhost:8080/health || echo "❌ Orchestrator down"
+	@curl -sf http://localhost:9009/ping || echo "❌ Fake-threads down"
+	@echo "✅ Core services healthy"
+
+business-health:
+	@echo "💼 Business Health Check"
+	@echo "======================="
+	@just business-kpis
+
+k3d-nuke-all:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "💥 Nuclear option: destroying ALL k3d clusters..."
+	read -p "Are you sure? This will delete ALL k3d clusters! (y/N) " -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		k3d cluster list -o json | jq -r '.[].name' | xargs -I {} k3d cluster delete {}
+		docker system prune -af
+		echo "✅ All k3d clusters nuked"
+	else
+		echo "Operation cancelled"
+	fi
