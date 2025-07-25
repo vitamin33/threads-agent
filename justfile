@@ -34,7 +34,7 @@ cluster-delete NAME: # delete a specific cluster
 images CLUSTER="":
 	@echo "🐳  building dev images …"
 
-	for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine threads_adaptor; do \
+	for svc in orchestrator celery_worker persona_runtime fake_threads viral_engine threads_adaptor achievement_collector; do \
 		docker build -f services/${svc}/Dockerfile -t ${svc//_/-}:local .; \
 	done
 
@@ -50,11 +50,11 @@ images CLUSTER="":
 	k3d image import qdrant/qdrant:v1.9.4 -c $$cluster_name || true; \
 	k3d image import bitnami/postgresql:16 -c $$cluster_name || true; \
 	k3d image import rabbitmq:3.13-management-alpine -c $$cluster_name || true; \
-	for img in orchestrator celery-worker persona-runtime fake-threads viral-engine threads-adaptor; do \
+	for img in orchestrator celery-worker persona-runtime fake-threads viral-engine threads-adaptor achievement-collector; do \
 		k3d image import $${img}:local -c $$cluster_name || true; \
 	done; \
 	echo "🔍  images inside k3d nodes:"; \
-	docker exec k3d-$$cluster_name-agent-0 crictl images | grep -E "orchestrator|celery|persona|fake|viral|threads" || true
+	docker exec k3d-$$cluster_name-agent-0 crictl images | grep -E "orchestrator|celery|persona|fake|viral|threads|achievement" || true
 
 deploy-dev TIMEOUT="360s":
 	@bash -ceu 'extra=""; [ -f chart/values-dev.local.yaml ] && extra="-f chart/values-dev.local.yaml"; \
