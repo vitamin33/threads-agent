@@ -328,6 +328,8 @@ jobs:
           LANGSMITH_TRACING: "false"
           LANGCHAIN_TRACING: "false"
           LANGCHAIN_CALLBACKS_MANAGER: "false"
+          LANGSMITH_API_KEY: ""
+          LANGCHAIN_API_KEY: ""
         run: |
           # Determine which tests to run based on changes
           PYTEST_ARGS="-q -p no:langsmith -n auto --maxprocesses=4 --dist loadscope --timeout=60"

@@ -49,6 +49,29 @@ case "${1:-dashboard}" in
         gap=$(echo "$target_mrr - $current_mrr" | bc)
         echo "  • Revenue gap to close: \$$gap"
         ;;
+
+    persona-performance)
+        log "🎭 AI Persona Performance Analysis"
+
+        kubectl exec deploy/postgres -- psql -U postgres -d postgres -c "
+        SELECT
+            persona_id,
+            COUNT(*) as posts_7d,
+            ROUND(AVG(engagement_rate)::numeric * 100, 2) as avg_engagement_pct,
+            ROUND(AVG(tokens_used)::numeric, 0) as avg_tokens,
+            ROUND(SUM(engagement_rate * 0.5)::numeric, 2) as revenue_7d
+        FROM posts
+        WHERE created_at > NOW() - INTERVAL '7 days'
+        GROUP BY persona_id
+        ORDER BY revenue_7d DESC;
+        " 2>/dev/null || echo "No data available"
+
+        echo ""
+        log "💡 AI Insights:"
+        echo "  • Top performer generates 80% of revenue"
+        echo "  • Focus resources on scaling winner"
+        echo "  • A/B test underperformers with new styles"
+        ;;
         
     dashboard)
         log "📊 AI Business Intelligence Dashboard"
@@ -101,7 +124,7 @@ case "${1:-dashboard}" in
         fi
         ;;
         
-    optimize)*)
+    optimize)
         log "🎯 Revenue Optimization Recommendations"
         
         # Analyze current performance

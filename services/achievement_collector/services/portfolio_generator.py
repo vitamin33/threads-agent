@@ -220,17 +220,17 @@ class PortfolioGenerator:
                         "category": a.category,
                         "impact_score": a.impact_score,
                         "complexity_score": a.complexity_score,
-                        "business_value": float(a.business_value)
-                        if a.business_value
-                        else 0.0,
+                        "business_value": (
+                            float(a.business_value) if a.business_value else 0.0
+                        ),
                         "time_saved_hours": a.time_saved_hours,
                         "duration_hours": a.duration_hours,
-                        "started_at": a.started_at.isoformat()
-                        if a.started_at
-                        else None,
-                        "completed_at": a.completed_at.isoformat()
-                        if a.completed_at
-                        else None,
+                        "started_at": (
+                            a.started_at.isoformat() if a.started_at else None
+                        ),
+                        "completed_at": (
+                            a.completed_at.isoformat() if a.completed_at else None
+                        ),
                         "tags": a.tags,
                         "skills": a.skills_demonstrated,
                         "summary": a.ai_summary,

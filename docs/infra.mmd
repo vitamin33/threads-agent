@@ -1,9 +1,0 @@
-flowchart LR
-  subgraph k3d
-    orch[(orchestrator)]
-    worker[(celery-worker)]
-    threads[(fake-threads)]
-    pg[(Postgres)]
-    minio[(MinIO)]
-  end
-  orch --> worker --> threads
