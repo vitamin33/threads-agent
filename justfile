@@ -185,7 +185,7 @@ check: lint
 	echo "Running unit tests..."
 	just unit
 	
-	echo "✅ All quality checks passed"
+	echo "✅ All quality checks passed - all green!"
 
 ship message:
 	#!/usr/bin/env bash
