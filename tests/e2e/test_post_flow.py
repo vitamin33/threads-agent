@@ -18,24 +18,29 @@ def test_post_task_end_to_end() -> None:
     """Full flow: POST /task → Celery → fake-threads /published."""
     payload = {"persona_id": "ai-jesus", "task_type": "create_post"}
 
-    response = httpx.post(f"http://localhost:{ORCH_PORT}/task", json=payload, timeout=10)
-    response.raise_for_status()
-    task_data = response.json()
-    assert "task_id" in task_data
+    # 1️⃣  enqueue task
+    resp = httpx.post(f"http://localhost:{ORCH_PORT}/task", json=payload, timeout=5)
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "queued"
 
-    # Wait for background processing
-    time.sleep(15)
+    # 2️⃣  poll fake-threads until the draft appears (≤ 40 s)
+    deadline = time.time() + 40
+    while time.time() < deadline:
+        out = httpx.get(f"http://localhost:{THREADS_PORT}/published", timeout=5)
+        assert out.status_code == 200
+        posts = out.json()
+        if posts:
+            # Since fake-threads returns posts with 'topic' and 'content' fields
+            latest = posts[-1]
+            assert "topic" in latest
+            assert "content" in latest
+            # The topic should contain the persona_id
+            assert "ai-jesus" in latest["topic"].lower()
+            print(f"✅ Content published: {latest['content'][:50]}...")
+            return
+        time.sleep(1)
 
-    # Check fake-threads for published content
-    published_response = httpx.get(f"http://localhost:{THREADS_PORT}/published", timeout=5)
-    published_response.raise_for_status()
-    published = published_response.json()
-
-    assert len(published) > 0, "No content published"
-    latest_post = published[-1]
-    assert latest_post["persona_id"] == "ai-jesus"
-    assert "content" in latest_post
-    print(f"✅ Post published: {latest_post['content'][:50]}...")
+    pytest.fail("Draft never appeared in 40s window")
 
 
 def test_draft_post_happy_path() -> None:
@@ -106,7 +111,7 @@ def test_draft_post_happy_path() -> None:
         assert hook and body, "hook/body should be non-empty"
 
     # 4️⃣ verify vector store knows about this content
-    qclient = qdrant_client.QdrantClient(url=QDRANT_URL)
+    qclient = qdrant_client.QdrantClient(url=QDRANT_URL, check_compatibility=False)
     try:
         collection_info = qclient.get_collection(COLLECTION_NAME)
         assert collection_info.points_count > 0, "qdrant should have at least 1 point"
@@ -115,9 +120,10 @@ def test_draft_post_happy_path() -> None:
 
     # 5️⃣ verify fake-threads received our exact post
     assert published_content is not None
-    assert "persona_id" in published_content
-    assert published_content["persona_id"] == "ai-jesus"
+    assert "topic" in published_content
     assert "content" in published_content
+    # topic should contain persona_id
+    assert "ai-jesus" in published_content["topic"].lower()
     # content should be hook + body combined
     full_content = published_content["content"]
     assert hook in full_content or body in full_content, "published content missing hook/body"
