@@ -2,26 +2,18 @@
 # See: https://github.com/casey/just
 
 # Mega Commands (80/20 Rule)
-work-day: check-prerequisites trend-dashboard dev-dashboard ai-biz
-	create-viral ai-jesus "AI productivity tips": ai-plan "Create viral AI productivity content" && create-viral-ai-jesus "AI productivity tips"
-	ship-it message: smart-deploy canary && github-pr message
-	end-day: analyze-money overnight-optimize
-	make-money: autopilot-start grow-business analyze-money
-	grow-business: trend-start competitive-analysis ai-biz revenue && searxng-start
-	analyze-money: cost-analysis revenue-projection business-kpis
-	ai-biz action="dashboard": ai-business-intelligence action
-	health-check: cluster-health services-health business-health
+work-day: check-prerequisites trend-dashboard dev-dashboard
+# (Mega commands need proper recipe definitions)
 
 # Quick Start Commands
 dev-start: bootstrap deploy-dev mcp-setup dev-dashboard
 dev-start-multi: bootstrap-multi deploy-dev mcp-setup dev-dashboard
-persona-hot-reload persona="ai-jesus": hot-reload-persona persona
-ai-test-gen service: ai-generate-tests service
-smart-deploy strategy="blue-green": deploy-strategy strategy
+alias persona-hot-reload := hot-reload-persona
+alias ai-test-gen := ai-generate-tests
+alias smart-deploy := deploy-strategy
 dev-dashboard: prometheus-dashboard grafana business-dashboard
-cache-set key value: redis-cache-set key value
-cache-get key: redis-cache-get key
-trend-check topic: trend-detection topic
+# Redis cache aliases removed - recipes don't exist
+# Trend check alias removed - recipe doesn't exist
 
 # Core Development Commands
 bootstrap:
@@ -225,7 +217,7 @@ scaffold service:
 	cp scripts/templates/dockerfile services/$SERVICE/Dockerfile
 	
 	# Replace placeholders
-	sed -i.bak "s/{{SERVICE_NAME}}/$SERVICE/g" services/$SERVICE/*
+	sed -i.bak "s/SERVICE_NAME/$SERVICE/g" services/$SERVICE/*
 	rm services/$SERVICE/*.bak
 	
 	echo "✅ Service $SERVICE scaffolded"
@@ -302,24 +294,7 @@ searxng-test query:
 	echo "🔍 Testing SearXNG search for: {{query}}"
 	curl -s "http://localhost:8888/search?q={{query}}&format=json" | jq '.results[0:3] | .[] | {title, url, content}'
 
-# Search & Trend Detection
-trend-check topic:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	echo "📈 Checking trends for: {{topic}}"
-	
-	# Check if orchestrator is running
-	if ! curl -s http://localhost:8080/health >/dev/null 2>&1; then
-		echo "⚠️  Orchestrator not accessible, starting port-forward..."
-		kubectl port-forward svc/orchestrator 8080:8080 &
-		sleep 3
-	fi
-	
-	# Query trends endpoint
-	curl -s -X POST http://localhost:8080/search/trends \
-		-H "Content-Type: application/json" \
-		-d '{"topic": "{{topic}}", "timeframe": "7d", "limit": 5}' | \
-		jq '.trends[] | {title: .title, relevance: .relevance_score, source: .source}'
+# Search & Trend Detection (duplicate removed - using alias at line 24)
 
 trend-dashboard:
 	#!/usr/bin/env bash
@@ -387,14 +362,7 @@ mcp-setup:
 	echo "✅ MCP servers configured"
 	echo "🎯 Test with: just mcp-redis-test"
 
-cache-set key value:
-	#!/usr/bin/env bash
-	echo "💾 Setting cache: {{key}} = {{value}}"
-	redis-cli -h localhost -p 6379 SET "{{key}}" "{{value}}"
-	cache-get key:
-	#!/usr/bin/env bash
-	echo "🔍 Getting cache: {{key}}"
-	redis-cli -h localhost -p 6379 GET "{{key}}"
+# Cache operations (duplicate removed - using aliases at lines 22-23)
 
 cache-trends:
 	#!/usr/bin/env bash

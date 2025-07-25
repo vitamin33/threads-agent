@@ -33,8 +33,9 @@ async def create_achievement(
     ).total_seconds() / 3600
 
     # Create achievement
+    achievement_data = achievement.model_dump(exclude={"duration_hours"})
     db_achievement = AchievementModel(
-        **achievement.model_dump(),
+        **achievement_data,
         duration_hours=duration,
     )
 

@@ -253,3 +253,4 @@ traces.zip                     # OTEL export artefacts
 # ── Claude Code local settings ────────────────────────
 .claude/settings.local.json
 .claude-local.json
+test.db

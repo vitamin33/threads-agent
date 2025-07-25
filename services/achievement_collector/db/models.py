@@ -4,7 +4,6 @@ from datetime import datetime
 
 from sqlalchemy import (
     JSON,
-    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -29,7 +28,7 @@ class Achievement(Base):
 
     __tablename__ = "achievements"
 
-    id = Column(BigInteger, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
     # Basic Info
     title = Column(String(255), nullable=False)
@@ -94,8 +93,12 @@ class Achievement(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    git_commits: Mapped[list["GitCommit"]] = relationship("GitCommit", back_populates="achievement")
-    github_prs: Mapped[list["GitHubPR"]] = relationship("GitHubPR", back_populates="achievement")
+    git_commits: Mapped[list["GitCommit"]] = relationship(
+        "GitCommit", back_populates="achievement"
+    )
+    github_prs: Mapped[list["GitHubPR"]] = relationship(
+        "GitHubPR", back_populates="achievement"
+    )
     ci_runs: Mapped[list["CIRun"]] = relationship("CIRun", back_populates="achievement")
 
     # Indexes
@@ -112,8 +115,8 @@ class GitCommit(Base):
 
     __tablename__ = "git_commits"
 
-    id = Column(BigInteger, primary_key=True, index=True)
-    achievement_id = Column(BigInteger, ForeignKey("achievements.id"))
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    achievement_id = Column(Integer, ForeignKey("achievements.id"))
 
     sha = Column(String(40), nullable=False, unique=True)
     message = Column(Text, nullable=False)
@@ -132,7 +135,9 @@ class GitCommit(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    achievement: Mapped["Achievement"] = relationship("Achievement", back_populates="git_commits")
+    achievement: Mapped["Achievement"] = relationship(
+        "Achievement", back_populates="git_commits"
+    )
 
 
 class GitHubPR(Base):
@@ -140,8 +145,8 @@ class GitHubPR(Base):
 
     __tablename__ = "github_prs"
 
-    id = Column(BigInteger, primary_key=True, index=True)
-    achievement_id = Column(BigInteger, ForeignKey("achievements.id"))
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    achievement_id = Column(Integer, ForeignKey("achievements.id"))
 
     pr_number = Column(Integer, nullable=False, unique=True)
     title = Column(String(500), nullable=False)
@@ -165,7 +170,9 @@ class GitHubPR(Base):
     code_coverage_pct = Column(Float)
 
     # Relationships
-    achievement: Mapped["Achievement"] = relationship("Achievement", back_populates="github_prs")
+    achievement: Mapped["Achievement"] = relationship(
+        "Achievement", back_populates="github_prs"
+    )
 
 
 class CIRun(Base):
@@ -173,8 +180,8 @@ class CIRun(Base):
 
     __tablename__ = "ci_runs"
 
-    id = Column(BigInteger, primary_key=True, index=True)
-    achievement_id = Column(BigInteger, ForeignKey("achievements.id"))
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    achievement_id = Column(Integer, ForeignKey("achievements.id"))
 
     run_id = Column(String(255), nullable=False, unique=True)
     workflow_name = Column(String(255), nullable=False)
@@ -196,7 +203,9 @@ class CIRun(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    achievement: Mapped["Achievement"] = relationship("Achievement", back_populates="ci_runs")
+    achievement: Mapped["Achievement"] = relationship(
+        "Achievement", back_populates="ci_runs"
+    )
 
 
 class AchievementTemplate(Base):
@@ -204,7 +213,7 @@ class AchievementTemplate(Base):
 
     __tablename__ = "achievement_templates"
 
-    id = Column(BigInteger, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(255), nullable=False, unique=True)
     category = Column(String(50), nullable=False)
 
@@ -228,7 +237,7 @@ class PortfolioSnapshot(Base):
 
     __tablename__ = "portfolio_snapshots"
 
-    id = Column(BigInteger, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
     # Snapshot info
     version = Column(String(50), nullable=False)

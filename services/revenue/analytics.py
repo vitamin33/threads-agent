@@ -386,9 +386,7 @@ class RevenueAnalytics:
                             ["subscription", "subscription_payment"]
                         ),
                     )
-                ).scalar() or Decimal(
-                    "0"
-                )
+                ).scalar() or Decimal("0")
 
                 if prev_period_revenue > 0:
                     growth_rate = float(

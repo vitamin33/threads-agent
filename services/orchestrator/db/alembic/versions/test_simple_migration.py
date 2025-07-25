@@ -1,10 +1,11 @@
 """test simple migration
 
 Revision ID: simple_test
-Revises: 
+Revises:
 Create Date: 2025-07-25 12:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -27,10 +28,15 @@ def upgrade() -> None:
         sa.Column("hook", sa.Text(), nullable=False),
         sa.Column("body", sa.Text(), nullable=False),
         sa.Column("tokens_used", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("ts", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "ts",
+            sa.DateTime(),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Create tasks table
     op.create_table(
         "tasks",

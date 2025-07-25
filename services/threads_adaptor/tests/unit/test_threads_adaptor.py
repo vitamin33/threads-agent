@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from services.threads_adaptor.main import EngagementMetrics, app
+from services.threads_adaptor.main import EngagementResponse, app
 
 
 @pytest.fixture
@@ -93,7 +93,7 @@ class TestEngagementMetrics:
             (likes + comments + shares) / impressions if impressions > 0 else 0.0
         )
 
-        metrics = EngagementMetrics(
+        metrics = EngagementResponse(
             likes_count=likes,
             comments_count=comments,
             shares_count=shares,
@@ -108,7 +108,7 @@ class TestEngagementMetrics:
 
     def test_engagement_metrics_zero_impressions(self):
         """Test engagement rate with zero impressions."""
-        metrics = EngagementMetrics(
+        metrics = EngagementResponse(
             likes_count=10,
             comments_count=5,
             shares_count=2,

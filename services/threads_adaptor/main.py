@@ -15,9 +15,8 @@ from __future__ import annotations
 import asyncio
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-import httpx
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, create_engine
@@ -202,12 +201,12 @@ async def publish_post(
             db.close()
 
         # Step 4: Schedule engagement tracking
-        background_tasks.add_task(
-            track_engagement_async, thread_id, request.persona_id
-        )
+        background_tasks.add_task(track_engagement_async, thread_id, request.persona_id)
 
         # Record business metric
-        record_business_metric("posts_published_total", 1, {"persona_id": request.persona_id})
+        record_business_metric(
+            "posts_published_total", 1, {"persona_id": request.persona_id}
+        )
 
         return {
             "thread_id": thread_id,
@@ -275,9 +274,7 @@ async def get_profile_metrics() -> ProfileMetrics:
             "access_token": THREADS_ACCESS_TOKEN,
         }
 
-        profile_response = await rate_limited_call(
-            "GET", THREADS_PROFILE_ENDPOINT, params=profile_payload
-        )
+        await rate_limited_call("GET", THREADS_PROFILE_ENDPOINT, params=profile_payload)
 
         # Calculate metrics from database
         db = SessionLocal()
@@ -285,13 +282,16 @@ async def get_profile_metrics() -> ProfileMetrics:
             posts = db.query(ThreadsPost).all()
             total_posts = len(posts)
             avg_engagement = (
-                sum(p.engagement_rate for p in posts) / total_posts if total_posts > 0 else 0.0
+                sum(p.engagement_rate for p in posts) / total_posts
+                if total_posts > 0
+                else 0.0
             )
             total_impressions = sum(p.impressions_count for p in posts)
 
             # Calculate growth rate (simplified)
             recent_posts = [
-                p for p in posts
+                p
+                for p in posts
                 if p.published_at > datetime.utcnow() - timedelta(days=30)
             ]
             growth_rate = len(recent_posts) / 30.0 if recent_posts else 0.0
@@ -336,7 +336,9 @@ async def list_posts(persona_id: Optional[str] = None, limit: int = 50) -> List[
             {
                 "thread_id": p.thread_id,
                 "persona_id": p.persona_id,
-                "content": p.content[:100] + "..." if len(p.content) > 100 else p.content,
+                "content": p.content[:100] + "..."
+                if len(p.content) > 100
+                else p.content,
                 "engagement_rate": p.engagement_rate,
                 "likes_count": p.likes_count,
                 "comments_count": p.comments_count,
@@ -393,7 +395,10 @@ async def update_post_engagement(post: ThreadsPost) -> None:
         )
 
         # Parse metrics (simplified - actual API response structure may vary)
-        metrics = {item["name"]: item["values"][0]["value"] for item in insights_response.get("data", [])}
+        metrics = {
+            item["name"]: item["values"][0]["value"]
+            for item in insights_response.get("data", [])
+        }
 
         post.likes_count = metrics.get("likes", 0)
         post.comments_count = metrics.get("comments", 0)
@@ -404,7 +409,10 @@ async def update_post_engagement(post: ThreadsPost) -> None:
         total_engagement = post.likes_count + post.comments_count + post.shares_count
         post.engagement_rate = total_engagement / post.impressions_count
 
-        post.engagement_data = {"latest": insights_response, "updated_at": datetime.utcnow().isoformat()}
+        post.engagement_data = {
+            "latest": insights_response,
+            "updated_at": datetime.utcnow().isoformat(),
+        }
         post.updated_at = datetime.utcnow()
 
         # Commit to database
