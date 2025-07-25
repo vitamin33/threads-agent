@@ -1,7 +1,7 @@
 """Revenue service integration for content pipeline"""
 
 import os
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -10,7 +10,7 @@ REVENUE_SERVICE_URL = os.getenv("REVENUE_SERVICE_URL", "http://revenue:8080")
 
 def enhance_content_with_revenue(
     content: str, persona_id: str, content_id: int, category: Optional[str] = None
-) -> Dict:
+) -> Dict[str, Any]:
     """
     Enhance content with revenue-generating elements:
     1. Inject contextual affiliate links
@@ -68,7 +68,7 @@ def enhance_content_with_revenue(
 
 
 def track_content_performance(
-    content_id: int, persona_id: str, engagement_metrics: Dict
+    content_id: int, persona_id: str, engagement_metrics: Dict[str, Any]
 ) -> None:
     """
     Track content performance for revenue attribution

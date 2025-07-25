@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
@@ -27,7 +27,7 @@ class LeadCaptureRequest(BaseModel):
     utm_source: Optional[str] = None
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
-    metadata: Optional[Dict] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class AffiliateLinkRequest(BaseModel):
@@ -59,11 +59,30 @@ class AffiliateConversionRequest(BaseModel):
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/threads_agent"
 )
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Create engine and sessionmaker lazily to allow for testing overrides
+_engine = None
+_SessionLocal = None
 
 
-def get_db():
+def get_engine() -> Any:
+    global _engine
+    if _engine is None:
+        _engine = create_engine(DATABASE_URL)
+    return _engine
+
+
+def get_sessionmaker() -> Any:
+    global _SessionLocal
+    if _SessionLocal is None:
+        _SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=get_engine()
+        )
+    return _SessionLocal
+
+
+def get_db() -> Generator[Session, None, None]:
+    SessionLocal = get_sessionmaker()
     db = SessionLocal()
     try:
         yield db
@@ -72,10 +91,10 @@ def get_db():
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Any:
     # Startup
     maybe_start_metrics_server()
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=get_engine())
     yield
     # Shutdown
     pass
@@ -92,13 +111,13 @@ app = FastAPI(
 
 # Health check endpoint
 @app.get("/health")
-async def health():
+async def health() -> Dict[str, str]:
     return {"status": "healthy", "service": "revenue"}
 
 
 # Metrics endpoint
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Response:
     return Response(generate_latest(REGISTRY), media_type=CONTENT_TYPE_LATEST)
 
 
@@ -108,7 +127,7 @@ async def capture_lead(
     request: LeadCaptureRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-):
+) -> Dict[str, Any]:
     """Capture a lead with attribution tracking"""
     lead_capture = LeadCapture(db)
 
@@ -133,7 +152,7 @@ async def capture_lead(
 @app.post("/revenue/lead/{email}/convert")
 async def convert_lead(
     email: str, conversion_value: float = 0.0, db: Session = Depends(get_db)
-):
+) -> Dict[str, Any]:
     """Mark a lead as converted"""
     lead_capture = LeadCapture(db)
     success = lead_capture.mark_conversion(email, conversion_value)
@@ -148,7 +167,7 @@ async def convert_lead(
 @app.post("/revenue/inject-affiliate-links")
 async def inject_affiliate_links(
     request: AffiliateLinkRequest, db: Session = Depends(get_db)
-):
+) -> Dict[str, Any]:
     """Inject contextual affiliate links into content"""
     injector = AffiliateLinkInjector(db)
 
@@ -165,7 +184,7 @@ async def inject_affiliate_links(
 @app.post("/revenue/track-click")
 async def track_affiliate_click(
     request: AffiliateClickRequest, db: Session = Depends(get_db)
-):
+) -> Dict[str, bool]:
     """Track affiliate link click"""
     injector = AffiliateLinkInjector(db)
     success = injector.track_click(request.link_id, request.referrer)
@@ -179,7 +198,7 @@ async def track_affiliate_click(
 @app.post("/revenue/track-conversion")
 async def track_affiliate_conversion(
     request: AffiliateConversionRequest, db: Session = Depends(get_db)
-):
+) -> Dict[str, bool]:
     """Track affiliate conversion"""
     injector = AffiliateLinkInjector(db)
     success = injector.track_conversion(
@@ -196,7 +215,7 @@ async def track_affiliate_conversion(
 @app.post("/revenue/create-subscription")
 async def create_subscription(
     request: SubscriptionRequest, db: Session = Depends(get_db)
-):
+) -> Dict[str, Any]:
     """Create a new subscription"""
     revenue_manager = RevenueManager(db)
 
@@ -216,7 +235,7 @@ async def create_subscription(
 @app.delete("/revenue/subscription/{subscription_id}")
 async def cancel_subscription(
     subscription_id: int, immediate: bool = False, db: Session = Depends(get_db)
-):
+) -> Dict[str, Any]:
     """Cancel a subscription"""
     revenue_manager = RevenueManager(db)
 
@@ -229,7 +248,9 @@ async def cancel_subscription(
 
 
 @app.post("/revenue/stripe-webhook")
-async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
+async def stripe_webhook(
+    request: Request, db: Session = Depends(get_db)
+) -> Dict[str, Any]:
     """Handle Stripe webhooks"""
     revenue_manager = RevenueManager(db)
 
@@ -249,42 +270,52 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
 # Analytics endpoints
 @app.get("/revenue/analytics")
-async def get_revenue_analytics(days: int = 30, db: Session = Depends(get_db)):
+async def get_revenue_analytics(
+    days: int = 30, db: Session = Depends(get_db)
+) -> Dict[str, Any]:
     """Get comprehensive revenue analytics"""
     analytics = RevenueAnalytics(db)
     return analytics.get_revenue_summary(days)
 
 
 @app.get("/revenue/affiliate-stats")
-async def get_affiliate_stats(days: int = 30, db: Session = Depends(get_db)):
+async def get_affiliate_stats(
+    days: int = 30, db: Session = Depends(get_db)
+) -> Dict[str, Any]:
     """Get affiliate program performance"""
     analytics = RevenueAnalytics(db)
     return analytics.get_affiliate_performance(days)
 
 
 @app.get("/revenue/lead-funnel")
-async def get_lead_funnel(days: int = 30, db: Session = Depends(get_db)):
+async def get_lead_funnel(
+    days: int = 30, db: Session = Depends(get_db)
+) -> Dict[str, Any]:
     """Get lead funnel metrics"""
     analytics = RevenueAnalytics(db)
     return analytics.get_lead_funnel_metrics(days)
 
 
 @app.get("/revenue/subscription-metrics")
-async def get_subscription_metrics(db: Session = Depends(get_db)):
+async def get_subscription_metrics(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Get subscription metrics"""
     analytics = RevenueAnalytics(db)
     return analytics.get_subscription_metrics()
 
 
 @app.get("/revenue/forecast")
-async def get_revenue_forecast(months: int = 12, db: Session = Depends(get_db)):
+async def get_revenue_forecast(
+    months: int = 12, db: Session = Depends(get_db)
+) -> List[Dict[str, Any]]:
     """Get revenue forecast"""
     analytics = RevenueAnalytics(db)
     return analytics.get_revenue_forecast(months)
 
 
 @app.get("/revenue/leads/export")
-async def export_leads(converted_only: bool = False, db: Session = Depends(get_db)):
+async def export_leads(
+    converted_only: bool = False, db: Session = Depends(get_db)
+) -> List[Dict[str, Any]]:
     """Export lead data"""
     lead_capture = LeadCapture(db)
     return lead_capture.export_leads(converted_only)
@@ -292,7 +323,7 @@ async def export_leads(converted_only: bool = False, db: Session = Depends(get_d
 
 # Error handling
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
         status_code=500, content={"detail": f"Internal server error: {str(exc)}"}
     )

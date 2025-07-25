@@ -21,7 +21,7 @@ from . import Base
 class AffiliateLink(Base):
     __tablename__ = "affiliate_links"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     content_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
     link_url: Mapped[str] = mapped_column(Text, nullable=False)
     category: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -43,7 +43,7 @@ class AffiliateLink(Base):
 class Lead(Base):
     __tablename__ = "leads"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     source: Mapped[str] = mapped_column(
         String(50), nullable=False
@@ -67,7 +67,7 @@ class Lead(Base):
 class RevenueEvent(Base):
     __tablename__ = "revenue_events"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     event_type: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # 'affiliate_click', 'subscription', 'lead_capture'
@@ -89,7 +89,7 @@ class RevenueEvent(Base):
 class Subscription(Base):
     __tablename__ = "subscriptions"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     stripe_subscription_id: Mapped[str] = mapped_column(
         String(255), unique=True, nullable=False
     )
@@ -118,7 +118,7 @@ class Subscription(Base):
 class Customer(Base):
     __tablename__ = "customers"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(
         String(255), unique=True, nullable=True
@@ -137,3 +137,6 @@ class Customer(Base):
         Index("idx_customers_email", "email"),
         Index("idx_customers_stripe_id", "stripe_customer_id"),
     )
+
+
+__all__ = ["Base", "Customer", "Lead", "AffiliateLink", "Subscription", "RevenueEvent"]

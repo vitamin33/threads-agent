@@ -68,7 +68,7 @@ class TestAffiliateLinkInjector:
         )
 
         # Check that links were injected
-        assert "[Claude](" in enhanced_content
+        assert "[claude](" in enhanced_content
         assert len(links) == 1  # Only Claude from ai_tools category
 
         # Check database records

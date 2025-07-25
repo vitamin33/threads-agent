@@ -1,7 +1,8 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -134,7 +135,7 @@ class AffiliateLinkInjector:
         topic_category: Optional[str] = None,
         content_id: Optional[int] = None,
         max_links: int = 3,
-    ) -> Tuple[str, List[Dict]]:
+    ) -> Tuple[str, List[Dict[str, Any]]]:
         """
         Inject contextual affiliate links into content
         Returns: (enhanced_content, list_of_injected_links)
@@ -163,13 +164,14 @@ class AffiliateLinkInjector:
                     affiliate_url = self.generate_affiliate_url(merchant, content_id)
 
                     # Store link in database
-                    affiliate_link = AffiliateLink(
+                    affiliate_link = AffiliateLink(  # type: ignore[call-arg]
                         content_id=content_id,
                         link_url=affiliate_url,
                         category=merchant.category,
                         merchant=merchant.name,
                     )
                     self.db.add(affiliate_link)
+                    self.db.flush()  # Flush to get the ID
 
                     # Replace first occurrence with linked version
                     replacement = f"[{merchant.name}]({affiliate_url})"
@@ -213,7 +215,7 @@ class AffiliateLinkInjector:
                 link.click_count += 1
 
                 # Record revenue event
-                event = RevenueEvent(
+                event = RevenueEvent(  # type: ignore[call-arg]
                     event_type="affiliate_click",
                     amount=0.00,  # Clicks don't generate immediate revenue
                     content_id=link.content_id,
@@ -249,10 +251,10 @@ class AffiliateLinkInjector:
             link = self.db.query(AffiliateLink).filter_by(id=link_id).first()
             if link:
                 link.conversion_count += 1
-                link.revenue_generated += commission_amount
+                link.revenue_generated += Decimal(str(commission_amount))
 
                 # Record revenue event
-                event = RevenueEvent(
+                event = RevenueEvent(  # type: ignore[call-arg]
                     event_type="affiliate_commission",
                     amount=commission_amount,
                     customer_email=customer_email,
@@ -274,7 +276,7 @@ class AffiliateLinkInjector:
 
         return False
 
-    def get_top_performing_links(self, limit: int = 10) -> List[Dict]:
+    def get_top_performing_links(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get top performing affiliate links by revenue"""
         links = (
             self.db.query(AffiliateLink)

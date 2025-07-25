@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from email_validator import EmailNotValidError, validate_email
 from sqlalchemy import func
@@ -60,7 +61,7 @@ class LeadCapture:
             },
         }
 
-    def validate_and_score_email(self, email: str) -> Dict:
+    def validate_and_score_email(self, email: str) -> Dict[str, Any]:
         """Validate email and calculate initial score"""
         try:
             # Validate email format
@@ -94,9 +95,9 @@ class LeadCapture:
         email: str,
         source: str,
         content_id: Optional[int] = None,
-        utm_params: Optional[Dict] = None,
-        metadata: Optional[Dict] = None,
-    ) -> Dict:
+        utm_params: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Capture lead email with attribution tracking"""
         # Validate email
         validation = self.validate_and_score_email(email)
@@ -132,7 +133,7 @@ class LeadCapture:
                     lead_score += self.scoring_rules["engagement"]["delayed"]
 
             # Create lead record
-            lead = Lead(
+            lead = Lead(  # type: ignore[call-arg]
                 email=normalized_email,
                 source=source,
                 content_id=content_id,
@@ -144,7 +145,7 @@ class LeadCapture:
             self.db.add(lead)
 
             # Record revenue event
-            event = RevenueEvent(
+            event = RevenueEvent(  # type: ignore[call-arg]
                 event_type="lead_capture",
                 amount=0.00,  # No immediate revenue from lead capture
                 customer_email=normalized_email,
@@ -179,7 +180,7 @@ class LeadCapture:
             self.db.rollback()
             return {"success": False, "error": str(e)}
 
-    def _trigger_welcome_sequence(self, lead_id: int):
+    def _trigger_welcome_sequence(self, lead_id: int) -> None:
         """Trigger automated email nurturing sequence"""
         # In a real implementation, this would integrate with an email service
         # For now, we'll just log the sequence trigger
@@ -201,17 +202,17 @@ class LeadCapture:
             # Create or update customer record
             customer = self.db.query(Customer).filter_by(email=email).first()
             if not customer:
-                customer = Customer(
+                customer = Customer(  # type: ignore[call-arg]
                     email=email,
                     acquisition_source=lead.source,
                     lifetime_value=conversion_value,
                 )
                 self.db.add(customer)
             else:
-                customer.lifetime_value += conversion_value
+                customer.lifetime_value += Decimal(str(conversion_value))
 
             # Record revenue event
-            event = RevenueEvent(
+            event = RevenueEvent(  # type: ignore[call-arg]
                 event_type="lead_conversion",
                 amount=conversion_value,
                 customer_email=email,
@@ -237,7 +238,7 @@ class LeadCapture:
             print(f"Error marking conversion: {e}")
             return False
 
-    def get_lead_analytics(self, days: int = 30) -> Dict:
+    def get_lead_analytics(self, days: int = 30) -> Dict[str, Any]:
         """Get lead capture analytics"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
@@ -296,7 +297,7 @@ class LeadCapture:
             ],
         }
 
-    def export_leads(self, converted_only: bool = False) -> List[Dict]:
+    def export_leads(self, converted_only: bool = False) -> List[Dict[str, Any]]:
         """Export lead data for CRM integration"""
         query = self.db.query(Lead)
         if converted_only:

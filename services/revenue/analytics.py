@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from sqlalchemy import Integer, and_, func
 from sqlalchemy.orm import Session
@@ -20,7 +20,7 @@ class RevenueAnalytics:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_revenue_summary(self, days: int = 30) -> Dict:
+    def get_revenue_summary(self, days: int = 30) -> Dict[str, Any]:
         """Get comprehensive revenue summary for the specified period"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
@@ -96,7 +96,7 @@ class RevenueAnalytics:
             ),
         }
 
-    def get_affiliate_performance(self, days: int = 30) -> Dict:
+    def get_affiliate_performance(self, days: int = 30) -> Dict[str, Any]:
         """Get affiliate program performance metrics"""
         # Overall affiliate metrics
         total_clicks = self.db.query(func.sum(AffiliateLink.click_count)).scalar() or 0
@@ -175,7 +175,7 @@ class RevenueAnalytics:
             ],
         }
 
-    def get_lead_funnel_metrics(self, days: int = 30) -> Dict:
+    def get_lead_funnel_metrics(self, days: int = 30) -> Dict[str, Any]:
         """Get lead funnel conversion metrics"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
@@ -265,7 +265,7 @@ class RevenueAnalytics:
             ],
         }
 
-    def get_subscription_metrics(self) -> Dict:
+    def get_subscription_metrics(self) -> Dict[str, Any]:
         """Get detailed subscription metrics"""
         # Subscription distribution by tier
         tier_distribution = (
@@ -352,7 +352,7 @@ class RevenueAnalytics:
             "net_growth_30d": new_subs_30d - canceled_subs_30d,
         }
 
-    def get_revenue_forecast(self, months: int = 12) -> List[Dict]:
+    def get_revenue_forecast(self, months: int = 12) -> List[Dict[str, Any]]:
         """Generate revenue forecast based on current trends"""
         # Get current MRR
         current_mrr = self.db.query(func.sum(Subscription.monthly_amount)).filter_by(
@@ -402,7 +402,7 @@ class RevenueAnalytics:
         )
 
         # Generate forecast
-        forecast = []
+        forecast: List[Dict[str, Any]] = []
         projected_mrr = float(current_mrr)
 
         for month in range(1, months + 1):
