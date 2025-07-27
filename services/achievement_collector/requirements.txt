@@ -27,6 +27,8 @@ python-dateutil==2.9.*
 markdown==3.6
 reportlab==4.2.*
 jinja2==3.1.*
+matplotlib==3.8.*
+svglib==1.5.*
 
 # Development
 pytest==8.2.*
@@ -38,3 +40,7 @@ prometheus-client==0.20.*
 
 # JSON handling
 orjson==3.10.*
+
+# Analytics
+numpy==1.26.*
+openai==1.3.*

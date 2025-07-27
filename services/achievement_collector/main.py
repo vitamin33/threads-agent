@@ -11,6 +11,7 @@ from services.achievement_collector.api.routes import (
     achievements,
     analysis,
     analytics,
+    export,
     portfolio,
     webhooks,
 )
@@ -65,6 +66,7 @@ app.add_middleware(
 app.include_router(achievements.router, prefix="/achievements", tags=["achievements"])
 app.include_router(analysis.router, prefix="/analysis", tags=["analysis"])
 app.include_router(analytics.router)
+app.include_router(export.router)
 app.include_router(portfolio.router, prefix="/portfolio", tags=["portfolio"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 
