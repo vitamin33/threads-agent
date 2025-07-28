@@ -725,6 +725,164 @@ class ComprehensivePRAnalyzer:
             return value * 168
         return value
 
+    # Helper methods for team metrics
+    def _count_review_iterations(self, pr_data: Dict) -> int:
+        """Count the number of review iterations."""
+        # Mock implementation - in real scenario would analyze review comments
+        return len(pr_data.get("requested_reviewers", [])) + 1
+
+    def _detect_cross_team(self, pr_data: Dict) -> bool:
+        """Detect if PR involves cross-team collaboration."""
+        # Mock implementation - could analyze reviewers from different teams
+        return len(pr_data.get("requested_reviewers", [])) > 2
+
+
+    def _calculate_review_time(self, pr_data: Dict) -> float:
+        """Calculate actual review time in hours."""
+        # Mock implementation - in real scenario would analyze review timestamps
+        return self._calculate_merge_time(pr_data) * 0.3  # Assume 30% was review time
+
+    def _calculate_iteration_time(self, pr_data: Dict) -> float:
+        """Calculate time spent on iterations in hours."""
+        # Mock implementation - would analyze commit timestamps between reviews
+        return (
+            self._calculate_merge_time(pr_data) * 0.2
+        )  # Assume 20% was iteration time
+
+    # Composite score calculation methods
+    def _calculate_technical_score(self, analysis: Dict) -> float:
+        """Calculate technical excellence score (0-100)."""
+        score = 50.0  # Base score
+
+        # Quality metrics
+        quality = analysis.get("quality_metrics", {})
+        test_coverage = quality.get("test_coverage", {}).get("after", 0) or 0
+        if test_coverage > 80:
+            score += 15
+        if (quality.get("code_quality_score", 0) or 0) > 8:
+            score += 10
+
+        # Code metrics
+        code = analysis.get("code_metrics", {})
+        if (code.get("complexity_reduction", 0) or 0) > 0:
+            score += 10
+        if len(code.get("languages", {}) or {}) > 1:
+            score += 5
+
+        return min(100.0, score)
+
+    def _calculate_business_score(self, analysis: Dict) -> float:
+        """Calculate business impact score (0-100)."""
+        score = 30.0  # Base score
+
+        # Business metrics
+        business = analysis.get("business_metrics", {})
+        cost_savings = business.get("financial_impact", {}).get("cost_savings", 0) or 0
+        if cost_savings > 1000:
+            score += 25
+        users_affected = business.get("user_impact", {}).get("users_affected", 0) or 0
+        if users_affected > 100:
+            score += 20
+        hours_saved = (
+            business.get("operational_impact", {}).get("automation_hours_saved", 0) or 0
+        )
+        if hours_saved > 1:
+            score += 15
+
+        # Performance impact
+        perf = analysis.get("performance_metrics", {})
+        improvement = (
+            perf.get("latency_changes", {})
+            .get("reported", {})
+            .get("improvement_percentage", 0)
+            or 0
+        )
+        if improvement > 10:
+            score += 10
+
+        return min(100.0, score)
+
+    def _calculate_leadership_score(self, analysis: Dict) -> float:
+        """Calculate leadership and collaboration score (0-100)."""
+        score = 40.0  # Base score
+
+        # Team metrics
+        team = analysis.get("team_metrics", {})
+        collab = team.get("collaboration", {})
+        reviewers = collab.get("reviewers_count", 0) or 0
+        if reviewers > 2:
+            score += 15
+        if collab.get("cross_team_collaboration"):
+            score += 20
+        teaching = team.get("mentorship", {}).get("teaching_moments", 0) or 0
+        if teaching > 0:
+            score += 15
+
+        # Innovation
+        innovation = analysis.get("innovation_metrics", {})
+        tech_innovation = innovation.get("technical_innovation", 0)
+        if (
+            tech_innovation
+            and isinstance(tech_innovation, (int, float))
+            and tech_innovation > 5
+        ):
+            score += 10
+
+        return min(100.0, score)
+
+    def _calculate_collaboration_score(self, analysis: Dict) -> float:
+        """Calculate team collaboration score (0-100)."""
+        # Use the leadership score logic for collaboration
+        return self._calculate_leadership_score(analysis)
+
+    def _calculate_innovation_score(self, analysis: Dict) -> float:
+        """Calculate innovation index score (0-100)."""
+        score = 30.0  # Base score
+
+        innovation = analysis.get("innovation_metrics", {})
+        tech_innovation = innovation.get("technical_innovation", 0)
+        if (
+            tech_innovation
+            and isinstance(tech_innovation, (int, float))
+            and tech_innovation > 0
+        ):
+            score += tech_innovation * 2  # Scale innovation score
+
+        # New technology adoption
+        new_tech = innovation.get("new_technologies", 0)
+        if new_tech and isinstance(new_tech, (int, float)) and new_tech > 0:
+            score += 20
+
+        # Architecture improvements
+        arch = analysis.get("architectural_metrics", {})
+        if arch.get("patterns_implemented"):
+            score += 15
+
+        return min(100.0, score)
+
+    def _calculate_quality_score(self, analysis: Dict) -> float:
+        """Calculate quality improvement score (0-100)."""
+        score = 40.0  # Base score
+
+        quality = analysis.get("quality_metrics", {})
+
+        # Test coverage improvement
+        coverage_delta = quality.get("test_coverage", {}).get("delta", 0) or 0
+        if coverage_delta > 5:
+            score += coverage_delta * 2
+
+        # Code quality
+        code_quality = quality.get("code_quality_score", 0) or 0
+        if code_quality > 7:
+            score += (code_quality - 7) * 5
+
+        # Security improvements
+        security = analysis.get("security_metrics", {})
+        if security.get("vulnerabilities_fixed", 0) or 0 > 0:
+            score += 15
+
+        return min(100.0, score)
+
 
 class PythonAnalyzer:
     """Analyze Python code changes."""

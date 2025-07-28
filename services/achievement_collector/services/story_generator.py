@@ -333,7 +333,8 @@ class StoryGenerator:
     def _has_team_collaboration(self, analysis: Dict) -> bool:
         """Check if PR shows team collaboration."""
         team = analysis.get("team_metrics", {})
-        return team.get("collaboration", {}).get("reviewers_count", 0) > 2
+        reviewers = team.get("collaboration", {}).get("reviewers_count", 0) or 0
+        return reviewers > 2
 
     def _has_innovation(self, analysis: Dict) -> bool:
         """Check if PR contains innovation."""
@@ -350,25 +351,30 @@ class StoryGenerator:
         highlights = []
 
         # Collaboration
-        if (
+        reviewers_count = (
             analysis.get("team_metrics", {})
             .get("collaboration", {})
             .get("reviewers_count", 0)
-            > 0
-        ):
+            or 0
+        )
+        if reviewers_count > 0:
             highlights.append("Strong team collaboration")
 
         # Mentorship
-        if (
+        teaching_moments = (
             analysis.get("team_metrics", {})
             .get("mentorship", {})
             .get("teaching_moments", 0)
-            > 0
-        ):
+            or 0
+        )
+        if teaching_moments > 0:
             highlights.append("Mentored team members")
 
         # Problem solving
-        if analysis.get("composite_scores", {}).get("overall_impact", 0) > 70:
+        overall_impact = (
+            analysis.get("composite_scores", {}).get("overall_impact", 0) or 0
+        )
+        if overall_impact > 70:
             highlights.append("Exceptional problem-solving skills")
 
         # Communication (from PR description quality)
@@ -390,10 +396,11 @@ class StoryGenerator:
             highlights.append("Strong system design skills")
 
         # Code quality
-        if (
+        test_coverage = (
             analysis.get("quality_metrics", {}).get("test_coverage", {}).get("after", 0)
-            > 80
-        ):
+            or 0
+        )
+        if test_coverage > 80:
             highlights.append("High code quality standards")
 
         # Technical depth
@@ -409,26 +416,30 @@ class StoryGenerator:
 
         # Business impact
         financial = analysis.get("business_metrics", {}).get("financial_impact", {})
-        if financial.get("cost_savings", 0) > 0:
-            highlights.append(f"Saved ${financial['cost_savings']:,.0f} annually")
+        cost_savings = financial.get("cost_savings", 0) if financial else 0
+        if cost_savings and cost_savings > 0:
+            highlights.append(f"Saved ${cost_savings:,.0f} annually")
 
         # Speed of delivery
         if analysis.get("metadata", {}).get("merge_time_hours", 0) < 48:
             highlights.append("Fast execution and delivery")
 
         # Customer focus
-        if (
+        users_affected = (
             analysis.get("business_metrics", {})
             .get("user_impact", {})
             .get("users_affected", 0)
-            > 0
-        ):
+            or 0
+        )
+        if users_affected > 0:
             highlights.append("Customer-focused development")
 
         # Resourcefulness
-        if analysis.get("code_metrics", {}).get(
-            "total_lines_deleted", 0
-        ) > analysis.get("code_metrics", {}).get("total_lines_added", 0):
+        lines_deleted = (
+            analysis.get("code_metrics", {}).get("total_lines_deleted", 0) or 0
+        )
+        lines_added = analysis.get("code_metrics", {}).get("total_lines_added", 0) or 0
+        if lines_deleted > lines_added:
             highlights.append("Efficient, lean solutions")
 
         return highlights

@@ -69,6 +69,7 @@ class Achievement(Base):
         Enum(
             "git",
             "github",
+            "github_pr",
             "ci",
             "manual",
             "api",
@@ -107,10 +108,12 @@ class Achievement(Base):
     github_gist_id = Column(String(255))  # GitHub gist ID for detailed writeup
     blog_post_url = Column(String(500))  # URL if published as blog post
 
-    # Metadata
+    # Additional data
+    metadata_json = Column(
+        "metadata", JSON, default=dict
+    )  # Additional flexible storage
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    metadata = Column(JSON, default=dict)  # Additional flexible storage
 
     # Relationships
     git_commits: Mapped[list["GitCommit"]] = relationship(
@@ -428,8 +431,8 @@ class PREvidence(Base):
     url = Column(String(500))
     thumbnail_url = Column(String(500))
 
-    # Metadata
-    metadata = Column(JSON, default=dict)  # Additional info
+    # Additional info
+    metadata_json = Column("metadata", JSON, default=dict)  # Additional info
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships

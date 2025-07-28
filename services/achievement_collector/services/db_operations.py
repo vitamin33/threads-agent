@@ -30,6 +30,15 @@ def create_achievement_from_pr(
         # If pr_data is the metadata itself
         pr_metadata = pr_data
 
+    # Calculate duration
+    started_at = datetime.fromisoformat(
+        pr_metadata.get("created_at", "").replace("Z", "+00:00")
+    )
+    completed_at = datetime.fromisoformat(
+        pr_metadata.get("merged_at", "").replace("Z", "+00:00")
+    )
+    duration_hours = (completed_at - started_at).total_seconds() / 3600
+
     # Create achievement
     achievement_data = AchievementCreate(
         title=f"PR #{pr_metadata.get('pr_number', pr_metadata.get('number', ''))}: {pr_metadata.get('title', '')}",
@@ -37,12 +46,8 @@ def create_achievement_from_pr(
             :1000
         ],  # Limit description length
         category=category,
-        started_at=datetime.fromisoformat(
-            pr_metadata.get("created_at", "").replace("Z", "+00:00")
-        ),
-        completed_at=datetime.fromisoformat(
-            pr_metadata.get("merged_at", "").replace("Z", "+00:00")
-        ),
+        started_at=started_at,
+        completed_at=completed_at,
         source_type="github_pr",
         source_id=f"PR-{pr_metadata.get('pr_number', pr_metadata.get('number', ''))}",
         source_url=pr_metadata.get("pr_url", pr_metadata.get("html_url", "")),
@@ -67,6 +72,7 @@ def create_achievement_from_pr(
 
     # Create achievement
     achievement = Achievement(**achievement_data.model_dump(exclude={"metadata"}))
+    achievement.duration_hours = duration_hours
 
     # Add additional fields not in schema
     achievement.ai_summary = analysis.get("ai_insights", {}).get("summary")
@@ -77,8 +83,8 @@ def create_achievement_from_pr(
         analysis.get("ai_insights", {}).get("technical_analysis", [])
     )
 
-    # Store the full analysis in metadata
-    achievement.metadata = {
+    # Store the full analysis in metadata_json
+    achievement.metadata_json = {
         "full_analysis": analysis,
         "stories": pr_data.get("stories", {}),
         "platform_content": pr_data.get("platform_content", {}),
@@ -89,7 +95,7 @@ def create_achievement_from_pr(
     db.refresh(achievement)
 
     logger.info(
-        f"Created achievement {achievement.id} for PR #{pr_metadata['pr_number']}"
+        f"Created achievement {achievement.id} for PR #{pr_metadata.get('pr_number', pr_metadata.get('number', 'unknown'))}"
     )
 
     return achievement
@@ -106,10 +112,10 @@ def update_achievement_with_stories(
         raise ValueError(f"Achievement {achievement_id} not found")
 
     # Update metadata with stories
-    if not achievement.metadata:
-        achievement.metadata = {}
+    if not achievement.metadata_json:
+        achievement.metadata_json = {}
 
-    achievement.metadata["stories"] = stories
+    achievement.metadata_json["stories"] = stories
 
     # Update AI summaries from stories
     if "technical" in stories:
@@ -140,11 +146,11 @@ def update_achievement_with_platform_content(
         raise ValueError(f"Achievement {achievement_id} not found")
 
     # Update metadata
-    if not achievement.metadata:
-        achievement.metadata = {}
+    if not achievement.metadata_json:
+        achievement.metadata_json = {}
 
-    achievement.metadata["platform_content"] = platform_content
-    achievement.metadata["platforms_ready"] = list(platform_content.keys())
+    achievement.metadata_json["platform_content"] = platform_content
+    achievement.metadata_json["platforms_ready"] = list(platform_content.keys())
 
     # Mark as portfolio ready if content is prepared
     if len(platform_content) >= 3:  # At least 3 platforms ready
@@ -198,7 +204,7 @@ def get_achievements_for_posting(
         db.query(Achievement)
         .filter(
             Achievement.portfolio_ready.is_(True),
-            Achievement.metadata["platforms_ready"].contains([platform]),
+            Achievement.metadata_json["platforms_ready"].contains([platform]),
             # Check posting metadata - this would need more sophisticated querying
         )
         .order_by(Achievement.impact_score.desc())
@@ -286,7 +292,11 @@ def _extract_skills(analysis: Dict) -> List[str]:
     skills.extend(list(languages.keys())[:5])
 
     # Skills from code quality
-    if analysis.get("quality_metrics", {}).get("test_coverage", {}).get("delta", 0) > 5:
+    test_coverage_delta = (
+        analysis.get("quality_metrics", {}).get("test_coverage", {}).get("delta", 0)
+        or 0
+    )
+    if test_coverage_delta > 5:
         skills.append("Test-Driven Development")
 
     if (
@@ -304,20 +314,22 @@ def _extract_skills(analysis: Dict) -> List[str]:
         skills.append("Database Design")
 
     # Skills from process
-    if (
+    reviewers_count = (
         analysis.get("team_metrics", {})
         .get("collaboration", {})
         .get("reviewers_count", 0)
-        > 2
-    ):
+        or 0
+    )
+    if reviewers_count > 2:
         skills.append("Team Collaboration")
 
-    if (
+    teaching_moments = (
         analysis.get("team_metrics", {})
         .get("mentorship", {})
         .get("teaching_moments", 0)
-        > 0
-    ):
+        or 0
+    )
+    if teaching_moments > 0:
         skills.append("Mentorship")
 
     # Performance skills
