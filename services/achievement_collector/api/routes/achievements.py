@@ -11,10 +11,20 @@ from services.achievement_collector.api.schemas import (
     AchievementCreate,
     AchievementList,
     AchievementUpdate,
+    PRAchievement,
+    ComprehensiveAnalysisResult,
 )
 from services.achievement_collector.core.logging import setup_logging
 from services.achievement_collector.db.config import get_db
-from services.achievement_collector.db.models import Achievement as AchievementModel
+from services.achievement_collector.db.models import (
+    Achievement as AchievementModel,
+    PRAchievement as PRAchievementModel,
+)
+from services.achievement_collector.services.db_operations import (
+    create_achievement_from_pr,
+    update_achievement_with_stories,
+    get_achievement_by_pr,
+)
 
 logger = setup_logging(__name__)
 router = APIRouter()
@@ -230,3 +240,123 @@ async def get_achievement_stats(
         "average_complexity_score": float(stats.avg_complexity_score or 0),
         "by_category": {cat: count for cat, count in category_stats},
     }
+
+
+# PR-specific endpoints
+
+
+@router.post("/pr/{pr_number}", response_model=Achievement)
+async def create_pr_achievement(
+    pr_number: int,
+    pr_data: dict,
+    analysis: ComprehensiveAnalysisResult,
+    db: Session = Depends(get_db),
+):
+    """Create achievement from PR analysis"""
+
+    # Check if achievement already exists for this PR
+    existing = get_achievement_by_pr(db, pr_number)
+    if existing:
+        logger.info(f"Achievement already exists for PR #{pr_number}")
+        return existing
+
+    # Create achievement from PR data
+    achievement = create_achievement_from_pr(db, pr_data, analysis.model_dump())
+
+    logger.info(f"Created PR achievement: {achievement.id} for PR #{pr_number}")
+    return achievement
+
+
+@router.get("/pr/{pr_number}", response_model=Achievement)
+async def get_pr_achievement(
+    pr_number: int,
+    db: Session = Depends(get_db),
+):
+    """Get achievement by PR number"""
+
+    achievement = get_achievement_by_pr(db, pr_number)
+    if not achievement:
+        raise HTTPException(
+            status_code=404, detail=f"No achievement found for PR #{pr_number}"
+        )
+
+    return achievement
+
+
+@router.put("/pr/{pr_number}/stories")
+async def update_pr_stories(
+    pr_number: int,
+    stories: dict,
+    db: Session = Depends(get_db),
+):
+    """Update PR achievement with generated stories"""
+
+    achievement = get_achievement_by_pr(db, pr_number)
+    if not achievement:
+        raise HTTPException(
+            status_code=404, detail=f"No achievement found for PR #{pr_number}"
+        )
+
+    # Update with stories
+    updated = update_achievement_with_stories(db, achievement.id, stories)
+
+    return {
+        "status": "updated",
+        "achievement_id": updated.id,
+        "stories_count": len(stories),
+    }
+
+
+@router.get("/pr/{pr_number}/details", response_model=PRAchievement)
+async def get_pr_achievement_details(
+    pr_number: int,
+    db: Session = Depends(get_db),
+):
+    """Get detailed PR achievement data"""
+
+    pr_achievement = (
+        db.query(PRAchievementModel)
+        .filter(PRAchievementModel.pr_number == pr_number)
+        .first()
+    )
+
+    if not pr_achievement:
+        raise HTTPException(
+            status_code=404, detail=f"No PR achievement found for PR #{pr_number}"
+        )
+
+    return pr_achievement
+
+
+@router.get("/source/github_pr")
+async def list_pr_achievements(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """List all PR-based achievements"""
+
+    query = db.query(AchievementModel).filter(
+        AchievementModel.source_type == "github_pr"
+    )
+
+    # Count total
+    total = query.count()
+
+    # Sort by completion date
+    query = query.order_by(desc(AchievementModel.completed_at))
+
+    # Pagination
+    offset = (page - 1) * per_page
+    items = query.offset(offset).limit(per_page).all()
+
+    # Calculate pages
+    pages = (total + per_page - 1) // per_page
+
+    return AchievementList(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=pages,
+    )

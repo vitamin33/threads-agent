@@ -2,18 +2,26 @@
 
 ## Overview
 The Achievement Auto-Collection system automatically tracks and creates achievements from your development work across multiple sources:
-- Git commits and pull requests
+- GitHub Pull Requests (merged PRs with significant changes)
 - Linear issues and epics
 - MLflow experiments (pending E4.5 implementation)
+
+## Why PR-Based Tracking?
+
+We track PRs instead of individual commits because:
+- **Quality over Quantity**: One achievement per feature, not per commit
+- **Better Metrics**: Review participation, discussions, iterations  
+- **Richer Context**: PR descriptions provide the "why" behind changes
+- **Team Collaboration**: Shows code review and collaboration skills
 
 ## Architecture
 
 ### Core Components
 
-1. **Git Commit Tracker** (`services/achievement_collector/services/git_tracker.py`)
-   - Monitors git commits for significant changes
-   - Creates achievements based on commit type, size, and impact
-   - Extracts skills from file changes
+1. **GitHub PR Tracker** (`services/achievement_collector/services/github_pr_tracker.py`)
+   - Monitors merged PRs for significant changes
+   - Creates achievements based on PR size, reviews, and labels
+   - Extracts skills from files changed and PR metadata
    
 2. **Linear Tracker** (`services/achievement_collector/services/linear_tracker.py`)
    - Tracks completed Linear issues and epics
@@ -27,8 +35,8 @@ The Achievement Auto-Collection system automatically tracks and creates achievem
 
 ### Data Flow
 ```
-Git Commits → Git Tracker ↘
-                           → Achievement Database → Export/Publishing
+GitHub PRs → PR Tracker ↘
+                         → Achievement Database → Export/Publishing
 Linear Issues → Linear Tracker ↗
 ```
 
@@ -36,10 +44,12 @@ Linear Issues → Linear Tracker ↗
 
 ### Environment Variables
 ```bash
-# Git Tracking
+# GitHub PR Tracking
 GIT_REPO_PATH=.                    # Repository to monitor
-MIN_LINES_FOR_ACHIEVEMENT=50       # Minimum lines changed for achievement
-ENABLE_GIT_TRACKING=true           # Enable/disable git tracking
+MIN_PR_CHANGES_FOR_ACHIEVEMENT=50  # Minimum changes for PR achievement
+ENABLE_GITHUB_TRACKING=true        # Enable/disable GitHub PR tracking
+PR_CHECK_INTERVAL=300              # Check interval in seconds (5 min)
+GITHUB_TOKEN=your_token            # Optional: GitHub personal access token
 
 # Linear Tracking  
 LINEAR_API_KEY=your_key            # Linear API key (uses MCP in production)

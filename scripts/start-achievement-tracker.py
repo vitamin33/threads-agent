@@ -10,8 +10,9 @@ sys.path.insert(0, project_root)
 
 # Set environment variables for testing
 os.environ["GIT_REPO_PATH"] = project_root
-os.environ["MIN_LINES_FOR_ACHIEVEMENT"] = "20"  # Lower threshold for testing
-os.environ["ENABLE_GIT_TRACKING"] = "true"
+os.environ["MIN_PR_CHANGES_FOR_ACHIEVEMENT"] = "50"  # Min changes for PR achievement
+os.environ["ENABLE_GITHUB_TRACKING"] = "true"
+os.environ["PR_CHECK_INTERVAL"] = "300"  # Check every 5 minutes
 os.environ["LINEAR_CHECK_INTERVAL"] = "60"  # Check every minute for testing
 
 # Database URL for SQLite (for testing)
@@ -20,7 +21,10 @@ os.environ["DATABASE_URL"] = f"sqlite:///{project_root}/test_achievements.db"
 print("🚀 Starting Achievement Auto-Tracker")
 print(f"📁 Repository: {project_root}")
 print(f"🗄️  Database: {os.environ['DATABASE_URL']}")
-print(f"📊 Min lines for achievement: {os.environ['MIN_LINES_FOR_ACHIEVEMENT']}")
+print(
+    f"📊 Min PR changes for achievement: {os.environ['MIN_PR_CHANGES_FOR_ACHIEVEMENT']}"
+)
+print(f"⏱️  PR check interval: {os.environ['PR_CHECK_INTERVAL']}s")
 print("")
 
 try:

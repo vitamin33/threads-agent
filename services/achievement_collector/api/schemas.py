@@ -21,7 +21,8 @@ class AchievementBase(BaseModel):
     duration_hours: float = Field(..., ge=0)
 
     source_type: str = Field(
-        ..., pattern="^(git|github|ci|manual|api|threads|prometheus|webhook|linear)$"
+        ...,
+        pattern="^(git|github|github_pr|ci|manual|api|threads|prometheus|webhook|linear)$",
     )
     source_id: Optional[str] = None
     source_url: Optional[str] = None
@@ -45,7 +46,8 @@ class AchievementCreate(BaseModel):
     # duration_hours is calculated automatically from dates
 
     source_type: str = Field(
-        ..., pattern="^(git|github|ci|manual|api|threads|prometheus|webhook|linear)$"
+        ...,
+        pattern="^(git|github|github_pr|ci|manual|api|threads|prometheus|webhook|linear)$",
     )
     source_id: Optional[str] = None
     source_url: Optional[str] = None
@@ -203,3 +205,116 @@ class WebhookResponse(BaseModel):
     message: str
     achievement_created: bool = False
     achievement_id: Optional[int] = None
+
+
+class PRAchievementCreate(BaseModel):
+    """Schema for creating PR-based achievement"""
+
+    pr_number: int
+    title: str
+    description: Optional[str] = None
+    merge_timestamp: datetime
+    author: str
+    reviewers: List[str] = []
+
+    code_analysis: Dict[str, Any] = {}
+    impact_analysis: Dict[str, Any] = {}
+    stories: Dict[str, Any] = {}
+
+    ci_metrics: Dict[str, Any] = {}
+    performance_metrics: Dict[str, Any] = {}
+    quality_metrics: Dict[str, Any] = {}
+
+    posting_metadata: Dict[str, Any] = {}
+
+
+class PRAchievement(PRAchievementCreate):
+    """Complete PR achievement schema"""
+
+    id: int
+    achievement_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PRCodeChangeCreate(BaseModel):
+    """Schema for PR code changes"""
+
+    file_path: str
+    language: Optional[str] = None
+    change_type: Optional[str] = None
+
+    lines_added: int = 0
+    lines_deleted: int = 0
+    complexity_before: Optional[float] = None
+    complexity_after: Optional[float] = None
+
+    key_changes: List[str] = []
+    patterns_used: List[str] = []
+
+
+class PRKPIImpactCreate(BaseModel):
+    """Schema for KPI impacts"""
+
+    kpi_name: str
+    kpi_category: str
+
+    value_before: Optional[float] = None
+    value_after: Optional[float] = None
+    improvement_percentage: Optional[float] = None
+    improvement_absolute: Optional[float] = None
+
+    measurement_method: Optional[str] = None
+    confidence_score: Optional[float] = None
+
+
+class ComprehensiveAnalysisResult(BaseModel):
+    """Result from comprehensive PR analysis"""
+
+    metadata: Dict[str, Any]
+    code_metrics: Dict[str, Any]
+    performance_metrics: Dict[str, Any]
+    business_metrics: Dict[str, Any]
+    quality_metrics: Dict[str, Any]
+    team_metrics: Dict[str, Any]
+    architectural_metrics: Dict[str, Any]
+    security_metrics: Dict[str, Any]
+    innovation_metrics: Dict[str, Any]
+    learning_metrics: Dict[str, Any]
+    impact_predictions: Dict[str, Any]
+    composite_scores: Dict[str, Any]
+    ai_insights: Dict[str, Any]
+
+
+class StoryGenerationRequest(BaseModel):
+    """Request for story generation"""
+
+    analysis: ComprehensiveAnalysisResult
+    pr_data: Dict[str, Any]
+    personas: List[str] = ["technical", "business", "leadership"]
+
+
+class StoryGenerationResponse(BaseModel):
+    """Generated stories response"""
+
+    stories: Dict[str, Dict[str, Any]]
+    personas: Dict[str, Dict[str, Any]]
+    generation_time: float
+
+
+class MultiPlatformContentRequest(BaseModel):
+    """Request for multi-platform content preparation"""
+
+    achievement_id: int
+    platforms: List[str] = ["linkedin", "twitter", "devto", "github", "portfolio"]
+
+
+class MultiPlatformContentResponse(BaseModel):
+    """Prepared content for multiple platforms"""
+
+    achievement_id: int
+    platforms: Dict[str, Dict[str, Any]]
+    preparation_time: float

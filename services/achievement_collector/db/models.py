@@ -110,6 +110,7 @@ class Achievement(Base):
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    metadata = Column(JSON, default=dict)  # Additional flexible storage
 
     # Relationships
     git_commits: Mapped[list["GitCommit"]] = relationship(
@@ -117,6 +118,9 @@ class Achievement(Base):
     )
     github_prs: Mapped[list["GitHubPR"]] = relationship(
         "GitHubPR", back_populates="achievement"
+    )
+    pr_achievements: Mapped[list["PRAchievement"]] = relationship(
+        "PRAchievement", back_populates="achievement"
     )
     ci_runs: Mapped[list["CIRun"]] = relationship("CIRun", back_populates="achievement")
 
@@ -285,3 +289,150 @@ class PortfolioSnapshot(Base):
     __table_args__ = (
         UniqueConstraint("version", "format", name="uq_portfolio_version_format"),
     )
+
+
+class PRAchievement(Base):
+    """Enhanced PR-specific achievement data"""
+
+    __tablename__ = "pr_achievements"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    achievement_id = Column(Integer, ForeignKey("achievements.id"), nullable=False)
+
+    # PR Details
+    pr_number = Column(Integer, nullable=False)
+    title = Column(String(500), nullable=False)
+    description = Column(Text)
+    merge_timestamp = Column(DateTime, nullable=False)
+    author = Column(String(255), nullable=False)
+    reviewers = Column(JSON, default=list)  # List of reviewer usernames
+
+    # Comprehensive Analysis
+    code_analysis = Column(JSON, default=dict)  # From comprehensive analyzer
+    impact_analysis = Column(JSON, default=dict)  # Performance, business, quality
+    stories = Column(JSON, default=dict)  # Generated stories by persona
+
+    # CI/CD Metrics
+    ci_metrics = Column(JSON, default=dict)  # Build times, test results
+    performance_metrics = Column(JSON, default=dict)  # Benchmarks, profiling
+    quality_metrics = Column(JSON, default=dict)  # Coverage, complexity
+
+    # Publishing Metadata
+    posting_metadata = Column(JSON, default=dict)  # Platform-specific info
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    achievement: Mapped["Achievement"] = relationship(
+        "Achievement", back_populates="pr_achievements"
+    )
+    code_changes: Mapped[list["PRCodeChange"]] = relationship(
+        "PRCodeChange", back_populates="pr_achievement"
+    )
+    kpi_impacts: Mapped[list["PRKPIImpact"]] = relationship(
+        "PRKPIImpact", back_populates="pr_achievement"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("pr_number", name="uq_pr_achievement_number"),
+        Index("idx_pr_achievement_merge", "merge_timestamp"),
+    )
+
+
+class PRCodeChange(Base):
+    """Detailed code changes from PR"""
+
+    __tablename__ = "pr_code_changes"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    pr_achievement_id = Column(
+        Integer, ForeignKey("pr_achievements.id"), nullable=False
+    )
+
+    # File info
+    file_path = Column(String(500), nullable=False)
+    language = Column(String(50))
+    change_type = Column(String(50))  # feature, bugfix, refactor, test, docs
+
+    # Metrics
+    lines_added = Column(Integer, default=0)
+    lines_deleted = Column(Integer, default=0)
+    complexity_before = Column(Float)
+    complexity_after = Column(Float)
+
+    # Analysis
+    key_changes = Column(JSON, default=list)  # Important modifications
+    patterns_used = Column(JSON, default=list)  # Design patterns
+
+    # Relationships
+    pr_achievement: Mapped["PRAchievement"] = relationship(
+        "PRAchievement", back_populates="code_changes"
+    )
+
+
+class PRKPIImpact(Base):
+    """KPI impacts from PR changes"""
+
+    __tablename__ = "pr_kpi_impacts"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    pr_achievement_id = Column(
+        Integer, ForeignKey("pr_achievements.id"), nullable=False
+    )
+
+    # KPI info
+    kpi_name = Column(String(255), nullable=False)
+    kpi_category = Column(String(100), nullable=False)  # performance, business, quality
+
+    # Impact
+    value_before = Column(Float)
+    value_after = Column(Float)
+    improvement_percentage = Column(Float)
+    improvement_absolute = Column(Float)
+
+    # Context
+    measurement_method = Column(String(255))  # How it was measured
+    confidence_score = Column(Float)  # 0-100 confidence in measurement
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    pr_achievement: Mapped["PRAchievement"] = relationship(
+        "PRAchievement", back_populates="kpi_impacts"
+    )
+
+    __table_args__ = (
+        Index("idx_kpi_impact_category", "kpi_category"),
+        Index("idx_kpi_impact_improvement", "improvement_percentage"),
+    )
+
+
+class PREvidence(Base):
+    """Evidence and artifacts from PR"""
+
+    __tablename__ = "pr_evidence"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    pr_achievement_id = Column(
+        Integer, ForeignKey("pr_achievements.id"), nullable=False
+    )
+
+    # Evidence info
+    evidence_type = Column(String(50), nullable=False)  # screenshot, graph, diagram
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+
+    # Storage
+    file_path = Column(String(500))
+    url = Column(String(500))
+    thumbnail_url = Column(String(500))
+
+    # Metadata
+    metadata = Column(JSON, default=dict)  # Additional info
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    pr_achievement_id_fk = Column(Integer, ForeignKey("pr_achievements.id"))
+
+    __table_args__ = (Index("idx_evidence_type", "evidence_type"),)

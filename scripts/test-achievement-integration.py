@@ -88,47 +88,61 @@ async def test_achievement_creation():
     print("\n✅ Integration test completed!")
 
 
-async def test_git_tracker_e2e():
-    """Test Git tracker end-to-end."""
-    from services.achievement_collector.services.git_tracker import GitCommitTracker
+async def test_github_pr_tracker_e2e():
+    """Test GitHub PR tracker end-to-end."""
+    from services.achievement_collector.services.github_pr_tracker import (
+        GitHubPRTracker,
+    )
 
-    print("\n\n🔍 Testing Git Tracker E2E...")
+    print("\n\n🔍 Testing GitHub PR Tracker E2E...")
 
-    tracker = GitCommitTracker()
+    tracker = GitHubPRTracker()
 
-    # Create a test commit
-    test_commit = {
-        "hash": "e2e_test_" + str(int(datetime.now().timestamp())),
-        "author": "Test User",
-        "email": "test@example.com",
-        "timestamp": int(datetime.now().timestamp()),
-        "message": "feat(achievement): add end-to-end testing capabilities",
-        "files_changed": 3,
-        "lines_added": 150,
-        "lines_deleted": 20,
+    # Create a test PR
+    test_pr = {
+        "number": 999,
+        "title": "feat(achievement): add PR-based achievement tracking",
+        "body": "## Summary\nRefactored achievement system to track PRs instead of individual commits.\n\n## Changes\n- Replaced git commit tracker with GitHub PR tracker\n- Added PR metrics analysis\n- Updated scoring algorithms",
+        "author": {"login": "testuser"},
+        "mergedAt": datetime.now().isoformat() + "Z",
+        "additions": 450,
+        "deletions": 200,
         "files": [
             {
-                "name": "services/achievement_collector/tests/test_e2e.py",
-                "added": 100,
-                "deleted": 10,
+                "filename": "services/achievement_collector/services/github_pr_tracker.py"
             },
             {
-                "name": "scripts/test-achievement-integration.py",
-                "added": 50,
-                "deleted": 10,
+                "filename": "services/achievement_collector/tests/test_github_pr_tracker.py"
             },
+            {"filename": "scripts/test-achievement-integration.py"},
         ],
+        "labels": [{"name": "feature"}, {"name": "enhancement"}],
+        "reviews": [
+            {"login": "reviewer1", "state": "APPROVED"},
+            {"login": "reviewer2", "state": "APPROVED"},
+        ],
+        "commits": [
+            {"sha": "abc123"},
+            {"sha": "def456"},
+            {"sha": "ghi789"},
+            {"sha": "jkl012"},
+        ],
+        "url": "https://github.com/test/repo/pull/999",
     }
 
     # Check if significant
-    if tracker._is_significant_commit(test_commit):
-        print("✅ Commit is significant")
+    if tracker._is_significant_pr(test_pr):
+        print("✅ PR is significant")
+        print(f"   - Total changes: {test_pr['additions'] + test_pr['deletions']}")
+        print(f"   - Files changed: {len(test_pr['files'])}")
+        print(f"   - Reviews: {len(test_pr['reviews'])}")
+        print(f"   - Commits: {len(test_pr['commits'])}")
 
         # Create achievement
-        await tracker._create_commit_achievement(test_commit)
-        print(f"✅ Achievement created for commit {test_commit['hash'][:8]}")
+        await tracker._create_pr_achievement(test_pr)
+        print(f"✅ Achievement created for PR #{test_pr['number']}")
     else:
-        print("❌ Commit not significant enough")
+        print("❌ PR not significant enough")
 
 
 async def main():
@@ -140,7 +154,7 @@ async def main():
 
     # Run tests
     await test_achievement_creation()
-    await test_git_tracker_e2e()
+    await test_github_pr_tracker_e2e()
 
     print("\n\n✅ All integration tests completed!")
 

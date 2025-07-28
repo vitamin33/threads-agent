@@ -5,7 +5,7 @@ import os
 import signal
 import sys
 
-from .git_tracker import GitCommitTracker
+from .github_pr_tracker import GitHubPRTracker
 from .linear_tracker import LinearTracker
 from ..core.logging import setup_logging
 
@@ -16,7 +16,7 @@ class AutoTracker:
     """Main service that coordinates all achievement auto-tracking."""
 
     def __init__(self):
-        self.git_tracker = GitCommitTracker()
+        self.github_tracker = GitHubPRTracker()
         self.linear_tracker = LinearTracker()
         self.running = True
 
@@ -27,12 +27,12 @@ class AutoTracker:
         # Create tasks for each tracker
         tasks = []
 
-        # Git tracker
-        if os.getenv("ENABLE_GIT_TRACKING", "true").lower() == "true":
-            logger.info("✅ Git commit tracking enabled")
-            tasks.append(asyncio.create_task(self.git_tracker.track_commits()))
+        # GitHub PR tracker
+        if os.getenv("ENABLE_GITHUB_TRACKING", "true").lower() == "true":
+            logger.info("✅ GitHub PR tracking enabled")
+            tasks.append(asyncio.create_task(self.github_tracker.track_continuously()))
         else:
-            logger.info("❌ Git commit tracking disabled")
+            logger.info("❌ GitHub PR tracking disabled")
 
         # Linear tracker
         if os.getenv("LINEAR_API_KEY"):
