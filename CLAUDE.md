@@ -254,6 +254,7 @@ just token-batch     # Batch processing (80% savings)
 
 ### AI Collaboration Guidelines
 - Don't use Claude as co-author in git commits and PRs
+- Git commits should only show the user from git config as author
 
 ## Resources
 
