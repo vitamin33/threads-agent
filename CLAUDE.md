@@ -250,6 +250,11 @@ just token-batch     # Batch processing (80% savings)
 2. Batch Processing (30-40% savings)
 3. Template Generation (40-50% savings)
 
+## Team Guidelines
+
+### AI Collaboration Guidelines
+- Don't use Claude as co-author in git commits and PRs
+
 ## Resources
 
 - **[DAILY_PLAYBOOK.md](./DAILY_PLAYBOOK.md)** - Daily cheat sheet

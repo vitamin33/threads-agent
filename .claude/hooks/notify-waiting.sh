@@ -3,7 +3,15 @@
 
 # macOS voice notification
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    say "Claude Code is waiting motherfucker" &
+    # Option 1: Use custom audio file (e.g., from ElevenLabs)
+    AUDIO_FILE="$HOME/.claude/sounds/claude-waiting.mp3"
+    if [ -f "$AUDIO_FILE" ]; then
+        afplay "$AUDIO_FILE" &
+    else
+        # Option 2: Fallback to system voice
+        say -v "Samantha" -r 180 "Claude Code is waiting, motherfucker" &
+    fi
+    
     # Also show system notification
     osascript -e 'display notification "Claude Code needs your input" with title "Claude Code" sound name "Glass"'
 fi
