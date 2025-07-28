@@ -14,9 +14,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from services.achievement_collector.db.config import engine, get_db
-from services.achievement_collector.db.models import Base
-from services.achievement_collector.services.db_operations import (
+from services.achievement_collector.db.config import engine, get_db  # noqa: E402
+from services.achievement_collector.db.models import Base  # noqa: E402
+from services.achievement_collector.services.db_operations import (  # noqa: E402
     create_achievement_from_pr,
 )
 
@@ -93,3 +93,4 @@ def test_pr_achievement_creation():
 if __name__ == "__main__":
     success = test_pr_achievement_creation()
     sys.exit(0 if success else 1)
+

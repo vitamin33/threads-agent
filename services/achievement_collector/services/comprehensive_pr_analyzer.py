@@ -736,7 +736,6 @@ class ComprehensivePRAnalyzer:
         # Mock implementation - could analyze reviewers from different teams
         return len(pr_data.get("requested_reviewers", [])) > 2
 
-
     def _calculate_review_time(self, pr_data: Dict) -> float:
         """Calculate actual review time in hours."""
         # Mock implementation - in real scenario would analyze review timestamps

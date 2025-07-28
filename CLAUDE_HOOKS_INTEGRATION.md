@@ -3,6 +3,13 @@
 ## 🎯 Overview
 This guide shows how to integrate Claude Code hooks into your workflow for notifications, automation, and monitoring.
 
+### 🚀 Quick Setup for Multi-Teammate Environment
+```bash
+# One command setup for all 3 virtual teammates
+./scripts/setup-universal-hooks.sh
+```
+This creates universal hooks in `~/.claude/` that work across all repositories.
+
 ## 🔊 Voice Notifications Setup
 
 ### What's Included

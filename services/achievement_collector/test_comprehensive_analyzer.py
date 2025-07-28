@@ -15,7 +15,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from services.achievement_collector.services.comprehensive_pr_analyzer import (
+from services.achievement_collector.services.comprehensive_pr_analyzer import (  # noqa: E402
     ComprehensivePRAnalyzer,
 )
 
@@ -83,3 +83,4 @@ async def test_comprehensive_analyzer():
 if __name__ == "__main__":
     success = asyncio.run(test_comprehensive_analyzer())
     sys.exit(0 if success else 1)
+

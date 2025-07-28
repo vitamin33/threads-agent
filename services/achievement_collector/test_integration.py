@@ -15,14 +15,14 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from services.achievement_collector.db.config import get_db
-from services.achievement_collector.services.comprehensive_pr_analyzer import (
+from services.achievement_collector.db.config import get_db  # noqa: E402
+from services.achievement_collector.services.comprehensive_pr_analyzer import (  # noqa: E402
     ComprehensivePRAnalyzer,
 )
-from services.achievement_collector.services.db_operations import (
+from services.achievement_collector.services.db_operations import (  # noqa: E402
     create_achievement_from_pr,
 )
-from services.achievement_collector.services.story_generator import StoryGenerator
+from services.achievement_collector.services.story_generator import StoryGenerator  # noqa: E402
 
 
 async def test_full_integration():
