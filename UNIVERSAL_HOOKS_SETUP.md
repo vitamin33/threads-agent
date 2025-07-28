@@ -94,7 +94,39 @@ Create or update `~/.claude/settings.json` with:
 
 ## Customization
 
-To customize notifications per teammate, modify the scripts in `~/.claude/hooks/`:
+### Using Custom Audio (ElevenLabs, etc.)
+
+For ultra-realistic voices, use custom audio files:
+
+1. **Generate Audio**:
+   - Go to [ElevenLabs](https://elevenlabs.io)
+   - Generate: "Claude Code is waiting, motherfucker"
+   - Download as MP3
+
+2. **Install Audio**:
+   ```bash
+   mkdir -p ~/.claude/sounds
+   # Save your file as: ~/.claude/sounds/claude-waiting.mp3
+   ```
+
+3. **Automatic Usage**:
+   - Hooks automatically detect and use custom audio
+   - Falls back to system voice if file missing
+
+### System Voice Options
+
+```bash
+# Most natural macOS voices:
+say -v "Samantha" "text"  # US female (very natural)
+say -v "Daniel" "text"    # UK male (professional)
+say -v "Karen" "text"     # Australian female
+say -v "Tessa" "text"     # South African female
+
+# With speech rate adjustment:
+say -v "Samantha" -r 180 "text"  # Slightly faster (more natural)
+```
+
+### Advanced Customization
 
 ```bash
 # Example: Different voices for different times
