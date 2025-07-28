@@ -5,6 +5,28 @@
 work-day: check-prerequisites trend-dashboard dev-dashboard
 # (Mega commands need proper recipe definitions)
 
+# Claude Code Sub-Agent Helpers
+patterns FEATURE:
+	@./scripts/claude-subagents.sh patterns "{{FEATURE}}"
+
+test-gaps SERVICE:
+	@./scripts/claude-subagents.sh test-gaps "{{SERVICE}}"
+
+optimize SERVICE:
+	@./scripts/claude-subagents.sh optimize "{{SERVICE}}"
+
+doc-gaps COMPONENT:
+	@./scripts/claude-subagents.sh docs "{{COMPONENT}}"
+
+standup:
+	@./scripts/claude-subagents.sh standup
+
+sprint-plan:
+	@./scripts/claude-subagents.sh sprint-plan
+
+deep-review TARGET:
+	@./scripts/claude-subagents.sh review "{{TARGET}}"
+
 # Quick Start Commands
 dev-start: bootstrap deploy-dev mcp-setup dev-dashboard
 dev-start-multi: bootstrap-multi deploy-dev mcp-setup dev-dashboard
