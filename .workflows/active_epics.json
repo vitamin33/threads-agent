@@ -29,6 +29,18 @@
       "name": "Demo: Build a mobile app for food delivery",
       "status": "planning",
       "created": "2025-07-23T03:00:08+0300"
+    },
+    {
+      "id": "epic_demo_1753555788",
+      "name": "Demo: Implement sub-agent architecture with Code Generat",
+      "status": "planning",
+      "created": "2025-07-26T21:49:48+0300"
+    },
+    {
+      "id": "epic_1753556000",
+      "name": "Sub-Agent Architecture System",
+      "status": "planning",
+      "created": "2025-01-26T21:53:20+0300"
     }
   ]
 }
