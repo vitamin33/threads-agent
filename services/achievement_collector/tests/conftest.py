@@ -43,9 +43,9 @@ def db_session(test_db):
     transaction = connection.begin()
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
     session = SessionLocal()
-    
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()

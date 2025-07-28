@@ -20,6 +20,28 @@ logger = setup_logging(__name__)
 router = APIRouter()
 
 
+def create_achievement_sync(
+    db: Session, achievement: AchievementCreate
+) -> AchievementModel:
+    """Create a new achievement (synchronous version for internal use)"""
+    # Calculate duration
+    duration = (
+        achievement.completed_at - achievement.started_at
+    ).total_seconds() / 3600
+
+    # Create achievement
+    db_achievement = AchievementModel(
+        **achievement.model_dump(),
+        duration_hours=duration,
+    )
+    db.add(db_achievement)
+    db.commit()
+    db.refresh(db_achievement)
+
+    logger.info(f"Created achievement: {db_achievement.id} - {db_achievement.title}")
+    return db_achievement
+
+
 @router.post("/", response_model=Achievement)
 async def create_achievement(
     achievement: AchievementCreate,

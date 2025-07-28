@@ -185,6 +185,8 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
 - Branch: `task-{epic-id}-{title}`
 - Protection: PR + CI required
 - Automation: `just ship` handles all
+- **Pre-Push Checklist**:
+  - Before every push 'just check' command should be fully successful
 
 ### AI-Powered Planning
 ```bash
@@ -249,6 +251,11 @@ just token-batch     # Batch processing (80% savings)
 1. Smart Caching (60-70% savings)
 2. Batch Processing (30-40% savings)
 3. Template Generation (40-50% savings)
+
+## AI Guidelines
+
+### Collaboration Practices
+- Don't add Claude as co-author in git commits in PRs
 
 ## Resources
 

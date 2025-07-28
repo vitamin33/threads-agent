@@ -1,8 +1,21 @@
 # Application Configuration
 
+import os
 from typing import List
 
 from pydantic_settings import BaseSettings
+
+
+# Filter out Kubernetes service environment variables that conflict with our config
+def filter_k8s_env_vars():
+    """Remove Kubernetes auto-generated service port environment variables"""
+    for key in list(os.environ.keys()):
+        if key.endswith("_PORT") and os.environ[key].startswith("tcp://"):
+            del os.environ[key]
+
+
+# Clean environment before importing settings
+filter_k8s_env_vars()
 
 
 class Settings(BaseSettings):
@@ -36,7 +49,7 @@ class Settings(BaseSettings):
     PORTFOLIO_OUTPUT_DIR: str = "/tmp/portfolios"
 
     # Monitoring
-    PROMETHEUS_PORT: int = 9090
+    ACHIEVEMENT_COLLECTOR_PORT: int = 8090
 
     # Background Tasks
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"

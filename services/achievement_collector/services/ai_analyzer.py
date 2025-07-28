@@ -68,57 +68,59 @@ class AIAnalyzer:
         """Generate a professional summary based on achievements."""
         if not self.api_key or self.api_key == "test":
             return self._mock_professional_summary(achievements)
-        
+
         try:
             # Prepare achievement data
             achievement_data = []
             for a in achievements[:10]:  # Limit to top 10
-                achievement_data.append({
-                    "title": a.title,
-                    "impact": a.impact_score,
-                    "skills": a.skills_demonstrated,
-                    "category": a.category
-                })
-            
+                achievement_data.append(
+                    {
+                        "title": a.title,
+                        "impact": a.impact_score,
+                        "skills": a.skills_demonstrated,
+                        "category": a.category,
+                    }
+                )
+
             prompt = f"""Based on these achievements, generate a professional summary (3-4 sentences):
             {achievement_data}
             
             Focus on key skills, impact, and professional strengths."""
-            
+
             response = await self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=200
+                max_tokens=200,
             )
-            
+
             return response.choices[0].message.content.strip()
-            
+
         except Exception as e:
             print(f"AI summary generation failed: {e}")
             return self._mock_professional_summary(achievements)
-    
+
     def _mock_professional_summary(self, achievements: list) -> str:
         """Mock professional summary for offline mode."""
         if not achievements:
             return "Experienced professional with a track record of delivering impactful results."
-        
+
         # Extract top skills
         skill_counts = {}
         for a in achievements:
             if a.skills_demonstrated:
                 for skill in a.skills_demonstrated:
                     skill_counts[skill] = skill_counts.get(skill, 0) + 1
-        
+
         top_skills = sorted(skill_counts.items(), key=lambda x: x[1], reverse=True)[:3]
         skills_text = ", ".join([skill[0] for skill in top_skills])
-        
+
         return f"Results-driven professional with expertise in {skills_text}. Proven track record of delivering {len(achievements)} significant achievements with measurable business impact. Strong focus on innovation, optimization, and continuous improvement."
-    
+
     async def generate_linkedin_content(self, achievement) -> str:
         """Generate LinkedIn post content for an achievement."""
         if not self.api_key or self.api_key == "test":
             return self._mock_linkedin_content(achievement)
-        
+
         try:
             prompt = f"""Create an engaging LinkedIn post about this achievement:
             Title: {achievement.title}
@@ -127,23 +129,23 @@ class AIAnalyzer:
             Skills: {achievement.skills_demonstrated}
             
             Make it professional, engaging, and authentic. Include a call to action."""
-            
+
             response = await self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=300
+                max_tokens=300,
             )
-            
+
             return response.choices[0].message.content.strip()
-            
+
         except Exception as e:
             print(f"AI LinkedIn content generation failed: {e}")
             return self._mock_linkedin_content(achievement)
-    
+
     def _mock_linkedin_content(self, achievement) -> str:
         """Mock LinkedIn content for offline mode."""
         return f"🚀 Excited to share a recent achievement: {achievement.title}\n\n{achievement.description}\n\n💡 Key takeaway: Continuous improvement and innovation drive real business impact.\n\n#TechInnovation #ContinuousImprovement #ProfessionalGrowth"
-    
+
     def _mock_analysis(self, achievement: Achievement) -> Dict:
         """Mock analysis for offline mode."""
         return {

@@ -1,7 +1,6 @@
 # API Schemas
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -14,14 +13,16 @@ class AchievementBase(BaseModel):
     description: str = Field(..., min_length=1)
     category: str = Field(
         ...,
-        pattern="^(feature|optimization|bugfix|infrastructure|documentation|testing|security|performance|architecture)$",
+        pattern="^(feature|optimization|bugfix|infrastructure|documentation|testing|security|performance|architecture|content|business|milestone|project|development|refactoring)$",
     )
 
     started_at: datetime
     completed_at: datetime
     duration_hours: float = Field(..., ge=0)
 
-    source_type: str = Field(..., pattern="^(git|github|ci|manual|api)$")
+    source_type: str = Field(
+        ..., pattern="^(git|github|ci|manual|api|threads|prometheus|webhook|linear)$"
+    )
     source_id: Optional[str] = None
     source_url: Optional[str] = None
 
@@ -36,14 +37,16 @@ class AchievementCreate(BaseModel):
     description: str = Field(..., min_length=1)
     category: str = Field(
         ...,
-        pattern="^(feature|optimization|bugfix|infrastructure|documentation|testing|security|performance|architecture)$",
+        pattern="^(feature|optimization|bugfix|infrastructure|documentation|testing|security|performance|architecture|content|business|milestone|project|development|refactoring)$",
     )
 
     started_at: datetime
     completed_at: datetime
     # duration_hours is calculated automatically from dates
 
-    source_type: str = Field(..., pattern="^(git|github|ci|manual|api)$")
+    source_type: str = Field(
+        ..., pattern="^(git|github|ci|manual|api|threads|prometheus|webhook|linear)$"
+    )
     source_id: Optional[str] = None
     source_url: Optional[str] = None
 
@@ -57,7 +60,7 @@ class AchievementCreate(BaseModel):
     # Optional fields that can be set
     impact_score: Optional[float] = Field(None, ge=0, le=100)
     complexity_score: Optional[float] = Field(None, ge=0, le=100)
-    business_value: Optional[Decimal] = Field(None, ge=0)
+    business_value: Optional[str] = None
     time_saved_hours: Optional[float] = Field(None, ge=0)
     portfolio_ready: Optional[bool] = False
 
@@ -70,7 +73,7 @@ class AchievementUpdate(BaseModel):
 
     impact_score: Optional[float] = Field(None, ge=0, le=100)
     complexity_score: Optional[float] = Field(None, ge=0, le=100)
-    business_value: Optional[Decimal] = Field(None, ge=0)
+    business_value: Optional[str] = None
     time_saved_hours: Optional[float] = Field(None, ge=0)
     performance_improvement_pct: Optional[float] = Field(None, ge=0)
 
@@ -97,7 +100,7 @@ class Achievement(AchievementBase):
 
     impact_score: float = 0.0
     complexity_score: float = 0.0
-    business_value: Decimal = Decimal("0.00")
+    business_value: Optional[str] = None
     time_saved_hours: float = 0.0
     performance_improvement_pct: float = 0.0
 
@@ -145,7 +148,7 @@ class AnalysisResponse(BaseModel):
     achievement_id: int
     impact_score: float
     complexity_score: float
-    business_value: Decimal
+    business_value: Optional[str]
     time_saved_hours: float
 
     summary: str
@@ -172,7 +175,7 @@ class PortfolioResponse(BaseModel):
     format: str
     total_achievements: int
     total_impact_score: float
-    total_value_generated: Decimal
+    total_value_generated: Optional[str]
     total_time_saved: float
 
     content_preview: str

@@ -44,6 +44,9 @@ class Achievement(Base):
             "security",
             "performance",
             "architecture",
+            "content",
+            "business",
+            "milestone",
             name="achievement_category",
         ),
         nullable=False,
@@ -57,13 +60,23 @@ class Achievement(Base):
     # Impact Metrics
     impact_score = Column(Float, default=0.0)  # 0-100 calculated score
     complexity_score = Column(Float, default=0.0)  # 0-100 technical complexity
-    business_value = Column(Numeric(10, 2), default=0)  # Dollar value
+    business_value = Column(String(255))  # Business value description
     time_saved_hours = Column(Float, default=0.0)  # Hours saved per month
     performance_improvement_pct = Column(Float, default=0.0)  # Performance gain %
 
     # Source Tracking
     source_type = Column(
-        Enum("git", "github", "ci", "manual", "api", name="source_type"),
+        Enum(
+            "git",
+            "github",
+            "ci",
+            "manual",
+            "api",
+            "threads",
+            "prometheus",
+            "webhook",
+            name="source_type",
+        ),
         nullable=False,
     )
     source_id = Column(String(255))  # PR number, commit SHA, etc.
@@ -87,6 +100,12 @@ class Achievement(Base):
     portfolio_ready = Column(Boolean, default=False)
     portfolio_section = Column(String(100))  # Which portfolio section
     display_priority = Column(Integer, default=50)  # 0-100, higher = more prominent
+
+    # Social Media Publishing
+    linkedin_post_id = Column(String(255))  # LinkedIn post ID after publishing
+    linkedin_published_at = Column(DateTime)  # When published to LinkedIn
+    github_gist_id = Column(String(255))  # GitHub gist ID for detailed writeup
+    blog_post_url = Column(String(500))  # URL if published as blog post
 
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -99,8 +99,8 @@ threadsAdaptor:
       cpu: "500m"
 
 openai:
-  enabled: false
-  apiKey: "REPLACE_IN_RUNTIME"
+  enabled: true
+  apiKey: "test"  # Development mode
 
 # Redis for caching trends and token optimization
 redis:
@@ -175,3 +175,7 @@ achievementCollector:
   github:
     webhookSecret: "dev-webhook-secret"
     token: "test-github-token"
+  prometheus:
+    scrapeInterval: "24"  # hours
+  sqlite:
+    enabled: false  # use PostgreSQL in cluster
