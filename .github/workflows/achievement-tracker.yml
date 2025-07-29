@@ -268,6 +268,9 @@ jobs:
                   'commit_sha': '${{ github.sha }}'
               }
               
+              # Import AI analyzer for business value extraction
+              from services.achievement_collector.services.ai_analyzer import AIAnalyzer
+              
               # Calculate enhanced impact score
               base_score = 50
               
@@ -348,6 +351,17 @@ jobs:
                       achievement.metadata_json = metadata
                       db.commit()
                       db.refresh(achievement)
+                      
+                      # Extract business value using AI if available
+                      if os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'test':
+                          try:
+                              analyzer = AIAnalyzer()
+                              updated = asyncio.run(analyzer.update_achievement_business_value(db, achievement))
+                              if updated:
+                                  print(f"   💰 Business Value: {achievement.business_value}")
+                          except Exception as e:
+                              print(f"   ⚠️  Could not extract business value: {e}")
+                      
                       print(f"✅ Created achievement: {achievement.title}")
                       print(f"   Impact Score: {achievement.impact_score}")
                       print(f"   Skills: {', '.join(achievement.skills_demonstrated[:5])}")
