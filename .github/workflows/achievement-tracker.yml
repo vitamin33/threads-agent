@@ -3,10 +3,15 @@ name: Achievement Tracker
 on:
   pull_request:
     types: [closed]
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
 
 jobs:
   track-achievement:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'push' || github.event_name == 'workflow_run'
     runs-on: ubuntu-latest
     
     steps:
