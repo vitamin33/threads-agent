@@ -20,7 +20,8 @@ An intelligent PR-based achievement collection system that automatically transfo
 
 ### For Developers
 - [**API Reference**](./docs/API_REFERENCE.md) - Complete API documentation with examples
-- [**AI Business Value Extraction**](./docs/AI_BUSINESS_VALUE_EXTRACTION.md) - Automatic quantification of PR impact
+- [**Enhanced Business Value Calculation**](./docs/ENHANCED_BUSINESS_VALUE_CALCULATION.md) - Comprehensive business value system with agile KPIs
+- [**AI Business Value Extraction**](./docs/AI_BUSINESS_VALUE_EXTRACTION.md) - Legacy documentation (see Enhanced version above)
 - [**Deployment Guide**](./docs/DEPLOYMENT_GUIDE.md) - Docker, Kubernetes, and production deployment
 - [**Best Practices**](./docs/BEST_PRACTICES.md) - Maximize your achievement impact
 
