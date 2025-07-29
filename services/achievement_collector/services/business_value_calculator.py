@@ -61,16 +61,16 @@ class AgileBusinessValueCalculator:
         """Extract business value using multiple calculation methods."""
         pr_metrics = pr_metrics or {}
         
-        # Try different extraction methods in priority order
+        # Try different extraction methods in priority order (complex calculations first)
         for method in [
-            self._extract_explicit_value,
-            self._extract_time_savings,
-            self._extract_performance_improvements,
-            self._extract_automation_value,
-            self._extract_quality_improvements,
-            self._extract_technical_debt_reduction,
-            self._extract_risk_mitigation,
-            self._infer_from_pr_size
+            self._extract_time_savings,           # 1st - Most valuable and accurate
+            self._extract_performance_improvements, # 2nd - High business impact
+            self._extract_automation_value,        # 3rd - Complex value calculations
+            self._extract_quality_improvements,    # 4th - Measurable impact metrics
+            self._extract_risk_mitigation,         # 5th - High-value risk scenarios  
+            self._extract_technical_debt_reduction, # 6th - Long-term value
+            self._extract_explicit_value,          # 7th - Simple dollar extraction (fallback)
+            self._infer_from_pr_size              # 8th - Last resort estimation
         ]:
             result = method(pr_description, pr_metrics)
             if result:
@@ -110,17 +110,28 @@ class AgileBusinessValueCalculator:
     def _extract_time_savings(self, description: str, metrics: Dict) -> Optional[Dict]:
         """Extract time savings with role-based hourly rates."""
         patterns = [
-            r'sav(?:es?|ing)\s+(\d+(?:\.\d+)?)\s+(?:(developer|dev|engineer|senior|junior|lead)\s+)?hours?\s*(?:per\s+)?(week|month|year|daily|sprint)?',
-            r'(?:reduces?|cut|eliminates?)\s+(\d+(?:\.\d+)?)\s+(?:(developer|dev|engineer|senior|junior|lead)\s+)?hours?\s*(?:per\s+)?(week|month|year|daily|sprint)?',
-            r'(\d+(?:\.\d+)?)\s+(?:(developer|dev|engineer|senior|junior|lead)\s+)?hours?\s+(?:saved|reduction|less)',
+            r'sav(?:es?|ing)\s+(\d+(?:\.\d+)?)\s+hours?\s*(?:per\s+)?(week|month|year|daily|sprint)?\s*(?:for\s+)?(senior|junior|lead|mid|developer|dev|engineer)s?\s*(?:developer|dev|engineer)s?',
+            r'sav(?:es?|ing)\s+(\d+(?:\.\d+)?)\s+(?:(senior|junior|lead|mid|developer|dev|engineer)s?\s+)?hours?\s*(?:per\s+)?(week|month|year|daily|sprint)?',
+            r'(?:reduces?|cut|eliminates?)\s+(\d+(?:\.\d+)?)\s+(?:(senior|junior|lead|mid|developer|dev|engineer)s?\s+)?hours?\s*(?:per\s+)?(week|month|year|daily|sprint)?',
+            r'(\d+(?:\.\d+)?)\s+hours?\s*(?:per\s+)?(week|month|year|daily|sprint)?\s*(?:for\s+)?(senior|junior|lead|mid|developer|dev|engineer)s?\s*(?:developer|dev|engineer)s?',
+            r'(\d+(?:\.\d+)?)\s+(?:(senior|junior|lead|mid|developer|dev|engineer)s?\s+)?hours?\s+(?:saved|reduction|less)',
         ]
         
         for pattern in patterns:
             match = re.search(pattern, description, re.IGNORECASE)
             if match:
                 hours = float(match.group(1))
-                role = match.group(2).lower() if len(match.groups()) > 1 and match.group(2) else 'mid'
-                period = match.group(3).lower() if len(match.groups()) > 2 and match.group(3) else 'week'
+                
+                # Extract role and period from all groups
+                groups = [g for g in match.groups() if g]
+                role = 'mid'  # default
+                period = 'week'  # default
+                
+                for group in groups[1:]:  # Skip first group (hours)
+                    if group and group.lower() in ['week', 'month', 'year', 'daily', 'sprint']:
+                        period = group.lower()
+                    elif group and any(r in group.lower() for r in ['senior', 'junior', 'lead', 'mid', 'developer', 'dev', 'engineer']):
+                        role = group.lower()
                 
                 # Determine hourly rate based on role
                 if 'senior' in role or 'lead' in role:
@@ -133,9 +144,18 @@ class AgileBusinessValueCalculator:
                 # Convert to annual hours
                 annual_hours = self._normalize_to_annual_hours(hours, period)
                 
-                # Scale by typical team size if it affects multiple developers
-                if re.search(r'team|developers|engineers', description, re.IGNORECASE):
-                    annual_hours *= self.config.typical_team_size
+                # Scale by team size if it affects multiple developers
+                team_multiplier = 1
+                
+                # Check for specific team size mentions
+                team_size_match = re.search(r'(\d+)[-\s]*(?:person|people|member|developer|engineer)s?\s+team', description, re.IGNORECASE)
+                if team_size_match:
+                    team_multiplier = int(team_size_match.group(1))
+                # Check for general team mentions  
+                elif re.search(r'team|developers|engineers', description, re.IGNORECASE):
+                    team_multiplier = self.config.typical_team_size
+                
+                annual_hours *= team_multiplier
                 
                 return {
                     "total_value": int(annual_hours * hourly_rate),
@@ -148,7 +168,8 @@ class AgileBusinessValueCalculator:
                         "hours_saved_annually": annual_hours,
                         "hourly_rate": hourly_rate,
                         "role_assumed": role,
-                        "team_multiplier": self.config.typical_team_size if 'team' in description.lower() else 1
+                        "team_multiplier": team_multiplier,
+                        "base_hours_per_person": annual_hours // team_multiplier if team_multiplier > 1 else annual_hours
                     }
                 }
         return None
