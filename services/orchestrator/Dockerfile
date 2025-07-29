@@ -1,7 +1,7 @@
 # /services/orchestrator/Dockerfile
 # syntax=docker/dockerfile:1
 FROM python:3.12-slim-bookworm
-# Build trigger for CI - achievement system test
+# Build trigger for CI - achievement system test v2
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
