@@ -1,8 +1,9 @@
 name: Comprehensive Achievement Collector
 
 on:
-  pull_request:
-    types: [closed]
+  workflow_dispatch:  # Manual trigger only - disabled automatic runs to avoid duplication with Achievement Tracker
+  # pull_request:
+  #   types: [closed]
 
 jobs:
   collect-achievement-data:
@@ -505,7 +506,7 @@ jobs:
             });
             
       - name: Upload Analysis Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: achievement-analysis-${{ github.event.pull_request.number }}
           path: |
