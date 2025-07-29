@@ -9,7 +9,7 @@ from services.orchestrator.db.models import VariantPerformance
 
 class TestVariantPerformanceModel:
     """Test the VariantPerformance database model."""
-    
+
     @pytest.fixture
     def db_session(self):
         """Create a test database session."""
@@ -19,7 +19,7 @@ class TestVariantPerformanceModel:
         session = Session()
         yield session
         session.close()
-    
+
     def test_create_variant_performance_record(self, db_session):
         """Test creating a new variant performance record."""
         # Arrange
@@ -29,19 +29,21 @@ class TestVariantPerformanceModel:
                 "hook_style": "question",
                 "emotion": "curiosity",
                 "length": "short",
-                "cta": "learn_more"
+                "cta": "learn_more",
             },
             impressions=100,
             successes=10,
-            last_used=datetime.now(timezone.utc)
+            last_used=datetime.now(timezone.utc),
         )
-        
+
         # Act
         db_session.add(variant_performance)
         db_session.commit()
-        
+
         # Assert
-        saved = db_session.query(VariantPerformance).filter_by(variant_id="v_123").first()
+        saved = (
+            db_session.query(VariantPerformance).filter_by(variant_id="v_123").first()
+        )
         assert saved is not None
         assert saved.variant_id == "v_123"
         assert saved.dimensions["hook_style"] == "question"

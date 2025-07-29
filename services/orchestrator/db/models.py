@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, Text, func, JSON, Integer, Float
+from sqlalchemy import BigInteger, Text, func, JSON, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -30,7 +30,7 @@ class Task(Base):
 
 class VariantPerformance(Base):
     __tablename__ = "variant_performance"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     variant_id: Mapped[str] = mapped_column(Text, unique=True, index=True)
     dimensions: Mapped[dict[str, str]] = mapped_column(JSON)
@@ -38,7 +38,7 @@ class VariantPerformance(Base):
     successes: Mapped[int] = mapped_column(Integer, default=0)
     last_used: Mapped[datetime] = mapped_column(default=func.now())
     created_at: Mapped[datetime] = mapped_column(default=func.now())
-    
+
     @hybrid_property
     def success_rate(self) -> float:
         """Calculate success rate avoiding division by zero."""
