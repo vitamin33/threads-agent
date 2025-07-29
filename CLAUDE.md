@@ -257,14 +257,9 @@ just token-batch     # Batch processing (80% savings)
 ### Collaboration Practices
 - Don't add Claude as co-author in git commits in PRs
 
-### Python Development
-- **ALWAYS activate the virtual environment** before running Python commands in services:
-  ```bash
-  cd services/achievement_collector
-  source venv/bin/activate  # or python -m venv venv if not exists
-  ```
-- The venv contains all required dependencies (SQLAlchemy, pytest, mypy, etc.)
-- Without venv activation, you'll get ModuleNotFoundError and command not found errors
+### Development Environment
+- **ALWAYS use virtual environments** for Python services (venv contains all dependencies)
+- Without venv: ModuleNotFoundError, command not found (pytest, mypy, etc.)
 
 ## Resources
 
