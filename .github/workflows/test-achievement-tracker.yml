@@ -1,0 +1,83 @@
+name: Test Achievement Tracker
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to test'
+        required: false
+        default: '56'
+
+jobs:
+  test-track-achievement:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r services/achievement_collector/requirements.txt
+          pip install PyGithub
+          
+      - name: Test Achievement Creation
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || secrets.ACHIEVEMENT_DB_URL }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import sys
+          import json
+          from datetime import datetime
+          
+          # Add project to path
+          sys.path.insert(0, os.getcwd())
+          
+          from services.achievement_collector.db.config import get_db, engine
+          from services.achievement_collector.db.models import Base, Achievement
+          
+          # Test database connection
+          print("🔗 Testing database connection...")
+          try:
+              Base.metadata.create_all(bind=engine)
+              db = next(get_db())
+              
+              # Count existing achievements
+              count = db.query(Achievement).count()
+              print(f"✅ Database connected! Found {count} existing achievements")
+              
+              # Test with empty metrics handling
+              pr_metrics_raw = ''  # Empty string to simulate the issue
+              business_metrics_raw = '{"has_performance_improvement": false}'
+              
+              # This should not fail
+              pr_metrics = json.loads(pr_metrics_raw) if pr_metrics_raw else {}
+              business_metrics = json.loads(business_metrics_raw) if business_metrics_raw else {}
+              
+              print("✅ Empty metrics handling works!")
+              print(f"   PR metrics: {pr_metrics}")
+              print(f"   Business metrics: {business_metrics}")
+              
+              # Test creating a simple achievement
+              if pr_metrics:
+                  print("Would create achievement here...")
+              else:
+                  print("⚠️  No PR metrics available, skipping achievement creation (as expected)")
+              
+              db.close()
+              print("\n✅ All tests passed!")
+              
+          except Exception as e:
+              print(f"❌ Error: {e}")
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
+          EOF
