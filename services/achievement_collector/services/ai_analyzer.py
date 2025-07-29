@@ -165,7 +165,7 @@ class AIAnalyzer:
         """Extract business value from PR description using AI."""
         if not self.client:
             return self._extract_business_value_offline(pr_description)
-        
+
         prompt = f"""
         Analyze this PR description and extract quantifiable business value:
         
@@ -185,52 +185,59 @@ class AIAnalyzer:
         Return JSON with keys: total_value, currency, period, type, confidence, breakdown, extraction_method, raw_text
         If no clear business value is found, return null.
         """
-        
+
         try:
             response = await self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert at quantifying business value from technical improvements."
+                        "content": "You are an expert at quantifying business value from technical improvements.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
-            
+
             result = json.loads(response.choices[0].message.content)
             return result if result and result.get("total_value") else None
-            
+
         except Exception as e:
             print(f"AI business value extraction error: {e}")
             return self._extract_business_value_offline(pr_description)
-    
+
     def _extract_business_value_offline(self, pr_description: str) -> Dict:
         """Offline extraction for testing and fallback."""
         import re
-        
+
         # Simple pattern matching for offline mode
-        
+
         # Dollar amount patterns
-        dollar_match = re.search(r'\$(\d{1,3}(?:,\d{3})*|\d+)(?:\s+(?:per\s+)?(?:year|annually))?', pr_description)
+        dollar_match = re.search(
+            r"\$(\d{1,3}(?:,\d{3})*|\d+)(?:\s+(?:per\s+)?(?:year|annually))?",
+            pr_description,
+        )
         if dollar_match:
             # Remove commas and convert to int
-            amount_str = dollar_match.group(1).replace(',', '')
+            amount_str = dollar_match.group(1).replace(",", "")
             return {
                 "total_value": int(amount_str),
-                "currency": "USD", 
+                "currency": "USD",
                 "period": "yearly",
                 "type": "cost_savings",
             }
-        
+
         # Time savings patterns
-        time_match = re.search(r'sav(?:es?|ing)\s+(\d+)\s+(?:developer\s+)?hours?\s+(?:per\s+)?(week|month|year|annually)', pr_description, re.IGNORECASE)
+        time_match = re.search(
+            r"sav(?:es?|ing)\s+(\d+)\s+(?:developer\s+)?hours?\s+(?:per\s+)?(week|month|year|annually)",
+            pr_description,
+            re.IGNORECASE,
+        )
         if time_match:
             hours = int(time_match.group(1))
             period = time_match.group(2).lower()
-            
+
             # Convert to annual hours
             if period == "week":
                 annual_hours = hours * 52
@@ -238,20 +245,21 @@ class AIAnalyzer:
                 annual_hours = hours * 12
             else:  # year or annually
                 annual_hours = hours
-            
+
             return {
                 "total_value": annual_hours * 100,  # $100/hour
                 "currency": "USD",
                 "period": "yearly",
                 "type": "time_savings",
-                "breakdown": {
-                    "time_saved_hours": annual_hours,
-                    "hourly_rate": 100
-                }
+                "breakdown": {"time_saved_hours": annual_hours, "hourly_rate": 100},
             }
-        
+
         # Performance improvement pattern - also match "response time", "optimization", etc.
-        perf_match = re.search(r'(?:performance|response time|optimization|optimized|reduced).*?(\d+)%|(\d+)%.*?(?:performance|response time|optimization)', pr_description, re.IGNORECASE)
+        perf_match = re.search(
+            r"(?:performance|response time|optimization|optimized|reduced).*?(\d+)%|(\d+)%.*?(?:performance|response time|optimization)",
+            pr_description,
+            re.IGNORECASE,
+        )
         if perf_match:
             percentage = int(perf_match.group(1) or perf_match.group(2))
             # Estimate value: assume $1000/month baseline infrastructure cost
@@ -265,14 +273,18 @@ class AIAnalyzer:
                 "confidence": 0.7,
                 "breakdown": {
                     "performance_gain_pct": percentage,
-                    "infrastructure_savings": int(monthly_savings * 12)
+                    "infrastructure_savings": int(monthly_savings * 12),
                 },
                 "extraction_method": "pattern_matching",
-                "raw_text": f"{percentage}% performance improvement"
+                "raw_text": f"{percentage}% performance improvement",
             }
-        
+
         # Bug fix pattern - estimate prevented incident cost (exclude trivial fixes)
-        if re.search(r'bug|issue|error|crash|critical|prevent', pr_description, re.IGNORECASE) and not re.search(r'typo|spelling|documentation', pr_description, re.IGNORECASE):
+        if re.search(
+            r"bug|issue|error|crash|critical|prevent", pr_description, re.IGNORECASE
+        ) and not re.search(
+            r"typo|spelling|documentation", pr_description, re.IGNORECASE
+        ):
             # Estimate $5000 per prevented incident
             return {
                 "total_value": 5000,
@@ -281,59 +293,66 @@ class AIAnalyzer:
                 "type": "bug_prevention",
                 "confidence": 0.6,
                 "extraction_method": "pattern_matching",
-                "raw_text": "Bug fix - estimated incident prevention value"
+                "raw_text": "Bug fix - estimated incident prevention value",
             }
-        
+
         return None
 
-    async def update_achievement_business_value(self, achievement: Achievement) -> bool:
+    async def update_achievement_business_value(
+        self, db, achievement: Achievement
+    ) -> bool:
         """Update an achievement with extracted business value data."""
         try:
             # Extract business value from description
             business_data = await self.extract_business_value(achievement.description)
-            
+
             if not business_data:
                 return False
-            
+
             # Store the full JSON in business_value field
             achievement.business_value = json.dumps(business_data)
-            
+
             # Update specific metric fields based on the extracted data
             if business_data.get("type") == "time_savings":
-                achievement.time_saved_hours = business_data.get("breakdown", {}).get("time_saved_hours", 0)
-            
+                achievement.time_saved_hours = business_data.get("breakdown", {}).get(
+                    "time_saved_hours", 0
+                )
+
             # Extract performance percentage if mentioned
             import re
-            perf_match = re.search(r'(\d+)%', achievement.description)
-            if perf_match and business_data.get("type") in ["performance_improvement", "cost_savings"]:
+
+            perf_match = re.search(r"(\d+)%", achievement.description)
+            if perf_match and business_data.get("type") in [
+                "performance_improvement",
+                "cost_savings",
+            ]:
                 achievement.performance_improvement_pct = float(perf_match.group(1))
-            
+
+            # Commit changes to database
+            db.commit()
             return True
-            
+
         except Exception as e:
             print(f"Error updating achievement business value: {e}")
             return False
-    
-    async def batch_update_business_values(self, achievements: list[Achievement]) -> Dict:
+
+    async def batch_update_business_values(
+        self, db, achievements: list[Achievement]
+    ) -> Dict:
         """Batch update multiple achievements with business values."""
-        results = {
-            "updated": 0,
-            "failed": 0,
-            "errors": []
-        }
-        
+        results = {"updated": 0, "failed": 0, "errors": []}
+
         for achievement in achievements:
             try:
-                success = await self.update_achievement_business_value(achievement)
+                success = await self.update_achievement_business_value(db, achievement)
                 if success:
                     results["updated"] += 1
                 else:
                     results["failed"] += 1
             except Exception as e:
                 results["failed"] += 1
-                results["errors"].append({
-                    "achievement_id": achievement.id,
-                    "error": str(e)
-                })
-        
+                results["errors"].append(
+                    {"achievement_id": achievement.id, "error": str(e)}
+                )
+
         return results
