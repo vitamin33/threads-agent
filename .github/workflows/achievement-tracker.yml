@@ -45,8 +45,8 @@ jobs:
             const pr = context.payload.pull_request;
             const metrics = {
               pr_number: pr.number,
-              title: pr.title,
-              body: pr.body,
+              title: pr.title ? pr.title.replace(/"/g, '\\"') : '',
+              body: pr.body ? pr.body.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/"/g, '\\"') : '',
               additions: pr.additions,
               deletions: pr.deletions,
               changed_files: pr.changed_files,
