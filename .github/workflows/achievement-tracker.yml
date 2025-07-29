@@ -218,19 +218,39 @@ jobs:
               # Initialize database
               Base.metadata.create_all(bind=engine)
               
-              # Parse collected metrics
+              # Parse collected metrics with debugging
               pr_metrics_raw = '''${{ steps.pr_metrics.outputs.metrics }}'''
               business_metrics_raw = '''${{ steps.business_metrics.outputs.metrics }}'''
               planning_metrics_raw = '''${{ steps.planning_metrics.outputs.metrics }}'''
               
+              print(f"🔍 Debug - Event name: ${{ github.event_name }}")
+              print(f"🔍 Debug - PR metrics raw length: {len(pr_metrics_raw)}")
+              print(f"🔍 Debug - Business metrics raw length: {len(business_metrics_raw)}")
+              print(f"🔍 Debug - Planning metrics raw length: {len(planning_metrics_raw)}")
+              
               # Handle empty metrics gracefully
-              pr_metrics = json.loads(pr_metrics_raw) if pr_metrics_raw else {}
-              business_metrics = json.loads(business_metrics_raw) if business_metrics_raw else {}
-              planning_metrics = json.loads(planning_metrics_raw) if planning_metrics_raw else {}
+              try:
+                  pr_metrics = json.loads(pr_metrics_raw) if pr_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse PR metrics: {e}")
+                  pr_metrics = {}
+                  
+              try:
+                  business_metrics = json.loads(business_metrics_raw) if business_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse business metrics: {e}")
+                  business_metrics = {}
+                  
+              try:
+                  planning_metrics = json.loads(planning_metrics_raw) if planning_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse planning metrics: {e}")
+                  planning_metrics = {}
               
               # Exit early if no PR metrics
               if not pr_metrics:
                   print("⚠️  No PR metrics available, skipping achievement creation")
+                  print("    This is expected for workflow_run events from non-PR workflows")
                   return
               
               # Performance metrics
