@@ -161,29 +161,39 @@ class AIAnalyzer:
             "market_value": "High demand - $150k-$200k range",
         }
 
-    async def extract_business_value(self, pr_description: str) -> Dict:
-        """Extract business value from PR description using AI."""
+    async def extract_business_value(self, pr_description: str, pr_metrics: Dict = None) -> Dict:
+        """Extract business value from PR description using enhanced calculator and AI."""
+        pr_metrics = pr_metrics or {}
+        
+        # First try the enhanced calculator
+        from .business_value_calculator import AgileBusinessValueCalculator
+        calculator = AgileBusinessValueCalculator()
+        
+        enhanced_result = calculator.extract_business_value(pr_description, pr_metrics)
+        if enhanced_result:
+            return enhanced_result
+        
+        # Fallback to AI if available
         if not self.client:
             return self._extract_business_value_offline(pr_description)
 
         prompt = f"""
-        Analyze this PR description and extract quantifiable business value:
+        Analyze this PR description and extract quantifiable business value using industry best practices:
         
-        {pr_description}
+        PR Description: {pr_description}
+        PR Metrics: Files changed: {pr_metrics.get('changed_files', 'unknown')}, Lines: +{pr_metrics.get('additions', 0)}/-{pr_metrics.get('deletions', 0)}
         
-        Extract and calculate:
-        1. Total monetary value (in USD)
-        2. Time period (yearly, monthly, one-time)
-        3. Type of value (cost_savings, time_savings, performance_improvement, revenue_increase, bug_prevention)
-        4. Confidence level (0.0-1.0)
-        5. Breakdown of value components
+        Calculate realistic business value based on:
+        1. Time savings (use role-based rates: Junior $75/hr, Mid $100/hr, Senior $125/hr)
+        2. Infrastructure cost reductions (typical server costs $500-2000/month)
+        3. Quality improvements (defect fix cost ~$1200, incident costs $2500-25000)
+        4. Risk mitigation (security/compliance value)
+        5. Automation benefits (manual process elimination)
+        6. Technical debt reduction (future maintenance savings)
         
-        For time savings, use $100/hour as the standard developer rate.
-        For performance improvements, estimate infrastructure cost savings.
-        For bug fixes, estimate cost of prevented incidents.
-        
-        Return JSON with keys: total_value, currency, period, type, confidence, breakdown, extraction_method, raw_text
-        If no clear business value is found, return null.
+        Be conservative with estimates and include confidence levels.
+        Return JSON with: total_value, currency, period, type, confidence, breakdown, method, justification
+        If no clear business value, return null.
         """
 
         try:
@@ -191,16 +201,22 @@ class AIAnalyzer:
                 model="gpt-4",
                 messages=[
                     {
-                        "role": "system",
-                        "content": "You are an expert at quantifying business value from technical improvements.",
+                        "role": "system", 
+                        "content": "You are a business value analyst specializing in quantifying software engineering improvements using industry-standard metrics and conservative estimates.",
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.3,
-                response_format={"type": "json_object"},
+                temperature=0.2,  # Lower temperature for more conservative estimates
             )
 
-            result = json.loads(response.choices[0].message.content)
+            # Handle both JSON object and regular text responses
+            try:
+                result = json.loads(response.choices[0].message.content)
+            except json.JSONDecodeError:
+                # If not JSON, try to extract from text
+                content = response.choices[0].message.content
+                result = self._parse_ai_text_response(content)
+            
             return result if result and result.get("total_value") else None
 
         except Exception as e:
@@ -297,14 +313,43 @@ class AIAnalyzer:
             }
 
         return None
+    
+    def _parse_ai_text_response(self, content: str) -> Dict:
+        """Parse AI text response when JSON parsing fails."""
+        import re
+        
+        # Try to extract dollar amount
+        dollar_match = re.search(r'\$(\d{1,3}(?:,\d{3})*)', content)
+        if dollar_match:
+            amount = int(dollar_match.group(1).replace(',', ''))
+            
+            # Determine type from content
+            if 'time' in content.lower() or 'hour' in content.lower():
+                value_type = 'time_savings'
+            elif 'performance' in content.lower() or 'optimization' in content.lower():
+                value_type = 'performance_improvement'
+            else:
+                value_type = 'cost_savings'
+                
+            return {
+                "total_value": amount,
+                "currency": "USD",
+                "period": "yearly",
+                "type": value_type,
+                "confidence": 0.6,
+                "method": "ai_text_parsing",
+                "source": content[:200]
+            }
+        return None
 
     async def update_achievement_business_value(
         self, db, achievement: Achievement
     ) -> bool:
         """Update an achievement with extracted business value data."""
         try:
-            # Extract business value from description
-            business_data = await self.extract_business_value(achievement.description)
+            # Extract business value from description with metrics context
+            pr_metrics = achievement.metrics_after or {}
+            business_data = await self.extract_business_value(achievement.description, pr_metrics)
 
             if not business_data:
                 return False
