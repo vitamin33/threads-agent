@@ -323,13 +323,15 @@ jobs:
                   metrics_after=comprehensive_metrics,
                   impact_score=impact_score,
                   complexity_score=tracker._calculate_complexity_score(pr_metrics),
-                  portfolio_ready=impact_score >= 70,
-                  metadata={
-                      'github_run_url': '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
-                      'pr_url': pr_metrics.get('url', ''),
-                      'collected_by': 'github-actions'
-                  }
+                  portfolio_ready=impact_score >= 70
               )
+              
+              # Metadata to be set separately
+              metadata = {
+                  'github_run_url': '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+                  'pr_url': pr_metrics.get('url', ''),
+                  'collected_by': 'github-actions'
+              }
               
               # Save to database
               db = next(get_db())
@@ -342,9 +344,14 @@ jobs:
                   
                   if not existing:
                       achievement = create_achievement_sync(db, achievement_data)
+                      # Set metadata separately since it's not in the schema
+                      achievement.metadata_json = metadata
+                      db.commit()
+                      db.refresh(achievement)
                       print(f"✅ Created achievement: {achievement.title}")
                       print(f"   Impact Score: {achievement.impact_score}")
                       print(f"   Skills: {', '.join(achievement.skills_demonstrated[:5])}")
+                      print(f"   Metadata: {bool(achievement.metadata_json)}")
                   else:
                       print(f"ℹ️  Achievement already exists for PR #{pr_metrics['pr_number']}")
               finally:
