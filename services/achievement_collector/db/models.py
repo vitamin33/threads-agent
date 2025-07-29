@@ -60,7 +60,7 @@ class Achievement(Base):
     # Impact Metrics
     impact_score = Column(Float, default=0.0)  # 0-100 calculated score
     complexity_score = Column(Float, default=0.0)  # 0-100 technical complexity
-    business_value = Column(String(255))  # Business value description
+    business_value = Column(Text)  # Business value JSON (can be large)
     time_saved_hours = Column(Float, default=0.0)  # Hours saved per month
     performance_improvement_pct = Column(Float, default=0.0)  # Performance gain %
 
