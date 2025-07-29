@@ -172,3 +172,18 @@ pytest services/achievement_collector/tests/
 # E2E tests (requires database)
 pytest services/achievement_collector/tests/ -m e2e
 ```
+
+## GitHub Actions Integration
+
+The project includes a GitHub Actions workflow (`.github/workflows/achievement-tracker.yml`) that automatically creates achievements when PRs are merged. See [GitHub Actions Setup Guide](./GITHUB_ACTIONS_SETUP.md) for configuration details.
+
+### Key Features:
+- Triggers only on PR merge (not on push or close)
+- Extracts business metrics from PR descriptions
+- Calculates impact scores based on PR characteristics
+- Stores comprehensive metadata including GitHub run URLs
+
+### Common Issues:
+- **Empty business_value**: Include specific numbers in PR descriptions (e.g., "$15,000 saved")
+- **Missing metadata**: Update to latest workflow version with metadata fix
+- **No achievement created**: Verify PR was merged (not just closed)

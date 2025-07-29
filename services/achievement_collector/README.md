@@ -14,6 +14,7 @@ An intelligent PR-based achievement collection system that automatically transfo
 
 ### Getting Started
 - [**PR Achievement System Overview**](./PR_ACHIEVEMENT_SYSTEM.md) - Complete system architecture and workflow
+- [**GitHub Actions Setup Guide**](./GITHUB_ACTIONS_SETUP.md) - Step-by-step setup for automatic PR tracking
 - [**Quick Start Guide**](./PR_ACHIEVEMENT_SYSTEM.md#installation--setup) - Get up and running in 5 minutes
 
 ### For Developers
