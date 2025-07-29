@@ -123,7 +123,10 @@ def test_draft_post_happy_path() -> None:
     qclient = qdrant_client.QdrantClient(url=QDRANT_URL, check_compatibility=False)
     try:
         collection_info = qclient.get_collection(COLLECTION_NAME)
-        assert collection_info.points_count > 0, "qdrant should have at least 1 point"
+        assert (
+            collection_info.points_count is not None
+            and collection_info.points_count > 0
+        ), "qdrant should have at least 1 point"
     except Exception:  # pragma: no cover
         pytest.fail(f"qdrant collection {COLLECTION_NAME} missing or empty")
 

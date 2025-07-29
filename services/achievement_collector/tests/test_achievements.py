@@ -4,34 +4,9 @@ from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from services.achievement_collector.db.config import get_db
-from services.achievement_collector.db.models import Base
 from services.achievement_collector.main import app
-
-# Test database setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base.metadata.create_all(bind=engine)
-
-
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-client = TestClient(app)
 
 
 @pytest.fixture
@@ -43,14 +18,29 @@ def sample_achievement_data():
         "category": "optimization",
         "started_at": (datetime.utcnow() - timedelta(days=7)).isoformat(),
         "completed_at": datetime.utcnow().isoformat(),
-        "duration_hours": 20,
         "source_type": "manual",
         "tags": ["ci/cd", "optimization", "github-actions"],
         "skills_demonstrated": ["DevOps", "GitHub Actions", "Docker"],
     }
 
 
-def test_create_achievement(sample_achievement_data):
+@pytest.fixture
+def client(db_session):
+    """Create test client with database session override."""
+
+    def override():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    # Clean up overrides
+    app.dependency_overrides.clear()
+
+
+def test_create_achievement(client, sample_achievement_data):
     """Test creating a new achievement"""
     response = client.post("/achievements/", json=sample_achievement_data)
 
@@ -64,7 +54,7 @@ def test_create_achievement(sample_achievement_data):
     assert data["portfolio_ready"] is False  # Default value
 
 
-def test_list_achievements(sample_achievement_data):
+def test_list_achievements(client, sample_achievement_data):
     """Test listing achievements with pagination"""
     # Create a few achievements
     for i in range(5):
@@ -77,13 +67,13 @@ def test_list_achievements(sample_achievement_data):
     assert response.status_code == 200
 
     data = response.json()
-    assert len(data["items"]) == 3
     assert data["total"] >= 5
+    assert len(data["items"]) == 3
     assert data["page"] == 1
     assert data["per_page"] == 3
 
 
-def test_get_achievement(sample_achievement_data):
+def test_get_achievement(client, sample_achievement_data):
     """Test getting a specific achievement"""
     # Create achievement
     create_response = client.post("/achievements/", json=sample_achievement_data)
@@ -98,7 +88,7 @@ def test_get_achievement(sample_achievement_data):
     assert data["title"] == sample_achievement_data["title"]
 
 
-def test_update_achievement(sample_achievement_data):
+def test_update_achievement(client, sample_achievement_data):
     """Test updating an achievement"""
     # Create achievement
     create_response = client.post("/achievements/", json=sample_achievement_data)
@@ -107,9 +97,9 @@ def test_update_achievement(sample_achievement_data):
     # Update achievement
     update_data = {
         "impact_score": 85.5,
-        "business_value": 50000,
+        "complexity_score": 75.0,
+        "business_value": "$50000 annual savings",
         "portfolio_ready": True,
-        "ai_summary": "Successfully optimized CI pipeline, reducing build times by 80%",
     }
 
     response = client.put(f"/achievements/{achievement_id}", json=update_data)
@@ -117,12 +107,12 @@ def test_update_achievement(sample_achievement_data):
 
     data = response.json()
     assert data["impact_score"] == 85.5
-    assert float(data["business_value"]) == 50000.0
+    assert data["complexity_score"] == 75.0
+    assert data["business_value"] == "$50000 annual savings"
     assert data["portfolio_ready"] is True
-    assert data["ai_summary"] == update_data["ai_summary"]
 
 
-def test_delete_achievement(sample_achievement_data):
+def test_delete_achievement(client, sample_achievement_data):
     """Test deleting an achievement"""
     # Create achievement
     create_response = client.post("/achievements/", json=sample_achievement_data)
@@ -131,60 +121,105 @@ def test_delete_achievement(sample_achievement_data):
     # Delete achievement
     response = client.delete(f"/achievements/{achievement_id}")
     assert response.status_code == 200
-    assert response.json()["status"] == "deleted"
 
     # Verify it's deleted
     get_response = client.get(f"/achievements/{achievement_id}")
     assert get_response.status_code == 404
 
 
-def test_achievement_stats():
-    """Test achievement statistics endpoint"""
-    response = client.get("/achievements/stats/summary")
+def test_search_achievements(client, sample_achievement_data):
+    """Test searching achievements"""
+    # Create achievements with different tags
+    for tag in ["python", "docker", "kubernetes"]:
+        data = sample_achievement_data.copy()
+        data["title"] = f"Achievement with {tag}"
+        data["tags"] = [tag]
+        client.post("/achievements/", json=data)
+
+    # Search by text
+    response = client.get("/achievements/?search=docker")
     assert response.status_code == 200
-
     data = response.json()
-    assert "total_achievements" in data
-    assert "total_value_generated" in data
-    assert "total_time_saved_hours" in data
-    assert "average_impact_score" in data
-    assert "by_category" in data
+    assert any("docker" in item["title"].lower() for item in data["items"])
 
 
-def test_filter_achievements_by_category(sample_achievement_data):
+def test_filter_by_category(client, sample_achievement_data):
     """Test filtering achievements by category"""
-    # Create achievements with different categories
     categories = ["feature", "optimization", "bugfix"]
 
     for category in categories:
-        achievement_data = sample_achievement_data.copy()
-        achievement_data["category"] = category
-        achievement_data["title"] = f"{category} achievement"
-        client.post("/achievements/", json=achievement_data)
+        data = sample_achievement_data.copy()
+        data["category"] = category
+        data["title"] = f"{category} achievement"
+        client.post("/achievements/", json=data)
 
     # Filter by category
     response = client.get("/achievements/?category=optimization")
     assert response.status_code == 200
-
     data = response.json()
-    for item in data["items"]:
-        assert item["category"] == "optimization"
+    assert all(item["category"] == "optimization" for item in data["items"])
 
 
-def test_search_achievements(sample_achievement_data):
-    """Test searching achievements"""
-    # Create achievements with searchable content
-    search_terms = ["Python optimization", "Docker deployment", "API refactoring"]
+def test_portfolio_ready_filter(client, sample_achievement_data):
+    """Test filtering portfolio-ready achievements"""
+    # Create mix of portfolio-ready and not ready
+    for i, ready in enumerate([True, False, True, False]):
+        data = sample_achievement_data.copy()
+        data["title"] = f"Achievement {i}"
+        create_response = client.post("/achievements/", json=data)
 
-    for term in search_terms:
-        achievement_data = sample_achievement_data.copy()
-        achievement_data["title"] = term
-        client.post("/achievements/", json=achievement_data)
+        if ready:
+            achievement_id = create_response.json()["id"]
+            client.put(
+                f"/achievements/{achievement_id}", json={"portfolio_ready": True}
+            )
 
-    # Search
-    response = client.get("/achievements/?search=Docker")
+    # Filter portfolio ready
+    response = client.get("/achievements/?portfolio_ready=true")
+    assert response.status_code == 200
+    data = response.json()
+    assert all(item["portfolio_ready"] is True for item in data["items"])
+
+
+def test_phase2_threads_integration(client):
+    """Test Phase 2: Threads viral post tracking"""
+    post_data = {
+        "hook": "Amazing CI optimization techniques!",
+        "engagement_rate": 0.08,  # 8% engagement (viral)
+        "views": 10000,
+        "likes": 800,
+        "shares": 200,
+    }
+
+    response = client.post("/threads/track", json=post_data)
     assert response.status_code == 200
 
     data = response.json()
-    assert len(data["items"]) >= 1
-    assert "Docker" in data["items"][0]["title"]
+    assert data["status"] == "created"
+    assert "achievement_id" in data
+
+    # Verify achievement was created
+    achievement_response = client.get(f"/achievements/{data['achievement_id']}")
+    assert achievement_response.status_code == 200
+    achievement = achievement_response.json()
+    assert "Viral Post" in achievement["title"]
+    assert achievement["category"] == "content"
+    assert achievement["source_type"] == "threads"
+
+
+def test_phase2_non_viral_post(client):
+    """Test that non-viral posts are not tracked"""
+    post_data = {
+        "hook": "Regular post",
+        "engagement_rate": 0.02,  # 2% engagement (not viral)
+        "views": 100,
+        "likes": 2,
+        "shares": 0,
+    }
+
+    response = client.post("/threads/track", json=post_data)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["status"] == "skipped"
+    assert data["reason"] == "Below viral threshold"

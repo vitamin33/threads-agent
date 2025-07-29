@@ -106,6 +106,27 @@ class TestEngagementMetrics:
         assert metrics.impressions_count == 1000
         assert metrics.engagement_rate == 0.125  # (100+20+5)/1000
 
+    @patch("services.threads_adaptor.main.fetch_post_metrics")
+    def test_get_post_metrics(self, mock_fetch, client):
+        """Test fetching metrics for a specific post."""
+        # Mock metrics
+        mock_metrics = Mock()
+        mock_metrics.likes_count = 100
+        mock_metrics.comments_count = 10
+        mock_metrics.shares_count = 5
+        mock_metrics.impressions_count = 1000
+        mock_metrics.engagement_rate = 0.115
+        mock_metrics.followers_count = 500
+
+        mock_fetch.return_value = mock_metrics
+
+        # Test the endpoint
+        response = client.get("/metrics/test_post_id")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["likes_count"] == 100
+        assert data["comments_count"] == 10
+
     def test_engagement_metrics_zero_impressions(self):
         """Test engagement rate with zero impressions."""
         metrics = EngagementResponse(

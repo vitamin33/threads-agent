@@ -7,7 +7,6 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import Session
 
 from ..base import BaseExporter
@@ -15,17 +14,14 @@ from ..base import BaseExporter
 
 class WebPortfolioGenerator(BaseExporter):
     """Generate interactive web portfolio sites."""
-    
+
     def __init__(self, template_dir: Optional[str] = None):
         if template_dir:
             self.template_dir = template_dir
         else:
             # Use default templates
-            self.template_dir = os.path.join(
-                os.path.dirname(__file__), 
-                'templates'
-            )
-            
+            self.template_dir = os.path.join(os.path.dirname(__file__), "templates")
+
     async def export(
         self,
         db: Session,
@@ -33,11 +29,11 @@ class WebPortfolioGenerator(BaseExporter):
         filters: Optional[Dict[str, Any]] = None,
         user_info: Optional[Dict[str, str]] = None,
         output_dir: Optional[str] = None,
-        theme: str = "modern"
+        theme: str = "modern",
     ) -> str:
         """
         Generate a complete portfolio website.
-        
+
         Args:
             db: Database session
             user_id: Optional user ID filter
@@ -45,194 +41,199 @@ class WebPortfolioGenerator(BaseExporter):
             user_info: User information
             output_dir: Output directory for website files
             theme: Portfolio theme
-            
+
         Returns:
             Path to generated website directory
         """
         achievements = self.get_achievements(db, user_id, filters)
-        
+
         if not output_dir:
             output_dir = f"portfolio_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-            
+
         # Create output directory
         os.makedirs(output_dir, exist_ok=True)
-        
+
         # Prepare data
         portfolio_data = self._prepare_portfolio_data(achievements, user_info)
-        
+
         # Generate HTML files
         self._generate_html_files(portfolio_data, output_dir, theme)
-        
+
         # Generate CSS and JS files
         self._generate_static_files(output_dir, theme)
-        
+
         # Generate data files
         self._generate_data_files(portfolio_data, output_dir)
-        
+
         return output_dir
-    
+
     def _prepare_portfolio_data(
-        self, 
-        achievements: List,
-        user_info: Optional[Dict[str, str]]
+        self, achievements: List, user_info: Optional[Dict[str, str]]
     ) -> Dict[str, Any]:
         """Prepare data for portfolio generation."""
         # Basic user info
         if not user_info:
             user_info = {
-                'name': 'Portfolio',
-                'title': 'Software Developer',
-                'bio': 'Passionate developer with a track record of impactful solutions.'
+                "name": "Portfolio",
+                "title": "Software Developer",
+                "bio": "Passionate developer with a track record of impactful solutions.",
             }
-            
+
         # Calculate statistics
         stats = {
-            'total_achievements': len(achievements),
-            'total_impact': sum(a.impact_score or 0 for a in achievements),
-            'total_hours': sum(a.duration_hours or 0 for a in achievements),
-            'categories': len(set(a.category for a in achievements)),
-            'skills': len(set(
-                skill for a in achievements 
-                if a.skills_demonstrated 
-                for skill in a.skills_demonstrated
-            ))
+            "total_achievements": len(achievements),
+            "total_impact": sum(a.impact_score or 0 for a in achievements),
+            "total_hours": sum(a.duration_hours or 0 for a in achievements),
+            "categories": len(set(a.category for a in achievements)),
+            "skills": len(
+                set(
+                    skill
+                    for a in achievements
+                    if a.skills_demonstrated
+                    for skill in a.skills_demonstrated
+                )
+            ),
         }
-        
+
         # Group achievements
         achievements_by_category = {}
         for achievement in achievements:
             if achievement.category not in achievements_by_category:
                 achievements_by_category[achievement.category] = []
             achievements_by_category[achievement.category].append(achievement)
-            
+
         # Timeline data
         timeline_data = self._generate_timeline_data(achievements)
-        
+
         # Skills data
         skills_data = self._generate_skills_data(achievements)
-        
+
         # Impact chart data
         impact_data = self._generate_impact_data(achievements)
-        
+
         return {
-            'user': user_info,
-            'stats': stats,
-            'achievements': achievements,
-            'achievements_by_category': achievements_by_category,
-            'timeline': timeline_data,
-            'skills': skills_data,
-            'impact_chart': impact_data,
-            'generated_at': datetime.utcnow().isoformat()
+            "user": user_info,
+            "stats": stats,
+            "achievements": achievements,
+            "achievements_by_category": achievements_by_category,
+            "timeline": timeline_data,
+            "skills": skills_data,
+            "impact_chart": impact_data,
+            "generated_at": datetime.utcnow().isoformat(),
         }
-    
+
     def _generate_timeline_data(self, achievements: List) -> List[Dict]:
         """Generate timeline visualization data."""
         timeline = []
-        
-        for achievement in sorted(achievements, key=lambda a: a.completed_at or datetime.min):
+
+        for achievement in sorted(
+            achievements, key=lambda a: a.completed_at or datetime.min
+        ):
             if achievement.completed_at:
-                timeline.append({
-                    'date': achievement.completed_at.isoformat(),
-                    'title': achievement.title,
-                    'category': achievement.category,
-                    'impact': achievement.impact_score or 0,
-                    'skills': achievement.skills_demonstrated or []
-                })
-                
+                timeline.append(
+                    {
+                        "date": achievement.completed_at.isoformat(),
+                        "title": achievement.title,
+                        "category": achievement.category,
+                        "impact": achievement.impact_score or 0,
+                        "skills": achievement.skills_demonstrated or [],
+                    }
+                )
+
         return timeline
-    
+
     def _generate_skills_data(self, achievements: List) -> Dict[str, Any]:
         """Generate skills visualization data."""
         skill_counts = {}
         skill_timeline = {}
-        
+
         for achievement in achievements:
             if achievement.skills_demonstrated:
                 for skill in achievement.skills_demonstrated:
                     # Count occurrences
                     skill_counts[skill] = skill_counts.get(skill, 0) + 1
-                    
+
                     # Track timeline
                     if skill not in skill_timeline:
                         skill_timeline[skill] = []
                     if achievement.completed_at:
-                        skill_timeline[skill].append(achievement.completed_at.isoformat())
-                        
+                        skill_timeline[skill].append(
+                            achievement.completed_at.isoformat()
+                        )
+
         # Create radar chart data
         top_skills = sorted(skill_counts.items(), key=lambda x: x[1], reverse=True)[:12]
-        
+
         radar_data = {
-            'labels': [s[0] for s in top_skills],
-            'values': [s[1] for s in top_skills],
-            'max_value': max(s[1] for s in top_skills) if top_skills else 10
+            "labels": [s[0] for s in top_skills],
+            "values": [s[1] for s in top_skills],
+            "max_value": max(s[1] for s in top_skills) if top_skills else 10,
         }
-        
+
         return {
-            'counts': skill_counts,
-            'timeline': skill_timeline,
-            'radar': radar_data,
-            'total': len(skill_counts)
+            "counts": skill_counts,
+            "timeline": skill_timeline,
+            "radar": radar_data,
+            "total": len(skill_counts),
         }
-    
+
     def _generate_impact_data(self, achievements: List) -> Dict[str, Any]:
         """Generate impact visualization data."""
         # Monthly impact scores
         monthly_impact = {}
         category_impact = {}
-        
+
         for achievement in achievements:
             if achievement.completed_at and achievement.impact_score:
-                month_key = achievement.completed_at.strftime('%Y-%m')
-                monthly_impact[month_key] = monthly_impact.get(month_key, 0) + achievement.impact_score
-                
-                category_impact[achievement.category] = category_impact.get(
-                    achievement.category, 0
-                ) + achievement.impact_score
-                
+                month_key = achievement.completed_at.strftime("%Y-%m")
+                monthly_impact[month_key] = (
+                    monthly_impact.get(month_key, 0) + achievement.impact_score
+                )
+
+                category_impact[achievement.category] = (
+                    category_impact.get(achievement.category, 0)
+                    + achievement.impact_score
+                )
+
         # Sort monthly data
         sorted_months = sorted(monthly_impact.items())
-        
+
         return {
-            'monthly': {
-                'labels': [m[0] for m in sorted_months],
-                'values': [m[1] for m in sorted_months]
+            "monthly": {
+                "labels": [m[0] for m in sorted_months],
+                "values": [m[1] for m in sorted_months],
             },
-            'by_category': category_impact,
-            'distribution': self._calculate_impact_distribution(achievements)
+            "by_category": category_impact,
+            "distribution": self._calculate_impact_distribution(achievements),
         }
-    
+
     def _calculate_impact_distribution(self, achievements: List) -> Dict[str, int]:
         """Calculate impact score distribution."""
         distribution = {
-            'low': 0,      # 0-33
-            'medium': 0,   # 34-66
-            'high': 0      # 67-100
+            "low": 0,  # 0-33
+            "medium": 0,  # 34-66
+            "high": 0,  # 67-100
         }
-        
+
         for achievement in achievements:
             if achievement.impact_score:
                 if achievement.impact_score <= 33:
-                    distribution['low'] += 1
+                    distribution["low"] += 1
                 elif achievement.impact_score <= 66:
-                    distribution['medium'] += 1
+                    distribution["medium"] += 1
                 else:
-                    distribution['high'] += 1
-                    
+                    distribution["high"] += 1
+
         return distribution
-    
-    def _generate_html_files(
-        self, 
-        data: Dict[str, Any],
-        output_dir: str,
-        theme: str
-    ):
+
+    def _generate_html_files(self, data: Dict[str, Any], output_dir: str, theme: str):
         """Generate HTML files for the portfolio."""
         # Create basic HTML structure
         self._create_index_html(data, output_dir, theme)
         self._create_achievements_html(data, output_dir, theme)
         self._create_skills_html(data, output_dir, theme)
         self._create_timeline_html(data, output_dir, theme)
-        
+
     def _create_index_html(self, data: Dict, output_dir: str, theme: str):
         """Create main index.html file."""
         html_content = f"""<!DOCTYPE html>
@@ -240,7 +241,7 @@ class WebPortfolioGenerator(BaseExporter):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{data['user'].get('name', 'Portfolio')} - Professional Portfolio</title>
+    <title>{data["user"].get("name", "Portfolio")} - Professional Portfolio</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme-{theme}.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -248,7 +249,7 @@ class WebPortfolioGenerator(BaseExporter):
 <body>
     <nav class="navbar">
         <div class="container">
-            <h1 class="logo">{data['user'].get('name', 'Portfolio')}</h1>
+            <h1 class="logo">{data["user"].get("name", "Portfolio")}</h1>
             <ul class="nav-links">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#achievements">Achievements</a></li>
@@ -260,25 +261,25 @@ class WebPortfolioGenerator(BaseExporter):
     
     <section id="home" class="hero">
         <div class="container">
-            <h1>{data['user'].get('name', 'Professional')}</h1>
-            <h2>{data['user'].get('title', 'Software Developer')}</h2>
-            <p>{data['user'].get('bio', '')}</p>
+            <h1>{data["user"].get("name", "Professional")}</h1>
+            <h2>{data["user"].get("title", "Software Developer")}</h2>
+            <p>{data["user"].get("bio", "")}</p>
             
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>{data['stats']['total_achievements']}</h3>
+                    <h3>{data["stats"]["total_achievements"]}</h3>
                     <p>Achievements</p>
                 </div>
                 <div class="stat-card">
-                    <h3>{data['stats']['total_impact']}</h3>
+                    <h3>{data["stats"]["total_impact"]}</h3>
                     <p>Total Impact</p>
                 </div>
                 <div class="stat-card">
-                    <h3>{data['stats']['skills']}</h3>
+                    <h3>{data["stats"]["skills"]}</h3>
                     <p>Skills</p>
                 </div>
                 <div class="stat-card">
-                    <h3>{data['stats']['total_hours']:,}</h3>
+                    <h3>{data["stats"]["total_hours"]:,}</h3>
                     <p>Project Hours</p>
                 </div>
             </div>
@@ -312,10 +313,10 @@ class WebPortfolioGenerator(BaseExporter):
 </body>
 </html>
 """
-        
-        with open(os.path.join(output_dir, 'index.html'), 'w') as f:
+
+        with open(os.path.join(output_dir, "index.html"), "w") as f:
             f.write(html_content)
-            
+
     def _create_achievements_html(self, data: Dict, output_dir: str, theme: str):
         """Create achievements page."""
         html_content = f"""<!DOCTYPE html>
@@ -323,14 +324,14 @@ class WebPortfolioGenerator(BaseExporter):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Achievements - {data['user'].get('name', 'Portfolio')}</title>
+    <title>Achievements - {data["user"].get("name", "Portfolio")}</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme-{theme}.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <h1 class="logo">{data['user'].get('name', 'Portfolio')}</h1>
+            <h1 class="logo">{data["user"].get("name", "Portfolio")}</h1>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="achievements.html" class="active">Achievements</a></li>
@@ -347,7 +348,7 @@ class WebPortfolioGenerator(BaseExporter):
             <div class="filters">
                 <select id="categoryFilter" onchange="filterAchievements()">
                     <option value="">All Categories</option>
-                    {' '.join(f'<option value="{cat}">{cat.title()}</option>' for cat in data['achievements_by_category'].keys())}
+                    {" ".join(f'<option value="{cat}">{cat.title()}</option>' for cat in data["achievements_by_category"].keys())}
                 </select>
                 
                 <select id="sortBy" onchange="sortAchievements()">
@@ -371,10 +372,10 @@ class WebPortfolioGenerator(BaseExporter):
 </body>
 </html>
 """
-        
-        with open(os.path.join(output_dir, 'achievements.html'), 'w') as f:
+
+        with open(os.path.join(output_dir, "achievements.html"), "w") as f:
             f.write(html_content)
-            
+
     def _create_skills_html(self, data: Dict, output_dir: str, theme: str):
         """Create skills visualization page."""
         html_content = f"""<!DOCTYPE html>
@@ -382,7 +383,7 @@ class WebPortfolioGenerator(BaseExporter):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skills - {data['user'].get('name', 'Portfolio')}</title>
+    <title>Skills - {data["user"].get("name", "Portfolio")}</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme-{theme}.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -390,7 +391,7 @@ class WebPortfolioGenerator(BaseExporter):
 <body>
     <nav class="navbar">
         <div class="container">
-            <h1 class="logo">{data['user'].get('name', 'Portfolio')}</h1>
+            <h1 class="logo">{data["user"].get("name", "Portfolio")}</h1>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="achievements.html">Achievements</a></li>
@@ -406,7 +407,7 @@ class WebPortfolioGenerator(BaseExporter):
             
             <div class="skills-overview">
                 <div class="stat-card">
-                    <h3>{data['skills']['total']}</h3>
+                    <h3>{data["skills"]["total"]}</h3>
                     <p>Total Skills</p>
                 </div>
             </div>
@@ -437,10 +438,10 @@ class WebPortfolioGenerator(BaseExporter):
 </body>
 </html>
 """
-        
-        with open(os.path.join(output_dir, 'skills.html'), 'w') as f:
+
+        with open(os.path.join(output_dir, "skills.html"), "w") as f:
             f.write(html_content)
-            
+
     def _create_timeline_html(self, data: Dict, output_dir: str, theme: str):
         """Create timeline visualization page."""
         html_content = f"""<!DOCTYPE html>
@@ -448,14 +449,14 @@ class WebPortfolioGenerator(BaseExporter):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timeline - {data['user'].get('name', 'Portfolio')}</title>
+    <title>Timeline - {data["user"].get("name", "Portfolio")}</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme-{theme}.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <h1 class="logo">{data['user'].get('name', 'Portfolio')}</h1>
+            <h1 class="logo">{data["user"].get("name", "Portfolio")}</h1>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="achievements.html">Achievements</a></li>
@@ -483,27 +484,27 @@ class WebPortfolioGenerator(BaseExporter):
 </body>
 </html>
 """
-        
-        with open(os.path.join(output_dir, 'timeline.html'), 'w') as f:
+
+        with open(os.path.join(output_dir, "timeline.html"), "w") as f:
             f.write(html_content)
-            
+
     def _generate_static_files(self, output_dir: str, theme: str):
         """Generate CSS and JavaScript files."""
         # Create directories
-        css_dir = os.path.join(output_dir, 'css')
-        js_dir = os.path.join(output_dir, 'js')
+        css_dir = os.path.join(output_dir, "css")
+        js_dir = os.path.join(output_dir, "js")
         os.makedirs(css_dir, exist_ok=True)
         os.makedirs(js_dir, exist_ok=True)
-        
+
         # Generate main CSS
         self._create_main_css(css_dir)
-        
+
         # Generate theme CSS
         self._create_theme_css(css_dir, theme)
-        
+
         # Generate JavaScript
         self._create_portfolio_js(js_dir)
-        
+
     def _create_main_css(self, css_dir: str):
         """Create main stylesheet."""
         css_content = """
@@ -789,10 +790,10 @@ body {
     }
 }
 """
-        
-        with open(os.path.join(css_dir, 'style.css'), 'w') as f:
+
+        with open(os.path.join(css_dir, "style.css"), "w") as f:
             f.write(css_content)
-            
+
     def _create_theme_css(self, css_dir: str, theme: str):
         """Create theme-specific CSS."""
         if theme == "modern":
@@ -873,10 +874,10 @@ body {
             theme_css = """
 /* Default Theme */
 """
-        
-        with open(os.path.join(css_dir, f'theme-{theme}.css'), 'w') as f:
+
+        with open(os.path.join(css_dir, f"theme-{theme}.css"), "w") as f:
             f.write(theme_css)
-            
+
     def _create_portfolio_js(self, js_dir: str):
         """Create portfolio JavaScript file."""
         js_content = """
@@ -1100,15 +1101,15 @@ function loadTimelinePage() {
     `).join('');
 }
 """
-        
-        with open(os.path.join(js_dir, 'portfolio.js'), 'w') as f:
+
+        with open(os.path.join(js_dir, "portfolio.js"), "w") as f:
             f.write(js_content)
-            
+
     def _generate_data_files(self, data: Dict, output_dir: str):
         """Generate data files for the portfolio."""
         # Save full data as JSON
-        data_dir = os.path.join(output_dir, 'data')
+        data_dir = os.path.join(output_dir, "data")
         os.makedirs(data_dir, exist_ok=True)
-        
-        with open(os.path.join(data_dir, 'portfolio.json'), 'w') as f:
+
+        with open(os.path.join(data_dir, "portfolio.json"), "w") as f:
             json.dump(data, f, indent=2, default=str)

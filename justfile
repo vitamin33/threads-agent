@@ -2,8 +2,21 @@
 # See: https://github.com/casey/just
 
 # Mega Commands (80/20 Rule)
-work-day: check-prerequisites trend-dashboard dev-dashboard
-# (Mega commands need proper recipe definitions)
+work-day: check-prerequisites trend-dashboard dev-dashboard ai-business-intelligence
+create-viral persona topic:
+	just create-viral-{{persona}} "{{topic}}"
+ship-it message:
+	just smart-deploy canary && just github-pr "{{message}}"
+end-day: analyze-money overnight-optimize
+make-money: autopilot-start grow-business analyze-money
+grow-business: trend-start searxng-start
+	just competitive-analysis "AI content"
+	just ai-biz
+	just revenue-projection
+analyze-money: cost-analysis revenue-projection business-kpis
+ai-biz action="dashboard":
+	just ai-business-intelligence {{action}}
+health-check: cluster-health services-health business-health
 
 # Claude Code Sub-Agent Helpers
 patterns FEATURE:
@@ -34,8 +47,12 @@ alias persona-hot-reload := hot-reload-persona
 alias ai-test-gen := ai-generate-tests
 alias smart-deploy := deploy-strategy
 dev-dashboard: prometheus-dashboard grafana business-dashboard
-# Redis cache aliases removed - recipes don't exist
-# Trend check alias removed - recipe doesn't exist
+cache-set key value:
+	just redis-cache-set {{key}} {{value}}
+cache-get key:
+	just redis-cache-get {{key}}
+trend-check topic:
+	just trend-detection {{topic}}
 
 # Core Development Commands
 bootstrap:
@@ -83,13 +100,14 @@ images:
 	docker build -t persona-runtime:local services/persona_runtime &
 	docker build -t fake-threads:local services/fake_threads &
 	docker build -t viral-engine:local services/viral_engine &
+	docker build -t achievement-collector:local -f services/achievement_collector/Dockerfile . &
 	
 	# Wait for all builds to complete
 	wait
 	
 	# Import to k3d registry
 	echo "📦 Importing images to k3d..."
-	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local -c threads-agent
+	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local achievement-collector:local -c threads-agent
 	
 	echo "✅ All images built and imported"
 
@@ -239,7 +257,7 @@ scaffold service:
 	cp scripts/templates/dockerfile services/$SERVICE/Dockerfile
 	
 	# Replace placeholders
-	sed -i.bak "s/SERVICE_NAME/$SERVICE/g" services/$SERVICE/*
+	sed -i.bak "s/__SERVICE_NAME__/$SERVICE/g" services/$SERVICE/*
 	rm services/$SERVICE/*.bak
 	
 	echo "✅ Service $SERVICE scaffolded"
@@ -384,7 +402,6 @@ mcp-setup:
 	echo "✅ MCP servers configured"
 	echo "🎯 Test with: just mcp-redis-test"
 
-# Cache operations (duplicate removed - using aliases at lines 22-23)
 
 cache-trends:
 	#!/usr/bin/env bash

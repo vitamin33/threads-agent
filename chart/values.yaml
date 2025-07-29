@@ -244,9 +244,16 @@ achievementCollector:
   storage:
     size: 10Gi
     className: ""                  # Use default storage class
+  service:
+    type: ClusterIP
+    port: 8090
   github:
     webhookSecret: ""             # Set in secrets
     token: ""                     # GitHub PAT for API access
+  prometheus:
+    scrapeInterval: "24"          # hours between metric scrapes
+  sqlite:
+    enabled: false                # use PostgreSQL by default
   ingress:
     enabled: false
     host: achievements.example.com

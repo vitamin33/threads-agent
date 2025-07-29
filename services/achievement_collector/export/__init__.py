@@ -17,9 +17,9 @@ from .web.portfolio_site import WebPortfolioGenerator
 
 __all__ = [
     "JSONExporter",
-    "CSVExporter", 
+    "CSVExporter",
     "ResumeGenerator",
     "PortfolioGenerator",
     "LinkedInIntegration",
-    "WebPortfolioGenerator"
+    "WebPortfolioGenerator",
 ]

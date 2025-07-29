@@ -4,17 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from services.achievement_collector.api.schemas import AnalysisRequest, AnalysisResponse
-from services.achievement_collector.core.config import settings
 from services.achievement_collector.core.logging import setup_logging
 from services.achievement_collector.db.config import get_db
 from services.achievement_collector.db.models import Achievement
-from services.achievement_collector.services.ai_analyzer import AchievementAnalyzer
+from services.achievement_collector.services.ai_analyzer import AIAnalyzer
 
 logger = setup_logging(__name__)
 router = APIRouter()
 
 # Initialize analyzer
-analyzer = AchievementAnalyzer(api_key=settings.OPENAI_API_KEY)
+analyzer = AIAnalyzer()
 
 
 @router.post("/analyze", response_model=AnalysisResponse)

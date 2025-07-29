@@ -12,9 +12,14 @@ USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
 
 if USE_SQLITE:
     # Use SQLite for local persistent storage
-    ACHIEVEMENTS_DIR = Path.home() / ".threads-agent" / "achievements"
-    ACHIEVEMENTS_DIR.mkdir(parents=True, exist_ok=True)
-    SQLITE_DB_PATH = ACHIEVEMENTS_DIR / "achievements.db"
+    # Check for existing test_achievements.db first
+    local_db_path = Path("test_achievements.db")
+    if local_db_path.exists():
+        SQLITE_DB_PATH = local_db_path.absolute()
+    else:
+        ACHIEVEMENTS_DIR = Path.home() / ".threads-agent" / "achievements"
+        ACHIEVEMENTS_DIR.mkdir(parents=True, exist_ok=True)
+        SQLITE_DB_PATH = ACHIEVEMENTS_DIR / "achievements.db"
     DATABASE_URL = f"sqlite:///{SQLITE_DB_PATH}"
     connect_args = {"check_same_thread": False}
     print(f"🗄️  Using SQLite database at: {SQLITE_DB_PATH}")

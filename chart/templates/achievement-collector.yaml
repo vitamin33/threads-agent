@@ -35,12 +35,23 @@ spec:
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "threads.fullname" . }}-openai
-              key: api-key
+              name: openai-secret
+              key: OPENAI_API_KEY
         - name: PORTFOLIO_OUTPUT_DIR
           value: "/app/portfolios"
         - name: LOG_LEVEL
           value: {{ .Values.achievementCollector.logLevel | default "INFO" | quote }}
+        # Phase 2 Integration Environment Variables
+        - name: ORCHESTRATOR_URL
+          value: "http://orchestrator:8080"
+        - name: THREADS_ADAPTOR_URL
+          value: "http://threads-adaptor:8000"
+        - name: PROMETHEUS_URL
+          value: "http://prometheus:9090"
+        - name: SCRAPE_INTERVAL_HOURS
+          value: {{ .Values.achievementCollector.prometheus.scrapeInterval | default "24" | quote }}
+        - name: USE_SQLITE
+          value: {{ .Values.achievementCollector.sqlite.enabled | default "false" | quote }}
         livenessProbe:
           httpGet:
             path: /health
