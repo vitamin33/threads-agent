@@ -1,0 +1,10 @@
+name: Test Billing
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simple test
+        run: echo "Testing if Actions work after billing upgrade"
