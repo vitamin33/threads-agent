@@ -5,6 +5,7 @@ An intelligent PR-based achievement collection system that automatically transfo
 ## 🚀 Key Features
 
 - **Automatic PR Analysis**: Extracts 50+ metrics across code, performance, business, quality, and team dimensions
+- **AI-Powered Business Value Extraction**: Quantifies impact in dollars, time saved, and performance gains
 - **AI-Powered Story Generation**: Creates tailored narratives for technical, business, and leadership audiences
 - **Multi-Platform Publishing**: Prepares content optimized for LinkedIn, Twitter, Dev.to, GitHub, and portfolio sites
 - **Career Impact Tracking**: Measures and visualizes your professional growth with data-driven insights
@@ -19,6 +20,7 @@ An intelligent PR-based achievement collection system that automatically transfo
 
 ### For Developers
 - [**API Reference**](./API_REFERENCE.md) - Complete API documentation with examples
+- [**AI Business Value Extraction**](./AI_BUSINESS_VALUE_EXTRACTION.md) - Automatic quantification of PR impact
 - [**Deployment Guide**](./DEPLOYMENT_GUIDE.md) - Docker, Kubernetes, and production deployment
 - [**Best Practices**](./BEST_PRACTICES.md) - Maximize your achievement impact
 
