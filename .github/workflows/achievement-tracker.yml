@@ -218,10 +218,40 @@ jobs:
               # Initialize database
               Base.metadata.create_all(bind=engine)
               
-              # Parse collected metrics
-              pr_metrics = json.loads('''${{ steps.pr_metrics.outputs.metrics }}''')
-              business_metrics = json.loads('''${{ steps.business_metrics.outputs.metrics }}''')
-              planning_metrics = json.loads('''${{ steps.planning_metrics.outputs.metrics }}''')
+              # Parse collected metrics with debugging
+              pr_metrics_raw = '''${{ steps.pr_metrics.outputs.metrics }}'''
+              business_metrics_raw = '''${{ steps.business_metrics.outputs.metrics }}'''
+              planning_metrics_raw = '''${{ steps.planning_metrics.outputs.metrics }}'''
+              
+              print(f"🔍 Debug - Event name: ${{ github.event_name }}")
+              print(f"🔍 Debug - PR metrics raw length: {len(pr_metrics_raw)}")
+              print(f"🔍 Debug - Business metrics raw length: {len(business_metrics_raw)}")
+              print(f"🔍 Debug - Planning metrics raw length: {len(planning_metrics_raw)}")
+              
+              # Handle empty metrics gracefully
+              try:
+                  pr_metrics = json.loads(pr_metrics_raw) if pr_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse PR metrics: {e}")
+                  pr_metrics = {}
+                  
+              try:
+                  business_metrics = json.loads(business_metrics_raw) if business_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse business metrics: {e}")
+                  business_metrics = {}
+                  
+              try:
+                  planning_metrics = json.loads(planning_metrics_raw) if planning_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse planning metrics: {e}")
+                  planning_metrics = {}
+              
+              # Exit early if no PR metrics
+              if not pr_metrics:
+                  print("⚠️  No PR metrics available, skipping achievement creation")
+                  print("    This is expected for workflow_run events from non-PR workflows")
+                  return
               
               # Performance metrics
               perf_data = {
@@ -290,7 +320,7 @@ jobs:
                   description=f"{pr_metrics.get('body', '')}\\n\\nDelivered via PR #{pr_metrics['pr_number']} with {pr_metrics['review_count']} reviews.",
                   started_at=datetime.now(),
                   completed_at=datetime.now(),
-                  source_type="github_pr_ci",
+                  source_type="github_pr",
                   source_id=f"PR-{pr_metrics['pr_number']}",
                   tags=pr_metrics.get('labels', []) + ['ci-tracked'],
                   skills_demonstrated=list(set(skills))[:15],
@@ -310,7 +340,7 @@ jobs:
               try:
                   # Check if already exists
                   existing = db.query(Achievement).filter_by(
-                      source_type="github_pr_ci",
+                      source_type="github_pr",
                       source_id=f"PR-{pr_metrics['pr_number']}"
                   ).first()
                   
