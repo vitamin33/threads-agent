@@ -356,7 +356,7 @@ jobs:
                       if os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'test':
                           try:
                               analyzer = AIAnalyzer()
-                              updated = asyncio.run(analyzer.update_achievement_business_value(db, achievement))
+                              updated = await analyzer.update_achievement_business_value(db, achievement)
                               if updated:
                                   print(f"   💰 Business Value: {achievement.business_value}")
                           except Exception as e:

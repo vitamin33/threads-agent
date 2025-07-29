@@ -362,29 +362,39 @@ class GitHubPRTracker:
         """Calculate complexity score from PR metrics."""
         score = 40.0  # Base complexity
 
-        # File diversity
-        if metrics.get("files_changed", 0) >= 10:
+        # File diversity - handle both field names
+        files_changed = metrics.get("files_changed", metrics.get("changed_files", 0))
+        if files_changed >= 10:
             score += 20
-        elif metrics.get("files_changed", 0) >= 5:
+        elif files_changed >= 5:
             score += 10
 
-        # Code volume
+        # Code volume - calculate total from additions + deletions
         total_changes = metrics.get("total_changes", 0)
-        if total_changes >= 500:
+        if total_changes == 0:  # If not provided, calculate from additions + deletions
+            total_changes = metrics.get("additions", 0) + metrics.get("deletions", 0)
+        
+        if total_changes >= 1000:  # Adjusted thresholds for better scoring
+            score += 25
+        elif total_changes >= 500:
             score += 20
         elif total_changes >= 200:
             score += 10
+        elif total_changes >= 50:
+            score += 5
 
-        # Review complexity (more reviewers = more complex)
-        if metrics.get("reviewers_count", 0) >= 3:
+        # Review complexity - handle both field names
+        reviewers_count = metrics.get("reviewers_count", metrics.get("review_count", 0))
+        if reviewers_count >= 3:
             score += 10
-        elif metrics.get("reviewers_count", 0) >= 2:
+        elif reviewers_count >= 2:
             score += 5
 
         # Commit count (more commits might indicate iterative complexity)
-        if metrics.get("commits_count", 0) >= 10:
+        commits_count = metrics.get("commits_count", metrics.get("commits", 0))
+        if commits_count >= 10:
             score += 10
-        elif metrics.get("commits_count", 0) >= 5:
+        elif commits_count >= 5:
             score += 5
 
         return min(score, 100.0)
