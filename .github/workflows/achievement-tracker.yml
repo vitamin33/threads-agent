@@ -3,15 +3,10 @@ name: Achievement Tracker
 on:
   pull_request:
     types: [closed]
-  push:
-    branches: [main]
-  workflow_run:
-    workflows: ["*"]
-    types: [completed]
 
 jobs:
   track-achievement:
-    if: github.event.pull_request.merged == true || github.event_name == 'push' || github.event_name == 'workflow_run'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
@@ -219,9 +214,19 @@ jobs:
               Base.metadata.create_all(bind=engine)
               
               # Parse collected metrics
-              pr_metrics = json.loads('''${{ steps.pr_metrics.outputs.metrics }}''')
-              business_metrics = json.loads('''${{ steps.business_metrics.outputs.metrics }}''')
-              planning_metrics = json.loads('''${{ steps.planning_metrics.outputs.metrics }}''')
+              pr_metrics_raw = '''${{ steps.pr_metrics.outputs.metrics }}'''
+              business_metrics_raw = '''${{ steps.business_metrics.outputs.metrics }}'''
+              planning_metrics_raw = '''${{ steps.planning_metrics.outputs.metrics }}'''
+              
+              # Handle empty metrics gracefully
+              pr_metrics = json.loads(pr_metrics_raw) if pr_metrics_raw else {}
+              business_metrics = json.loads(business_metrics_raw) if business_metrics_raw else {}
+              planning_metrics = json.loads(planning_metrics_raw) if planning_metrics_raw else {}
+              
+              # Exit early if no PR metrics
+              if not pr_metrics:
+                  print("⚠️  No PR metrics available, skipping achievement creation")
+                  return
               
               # Performance metrics
               perf_data = {
