@@ -1,6 +1,7 @@
 <!-- title & badges -->
 
 # Threads-Agent Stack 🧵🤖
+<!-- Achievement tracking with PostgreSQL enabled -->
 
 [![CI (dev)](.github/workflows/dev-ci.yml/badge.svg)](../../actions/workflows/dev-ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
