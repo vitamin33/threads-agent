@@ -14,20 +14,20 @@ An intelligent PR-based achievement collection system that automatically transfo
 ## 📖 Documentation
 
 ### Getting Started
-- [**PR Achievement System Overview**](./PR_ACHIEVEMENT_SYSTEM.md) - Complete system architecture and workflow
-- [**GitHub Actions Setup Guide**](./GITHUB_ACTIONS_SETUP.md) - Step-by-step setup for automatic PR tracking
-- [**Quick Start Guide**](./PR_ACHIEVEMENT_SYSTEM.md#installation--setup) - Get up and running in 5 minutes
+- [**PR Achievement System Overview**](./docs/PR_ACHIEVEMENT_SYSTEM.md) - Complete system architecture and workflow
+- [**GitHub Actions Setup Guide**](./docs/GITHUB_ACTIONS_SETUP.md) - Step-by-step setup for automatic PR tracking
+- [**Quick Start Guide**](./docs/PR_ACHIEVEMENT_SYSTEM.md#installation--setup) - Get up and running in 5 minutes
 
 ### For Developers
-- [**API Reference**](./API_REFERENCE.md) - Complete API documentation with examples
-- [**AI Business Value Extraction**](./AI_BUSINESS_VALUE_EXTRACTION.md) - Automatic quantification of PR impact
-- [**Deployment Guide**](./DEPLOYMENT_GUIDE.md) - Docker, Kubernetes, and production deployment
-- [**Best Practices**](./BEST_PRACTICES.md) - Maximize your achievement impact
+- [**API Reference**](./docs/API_REFERENCE.md) - Complete API documentation with examples
+- [**AI Business Value Extraction**](./docs/AI_BUSINESS_VALUE_EXTRACTION.md) - Automatic quantification of PR impact
+- [**Deployment Guide**](./docs/DEPLOYMENT_GUIDE.md) - Docker, Kubernetes, and production deployment
+- [**Best Practices**](./docs/BEST_PRACTICES.md) - Maximize your achievement impact
 
 ### Architecture Docs
-- [Phase 1: Core System](./PHASE_1_DOCUMENTATION.md) - Foundation and database design
-- [Phase 2: Analytics](./PHASE_2_DOCUMENTATION.md) - Analytics and insights
-- [Phase 3: Export & Publishing](./PHASE_3_ROADMAP.md) - Multi-platform publishing
+- [Phase 1: Core System](./docs/PHASE_1_DOCUMENTATION.md) - Foundation and database design
+- [Phase 2: Analytics](./docs/PHASE_2_DOCUMENTATION.md) - Analytics and insights
+- [Phase 3: Export & Publishing](./docs/PHASE_3_ROADMAP.md) - Multi-platform publishing
 
 ## 🎯 Quick Example
 

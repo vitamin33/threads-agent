@@ -257,6 +257,10 @@ just token-batch     # Batch processing (80% savings)
 ### Collaboration Practices
 - Don't add Claude as co-author in git commits in PRs
 
+### Development Environment
+- **ALWAYS use virtual environments** for Python services (venv contains all dependencies)
+- Without venv: ModuleNotFoundError, command not found (pytest, mypy, etc.)
+
 ## Resources
 
 - **[DAILY_PLAYBOOK.md](./DAILY_PLAYBOOK.md)** - Daily cheat sheet

@@ -1,7 +1,0 @@
-{
-  "timestamp": "2025-07-21T01:56:58+03:00",
-  "test_structure": {"unit_tests":        1,"integration_tests":        0,"e2e_tests":        3,"service_tests":       13},
-  "test_types": ["pytest","unittest","mocking","fixtures"],
-  "coverage_estimation": {"estimated_coverage": 36.11, "source_files":       36, "test_files":       13},
-  "test_patterns": ["given_when_then"]
-}

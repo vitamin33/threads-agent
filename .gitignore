@@ -254,3 +254,5 @@ traces.zip                     # OTEL export artefacts
 .claude/settings.local.json
 .claude-local.json
 test.db
+test_achievements.db
+*.db
