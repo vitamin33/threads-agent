@@ -105,7 +105,7 @@ class TestThompsonSamplingPerformanceRegression:
         # Compare with optimized version
         start = time.perf_counter()
         for _ in range(100):
-            result_opt = select_top_variants_optimized(variants, top_k=10)
+            select_top_variants_optimized(variants, top_k=10)
         elapsed_opt = time.perf_counter() - start
         avg_time_opt = elapsed_opt / 100
 
@@ -199,7 +199,7 @@ class TestThompsonSamplingPerformanceRegression:
         for ratio in ratios:
             start = time.perf_counter()
             for _ in range(20):
-                result = select_top_variants_with_exploration(
+                select_top_variants_with_exploration(
                     variants, top_k=10, min_impressions=100, exploration_ratio=ratio
                 )
             elapsed = time.perf_counter() - start
@@ -229,13 +229,13 @@ class TestThompsonSamplingPerformanceRegression:
         # Measure without E3
         start = time.perf_counter()
         for _ in range(10):
-            result_basic = select_top_variants(variants, top_k=10)
+            select_top_variants(variants, top_k=10)
         time_basic = time.perf_counter() - start
 
         # Measure with E3 (cached)
         start = time.perf_counter()
         for _ in range(10):
-            result_e3 = select_top_variants_with_e3_predictions(
+            select_top_variants_with_e3_predictions(
                 variants, predictor=mock_predictor, top_k=10, use_cache=True
             )
         time_e3 = time.perf_counter() - start

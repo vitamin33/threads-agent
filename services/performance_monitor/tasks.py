@@ -1,4 +1,5 @@
 """Celery tasks for performance monitoring."""
+
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
@@ -7,10 +8,7 @@ from celery import shared_task
 from sqlalchemy import and_
 
 from contextlib import contextmanager
-from services.performance_monitor.early_kill import (
-    EarlyKillMonitor,
-    VariantPerformance
-)
+from services.performance_monitor.early_kill import EarlyKillMonitor, VariantPerformance
 from services.performance_monitor.models import VariantMonitoring
 from services.performance_monitor.cache import PerformanceCache
 from services.threads_adaptor.client_sync import ThreadsClientSync
@@ -22,6 +20,7 @@ logger = logging.getLogger(__name__)
 def get_db_session():
     """Get database session for tasks."""
     from services.performance_monitor.main import SessionLocal
+
     session = SessionLocal()
     try:
         yield session
@@ -31,10 +30,7 @@ def get_db_session():
 
 @shared_task(name="performance_monitor.start_monitoring")
 def start_monitoring_task(
-    variant_id: str,
-    persona_id: str,
-    post_id: str,
-    expected_engagement_rate: float
+    variant_id: str, persona_id: str, post_id: str, expected_engagement_rate: float
 ) -> Dict[str, Any]:
     """Start monitoring a variant for early kill decisions."""
     logger.info(f"Starting monitoring for variant {variant_id}")
@@ -46,7 +42,7 @@ def start_monitoring_task(
             persona_id=persona_id,
             post_id=post_id,
             expected_engagement_rate=expected_engagement_rate,
-            started_at=datetime.utcnow()
+            started_at=datetime.utcnow(),
         )
         db.add(monitoring)
         db.commit()
@@ -57,7 +53,7 @@ def start_monitoring_task(
         return {
             "variant_id": variant_id,
             "monitoring_id": monitoring.id,
-            "status": "monitoring_started"
+            "status": "monitoring_started",
         }
 
 
@@ -68,17 +64,20 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
 
     with get_db_session() as db:
         # Get monitoring record
-        monitoring = db.query(VariantMonitoring).filter_by(
-            variant_id=variant_id,
-            is_active=True
-        ).first()
+        monitoring = (
+            db.query(VariantMonitoring)
+            .filter_by(variant_id=variant_id, is_active=True)
+            .first()
+        )
 
         if not monitoring:
             logger.warning(f"No active monitoring found for variant {variant_id}")
             return {"status": "no_monitoring"}
 
         # Check if timed out
-        elapsed_minutes = (datetime.utcnow() - monitoring.started_at).total_seconds() / 60
+        elapsed_minutes = (
+            datetime.utcnow() - monitoring.started_at
+        ).total_seconds() / 60
         if elapsed_minutes >= monitoring.timeout_minutes:
             monitoring.is_active = False
             monitoring.ended_at = datetime.utcnow()
@@ -91,10 +90,11 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
             # TODO: Replace with actual Threads API integration
             # For now, use mock data
             import random
+
             performance = {
                 "views": random.randint(100, 1000),
                 "interactions": random.randint(5, 50),
-                "engagement_rate": random.uniform(0.01, 0.10)
+                "engagement_rate": random.uniform(0.01, 0.10),
             }
 
             # Create performance data
@@ -103,7 +103,7 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
                 total_views=performance["views"],
                 total_interactions=performance["interactions"],
                 engagement_rate=performance["engagement_rate"],
-                last_updated=datetime.utcnow()
+                last_updated=datetime.utcnow(),
             )
 
             # Evaluate performance
@@ -112,7 +112,7 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
                 variant_id=variant_id,
                 persona_id=monitoring.persona_id,
                 expected_engagement_rate=monitoring.expected_engagement_rate,
-                post_timestamp=monitoring.started_at
+                post_timestamp=monitoring.started_at,
             )
 
             decision = monitor.evaluate_performance(variant_id, perf_data)
@@ -137,19 +137,19 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
                 return {
                     "status": "killed",
                     "reason": decision.reason,
-                    "final_engagement_rate": perf_data.engagement_rate
+                    "final_engagement_rate": perf_data.engagement_rate,
                 }
             else:
                 # Schedule next check
                 check_performance_task.apply_async(
                     args=[variant_id],
-                    countdown=30  # Check again in 30 seconds
+                    countdown=30,  # Check again in 30 seconds
                 )
 
                 return {
                     "status": "monitoring",
                     "current_engagement_rate": perf_data.engagement_rate,
-                    "interactions": perf_data.total_interactions
+                    "interactions": perf_data.total_interactions,
                 }
 
         except Exception as e:
@@ -157,7 +157,7 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
             # Schedule retry
             check_performance_task.apply_async(
                 args=[variant_id],
-                countdown=60  # Retry in 60 seconds
+                countdown=60,  # Retry in 60 seconds
             )
             return {"status": "error", "error": str(e)}
 
@@ -173,12 +173,17 @@ def batch_check_performance_task() -> Dict[str, Any]:
 
     with get_db_session() as db:
         # Get all active monitoring sessions
-        active_sessions = db.query(VariantMonitoring).filter(
-            and_(
-                VariantMonitoring.is_active.is_(True),
-                VariantMonitoring.started_at >= datetime.utcnow() - timedelta(minutes=10)
+        active_sessions = (
+            db.query(VariantMonitoring)
+            .filter(
+                and_(
+                    VariantMonitoring.is_active.is_(True),
+                    VariantMonitoring.started_at
+                    >= datetime.utcnow() - timedelta(minutes=10),
+                )
             )
-        ).all()
+            .all()
+        )
 
         if not active_sessions:
             logger.info("No active monitoring sessions")
@@ -190,7 +195,7 @@ def batch_check_performance_task() -> Dict[str, Any]:
 
         with ThreadsClientSync() as threads_client:
             for i in range(0, len(active_sessions), batch_size):
-                batch = active_sessions[i:i+batch_size]
+                batch = active_sessions[i : i + batch_size]
                 post_ids = [s.post_id for s in batch]
 
                 # Check cache first
@@ -198,7 +203,8 @@ def batch_check_performance_task() -> Dict[str, Any]:
 
                 # Fetch missing data
                 to_fetch = [
-                    post_id for post_id, perf in cached_performances.items()
+                    post_id
+                    for post_id, perf in cached_performances.items()
                     if perf is None
                 ]
 
@@ -220,17 +226,23 @@ def batch_check_performance_task() -> Dict[str, Any]:
                     processed_count += 1
 
                     # Check timeout first
-                    elapsed_minutes = (datetime.utcnow() - session.started_at).total_seconds() / 60
+                    elapsed_minutes = (
+                        datetime.utcnow() - session.started_at
+                    ).total_seconds() / 60
                     if elapsed_minutes >= session.timeout_minutes:
                         session.is_active = False
                         session.ended_at = datetime.utcnow()
-                        logger.info(f"Monitoring timed out for variant {session.variant_id}")
+                        logger.info(
+                            f"Monitoring timed out for variant {session.variant_id}"
+                        )
                         continue
 
                     # Get performance data
                     perf = cached_performances.get(session.post_id)
                     if not perf or perf.get("error"):
-                        logger.warning(f"No performance data for variant {session.variant_id}")
+                        logger.warning(
+                            f"No performance data for variant {session.variant_id}"
+                        )
                         continue
 
                     # Create performance data object
@@ -239,7 +251,7 @@ def batch_check_performance_task() -> Dict[str, Any]:
                         total_views=perf["views"],
                         total_interactions=perf["interactions"],
                         engagement_rate=perf["engagement_rate"],
-                        last_updated=datetime.utcnow()
+                        last_updated=datetime.utcnow(),
                     )
 
                     # Evaluate performance
@@ -247,14 +259,18 @@ def batch_check_performance_task() -> Dict[str, Any]:
                         variant_id=session.variant_id,
                         persona_id=session.persona_id,
                         expected_engagement_rate=session.expected_engagement_rate,
-                        post_timestamp=session.started_at
+                        post_timestamp=session.started_at,
                     )
 
-                    decision = monitor.evaluate_performance(session.variant_id, perf_data)
+                    decision = monitor.evaluate_performance(
+                        session.variant_id, perf_data
+                    )
 
                     if decision and decision.should_kill:
                         killed_count += 1
-                        logger.info(f"Killing variant {session.variant_id}: {decision.reason}")
+                        logger.info(
+                            f"Killing variant {session.variant_id}: {decision.reason}"
+                        )
 
                         # Update monitoring record
                         session.is_active = False
@@ -266,7 +282,9 @@ def batch_check_performance_task() -> Dict[str, Any]:
                         session.final_view_count = perf_data.total_views
 
                         # Trigger cleanup
-                        cleanup_killed_variant_task.delay(session.variant_id, session.post_id)
+                        cleanup_killed_variant_task.delay(
+                            session.variant_id, session.post_id
+                        )
 
                         # Invalidate cache
                         cache.invalidate(session.post_id)
@@ -277,19 +295,18 @@ def batch_check_performance_task() -> Dict[str, Any]:
     # Schedule next batch check
     schedule_batch_check()
 
-    logger.info(f"Batch check complete: {processed_count} processed, {killed_count} killed")
+    logger.info(
+        f"Batch check complete: {processed_count} processed, {killed_count} killed"
+    )
 
-    return {
-        "status": "complete",
-        "processed": processed_count,
-        "killed": killed_count
-    }
+    return {"status": "complete", "processed": processed_count, "killed": killed_count}
 
 
 def schedule_batch_check():
     """Schedule next batch check if not already scheduled."""
     # Check if task is already scheduled
     from celery import current_app
+
     inspect = current_app.control.inspect()
     scheduled = inspect.scheduled()
 
@@ -298,7 +315,7 @@ def schedule_batch_check():
     if scheduled:
         for worker, tasks in scheduled.items():
             for task in tasks:
-                if task['name'] == 'performance_monitor.batch_check_performance':
+                if task["name"] == "performance_monitor.batch_check_performance":
                     task_scheduled = True
                     break
 
@@ -322,11 +339,7 @@ def cleanup_killed_variant_task(variant_id: str, post_id: str) -> Dict[str, Any]
         # TODO: Implement actual Threads deletion
         logger.info(f"Would delete post {post_id} from Threads (not implemented)")
 
-        return {
-            "status": "cleaned_up",
-            "variant_id": variant_id,
-            "post_id": post_id
-        }
+        return {"status": "cleaned_up", "variant_id": variant_id, "post_id": post_id}
 
     except Exception as e:
         logger.error(f"Error cleaning up variant {variant_id}: {e}")

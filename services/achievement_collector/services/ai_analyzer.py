@@ -1,6 +1,7 @@
 """Enhanced AI analysis for achievements using GPT-4."""
 
 import json
+import logging
 import os
 from typing import Dict
 
@@ -161,18 +162,21 @@ class AIAnalyzer:
             "market_value": "High demand - $150k-$200k range",
         }
 
-    async def extract_business_value(self, pr_description: str, pr_metrics: Dict = None) -> Dict:
+    async def extract_business_value(
+        self, pr_description: str, pr_metrics: Dict = None
+    ) -> Dict:
         """Extract business value from PR description using enhanced calculator and AI."""
         pr_metrics = pr_metrics or {}
-        
+
         # First try the enhanced calculator
         from .business_value_calculator import AgileBusinessValueCalculator
+
         calculator = AgileBusinessValueCalculator()
-        
+
         enhanced_result = calculator.extract_business_value(pr_description, pr_metrics)
         if enhanced_result:
             return enhanced_result
-        
+
         # Fallback to AI if available
         if not self.client:
             return self._extract_business_value_offline(pr_description)
@@ -181,7 +185,7 @@ class AIAnalyzer:
         Analyze this PR description and extract quantifiable business value using industry best practices:
         
         PR Description: {pr_description}
-        PR Metrics: Files changed: {pr_metrics.get('changed_files', 'unknown')}, Lines: +{pr_metrics.get('additions', 0)}/-{pr_metrics.get('deletions', 0)}
+        PR Metrics: Files changed: {pr_metrics.get("changed_files", "unknown")}, Lines: +{pr_metrics.get("additions", 0)}/-{pr_metrics.get("deletions", 0)}
         
         Calculate realistic business value based on:
         1. Time savings (use role-based rates: Junior $75/hr, Mid $100/hr, Senior $125/hr)
@@ -201,7 +205,7 @@ class AIAnalyzer:
                 model="gpt-4",
                 messages=[
                     {
-                        "role": "system", 
+                        "role": "system",
                         "content": "You are a business value analyst specializing in quantifying software engineering improvements using industry-standard metrics and conservative estimates.",
                     },
                     {"role": "user", "content": prompt},
@@ -216,7 +220,7 @@ class AIAnalyzer:
                 # If not JSON, try to extract from text
                 content = response.choices[0].message.content
                 result = self._parse_ai_text_response(content)
-            
+
             return result if result and result.get("total_value") else None
 
         except Exception as e:
@@ -313,24 +317,24 @@ class AIAnalyzer:
             }
 
         return None
-    
+
     def _parse_ai_text_response(self, content: str) -> Dict:
         """Parse AI text response when JSON parsing fails."""
         import re
-        
+
         # Try to extract dollar amount
-        dollar_match = re.search(r'\$(\d{1,3}(?:,\d{3})*)', content)
+        dollar_match = re.search(r"\$(\d{1,3}(?:,\d{3})*)", content)
         if dollar_match:
-            amount = int(dollar_match.group(1).replace(',', ''))
-            
+            amount = int(dollar_match.group(1).replace(",", ""))
+
             # Determine type from content
-            if 'time' in content.lower() or 'hour' in content.lower():
-                value_type = 'time_savings'
-            elif 'performance' in content.lower() or 'optimization' in content.lower():
-                value_type = 'performance_improvement'
+            if "time" in content.lower() or "hour" in content.lower():
+                value_type = "time_savings"
+            elif "performance" in content.lower() or "optimization" in content.lower():
+                value_type = "performance_improvement"
             else:
-                value_type = 'cost_savings'
-                
+                value_type = "cost_savings"
+
             return {
                 "total_value": amount,
                 "currency": "USD",
@@ -338,7 +342,7 @@ class AIAnalyzer:
                 "type": value_type,
                 "confidence": 0.6,
                 "method": "ai_text_parsing",
-                "source": content[:200]
+                "source": content[:200],
             }
         return None
 
@@ -349,32 +353,36 @@ class AIAnalyzer:
         try:
             # Extract business value from description with metrics context
             pr_metrics = achievement.metrics_after or {}
-            business_data = await self.extract_business_value(achievement.description, pr_metrics)
+            business_data = await self.extract_business_value(
+                achievement.description, pr_metrics
+            )
 
             if not business_data:
                 return False
 
             # Store the full JSON in business_value field
             business_value_json = json.dumps(business_data)
-            
+
             # Check if the JSON is too long for VARCHAR(255)
             # If so, store a summary in business_value and full data in metadata
             if len(business_value_json) > 255:
                 # Create a short summary for business_value field
-                total_value = business_data.get('total_value', 0)
-                currency = business_data.get('currency', 'USD')
-                period = business_data.get('period', 'yearly')
-                
+                total_value = business_data.get("total_value", 0)
+                currency = business_data.get("currency", "USD")
+                period = business_data.get("period", "yearly")
+
                 # Store summary in business_value
                 achievement.business_value = f"${total_value:,} {currency}/{period}"
-                
+
                 # Store full JSON in metadata
                 if not achievement.metadata_json:
                     achievement.metadata_json = {}
-                achievement.metadata_json['business_value_full'] = business_data
-                
-                logger.info(f"Business value JSON too long ({len(business_value_json)} chars), "
-                           f"stored summary: {achievement.business_value}")
+                achievement.metadata_json["business_value_full"] = business_data
+
+                logging.getLogger(__name__).info(
+                    f"Business value JSON too long ({len(business_value_json)} chars), "
+                    f"stored summary: {achievement.business_value}"
+                )
             else:
                 # JSON fits in VARCHAR(255), store directly
                 achievement.business_value = business_value_json

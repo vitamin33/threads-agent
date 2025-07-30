@@ -1,4 +1,5 @@
 """API endpoints for performance monitoring service."""
+
 from datetime import datetime
 from typing import Optional, List
 
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/performance-monitor", tags=["performance-monitor"])
 
 class StartMonitoringRequest(BaseModel):
     """Request to start monitoring a variant."""
+
     variant_id: str
     persona_id: str
     post_id: str
@@ -23,6 +25,7 @@ class StartMonitoringRequest(BaseModel):
 
 class MonitoringStatus(BaseModel):
     """Status of a monitoring session."""
+
     variant_id: str
     persona_id: str
     is_active: bool
@@ -37,25 +40,25 @@ class MonitoringStatus(BaseModel):
 def get_db():
     """Import get_db from main module."""
     from services.performance_monitor.main import get_db as _get_db
+
     return _get_db()
 
 
 @router.post("/start-monitoring")
 async def start_monitoring(
-    request: StartMonitoringRequest,
-    db: Session = Depends(get_db)
+    request: StartMonitoringRequest, db: Session = Depends(get_db)
 ) -> dict:
     """Start monitoring a variant for early kill decisions."""
     # Check if already monitoring
-    existing = db.query(VariantMonitoring).filter_by(
-        variant_id=request.variant_id,
-        is_active=True
-    ).first()
+    existing = (
+        db.query(VariantMonitoring)
+        .filter_by(variant_id=request.variant_id, is_active=True)
+        .first()
+    )
 
     if existing:
         raise HTTPException(
-            status_code=400,
-            detail=f"Already monitoring variant {request.variant_id}"
+            status_code=400, detail=f"Already monitoring variant {request.variant_id}"
         )
 
     # Start monitoring task
@@ -63,30 +66,31 @@ async def start_monitoring(
         variant_id=request.variant_id,
         persona_id=request.persona_id,
         post_id=request.post_id,
-        expected_engagement_rate=request.expected_engagement_rate
+        expected_engagement_rate=request.expected_engagement_rate,
     )
 
     return {
         "status": "monitoring_started",
         "task_id": result.id,
-        "variant_id": request.variant_id
+        "variant_id": request.variant_id,
     }
 
 
 @router.get("/status/{variant_id}")
 async def get_monitoring_status(
-    variant_id: str,
-    db: Session = Depends(get_db)
+    variant_id: str, db: Session = Depends(get_db)
 ) -> MonitoringStatus:
     """Get the status of a monitoring session."""
-    monitoring = db.query(VariantMonitoring).filter_by(
-        variant_id=variant_id
-    ).order_by(VariantMonitoring.created_at.desc()).first()
+    monitoring = (
+        db.query(VariantMonitoring)
+        .filter_by(variant_id=variant_id)
+        .order_by(VariantMonitoring.created_at.desc())
+        .first()
+    )
 
     if not monitoring:
         raise HTTPException(
-            status_code=404,
-            detail=f"No monitoring found for variant {variant_id}"
+            status_code=404, detail=f"No monitoring found for variant {variant_id}"
         )
 
     return MonitoringStatus(
@@ -98,18 +102,16 @@ async def get_monitoring_status(
         was_killed=monitoring.was_killed,
         kill_reason=monitoring.kill_reason,
         final_engagement_rate=monitoring.final_engagement_rate,
-        final_interaction_count=monitoring.final_interaction_count
+        final_interaction_count=monitoring.final_interaction_count,
     )
 
 
 @router.get("/active")
 async def get_active_monitoring(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> List[MonitoringStatus]:
     """Get all active monitoring sessions."""
-    active_sessions = db.query(VariantMonitoring).filter_by(
-        is_active=True
-    ).all()
+    active_sessions = db.query(VariantMonitoring).filter_by(is_active=True).all()
 
     return [
         MonitoringStatus(
@@ -121,27 +123,24 @@ async def get_active_monitoring(
             was_killed=m.was_killed,
             kill_reason=m.kill_reason,
             final_engagement_rate=m.final_engagement_rate,
-            final_interaction_count=m.final_interaction_count
+            final_interaction_count=m.final_interaction_count,
         )
         for m in active_sessions
     ]
 
 
 @router.post("/stop/{variant_id}")
-async def stop_monitoring(
-    variant_id: str,
-    db: Session = Depends(get_db)
-) -> dict:
+async def stop_monitoring(variant_id: str, db: Session = Depends(get_db)) -> dict:
     """Manually stop monitoring a variant."""
-    monitoring = db.query(VariantMonitoring).filter_by(
-        variant_id=variant_id,
-        is_active=True
-    ).first()
+    monitoring = (
+        db.query(VariantMonitoring)
+        .filter_by(variant_id=variant_id, is_active=True)
+        .first()
+    )
 
     if not monitoring:
         raise HTTPException(
-            status_code=404,
-            detail=f"No active monitoring for variant {variant_id}"
+            status_code=404, detail=f"No active monitoring for variant {variant_id}"
         )
 
     monitoring.is_active = False
@@ -149,10 +148,7 @@ async def stop_monitoring(
     monitoring.kill_reason = "Manually stopped"
     db.commit()
 
-    return {
-        "status": "monitoring_stopped",
-        "variant_id": variant_id
-    }
+    return {"status": "monitoring_stopped", "variant_id": variant_id}
 
 
 # Health check endpoint

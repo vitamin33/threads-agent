@@ -1,4 +1,5 @@
 """Integration hooks for performance monitoring with other services."""
+
 import logging
 from typing import Dict, Any
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def on_variant_posted(variant_data: Dict[str, Any]) -> None:
     """Hook to be called when a variant is posted to Threads.
-    
+
     This should be integrated into the orchestrator or threads_adaptor
     to automatically start monitoring.
     """
@@ -28,7 +29,7 @@ def on_variant_posted(variant_data: Dict[str, Any]) -> None:
             variant_id=variant_id,
             persona_id=persona_id,
             post_id=post_id,
-            expected_engagement_rate=expected_engagement_rate
+            expected_engagement_rate=expected_engagement_rate,
         )
 
         logger.info(f"Started monitoring for variant {variant_id}")
@@ -39,7 +40,7 @@ def on_variant_posted(variant_data: Dict[str, Any]) -> None:
 
 def register_monitoring_hooks():
     """Register monitoring hooks with the event system.
-    
+
     This should be called during service initialization.
     """
     # This would integrate with your event/hook system

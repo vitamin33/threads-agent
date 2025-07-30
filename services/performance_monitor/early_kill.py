@@ -1,4 +1,5 @@
 """Early kill monitoring system for underperforming variants."""
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional
@@ -8,6 +9,7 @@ from collections import OrderedDict
 @dataclass
 class VariantPerformance:
     """Tracks performance metrics for a variant."""
+
     variant_id: str
     total_views: int
     total_interactions: int
@@ -18,6 +20,7 @@ class VariantPerformance:
 @dataclass
 class KillDecision:
     """Represents a decision to kill or keep a variant."""
+
     should_kill: bool
     reason: str
     evaluation_time: float
@@ -26,6 +29,7 @@ class KillDecision:
 @dataclass
 class MonitoringSession:
     """Represents an active monitoring session for a variant."""
+
     variant_id: str
     persona_id: str
     expected_engagement_rate: float
@@ -36,6 +40,7 @@ class MonitoringSession:
 @dataclass
 class TimeoutStatus:
     """Status of a monitoring session timeout check."""
+
     timed_out: bool
     reason: str
 
@@ -69,7 +74,7 @@ class EarlyKillMonitor:
         variant_id: str,
         persona_id: str,
         expected_engagement_rate: float,
-        post_timestamp: datetime
+        post_timestamp: datetime,
     ) -> MonitoringSession:
         """Start monitoring a variant for early kill decisions."""
         self._cleanup_expired()
@@ -83,19 +88,18 @@ class EarlyKillMonitor:
             persona_id=persona_id,
             expected_engagement_rate=expected_engagement_rate,
             started_at=post_timestamp,
-            is_active=True
+            is_active=True,
         )
 
         self.active_sessions[variant_id] = session
         return session
 
     def evaluate_performance(
-        self,
-        variant_id: str,
-        performance_data: VariantPerformance
+        self, variant_id: str, performance_data: VariantPerformance
     ) -> Optional[KillDecision]:
         """Evaluate variant performance and decide if it should be killed."""
         import time
+
         start_time = time.time()
 
         # Get the monitoring session
@@ -116,7 +120,7 @@ class EarlyKillMonitor:
             return KillDecision(
                 should_kill=True,
                 reason="Below 50% of expected engagement rate",
-                evaluation_time=evaluation_time
+                evaluation_time=evaluation_time,
             )
 
         return None
@@ -132,11 +136,7 @@ class EarlyKillMonitor:
         if elapsed_time > timedelta(minutes=10):
             session.is_active = False
             return TimeoutStatus(
-                timed_out=True,
-                reason="10-minute monitoring window expired"
+                timed_out=True, reason="10-minute monitoring window expired"
             )
 
-        return TimeoutStatus(
-            timed_out=False,
-            reason="Still within monitoring window"
-        )
+        return TimeoutStatus(timed_out=False, reason="Still within monitoring window")

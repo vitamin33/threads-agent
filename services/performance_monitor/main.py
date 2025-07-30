@@ -1,4 +1,5 @@
 """Main entry point for Performance Monitor service."""
+
 import os
 import logging
 from contextlib import asynccontextmanager
@@ -14,12 +15,14 @@ from sqlalchemy.orm import sessionmaker
 # Configure logging
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"
+)
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -27,7 +30,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 celery_app = Celery(
     "performance_monitor",
     broker=os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//"),
-    include=["services.performance_monitor.tasks"]
+    include=["services.performance_monitor.tasks"],
 )
 
 # Configure Celery
@@ -58,18 +61,15 @@ app = FastAPI(
     title="Performance Monitor Service",
     version="0.1.0",
     description="Monitors variant performance and makes early kill decisions",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
 
 # Health check endpoint
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Kubernetes probes."""
-    return {
-        "status": "healthy",
-        "service": "performance-monitor",
-        "version": "0.1.0"
-    }
+    return {"status": "healthy", "service": "performance-monitor", "version": "0.1.0"}
 
 
 # Prometheus metrics endpoint
@@ -98,4 +98,5 @@ app.include_router(router)
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8085)

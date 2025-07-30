@@ -1,4 +1,5 @@
 """Tests for early kill monitoring system."""
+
 from datetime import datetime, timedelta
 
 from services.performance_monitor.early_kill import (
@@ -23,7 +24,7 @@ class TestEarlyKillMonitor:
             variant_id=variant_id,
             persona_id=persona_id,
             expected_engagement_rate=expected_engagement_rate,
-            post_timestamp=datetime.now()
+            post_timestamp=datetime.now(),
         )
 
         # Assert
@@ -44,7 +45,7 @@ class TestEarlyKillMonitor:
             variant_id=variant_id,
             persona_id="persona_abc",
             expected_engagement_rate=expected_engagement_rate,
-            post_timestamp=datetime.now()
+            post_timestamp=datetime.now(),
         )
 
         # Create performance data with low engagement (2% actual vs 6% expected = 33%)
@@ -53,7 +54,7 @@ class TestEarlyKillMonitor:
             total_views=500,
             total_interactions=10,  # Exactly 10 interactions
             engagement_rate=0.02,  # 2% actual (less than 50% of 6% expected)
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         # Act
@@ -77,7 +78,7 @@ class TestEarlyKillMonitor:
             variant_id=variant_id,
             persona_id="persona_abc",
             expected_engagement_rate=0.06,
-            post_timestamp=post_time
+            post_timestamp=post_time,
         )
 
         # Act
@@ -98,7 +99,7 @@ class TestEarlyKillMonitor:
             variant_id=variant_id,
             persona_id="persona_abc",
             expected_engagement_rate=0.06,
-            post_timestamp=datetime.now()
+            post_timestamp=datetime.now(),
         )
 
         # Performance data with only 9 interactions
@@ -107,7 +108,7 @@ class TestEarlyKillMonitor:
             total_views=450,
             total_interactions=9,  # Less than 10
             engagement_rate=0.02,  # Low engagement
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         # Act
@@ -127,7 +128,7 @@ class TestEarlyKillMonitor:
             variant_id=variant_id,
             persona_id="persona_abc",
             expected_engagement_rate=expected_rate,
-            post_timestamp=datetime.now()
+            post_timestamp=datetime.now(),
         )
 
         # Performance at 60% of expected (3.6% actual vs 6% expected)
@@ -136,7 +137,7 @@ class TestEarlyKillMonitor:
             total_views=500,
             total_interactions=18,
             engagement_rate=0.036,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         # Act

@@ -1,4 +1,5 @@
 """Redis caching layer for performance data."""
+
 import json
 from typing import Dict, List, Optional, Any
 

@@ -123,12 +123,12 @@ class TestThompsonSamplingPerformance:
         """Test performance with stress test variant set (1000)."""
         # Original implementation
         start = time.time()
-        result_orig = select_top_variants_original(mock_variants_huge, top_k=10)
+        select_top_variants_original(mock_variants_huge, top_k=10)
         time_orig = time.time() - start
 
         # Optimized implementation
         start = time.time()
-        result_opt = select_top_variants_optimized(mock_variants_huge, top_k=10)
+        select_top_variants_optimized(mock_variants_huge, top_k=10)
         time_opt = time.time() - start
 
         print("\nHuge set (1000 variants, single run):")
@@ -181,7 +181,7 @@ class TestThompsonSamplingPerformance:
         with patch(
             "time.sleep", lambda x: time.sleep(0.01)
         ):  # Simulate 10ms per prediction
-            result_sync = select_top_variants_with_engagement_predictor(
+            select_top_variants_with_engagement_predictor(
                 mock_variants_large[:50],  # Use subset to avoid timeout
                 top_k=10,
                 predictor_instance=mock_predictor,
