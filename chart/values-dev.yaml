@@ -182,7 +182,7 @@ achievementCollector:
 
 # Performance Monitor for early variant kill
 performanceMonitor:
-  enabled: false  # Temporarily disabled to fix CI
+  enabled: true
   logLevel: "DEBUG"  # More verbose for dev
   killThreshold: 0.5
   minInteractions: 5  # Lower threshold for dev testing
