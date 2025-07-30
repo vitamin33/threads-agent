@@ -18,11 +18,11 @@ def on_variant_posted(variant_data: Dict[str, Any]) -> None:
         persona_id = variant_data.get("persona_id")
         post_id = variant_data.get("post_id")
         expected_engagement_rate = variant_data.get("expected_engagement_rate", 0.06)
-        
+
         if not all([variant_id, persona_id, post_id]):
             logger.error(f"Missing required fields in variant data: {variant_data}")
             return
-        
+
         # Start monitoring asynchronously
         start_monitoring_task.delay(
             variant_id=variant_id,
@@ -30,9 +30,9 @@ def on_variant_posted(variant_data: Dict[str, Any]) -> None:
             post_id=post_id,
             expected_engagement_rate=expected_engagement_rate
         )
-        
+
         logger.info(f"Started monitoring for variant {variant_id}")
-        
+
     except Exception as e:
         logger.error(f"Failed to start monitoring for variant: {e}")
 

@@ -51,13 +51,13 @@ async def start_monitoring(
         variant_id=request.variant_id,
         is_active=True
     ).first()
-    
+
     if existing:
         raise HTTPException(
             status_code=400,
             detail=f"Already monitoring variant {request.variant_id}"
         )
-    
+
     # Start monitoring task
     result = start_monitoring_task.delay(
         variant_id=request.variant_id,
@@ -65,7 +65,7 @@ async def start_monitoring(
         post_id=request.post_id,
         expected_engagement_rate=request.expected_engagement_rate
     )
-    
+
     return {
         "status": "monitoring_started",
         "task_id": result.id,
@@ -82,13 +82,13 @@ async def get_monitoring_status(
     monitoring = db.query(VariantMonitoring).filter_by(
         variant_id=variant_id
     ).order_by(VariantMonitoring.created_at.desc()).first()
-    
+
     if not monitoring:
         raise HTTPException(
             status_code=404,
             detail=f"No monitoring found for variant {variant_id}"
         )
-    
+
     return MonitoringStatus(
         variant_id=monitoring.variant_id,
         persona_id=monitoring.persona_id,
@@ -110,7 +110,7 @@ async def get_active_monitoring(
     active_sessions = db.query(VariantMonitoring).filter_by(
         is_active=True
     ).all()
-    
+
     return [
         MonitoringStatus(
             variant_id=m.variant_id,
@@ -137,18 +137,18 @@ async def stop_monitoring(
         variant_id=variant_id,
         is_active=True
     ).first()
-    
+
     if not monitoring:
         raise HTTPException(
             status_code=404,
             detail=f"No active monitoring for variant {variant_id}"
         )
-    
+
     monitoring.is_active = False
     monitoring.ended_at = datetime.utcnow()
     monitoring.kill_reason = "Manually stopped"
     db.commit()
-    
+
     return {
         "status": "monitoring_stopped",
         "variant_id": variant_id

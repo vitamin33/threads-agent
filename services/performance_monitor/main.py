@@ -78,7 +78,7 @@ async def metrics():
     """Prometheus metrics endpoint."""
     from services.performance_monitor.metrics import get_metrics
     from fastapi.responses import Response
-    
+
     metrics_data = get_metrics()
     return Response(content=metrics_data, media_type="text/plain")
 
