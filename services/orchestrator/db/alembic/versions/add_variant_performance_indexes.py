@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "add_variant_performance_indexes"
-down_revision = None
+down_revision = "add_performance_monitor_tables"
 branch_labels = None
 depends_on = None
 
