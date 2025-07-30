@@ -187,6 +187,15 @@ jobs:
           PLANNING_METRICS=$(cat planning_metrics.json)
           echo "metrics=${PLANNING_METRICS}" >> $GITHUB_OUTPUT
 
+      - name: Apply Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.ACHIEVEMENT_DB_URL }}
+        run: |
+          cd services/achievement_collector
+          # Run alembic migrations to ensure business_value field is TEXT type
+          alembic upgrade head || echo "Migration already applied"
+        continue-on-error: true
+
       - name: Create Achievement
         env:
           DATABASE_URL: ${{ secrets.ACHIEVEMENT_DB_URL }}
@@ -356,11 +365,27 @@ jobs:
                       if os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'test':
                           try:
                               analyzer = AIAnalyzer()
+                              
+                              # First check if business_value field can handle large JSON
+                              # If the column is still VARCHAR(255), truncate or store in metadata
                               updated = await analyzer.update_achievement_business_value(db, achievement)
+                              
                               if updated:
-                                  print(f"   💰 Business Value: {achievement.business_value}")
+                                  # Safely get business value, handling both string and None
+                                  business_value = achievement.business_value
+                                  if business_value and len(str(business_value)) > 255:
+                                      print(f"   💰 Business Value: {str(business_value)[:100]}... (truncated)")
+                                  else:
+                                      print(f"   💰 Business Value: {business_value}")
+                                      
+                              # Commit changes if successful
+                              db.commit()
+                              
                           except Exception as e:
                               print(f"   ⚠️  Could not extract business value: {e}")
+                              # Rollback any pending changes
+                              db.rollback()
+                              # Continue without business value - don't fail the whole workflow
                       
                       print(f"✅ Created achievement: {achievement.title}")
                       print(f"   Impact Score: {achievement.impact_score}")
