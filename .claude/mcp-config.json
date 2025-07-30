@@ -54,7 +54,7 @@
     },
     "linear": {
       "command": "node",
-      "args": ["/Users/vitaliiserbyn/development/team/riley-morgan/threads-agent/mcp/linear/index.js"],
+      "args": ["/Users/vitaliiserbyn/development/team/jordan-kim/threads-agent/mcp/linear/index.js"],
       "env": {
         "LINEAR_API_KEY": "lin_api_VIi0UyD5KDmiqSum9o7Rfgehs0zSKHQinh3gYngK"
       }

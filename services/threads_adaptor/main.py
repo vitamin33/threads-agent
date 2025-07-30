@@ -90,6 +90,8 @@ class PublishRequest(BaseModel):
 
     content: str = Field(..., description="Post content (max 500 chars)")
     persona_id: str = Field(..., description="AI persona that generated this")
+    variant_id: Optional[str] = Field(None, description="Variant ID for A/B testing")
+    expected_engagement_rate: Optional[float] = Field(None, description="Expected engagement rate for monitoring")
     media_urls: Optional[List[str]] = Field(
         None, description="Optional media URLs to attach"
     )
@@ -203,6 +205,22 @@ async def publish_post(
         # Step 4: Schedule engagement tracking
         background_tasks.add_task(track_engagement_async, thread_id, request.persona_id)
 
+        # Step 5: Trigger performance monitoring if variant_id is provided
+        if request.variant_id:
+            try:
+                # Import here to avoid circular dependency
+                from services.performance_monitor.integration import on_variant_posted
+                
+                monitoring_data = {
+                    "variant_id": request.variant_id,
+                    "persona_id": request.persona_id,
+                    "post_id": thread_id,
+                    "expected_engagement_rate": request.expected_engagement_rate or 0.06
+                }
+                on_variant_posted(monitoring_data)
+            except Exception as e:
+                print(f"Failed to start monitoring for variant {request.variant_id}: {e}")
+
         # Record business metric
         record_business_metric(
             "posts_published_total", 1, {"persona_id": request.persona_id}
@@ -212,6 +230,7 @@ async def publish_post(
             "thread_id": thread_id,
             "status": "published",
             "persona_id": request.persona_id,
+            "variant_id": request.variant_id,
             "published_at": datetime.utcnow().isoformat(),
         }
 

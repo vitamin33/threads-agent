@@ -25,6 +25,7 @@ from services.common.metrics import (
 )
 from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
+from services.performance_monitor.api import router as performance_monitor_router
 
 # ── constants & wiring ────────────────────────────────────────────────────────
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
@@ -36,8 +37,9 @@ maybe_start_metrics_server()  # Prom-client HTTP at :9090
 
 logger = logging.getLogger(__name__)
 
-# Include search router
+# Include routers
 app.include_router(search_router)
+app.include_router(performance_monitor_router)
 
 # Track service startup time for uptime calculation
 _service_start_time = time.time()
