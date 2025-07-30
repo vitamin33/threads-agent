@@ -355,7 +355,29 @@ class AIAnalyzer:
                 return False
 
             # Store the full JSON in business_value field
-            achievement.business_value = json.dumps(business_data)
+            business_value_json = json.dumps(business_data)
+            
+            # Check if the JSON is too long for VARCHAR(255)
+            # If so, store a summary in business_value and full data in metadata
+            if len(business_value_json) > 255:
+                # Create a short summary for business_value field
+                total_value = business_data.get('total_value', 0)
+                currency = business_data.get('currency', 'USD')
+                period = business_data.get('period', 'yearly')
+                
+                # Store summary in business_value
+                achievement.business_value = f"${total_value:,} {currency}/{period}"
+                
+                # Store full JSON in metadata
+                if not achievement.metadata_json:
+                    achievement.metadata_json = {}
+                achievement.metadata_json['business_value_full'] = business_data
+                
+                logger.info(f"Business value JSON too long ({len(business_value_json)} chars), "
+                           f"stored summary: {achievement.business_value}")
+            else:
+                # JSON fits in VARCHAR(255), store directly
+                achievement.business_value = business_value_json
 
             # Update specific metric fields based on the extracted data
             if business_data.get("type") == "time_savings":
