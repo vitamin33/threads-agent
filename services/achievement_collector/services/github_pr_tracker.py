@@ -373,7 +373,7 @@ class GitHubPRTracker:
         total_changes = metrics.get("total_changes", 0)
         if total_changes == 0:  # If not provided, calculate from additions + deletions
             total_changes = metrics.get("additions", 0) + metrics.get("deletions", 0)
-        
+
         if total_changes >= 1000:  # Adjusted thresholds for better scoring
             score += 25
         elif total_changes >= 500:
