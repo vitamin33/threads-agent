@@ -2,14 +2,14 @@
 from datetime import datetime
 from typing import Optional, List
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from services.common.database import get_db
 from services.performance_monitor.models import VariantMonitoring
 from services.performance_monitor.tasks import start_monitoring_task
 
+app = FastAPI(title="Performance Monitor Service", version="0.1.0")
 router = APIRouter(prefix="/performance-monitor", tags=["performance-monitor"])
 
 
@@ -32,6 +32,12 @@ class MonitoringStatus(BaseModel):
     kill_reason: Optional[str]
     final_engagement_rate: Optional[float]
     final_interaction_count: Optional[int]
+
+
+def get_db():
+    """Import get_db from main module."""
+    from services.performance_monitor.main import get_db as _get_db
+    return _get_db()
 
 
 @router.post("/start-monitoring")
@@ -147,3 +153,22 @@ async def stop_monitoring(
         "status": "monitoring_stopped",
         "variant_id": variant_id
     }
+
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes probes."""
+    return {"status": "healthy", "service": "performance-monitor"}
+
+
+# Metrics endpoint for Prometheus
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint."""
+    # TODO: Implement actual Prometheus metrics
+    return {"metrics": "prometheus_metrics_placeholder"}
+
+
+# Include router
+app.include_router(router)

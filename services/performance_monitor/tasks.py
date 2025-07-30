@@ -1,20 +1,33 @@
 """Celery tasks for performance monitoring."""
 import logging
-from datetime import datetime
-from typing import Dict, Any
+from datetime import datetime, timedelta
+from typing import Dict, Any, List
 
 from celery import shared_task
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 
-from services.common.database import get_db_session
+from contextlib import contextmanager
 from services.performance_monitor.early_kill import (
     EarlyKillMonitor, 
     VariantPerformance
 )
 from services.performance_monitor.models import VariantMonitoring
-from services.threads_adaptor.client import ThreadsClient
+from services.performance_monitor.cache import PerformanceCache
+from services.threads_adaptor.client_sync import ThreadsClientSync
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def get_db_session():
+    """Get database session for tasks."""
+    from services.performance_monitor.main import SessionLocal
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
 
 
 @shared_task(name="performance_monitor.start_monitoring")
@@ -39,11 +52,8 @@ def start_monitoring_task(
         db.add(monitoring)
         db.commit()
         
-        # Schedule periodic checks
-        check_performance_task.apply_async(
-            args=[variant_id],
-            countdown=30  # First check after 30 seconds
-        )
+        # Schedule batch check if not already scheduled
+        schedule_batch_check()
         
         return {
             "variant_id": variant_id,
@@ -79,8 +89,14 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
         
         # Get current performance from Threads
         try:
-            threads_client = ThreadsClient()
-            performance = threads_client.get_post_performance(monitoring.post_id)
+            # TODO: Replace with actual Threads API integration
+            # For now, use mock data
+            import random
+            performance = {
+                "views": random.randint(100, 1000),
+                "interactions": random.randint(5, 50),
+                "engagement_rate": random.uniform(0.01, 0.10)
+            }
             
             # Create performance data
             perf_data = VariantPerformance(
@@ -147,6 +163,150 @@ def check_performance_task(variant_id: str) -> Dict[str, Any]:
             return {"status": "error", "error": str(e)}
 
 
+@shared_task(name="performance_monitor.batch_check_performance")
+def batch_check_performance_task() -> Dict[str, Any]:
+    """Check all active variants in batches for better performance."""
+    logger.info("Starting batch performance check")
+    
+    cache = PerformanceCache()
+    processed_count = 0
+    killed_count = 0
+    
+    with get_db_session() as db:
+        # Get all active monitoring sessions
+        active_sessions = db.query(VariantMonitoring).filter(
+            and_(
+                VariantMonitoring.is_active == True,
+                VariantMonitoring.started_at >= datetime.utcnow() - timedelta(minutes=10)
+            )
+        ).all()
+        
+        if not active_sessions:
+            logger.info("No active monitoring sessions")
+            return {"status": "no_active_sessions"}
+        
+        # Process in batches
+        batch_size = 50
+        monitor = EarlyKillMonitor()
+        
+        with ThreadsClientSync() as threads_client:
+            for i in range(0, len(active_sessions), batch_size):
+                batch = active_sessions[i:i+batch_size]
+                post_ids = [s.post_id for s in batch]
+                
+                # Check cache first
+                cached_performances = cache.bulk_get_performance(post_ids)
+                
+                # Fetch missing data
+                to_fetch = [
+                    post_id for post_id, perf in cached_performances.items()
+                    if perf is None
+                ]
+                
+                if to_fetch:
+                    fresh_performances = threads_client.bulk_get_performance(to_fetch)
+                    
+                    # Cache fresh data
+                    to_cache = {}
+                    for post_id, perf in zip(to_fetch, fresh_performances):
+                        if not perf.get("error"):
+                            to_cache[post_id] = perf
+                            cached_performances[post_id] = perf
+                    
+                    if to_cache:
+                        cache.bulk_set_performance(to_cache)
+                
+                # Process each monitoring session
+                for session in batch:
+                    processed_count += 1
+                    
+                    # Check timeout first
+                    elapsed_minutes = (datetime.utcnow() - session.started_at).total_seconds() / 60
+                    if elapsed_minutes >= session.timeout_minutes:
+                        session.is_active = False
+                        session.ended_at = datetime.utcnow()
+                        logger.info(f"Monitoring timed out for variant {session.variant_id}")
+                        continue
+                    
+                    # Get performance data
+                    perf = cached_performances.get(session.post_id)
+                    if not perf or perf.get("error"):
+                        logger.warning(f"No performance data for variant {session.variant_id}")
+                        continue
+                    
+                    # Create performance data object
+                    perf_data = VariantPerformance(
+                        variant_id=session.variant_id,
+                        total_views=perf["views"],
+                        total_interactions=perf["interactions"],
+                        engagement_rate=perf["engagement_rate"],
+                        last_updated=datetime.utcnow()
+                    )
+                    
+                    # Evaluate performance
+                    monitor.start_monitoring(
+                        variant_id=session.variant_id,
+                        persona_id=session.persona_id,
+                        expected_engagement_rate=session.expected_engagement_rate,
+                        post_timestamp=session.started_at
+                    )
+                    
+                    decision = monitor.evaluate_performance(session.variant_id, perf_data)
+                    
+                    if decision and decision.should_kill:
+                        killed_count += 1
+                        logger.info(f"Killing variant {session.variant_id}: {decision.reason}")
+                        
+                        # Update monitoring record
+                        session.is_active = False
+                        session.was_killed = True
+                        session.kill_reason = decision.reason
+                        session.ended_at = datetime.utcnow()
+                        session.final_engagement_rate = perf_data.engagement_rate
+                        session.final_interaction_count = perf_data.total_interactions
+                        session.final_view_count = perf_data.total_views
+                        
+                        # Trigger cleanup
+                        cleanup_killed_variant_task.delay(session.variant_id, session.post_id)
+                        
+                        # Invalidate cache
+                        cache.invalidate(session.post_id)
+            
+            # Commit all changes
+            db.commit()
+    
+    # Schedule next batch check
+    schedule_batch_check()
+    
+    logger.info(f"Batch check complete: {processed_count} processed, {killed_count} killed")
+    
+    return {
+        "status": "complete",
+        "processed": processed_count,
+        "killed": killed_count
+    }
+
+
+def schedule_batch_check():
+    """Schedule next batch check if not already scheduled."""
+    # Check if task is already scheduled
+    from celery import current_app
+    inspect = current_app.control.inspect()
+    scheduled = inspect.scheduled()
+    
+    # Simple check - in production you'd want more sophisticated deduplication
+    task_scheduled = False
+    if scheduled:
+        for worker, tasks in scheduled.items():
+            for task in tasks:
+                if task['name'] == 'performance_monitor.batch_check_performance':
+                    task_scheduled = True
+                    break
+    
+    if not task_scheduled:
+        batch_check_performance_task.apply_async(countdown=30)
+
+
 @shared_task(name="performance_monitor.cleanup_killed_variant")
 def cleanup_killed_variant_task(variant_id: str, post_id: str) -> Dict[str, Any]:
     """Clean up a killed variant."""
@@ -160,9 +320,8 @@ def cleanup_killed_variant_task(variant_id: str, post_id: str) -> Dict[str, Any]
         # This would integrate with your scheduling system
         
         # Delete from Threads (if configured)
-        threads_client = ThreadsClient()
-        if threads_client.delete_post(post_id):
-            logger.info(f"Deleted post {post_id} from Threads")
+        # TODO: Implement actual Threads deletion
+        logger.info(f"Would delete post {post_id} from Threads (not implemented)")
         
         return {
             "status": "cleaned_up",

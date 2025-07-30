@@ -46,10 +46,15 @@ def upgrade():
     op.create_index(op.f('ix_variant_monitoring_persona_id'), 'variant_monitoring', ['persona_id'], unique=False)
     op.create_index(op.f('ix_variant_monitoring_is_active'), 'variant_monitoring', ['is_active'], unique=False)
     op.create_index(op.f('ix_variant_monitoring_started_at'), 'variant_monitoring', ['started_at'], unique=False)
+    
+    # Composite index for efficient active variant lookup
+    op.create_index('ix_variant_monitoring_variant_active', 'variant_monitoring', ['variant_id', 'is_active'], 
+                    unique=False, postgresql_where=sa.text('is_active = TRUE'))
 
 
 def downgrade():
     # Drop indexes
+    op.drop_index('ix_variant_monitoring_variant_active', table_name='variant_monitoring')
     op.drop_index(op.f('ix_variant_monitoring_started_at'), table_name='variant_monitoring')
     op.drop_index(op.f('ix_variant_monitoring_is_active'), table_name='variant_monitoring')
     op.drop_index(op.f('ix_variant_monitoring_persona_id'), table_name='variant_monitoring')

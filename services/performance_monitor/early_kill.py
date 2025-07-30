@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional
+from collections import OrderedDict
 
 
 @dataclass
@@ -42,9 +43,26 @@ class TimeoutStatus:
 class EarlyKillMonitor:
     """Monitors variant performance and makes early kill decisions."""
     
-    def __init__(self):
-        """Initialize the early kill monitor."""
-        self.active_sessions = {}
+    def __init__(self, max_sessions: int = 1000):
+        """Initialize the early kill monitor with bounded session storage."""
+        self.active_sessions = OrderedDict()
+        self.max_sessions = max_sessions
+        self._last_cleanup = datetime.now()
+    
+    def _cleanup_expired(self):
+        """Remove expired sessions to prevent memory leaks."""
+        if datetime.now() - self._last_cleanup < timedelta(minutes=1):
+            return
+            
+        expired = []
+        for variant_id, session in self.active_sessions.items():
+            if datetime.now() - session.started_at > timedelta(minutes=15):
+                expired.append(variant_id)
+        
+        for variant_id in expired:
+            self.active_sessions.pop(variant_id, None)
+        
+        self._last_cleanup = datetime.now()
     
     def start_monitoring(
         self,
@@ -54,6 +72,12 @@ class EarlyKillMonitor:
         post_timestamp: datetime
     ) -> MonitoringSession:
         """Start monitoring a variant for early kill decisions."""
+        self._cleanup_expired()
+        
+        # Enforce max sessions (LRU eviction)
+        if len(self.active_sessions) >= self.max_sessions:
+            self.active_sessions.popitem(last=False)
+        
         session = MonitoringSession(
             variant_id=variant_id,
             persona_id=persona_id,
