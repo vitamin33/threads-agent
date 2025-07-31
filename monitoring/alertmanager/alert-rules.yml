@@ -218,6 +218,30 @@ groups:
       description: "Average content quality for {{ $labels.persona_id }} is {{ $value }}, below 0.6 threshold for 1 hour."
       runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-ContentQuality"
 
+  # High variant kill rate
+  - alert: HighVariantKillRate
+    expr: rate(performance_monitor_variants_killed_total[1h]) > 0.3
+    for: 15m
+    labels:
+      severity: warning
+      alert_type: business
+    annotations:
+      summary: "High variant kill rate for {{ $labels.persona_id }}"
+      description: "More than 30% of variants for {{ $labels.persona_id }} are being killed due to poor performance."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-HighKillRate"
+
+  # Monitoring sessions stuck
+  - alert: MonitoringSessionStuck
+    expr: performance_monitor_sessions_active > 0 and increase(performance_monitor_sessions_active[10m]) == 0
+    for: 20m
+    labels:
+      severity: warning
+      alert_type: service
+    annotations:
+      summary: "Performance monitoring sessions appear stuck"
+      description: "{{ $value }} monitoring sessions have been active without change for 20 minutes."
+      runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Runbook-MonitoringStuck"
+
 # ================================
 # INFRASTRUCTURE ALERTS (Hybrid notification)
 # ================================

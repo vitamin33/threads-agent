@@ -301,7 +301,7 @@ class TestThompsonSamplingErrorRecovery:
 
         # Act - Try to load variants
         with pytest.raises(Exception):  # JSON decode error
-            variants = load_variants_from_db(db_session)
+            load_variants_from_db(db_session)
 
     def test_recovery_from_partial_update_failure(self, db_session):
         """Test recovery when variant update partially fails."""
@@ -336,7 +336,7 @@ class TestThompsonSamplingErrorRecovery:
                         impression=True,
                         success=True,
                     )
-                except:
+                except Exception:
                     pass  # Continue with other updates
 
         # Verify state after partial failure

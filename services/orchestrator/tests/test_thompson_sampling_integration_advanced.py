@@ -96,7 +96,7 @@ class TestThompsonSamplingIntegrationAdvanced:
 
         # Verify all selected variants are for the correct persona
         for variant_id in tech_variants:
-            variant = (
+            (
                 db_session.query(VariantPerformance)
                 .filter_by(variant_id=variant_id)
                 .first()
@@ -297,12 +297,16 @@ class TestThompsonSamplingIntegrationAdvanced:
         ):
             # Configure mocks
             mock_gauge.set = Mock()
-            mock_timer = Mock()
+            Mock()
             mock_histogram.labels.return_value.time.return_value.__enter__ = Mock()
             mock_histogram.labels.return_value.time.return_value.__exit__ = Mock()
 
             # Perform selection
             optimizer = ThompsonSamplingOptimized()
+            from services.orchestrator.thompson_sampling_optimized import (
+                load_variants_from_db,
+            )
+
             variants = load_variants_from_db(db_session)[:50]
             selected = optimizer.select_top_variants(variants, top_k=10)
 

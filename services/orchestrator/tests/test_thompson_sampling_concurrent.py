@@ -212,7 +212,7 @@ class TestThompsonSamplingConcurrent:
     @pytest.mark.asyncio
     async def test_async_e3_predictions_concurrent(self):
         """Test async E3 predictions handle concurrent requests properly."""
-        optimizer = ThompsonSamplingOptimized()
+        ThompsonSamplingOptimized()
         mock_predictor = Mock()
 
         call_times = []
@@ -388,7 +388,7 @@ class TestThompsonSamplingConcurrent:
             session = SessionFactory()
             try:
                 # Hold connection for a while
-                variants = session.query(VariantPerformance).all()
+                session.query(VariantPerformance).all()
                 time.sleep(0.5)  # Simulate slow operation
                 successes.append(thread_id)
             except Exception as e:
