@@ -1,0 +1,87 @@
+{{- if .Values.performanceMonitor.enabled }}
+# Performance Monitor Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: performance-monitor
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    app: performance-monitor
+spec:
+  replicas: {{ .Values.performanceMonitor.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: performance-monitor
+  template:
+    metadata:
+      labels:
+        app: performance-monitor
+    spec:
+      containers:
+        - name: performance-monitor
+          image: "{{ .Values.performanceMonitor.image.repository }}:{{ .Values.performanceMonitor.image.tag }}"
+          imagePullPolicy: {{ .Values.performanceMonitor.image.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+            - name: RABBITMQ_URL
+              value: {{ .Values.rabbitmq.url }}
+            - name: CELERY_BROKER_URL
+              value: {{ .Values.rabbitmq.url }}
+            - name: THREADS_BASE_URL
+              value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: OPENAI_API_KEY
+            - name: LOG_LEVEL
+              value: {{ .Values.performanceMonitor.logLevel | default "INFO" }}
+          ports:
+            - name: http
+              containerPort: 8085
+              protocol: TCP
+            - name: metrics
+              containerPort: 9095
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.performanceMonitor.resources | nindent 12 }}
+---
+# Performance Monitor Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: performance-monitor
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    app: performance-monitor
+spec:
+  type: ClusterIP
+  selector:
+    app: performance-monitor
+  ports:
+    - name: http
+      port: 8085
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 9095
+      targetPort: metrics
+      protocol: TCP
+{{- end }}

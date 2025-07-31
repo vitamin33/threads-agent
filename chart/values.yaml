@@ -260,3 +260,29 @@ achievementCollector:
     annotations: {}
     tls: []
   env: []
+
+# ───────── Performance Monitor (disabled by default) ─────────
+performanceMonitor:
+  enabled: false                   # turn ON in dev/prod values
+  replicas: 1
+  image:
+    repository: performance-monitor
+    tag: "local"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 300m
+      memory: 384Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  logLevel: "INFO"
+  # Early kill configuration
+  killThreshold: 0.5               # Kill if engagement < 50% of expected
+  minInteractions: 10              # Minimum interactions before evaluation
+  timeoutMinutes: 10               # Maximum monitoring duration
+  checkIntervalSeconds: 30         # How often to check performance
+  service:
+    type: ClusterIP
+    httpPort: 8085
+    metricsPort: 9095

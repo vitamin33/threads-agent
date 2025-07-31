@@ -179,3 +179,11 @@ achievementCollector:
     scrapeInterval: "24"  # hours
   sqlite:
     enabled: false  # use PostgreSQL in cluster
+
+# Performance Monitor for early variant kill
+performanceMonitor:
+  enabled: true
+  logLevel: "DEBUG"  # More verbose for dev
+  killThreshold: 0.5
+  minInteractions: 5  # Lower threshold for dev testing
+  timeoutMinutes: 5   # Shorter timeout for dev

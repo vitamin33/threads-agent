@@ -229,7 +229,7 @@ class ThompsonSamplingOptimized:
                     if future:
                         try:
                             e3_prediction = future.result(timeout=PREDICTION_TIMEOUT)
-                        except:
+                        except Exception:
                             e3_prediction = None
 
                     # Calculate Thompson score with E3 prior
