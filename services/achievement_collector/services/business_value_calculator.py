@@ -5,6 +5,24 @@ from typing import Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
 
+# Import the comprehensive business value model
+try:
+    from ..models.business_value_model import (
+        ComprehensiveBusinessValue,
+        ValueType as ComprehensiveValueType,
+        ConfidenceLevel,
+        BusinessImpactTier,
+        StartupKPIs,
+        BusinessValueBreakdown,
+        MarketContext,
+        CompetitiveAdvantage,
+        StrategicValue,
+    )
+
+    HAS_COMPREHENSIVE_MODEL = True
+except ImportError:
+    HAS_COMPREHENSIVE_MODEL = False
+
 
 class ValueType(Enum):
     """Types of business value."""
@@ -78,6 +96,11 @@ class AgileBusinessValueCalculator:
         ]:
             result = method(pr_description, pr_metrics)
             if result:
+                # Enhance result with comprehensive model if available
+                if HAS_COMPREHENSIVE_MODEL:
+                    result = self._enhance_with_comprehensive_model(
+                        result, pr_description, pr_metrics
+                    )
                 return result
 
         return None
@@ -495,3 +518,298 @@ class AgileBusinessValueCalculator:
         base_ops_cost_monthly = 1000  # Base operational overhead
         efficiency_gain = base_ops_cost_monthly * (performance_pct / 100) * 0.3
         return efficiency_gain * 12  # Annual value
+
+    def _enhance_with_comprehensive_model(
+        self, basic_result: Dict, description: str, pr_metrics: Dict
+    ) -> Dict:
+        """Enhance basic result with comprehensive business value model for interviews."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return basic_result
+
+        try:
+            # Map basic result to comprehensive model
+            value_type_map = {
+                "time_savings": ComprehensiveValueType.TIME_SAVINGS,
+                "cost_reduction": ComprehensiveValueType.COST_REDUCTION,
+                "revenue_increase": ComprehensiveValueType.REVENUE_INCREASE,
+                "risk_mitigation": ComprehensiveValueType.RISK_MITIGATION,
+                "productivity_gain": ComprehensiveValueType.PRODUCTIVITY_GAIN,
+                "quality_improvement": ComprehensiveValueType.QUALITY_IMPROVEMENT,
+                "technical_debt_reduction": ComprehensiveValueType.TECHNICAL_DEBT_REDUCTION,
+                "automation": ComprehensiveValueType.AUTOMATION,
+            }
+
+            # Determine confidence level
+            confidence_value = basic_result.get("confidence", 0.7)
+            if confidence_value >= 0.8:
+                confidence_level = ConfidenceLevel.HIGH
+            elif confidence_value >= 0.6:
+                confidence_level = ConfidenceLevel.MEDIUM
+            else:
+                confidence_level = ConfidenceLevel.LOW
+
+            # Calculate startup KPIs based on the value type and metrics
+            startup_kpis = self._calculate_startup_kpis(
+                basic_result, description, pr_metrics
+            )
+
+            # Create comprehensive business value
+            comprehensive_value = ComprehensiveBusinessValue(
+                total_value=basic_result["total_value"],
+                currency=basic_result.get("currency", "USD"),
+                period=basic_result.get("period", "yearly"),
+                value_type=value_type_map.get(
+                    basic_result["type"], ComprehensiveValueType.PRODUCTIVITY_GAIN
+                ),
+                confidence=confidence_value,
+                confidence_level=confidence_level,
+                calculation_method=basic_result.get("method", "unknown"),
+                data_sources=["PR description analysis", "GitHub metrics"],
+                impact_tier=self._determine_impact_tier(basic_result["total_value"]),
+                roi_multiple=self._calculate_roi_multiple(basic_result, pr_metrics),
+                payback_period_months=self._calculate_payback_period(basic_result),
+                breakdown=self._create_value_breakdown(basic_result),
+                startup_kpis=startup_kpis,
+                market_context=self._create_market_context(pr_metrics),
+                competitive_advantage=self._analyze_competitive_advantage(description),
+                strategic_value=self._analyze_strategic_value(description),
+                supporting_metrics=basic_result.get("breakdown", {}),
+                achievement_id=pr_metrics.get("pr_number", None),
+            )
+
+            # Return enhanced result with comprehensive model data
+            enhanced_result = basic_result.copy()
+            enhanced_result.update(
+                {
+                    "elevator_pitch": comprehensive_value.get_elevator_pitch(),
+                    "startup_dashboard": comprehensive_value.get_startup_dashboard_summary(),
+                    "interview_talking_points": comprehensive_value.get_interview_talking_points(),
+                    "comprehensive_json": comprehensive_value.to_json(),
+                    "startup_kpis": {
+                        "user_impact_multiplier": startup_kpis.user_impact_multiplier,
+                        "development_velocity_increase_pct": startup_kpis.development_velocity_increase_pct,
+                        "time_to_market_reduction_days": startup_kpis.time_to_market_reduction_days,
+                        "infrastructure_cost_reduction_pct": startup_kpis.infrastructure_cost_reduction_pct,
+                        "incident_reduction_pct": startup_kpis.incident_reduction_pct,
+                        "developer_satisfaction_score": startup_kpis.developer_satisfaction_score,
+                    },
+                }
+            )
+
+            return enhanced_result
+
+        except Exception as e:
+            # If enhancement fails, return basic result
+            basic_result["enhancement_error"] = str(e)
+            return basic_result
+
+    def _calculate_startup_kpis(
+        self, basic_result: Dict, description: str, pr_metrics: Dict
+    ) -> "StartupKPIs":
+        """Calculate startup KPIs based on the business value type."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return None
+
+        kpis = StartupKPIs()
+
+        value_type = basic_result.get("type", "")
+        total_value = basic_result.get("total_value", 0)
+
+        # Set KPIs based on value type
+        if value_type == "time_savings":
+            breakdown = basic_result.get("breakdown", {})
+            team_multiplier = breakdown.get("team_multiplier", 1)
+
+            kpis.user_impact_multiplier = max(
+                1.0, team_multiplier * 10
+            )  # Team affects users
+            kpis.development_velocity_increase_pct = min(
+                25.0, (total_value / 50000) * 10
+            )
+            kpis.time_to_market_reduction_days = (
+                breakdown.get("hours_saved_annually", 0) / 8
+            )
+            kpis.developer_satisfaction_score = min(10.0, 7.0 + (total_value / 100000))
+
+        elif value_type == "automation":
+            kpis.development_velocity_increase_pct = min(
+                30.0, (total_value / 10000) * 15
+            )
+            kpis.deployment_frequency_increase_pct = min(
+                50.0, (total_value / 5000) * 10
+            )
+            kpis.time_to_market_reduction_days = max(1.0, total_value / 1000)
+
+        elif value_type == "performance" or value_type == "productivity_gain":
+            breakdown = basic_result.get("breakdown", {})
+            perf_improvement = breakdown.get("performance_improvement_pct", 0)
+
+            kpis.system_throughput_increase_pct = perf_improvement
+            kpis.response_time_improvement_pct = perf_improvement
+            kpis.infrastructure_cost_reduction_pct = min(20.0, perf_improvement / 2)
+            kpis.user_impact_multiplier = max(100.0, perf_improvement * 10)
+
+        elif value_type == "quality_improvement":
+            breakdown = basic_result.get("breakdown", {})
+            defects_prevented = breakdown.get("defects_prevented_monthly", 0)
+
+            kpis.incident_reduction_pct = min(50.0, defects_prevented * 5)
+            kpis.developer_satisfaction_score = min(10.0, 6.0 + defects_prevented * 0.5)
+
+        elif value_type == "risk_mitigation":
+            kpis.incident_reduction_pct = min(80.0, total_value / 1000)
+            kpis.user_impact_multiplier = max(50.0, total_value / 500)
+
+        # Add general improvements based on total value
+        if total_value > 100000:  # High-value improvements
+            kpis.revenue_impact_monthly = (
+                total_value / 12 * 0.1
+            )  # 10% revenue correlation
+
+        return kpis
+
+    def _determine_impact_tier(self, value: float) -> "BusinessImpactTier":
+        """Determine impact tier based on value."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return None
+
+        if value >= 100000:
+            return BusinessImpactTier.CRITICAL
+        elif value >= 50000:
+            return BusinessImpactTier.HIGH
+        elif value >= 15000:
+            return BusinessImpactTier.MEDIUM
+        else:
+            return BusinessImpactTier.LOW
+
+    def _calculate_roi_multiple(self, basic_result: Dict, pr_metrics: Dict) -> float:
+        """Calculate ROI multiple."""
+        total_value = basic_result.get("total_value", 0)
+        # Estimate implementation cost based on PR size
+        lines_changed = pr_metrics.get("additions", 0) + pr_metrics.get("deletions", 0)
+        estimated_hours = max(8, lines_changed / 50)  # Minimum 8 hours
+        implementation_cost = estimated_hours * 100  # $100/hour average
+
+        return total_value / implementation_cost if implementation_cost > 0 else 1.0
+
+    def _calculate_payback_period(self, basic_result: Dict) -> float:
+        """Calculate payback period in months."""
+        value_type = basic_result.get("type", "")
+
+        if value_type in ["time_savings", "automation"]:
+            return 1.0  # Immediate payback
+        elif value_type in ["performance", "productivity_gain"]:
+            return 2.0  # 2 months to see full benefits
+        elif value_type == "quality_improvement":
+            return 3.0  # 3 months to prevent defects
+        else:
+            return 6.0  # Conservative estimate
+
+    def _create_value_breakdown(self, basic_result: Dict) -> "BusinessValueBreakdown":
+        """Create detailed value breakdown."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return None
+
+        breakdown = basic_result.get("breakdown", {})
+
+        return BusinessValueBreakdown(
+            base_value=basic_result.get("total_value", 0),
+            multipliers={"confidence": basic_result.get("confidence", 1.0)},
+            adjustments={},
+            hourly_rates={"assumed_rate": breakdown.get("hourly_rate", 100)},
+            time_periods={"annual_hours": breakdown.get("hours_saved_annually", 0)},
+            infrastructure_costs={},
+            operational_costs={},
+            incident_costs={},
+            compliance_costs={},
+        )
+
+    def _create_market_context(self, pr_metrics: Dict) -> "MarketContext":
+        """Create market context for valuation."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return None
+
+        return MarketContext(
+            industry_vertical="SaaS/Tech",
+            company_stage="Growth",
+            team_size=pr_metrics.get("team_size", 10),
+            engineering_team_size=pr_metrics.get("engineering_team_size", 5),
+            geographic_market="US Remote",
+            industry_average_salary=120000.0,
+            market_rate_multiplier=1.0,
+        )
+
+    def _analyze_competitive_advantage(
+        self, description: str
+    ) -> "CompetitiveAdvantage":
+        """Analyze competitive advantage from PR description."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return None
+
+        advantage = CompetitiveAdvantage()
+
+        if any(
+            keyword in description.lower()
+            for keyword in ["ai", "ml", "llm", "gpt", "automation"]
+        ):
+            advantage.differentiation_factor = (
+                "AI-powered automation and intelligent systems"
+            )
+            advantage.talent_attraction_value = (
+                "Cutting-edge AI/ML expertise demonstration"
+            )
+
+        if any(
+            keyword in description.lower()
+            for keyword in ["performance", "scale", "optimization"]
+        ):
+            advantage.differentiation_factor = "High-performance scalable architecture"
+            advantage.barrier_to_entry_created = "Technical performance moats"
+
+        if any(
+            keyword in description.lower()
+            for keyword in ["security", "compliance", "audit"]
+        ):
+            advantage.differentiation_factor = (
+                "Enterprise-grade security and compliance"
+            )
+            advantage.market_timing_advantage = "Regulatory compliance readiness"
+
+        return advantage
+
+    def _analyze_strategic_value(self, description: str) -> "StrategicValue":
+        """Analyze strategic value from PR description."""
+        if not HAS_COMPREHENSIVE_MODEL:
+            return None
+
+        strategic = StrategicValue()
+
+        if any(
+            keyword in description.lower()
+            for keyword in ["platform", "infrastructure", "framework"]
+        ):
+            strategic.platform_enablement = True
+            strategic.funding_story_impact = "Scalable platform architecture"
+
+        if any(
+            keyword in description.lower()
+            for keyword in ["data", "analytics", "metrics"]
+        ):
+            strategic.data_collection_value = True
+            strategic.funding_story_impact = "Data-driven decision making capabilities"
+
+        if any(keyword in description.lower() for keyword in ["api", "integration"]):
+            strategic.partnership_opportunities = [
+                "API partnerships",
+                "Integration marketplace",
+            ]
+
+        if any(
+            keyword in description.lower() for keyword in ["ai", "ml", "automation"]
+        ):
+            strategic.acquisition_attractiveness = (
+                "AI/ML capabilities attractive to acquirers"
+            )
+            strategic.funding_story_impact = "AI-first competitive positioning"
+
+        return strategic

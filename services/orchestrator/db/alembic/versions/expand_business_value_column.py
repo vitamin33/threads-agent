@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "expand_business_value_column"
-down_revision = "bac48e1b2394"
+down_revision = "bac48e1b2394_add_variant_performance_table"
 branch_labels = None
 depends_on = None
 

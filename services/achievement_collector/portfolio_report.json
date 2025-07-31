@@ -1,0 +1,59 @@
+{
+  "generated_at": "2025-07-30T18:54:11.367307",
+  "executive_summary": "Portfolio demonstrates $292,500 in quantifiable business value across 3 achievements in 3 categories. This value represents a combination of time savings, cost reductions, and revenue impacts calculated using industry-standard methodologies.",
+  "total_portfolio_value": 292500,
+  "value_breakdown": {
+    "total_value": 292500,
+    "confidence_interval": {
+      "low": 234000.0,
+      "high": 351000.0
+    }
+  },
+  "methodology": {
+    "calculation_methods": {
+      "time_savings": "Hours saved \u00d7 $150/hour (senior developer rate)",
+      "cost_reduction": "Direct cost savings from infrastructure, licensing, etc.",
+      "revenue_impact": "Direct revenue generation or enablement"
+    },
+    "confidence_intervals": "80%-120% range based on conservative estimates",
+    "validation": "Cross-referenced with industry benchmarks for each category"
+  },
+  "confidence_analysis": {
+    "confidence_interval": {
+      "low": 234000.0,
+      "high": 351000.0
+    },
+    "validation_status": "valid",
+    "reliability_score": "high",
+    "notes": "Values are conservative estimates based on measurable impacts"
+  },
+  "validation_results": {
+    "validation_status": "valid",
+    "benchmark_comparison": {
+      "infrastructure": {
+        "achievement_value": 125000,
+        "benchmark_avg": 105000,
+        "max_reasonable": 500000,
+        "within_range": true
+      },
+      "performance": {
+        "achievement_value": 105000,
+        "benchmark_avg": 72500,
+        "max_reasonable": 300000,
+        "within_range": true
+      },
+      "security": {
+        "achievement_value": 62500,
+        "benchmark_avg": 145000,
+        "max_reasonable": 600000,
+        "within_range": true
+      }
+    }
+  },
+  "achievements_count": 3,
+  "categories": [
+    "infrastructure",
+    "performance",
+    "security"
+  ]
+}

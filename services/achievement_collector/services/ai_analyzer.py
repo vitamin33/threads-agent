@@ -379,7 +379,7 @@ class AIAnalyzer:
                     achievement.metadata_json = {}
                 achievement.metadata_json["business_value_full"] = business_data
 
-                logging.getLogger(__name__).info(
+                logging.info(
                     f"Business value JSON too long ({len(business_value_json)} chars), "
                     f"stored summary: {achievement.business_value}"
                 )

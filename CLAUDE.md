@@ -187,6 +187,7 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
 - Automation: `just ship` handles all
 - **Pre-Push Checklist**:
   - Before every push 'just check' command should be fully successful
+- When working on a Linear task, create a git branch starting with the task number (e.g., for task CRA-331, branch name should be 'cra-331-title-of-task')
 
 ### AI-Powered Planning
 ```bash
