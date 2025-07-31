@@ -22,6 +22,7 @@ Located in `./claude-integration/`:
 
 ### Revenue & Infrastructure
 - [REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md](./REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md) - Revenue service implementation
+- [PERFORMANCE_MONITOR_IMPLEMENTATION.md](./PERFORMANCE_MONITOR_IMPLEMENTATION.md) - Performance Monitor service (CRA-232)
 
 ## 🔗 Quick Links
 
@@ -37,6 +38,7 @@ Each service has its own documentation in its directory:
 - Orchestrator: `/services/orchestrator/`
 - Persona Runtime: `/services/persona_runtime/`
 - Revenue Service: `/services/revenue/`
+- Performance Monitor: `/services/performance_monitor/`
 
 ## 🚀 Getting Started
 
