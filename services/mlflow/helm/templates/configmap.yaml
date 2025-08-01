@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mlflow.fullname" . }}-config
+  labels:
+    {{- include "mlflow.labels" . | nindent 4 }}
+data:
+  mlflow.conf: |
+    # MLflow Configuration
+    [mlflow]
+    # Backend store configuration
+    backend_store_uri = {{ .Values.backendStore.uri | default "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)" }}
+    
+    # Artifact store configuration
+    default_artifact_root = {{ .Values.artifactStore.uri | default "s3://mlflow-artifacts/" }}
+    
+    # Server configuration
+    host = 0.0.0.0
+    port = {{ .Values.service.targetPort }}
+    workers = {{ .Values.mlflow.workers | default 4 }}
+    
+    # Performance settings
+    static_prefix = {{ .Values.mlflow.staticPrefix | default "/static" }}
+    gunicorn_opts = {{ .Values.mlflow.gunicornOpts | default "--timeout 120 --keep-alive 5" }}
+    
+    # Experiment tracking
+    default_experiment_id = {{ .Values.mlflow.defaultExperimentId | default "0" }}
+    
+    # Security settings
+    expose_prometheus_metrics = {{ .Values.mlflow.exposePrometheusMetrics | default true }}
+    
+  logging.conf: |
+    [loggers]
+    keys=root,mlflow,gunicorn
+    
+    [handlers]
+    keys=console,file
+    
+    [formatters]
+    keys=detailed,simple
+    
+    [logger_root]
+    level={{ .Values.logging.level | default "INFO" }}
+    handlers=console,file
+    
+    [logger_mlflow]
+    level={{ .Values.logging.mlflowLevel | default "INFO" }}
+    handlers=console,file
+    qualname=mlflow
+    propagate=0
+    
+    [logger_gunicorn]
+    level={{ .Values.logging.gunicornLevel | default "INFO" }}
+    handlers=console
+    qualname=gunicorn
+    propagate=0
+    
+    [handler_console]
+    class=StreamHandler
+    level=DEBUG
+    formatter=detailed
+    args=(sys.stdout,)
+    
+    [handler_file]
+    class=handlers.RotatingFileHandler
+    level=INFO
+    formatter=detailed
+    args=('/mlflow/logs/mlflow.log', 'a', 10485760, 5)
+    
+    [formatter_detailed]
+    format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+    datefmt=%Y-%m-%d %H:%M:%S
+    
+    [formatter_simple]
+    format=%(levelname)s - %(message)s

@@ -1,0 +1,308 @@
+# MLflow Helm Chart Values
+# Optimized configuration for production-grade MLflow deployment on Kubernetes
+
+# MLflow server image configuration
+image:
+  repository: ghcr.io/mlflow/mlflow
+  tag: "v2.9.2"
+  pullPolicy: IfNotPresent
+
+# Number of replicas for high availability
+replicaCount: 2
+
+# Revision history limit for rollbacks
+revisionHistoryLimit: 3
+
+# Rolling update strategy
+rollingUpdate:
+  maxSurge: "25%"
+  maxUnavailable: "0"
+
+# Service configuration
+service:
+  type: LoadBalancer
+  port: 5000
+  targetPort: 5000
+  name: mlflow
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: mlflow.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Persistence configuration
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Resources - Optimized based on typical LLM tracking workloads
+resources:
+  requests:
+    cpu: 250m      # Reduced from 500m - MLflow is not CPU intensive
+    memory: 512Mi  # Reduced from 1Gi - sufficient for metadata operations
+  limits:
+    cpu: 1000m     # Reduced from 2000m - prevents resource hogging
+    memory: 2Gi    # Reduced from 4Gi - appropriate for tracking service
+
+# Probes - Enhanced for better resilience
+livenessProbe:
+  path: /health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+readinessProbe:
+  path: /health
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  successThreshold: 1
+  failureThreshold: 3
+
+startupProbe:
+  path: /health
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 30
+
+# MLflow specific configuration
+mlflow:
+  workers: 4          # Gunicorn workers
+  threads: 2          # Threads per worker
+  timeout: 120        # Request timeout
+  keepAlive: 5        # Keep-alive timeout
+  staticPrefix: "/static"
+  gunicornOpts: "--timeout 120 --keep-alive 5"
+  defaultExperimentId: "0"
+  exposePrometheusMetrics: true
+
+# Logging configuration
+logging:
+  level: INFO
+  mlflowLevel: INFO
+  gunicornLevel: INFO
+
+# Environment variables for MLflow (additional custom vars)
+env: []
+
+# PostgreSQL configuration for backend store
+postgresql:
+  enabled: false
+  auth:
+    database: mlflow
+    username: mlflow
+    password: ""  # Will be auto-generated if empty
+    postgresPassword: ""  # Will be auto-generated if empty
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi  # Increased for production use
+      storageClass: ""  # Use cluster default
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    initdb:
+      scripts:
+        01-init-mlflow.sh: |
+          #!/bin/bash
+          set -e
+          psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+            -- Create indexes for better performance
+            CREATE INDEX IF NOT EXISTS idx_experiments_name ON experiments(name);
+            CREATE INDEX IF NOT EXISTS idx_runs_experiment_id ON runs(experiment_id);
+            CREATE INDEX IF NOT EXISTS idx_runs_status ON runs(status);
+            CREATE INDEX IF NOT EXISTS idx_metrics_run_uuid ON metrics(run_uuid);
+            CREATE INDEX IF NOT EXISTS idx_params_run_uuid ON params(run_uuid);
+          EOSQL
+
+# MinIO configuration for artifact store
+minio:
+  enabled: true
+  auth:
+    rootUser: ""  # Will be auto-generated if empty
+    rootPassword: ""  # Will be auto-generated if empty
+  defaultBuckets: mlflow-artifacts
+  persistence:
+    enabled: true
+    size: 50Gi  # Increased for model storage
+    storageClass: ""  # Use cluster default
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# Backend store configuration
+backendStore:
+  uri: ""  # Will use PostgreSQL connection from secrets
+
+# Artifact store configuration
+artifactStore:
+  uri: "s3://mlflow-artifacts/"
+
+# RBAC configuration
+rbac:
+  create: true
+
+# Service account configuration
+serviceAccount:
+  annotations: {}
+
+# Security context
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# Network policy configuration
+networkPolicy:
+  enabled: true
+  allowedCIDRs: []  # Add specific IP ranges if needed
+
+# Secret management
+secrets:
+  create: true
+
+# Authentication configuration
+auth:
+  enabled: false  # Set to true for production
+  username: ""
+  password: ""
+  jwtSecret: ""  # Will be auto-generated if empty
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  scaleDownStabilizationWindowSeconds: 300
+  scaleUpStabilizationWindowSeconds: 60
+  customMetrics: false
+  targetRequestsPerSecond: 100
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  # maxUnavailable: 1  # Use either minAvailable or maxUnavailable
+  unhealthyPodEvictionPolicy: AlwaysAllow
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity - Anti-affinity is configured by default for HA
+affinity: {}
+
+# Monitoring configuration
+metrics:
+  enabled: true
+  path: /metrics
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    honorLabels: true
+    labels:
+      prometheus: kube-prometheus
+    metricRelabelings: []
+  prometheusRule:
+    enabled: false
+    labels:
+      prometheus: kube-prometheus
+
+# Grafana dashboards
+grafana:
+  dashboards:
+    enabled: false
+    labels:
+      grafana_dashboard: "1"
+    annotations: {}
+
+# Distributed tracing
+tracing:
+  enabled: true
+  jaeger:
+    agentHost: jaeger-agent.monitoring.svc.cluster.local
+    agentPort: "6831"
+    samplerType: probabilistic
+    samplerParam: "0.1"  # 10% sampling rate
+    reporterLogSpans: false
+    propagation: b3
+  otel:
+    enabled: false  # Use Jaeger by default
+    endpoint: http://otel-collector.monitoring.svc.cluster.local:4317
+    tracesExporter: otlp
+    metricsExporter: prometheus
+
+# Backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 300
+  backoffLimit: 3
+  activeDeadlineSeconds: 3600
+  storageClass: ""  # Use cluster default
+  storageSize: 20Gi
+  image:
+    repository: postgres
+    tag: 15-alpine
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  s3:
+    enabled: true
+    bucket: mlflow-backups
+  cleanup:
+    enabled: true
+    retentionCount: 7  # Keep last 7 backups
+
+# Restore configuration
+restore:
+  enabled: false  # Enable when needed
+  backupFile: ""  # Specify backup file to restore
+  fromS3: false
+  timestamp: manual
+  backoffLimit: 1
+  activeDeadlineSeconds: 7200
+  image:
+    repository: postgres
+    tag: 15-alpine
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi

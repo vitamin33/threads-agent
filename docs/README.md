@@ -23,6 +23,11 @@ Located in `./claude-integration/`:
 ### Revenue & Infrastructure
 - [REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md](./REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md) - Revenue service implementation
 
+### MLOps & Infrastructure Documentation
+Located in `./mlops-infrastructure/`:
+- [E4.5_MLOPS_FOUNDATION_EPIC.md](./mlops-infrastructure/E4.5_MLOPS_FOUNDATION_EPIC.md) - MLOps epic overview and progress
+- [MLFLOW_EXPERIMENT_TRACKING.md](./mlops-infrastructure/MLFLOW_EXPERIMENT_TRACKING.md) - Detailed MLflow implementation guide
+
 ## 🔗 Quick Links
 
 - **Main README**: [/README.md](../README.md)
@@ -37,6 +42,7 @@ Each service has its own documentation in its directory:
 - Orchestrator: `/services/orchestrator/`
 - Persona Runtime: `/services/persona_runtime/`
 - Revenue Service: `/services/revenue/`
+- MLflow: `/services/mlflow/` - Experiment tracking for LLM calls
 
 ## 🚀 Getting Started
 

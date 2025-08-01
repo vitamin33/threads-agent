@@ -1,0 +1,26 @@
+apiVersion: v2
+name: mlflow
+description: MLflow experiment tracking for threads-agent LLM calls
+type: application
+version: 0.1.0
+appVersion: "2.9.2"
+
+keywords:
+  - mlflow
+  - machine-learning
+  - experiment-tracking
+  - llm
+  - ai
+
+maintainers:
+  - name: threads-agent-team
+
+dependencies:
+  - name: postgresql
+    version: "~12.1.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: minio
+    version: "~12.1.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: minio.enabled
