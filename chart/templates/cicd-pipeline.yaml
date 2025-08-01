@@ -1,0 +1,343 @@
+# chart/templates/cicd-pipeline.yaml - Optimized CI/CD Pipeline Components
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cicd-pipeline
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-pipeline
+spec:
+  replicas: {{ .Values.cicdPipeline.replicas | default 2 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: cicd-pipeline
+  template:
+    metadata:
+      labels:
+        app: cicd-pipeline
+        component: cicd-pipeline
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Anti-affinity to spread replicas across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - cicd-pipeline
+              topologyKey: kubernetes.io/hostname
+      
+      # Fast startup with optimized init
+      initContainers:
+      - name: cache-warmer
+        image: redis:7-alpine
+        command: ['sh', '-c', 'redis-cli -h redis ping || echo "Redis not ready, continuing..."']
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      containers:
+      - name: cicd-pipeline
+        image: "{{ tpl .Values.image.repository $ }}:{{ tpl .Values.image.tag $ }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        
+        # Environment optimized for performance
+        env:
+        - name: COMPONENT_MODE
+          value: "cicd_pipeline"
+        - name: RABBITMQ_URL
+          value: {{ .Values.rabbitmq.url }}
+        - name: POSTGRES_DSN
+          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+        - name: REDIS_URL
+          value: "redis://redis:6379/2"  # Use separate DB for CI/CD cache
+        - name: MLFLOW_TRACKING_URI
+          value: {{ .Values.mlflow.trackingUri | default "http://mlflow:5000" }}
+        
+        # Performance tuning
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHON_GC_GENERATION0_THRESHOLD
+          value: "2000"  # Optimize garbage collection
+        - name: PERFORMANCE_CACHE_ENABLED
+          value: "true"
+        - name: PERFORMANCE_CACHE_TTL
+          value: "300"   # 5 minutes
+        - name: BATCH_SIZE
+          value: "50"
+        - name: CONCURRENT_WORKERS
+          value: "4"
+        
+        # CI/CD specific configuration
+        - name: PROMPT_TEST_PARALLEL_WORKERS
+          value: "8"
+        - name: REGRESSION_DETECTION_WINDOW_DAYS
+          value: "7"
+        - name: ROLLOUT_STAGE_TIMEOUT_MINUTES
+          value: "5"     # Fast rollout for CI/CD
+        - name: ROLLBACK_THRESHOLD_SECONDS
+          value: "15"    # Ultra-fast rollback
+        
+        envFrom:
+        - secretRef:
+            name: openai-secret
+        {{- if .Values.cicdPipeline.github.enabled }}
+        - secretRef:
+            name: github-cicd-secret
+        {{- end }}
+        
+        ports:
+        - name: http
+          containerPort: 8085
+        - name: metrics
+          containerPort: 9090
+        
+        # Optimized health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 15
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+        
+        # Startup probe for faster deployment
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 12  # 60 seconds max startup time
+        
+        # Optimized resource allocation
+        resources:
+          requests:
+            memory: {{ .Values.cicdPipeline.resources.requests.memory | default "512Mi" }}
+            cpu: {{ .Values.cicdPipeline.resources.requests.cpu | default "200m" }}
+          limits:
+            memory: {{ .Values.cicdPipeline.resources.limits.memory | default "1Gi" }}
+            cpu: {{ .Values.cicdPipeline.resources.limits.cpu | default "1000m" }}
+        
+        # Volume mounts for caching and performance
+        volumeMounts:
+        - name: performance-cache
+          mountPath: /tmp/cache
+        - name: model-cache
+          mountPath: /tmp/models
+      
+      volumes:
+      - name: performance-cache
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: model-cache
+        emptyDir:
+          sizeLimit: 2Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cicd-pipeline
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-pipeline
+spec:
+  type: ClusterIP
+  selector:
+    app: cicd-pipeline
+  ports:
+  - name: http
+    port: 8085
+    targetPort: 8085
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+
+---
+{{- if .Values.cicdPipeline.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cicd-pipeline-hpa
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-pipeline
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cicd-pipeline
+  minReplicas: {{ .Values.cicdPipeline.autoscaling.minReplicas | default 2 }}
+  maxReplicas: {{ .Values.cicdPipeline.autoscaling.maxReplicas | default 8 }}
+  metrics:
+  # CPU-based scaling
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.cicdPipeline.autoscaling.targetCPU | default 70 }}
+  
+  # Memory-based scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.cicdPipeline.autoscaling.targetMemory | default 80 }}
+  
+  # Custom metrics for CI/CD workload
+  {{- if .Values.cicdPipeline.autoscaling.customMetrics.enabled }}
+  - type: Pods
+    pods:
+      metric:
+        name: pipeline_queue_length
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.cicdPipeline.autoscaling.customMetrics.targetQueueLength | default "10" }}
+  
+  - type: Pods
+    pods:
+      metric:
+        name: test_execution_rate
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.cicdPipeline.autoscaling.customMetrics.targetTestRate | default "50" }}
+  {{- end }}
+  
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.cicdPipeline.autoscaling.scaleUp.stabilizationWindowSeconds | default 60 }}
+      policies:
+      - type: Percent
+        value: {{ .Values.cicdPipeline.autoscaling.scaleUp.percentPolicy | default 100 }}
+        periodSeconds: {{ .Values.cicdPipeline.autoscaling.scaleUp.periodSeconds | default 15 }}
+      - type: Pods
+        value: 2
+        periodSeconds: 15
+      selectPolicy: Max
+    
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.cicdPipeline.autoscaling.scaleDown.stabilizationWindowSeconds | default 300 }}
+      policies:
+      - type: Percent
+        value: {{ .Values.cicdPipeline.autoscaling.scaleDown.percentPolicy | default 50 }}
+        periodSeconds: {{ .Values.cicdPipeline.autoscaling.scaleDown.periodSeconds | default 60 }}
+      selectPolicy: Min
+{{- end }}
+
+---
+{{- if .Values.cicdPipeline.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cicd-pipeline-netpol
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-pipeline
+spec:
+  podSelector:
+    matchLabels:
+      app: cicd-pipeline
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  ingress:
+  # Allow from orchestrator
+  - from:
+    - podSelector:
+        matchLabels:
+          app: orchestrator
+    ports:
+    - protocol: TCP
+      port: 8085
+  
+  # Allow from monitoring
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090
+  
+  egress:
+  # Allow to Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  
+  # Allow to PostgreSQL
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  
+  # Allow to MLflow
+  - to:
+    - podSelector:
+        matchLabels:
+          app: mlflow
+    ports:
+    - protocol: TCP
+      port: 5000
+  
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+{{- end }}
+
+---
+{{- if .Values.cicdPipeline.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cicd-pipeline-pdb
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-pipeline
+spec:
+  selector:
+    matchLabels:
+      app: cicd-pipeline
+  minAvailable: {{ .Values.cicdPipeline.podDisruptionBudget.minAvailable | default 1 }}
+{{- end }}

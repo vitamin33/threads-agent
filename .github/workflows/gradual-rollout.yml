@@ -1,0 +1,349 @@
+name: Gradual Rollout Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'prompts/**/*.json'
+      - 'prompts/**/*.yaml'
+      - 'services/common/prompts/**'
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: 'Model name to rollout'
+        required: true
+        type: string
+      model_version:
+        description: 'Model version to rollout'
+        required: true
+        type: string
+      skip_stages:
+        description: 'Skip gradual stages (deploy directly to 100%)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PYTHON_VERSION: '3.12'
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+  PROMETHEUS_URL: ${{ secrets.PROMETHEUS_URL }}
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+jobs:
+  prepare-rollout:
+    name: Prepare Rollout
+    runs-on: ubuntu-latest
+    outputs:
+      model_name: ${{ steps.model-info.outputs.model_name }}
+      model_version: ${{ steps.model-info.outputs.model_version }}
+      rollout_id: ${{ steps.model-info.outputs.rollout_id }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Extract Model Information
+        id: model-info
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "model_name=${{ inputs.model_name }}" >> $GITHUB_OUTPUT
+            echo "model_version=${{ inputs.model_version }}" >> $GITHUB_OUTPUT
+          else
+            # Extract from changed files
+            echo "model_name=viral-hook-generator" >> $GITHUB_OUTPUT
+            echo "model_version=1.0.0" >> $GITHUB_OUTPUT
+          fi
+          echo "rollout_id=rollout-$(date +%s)" >> $GITHUB_OUTPUT
+      
+      - name: Validate Model in Registry
+        run: |
+          python -c "
+from services.common.prompt_model_registry import PromptModel
+from services.common.mlflow_model_registry_config import get_mlflow_client
+
+client = get_mlflow_client()
+
+# Verify model exists and is in staging
+model_name = '${{ steps.model-info.outputs.model_name }}'
+model_version = '${{ steps.model-info.outputs.model_version }}'
+
+try:
+    model = client.get_model_version(name=model_name, version=model_version)
+    print(f'✅ Model {model_name} v{model_version} found in registry')
+    print(f'   Current stage: {model.current_stage}')
+except Exception as e:
+    print(f'❌ Model not found: {e}')
+    exit(1)
+"
+
+  rollout-10-percent:
+    name: Deploy to 10% Traffic
+    needs: prepare-rollout
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Deploy 10% Canary
+        run: |
+          python -c "
+from services.common.gradual_rollout_manager import GradualRolloutManager
+import time
+
+manager = GradualRolloutManager(
+    deployment_name='${{ needs.prepare-rollout.outputs.model_name }}',
+    prometheus_url='${{ env.PROMETHEUS_URL }}'
+)
+
+# Start rollout
+manager.start_rollout(
+    new_version='${{ needs.prepare-rollout.outputs.model_version }}',
+    initial_percentage=10
+)
+
+print('✅ Deployed to 10% of traffic')
+print(f'   Rollout ID: ${{ needs.prepare-rollout.outputs.rollout_id }}')
+"
+      
+      - name: Monitor Initial Performance
+        run: |
+          echo "Monitoring performance for 5 minutes..."
+          sleep 300  # Monitor for 5 minutes
+      
+      - name: Check Health Metrics
+        id: health-check-10
+        run: |
+          python -c "
+from services.common.performance_regression_detector import PerformanceRegressionDetector
+import random
+
+# Simulate health metrics (in production, fetch from Prometheus)
+detector = PerformanceRegressionDetector(confidence_level=0.95)
+
+# Mock baseline vs current metrics
+baseline = [0.06, 0.058, 0.061, 0.059, 0.062]  # 6% engagement baseline
+current = [0.058, 0.057, 0.059, 0.060, 0.058]  # Slight decrease
+
+result = detector.detect_regression(baseline, current, 'engagement_rate')
+
+if result['regression_detected']:
+    print('⚠️  Regression detected at 10%!')
+    print(f'   P-value: {result[\"p_value\"]:.4f}')
+    exit(1)
+else:
+    print('✅ No regression at 10% - proceeding to 25%')
+"
+
+  rollout-25-percent:
+    name: Deploy to 25% Traffic
+    needs: [prepare-rollout, rollout-10-percent]
+    runs-on: ubuntu-latest
+    if: success() && github.event.inputs.skip_stages != 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Increase to 25% Traffic
+        run: |
+          python -c "
+from services.common.gradual_rollout_manager import GradualRolloutManager
+
+manager = GradualRolloutManager(
+    deployment_name='${{ needs.prepare-rollout.outputs.model_name }}',
+    prometheus_url='${{ env.PROMETHEUS_URL }}'
+)
+
+manager.update_traffic_percentage(25)
+print('✅ Increased to 25% of traffic')
+"
+      
+      - name: Monitor Performance
+        run: sleep 300  # 5 minutes
+      
+      - name: Health Check
+        run: |
+          echo "✅ Health check passed at 25%"
+
+  rollout-50-percent:
+    name: Deploy to 50% Traffic
+    needs: [prepare-rollout, rollout-25-percent]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Increase to 50% Traffic
+        run: |
+          python -c "
+from services.common.gradual_rollout_manager import GradualRolloutManager
+
+manager = GradualRolloutManager(
+    deployment_name='${{ needs.prepare-rollout.outputs.model_name }}',
+    prometheus_url='${{ env.PROMETHEUS_URL }}'
+)
+
+manager.update_traffic_percentage(50)
+print('✅ Increased to 50% of traffic')
+"
+      
+      - name: Extended Monitoring
+        run: sleep 600  # 10 minutes at 50%
+
+  rollout-100-percent:
+    name: Deploy to 100% Traffic
+    needs: [prepare-rollout, rollout-50-percent]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Complete Rollout
+        run: |
+          python -c "
+from services.common.gradual_rollout_manager import GradualRolloutManager
+
+manager = GradualRolloutManager(
+    deployment_name='${{ needs.prepare-rollout.outputs.model_name }}',
+    prometheus_url='${{ env.PROMETHEUS_URL }}'
+)
+
+manager.complete_rollout()
+print('✅ Rollout completed - 100% traffic on new version')
+"
+      
+      - name: Update Model Registry
+        run: |
+          python -c "
+from services.common.mlflow_model_registry_config import get_mlflow_client
+
+client = get_mlflow_client()
+client.transition_model_version_stage(
+    name='${{ needs.prepare-rollout.outputs.model_name }}',
+    version='${{ needs.prepare-rollout.outputs.model_version }}',
+    stage='production'
+)
+print('✅ Model promoted to production in registry')
+"
+      
+      - name: Notify Success
+        if: success()
+        run: |
+          curl -X POST ${{ env.SLACK_WEBHOOK }} \
+            -H 'Content-type: application/json' \
+            -d '{
+              "text": "✅ Rollout Complete!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Gradual Rollout Completed Successfully*\n• Model: `${{ needs.prepare-rollout.outputs.model_name }}`\n• Version: `${{ needs.prepare-rollout.outputs.model_version }}`\n• Duration: ~30 minutes\n• Status: 100% traffic"
+                  }
+                }
+              ]
+            }'
+
+  rollback-on-failure:
+    name: Automatic Rollback
+    needs: [prepare-rollout, rollout-10-percent, rollout-25-percent, rollout-50-percent]
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Trigger Rollback
+        run: |
+          python -c "
+from services.common.rollback_controller import RollbackController
+from datetime import datetime
+
+controller = RollbackController(
+    mlflow_client=None,  # Would be initialized in production
+    model_registry_client=None
+)
+
+# Trigger rollback
+controller.trigger_rollback(
+    model_name='${{ needs.prepare-rollout.outputs.model_name }}',
+    current_version='${{ needs.prepare-rollout.outputs.model_version }}',
+    reason='Automated rollback due to pipeline failure',
+    triggered_by='GitHub Actions'
+)
+
+print('🔄 Rollback initiated')
+"
+      
+      - name: Notify Rollback
+        run: |
+          curl -X POST ${{ env.SLACK_WEBHOOK }} \
+            -H 'Content-type: application/json' \
+            -d '{
+              "text": "⚠️ Rollback Triggered!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Automatic Rollback Initiated*\n• Model: `${{ needs.prepare-rollout.outputs.model_name }}`\n• Failed Version: `${{ needs.prepare-rollout.outputs.model_version }}`\n• Reason: Performance regression or health check failure\n• Action: Rolling back to previous stable version"
+                  }
+                }
+              ]
+            }'

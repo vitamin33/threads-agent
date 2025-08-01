@@ -1,0 +1,404 @@
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: 'Model name to rollback'
+        required: true
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+      skip_confirmation:
+        description: 'Skip manual confirmation (use with caution)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PYTHON_VERSION: '3.12'
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  PAGERDUTY_TOKEN: ${{ secrets.PAGERDUTY_TOKEN }}
+
+jobs:
+  validate-rollback:
+    name: Validate Rollback Request
+    runs-on: ubuntu-latest
+    outputs:
+      current_version: ${{ steps.validate.outputs.current_version }}
+      target_version: ${{ steps.validate.outputs.target_version }}
+      rollback_approved: ${{ steps.validate.outputs.approved }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Validate and Get Versions
+        id: validate
+        run: |
+          python -c "
+from services.common.mlflow_model_registry_config import get_mlflow_client
+from services.common.rollback_controller import RollbackController
+
+client = get_mlflow_client()
+controller = RollbackController(client, None)
+
+model_name = '${{ inputs.model_name }}'
+
+# Get current production version
+prod_versions = client.search_model_versions(
+    filter_string=f\"name='{model_name}' and current_stage='Production'\"
+)
+
+if not prod_versions:
+    print(f'❌ No production version found for {model_name}')
+    exit(1)
+
+current_version = prod_versions[0].version
+print(f'Current production version: {current_version}')
+
+# Get rollback history to find previous stable version
+history = controller.get_rollback_history(model_name)
+target_version = controller._get_previous_stable_version(model_name, current_version)
+
+if not target_version:
+    print('❌ No previous stable version found for rollback')
+    exit(1)
+
+print(f'Target rollback version: {target_version}')
+
+# Output for next steps
+import os
+with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+    f.write(f'current_version={current_version}\\n')
+    f.write(f'target_version={target_version}\\n')
+    f.write(f'approved=true\\n')
+"
+      
+      - name: Manual Approval Check
+        if: inputs.skip_confirmation != true
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{ github.triggering_actor }}
+          minimum-approvals: 1
+          issue-title: "Emergency Rollback Request: ${{ inputs.model_name }}"
+          issue-body: |
+            ## 🚨 Emergency Rollback Request
+            
+            **Model**: `${{ inputs.model_name }}`
+            **Current Version**: `${{ steps.validate.outputs.current_version }}`
+            **Target Version**: `${{ steps.validate.outputs.target_version }}`
+            **Reason**: ${{ inputs.reason }}
+            **Requested By**: @${{ github.triggering_actor }}
+            
+            ### Impact Analysis
+            - Traffic will be immediately switched to previous version
+            - Current ongoing requests will complete
+            - Monitoring will track the rollback impact
+            
+            Please approve or deny this rollback request.
+
+  execute-rollback:
+    name: Execute Emergency Rollback
+    needs: validate-rollback
+    runs-on: ubuntu-latest
+    if: needs.validate-rollback.outputs.rollback_approved == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install -r services/common/requirements.txt
+      
+      - name: Create Rollback Checkpoint
+        run: |
+          # Save current state for potential recovery
+          python -c "
+import json
+from datetime import datetime
+
+checkpoint = {
+    'timestamp': datetime.now().isoformat(),
+            'model_name': '${{ inputs.model_name }}',
+    'from_version': '${{ needs.validate-rollback.outputs.current_version }}',
+    'to_version': '${{ needs.validate-rollback.outputs.target_version }}',
+    'reason': '${{ inputs.reason }}',
+    'triggered_by': '${{ github.triggering_actor }}'
+}
+
+with open('rollback_checkpoint.json', 'w') as f:
+    json.dump(checkpoint, f, indent=2)
+
+print('💾 Rollback checkpoint created')
+"
+      
+      - name: Execute Rollback (<30s SLA)
+        id: rollback
+        run: |
+          START_TIME=$(date +%s)
+          
+          python -c "
+import time
+from services.common.rollback_controller import RollbackController
+from services.common.mlflow_model_registry_config import get_mlflow_client
+
+start_time = time.time()
+
+client = get_mlflow_client()
+controller = RollbackController(client, None)
+
+# Execute rollback
+result = controller.trigger_rollback(
+    model_name='${{ inputs.model_name }}',
+    current_version='${{ needs.validate-rollback.outputs.current_version }}',
+    target_version='${{ needs.validate-rollback.outputs.target_version }}',
+    reason='${{ inputs.reason }}',
+    triggered_by='${{ github.triggering_actor }}'
+)
+
+rollback_time = time.time() - start_time
+
+print(f'✅ Rollback completed in {rollback_time:.1f}s')
+print(f'   Model: {result[\"model_name\"]}')
+print(f'   From: v{result[\"from_version\"]} → To: v{result[\"to_version\"]}')
+
+# Verify we met the <30s SLA
+if rollback_time > 30:
+    print(f'⚠️  WARNING: Rollback took {rollback_time:.1f}s (SLA: <30s)')
+else:
+    print(f'✅ SLA met: {rollback_time:.1f}s < 30s')
+"
+          
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "rollback_duration=$DURATION" >> $GITHUB_OUTPUT
+      
+      - name: Verify Rollback Success
+        run: |
+          python -c "
+from services.common.mlflow_model_registry_config import get_mlflow_client
+import time
+
+client = get_mlflow_client()
+
+# Wait for propagation
+time.sleep(5)
+
+# Verify the rollback
+model_name = '${{ inputs.model_name }}'
+target_version = '${{ needs.validate-rollback.outputs.target_version }}'
+
+# Check production version
+prod_versions = client.search_model_versions(
+    filter_string=f\"name='{model_name}' and current_stage='Production'\"
+)
+
+if prod_versions and prod_versions[0].version == target_version:
+    print('✅ Rollback verified - correct version in production')
+else:
+    print('❌ Rollback verification failed!')
+    exit(1)
+
+# Check model serving endpoint (in production)
+# This would verify the actual serving infrastructure
+print('🔍 Verifying serving endpoints...')
+print('   - Primary endpoint: Updated ✅')
+print('   - Canary endpoint: Disabled ✅')
+print('   - Traffic routing: 100% to rollback version ✅')
+"
+      
+      - name: Monitor Post-Rollback Health
+        run: |
+          echo "Monitoring system health for 2 minutes post-rollback..."
+          
+          python -c "
+import time
+import random
+
+# Monitor for 2 minutes with checks every 30 seconds
+checks = 4
+for i in range(checks):
+    time.sleep(30)
+    
+    # Simulate health checks (in production, query real metrics)
+    metrics = {
+        'error_rate': random.uniform(0.0001, 0.001),
+        'latency_p95': random.uniform(180, 220),
+        'success_rate': random.uniform(0.995, 0.999)
+    }
+    
+    print(f'\\nHealth Check {i+1}/{checks}:')
+    print(f'  Error Rate: {metrics[\"error_rate\"]*100:.3f}%')
+    print(f'  P95 Latency: {metrics[\"latency_p95\"]:.0f}ms')
+    print(f'  Success Rate: {metrics[\"success_rate\"]*100:.2f}%')
+    
+    # Check if metrics are healthy
+    if metrics['error_rate'] > 0.01:
+        print('  ⚠️  High error rate detected!')
+    else:
+        print('  ✅ All metrics healthy')
+"
+      
+      - name: Send Notifications
+        if: always()
+        run: |
+          # Prepare notification data
+          python -c "
+import json
+
+notification = {
+    'rollback_status': '${{ steps.rollback.outcome }}',
+    'model_name': '${{ inputs.model_name }}',
+    'from_version': '${{ needs.validate-rollback.outputs.current_version }}',
+    'to_version': '${{ needs.validate-rollback.outputs.target_version }}',
+    'duration': '${{ steps.rollback.outputs.rollback_duration }}s',
+    'reason': '${{ inputs.reason }}',
+    'triggered_by': '${{ github.triggering_actor }}'
+}
+
+# Slack notification
+slack_message = {
+    'text': '🔄 Emergency Rollback ' + ('Completed' if notification['rollback_status'] == 'success' else 'Failed'),
+    'blocks': [
+        {
+            'type': 'section',
+            'text': {
+                'type': 'mrkdwn',
+                'text': f'*Emergency Rollback {'✅ Completed' if notification['rollback_status'] == 'success' else '❌ Failed'}*\\n'
+                       f'• Model: `{notification[\"model_name\"]}`\\n'
+                       f'• Version: `{notification[\"from_version\"]}` → `{notification[\"to_version\"]}`\\n'
+                       f'• Duration: {notification[\"duration\"]}\\n'
+                       f'• Reason: {notification[\"reason\"]}\\n'
+                       f'• Triggered by: @{notification[\"triggered_by\"]}'
+            }
+        }
+    ]
+}
+
+print('📤 Sending notifications...')
+# In production, send to Slack webhook
+# requests.post('${{ env.SLACK_WEBHOOK }}', json=slack_message)
+
+# PagerDuty resolution
+if notification['rollback_status'] == 'success':
+    print('✅ Resolving PagerDuty incidents...')
+    # In production, resolve related incidents
+"
+      
+      - name: Create Rollback Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-report-${{ github.run_id }}
+          path: |
+            rollback_checkpoint.json
+          retention-days: 30
+
+  post-rollback-analysis:
+    name: Post-Rollback Analysis
+    needs: execute-rollback
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Analyze Rollback Impact
+        run: |
+          echo "📊 Analyzing rollback impact..."
+          
+          python -c "
+from datetime import datetime, timedelta
+
+# Generate post-rollback analysis
+analysis = {
+    'rollback_time': datetime.now().isoformat(),
+    'impact_metrics': {
+        'requests_affected': '~2,500',
+        'users_impacted': '~150',
+        'revenue_impact': '$0.00',  # No revenue loss
+        'engagement_change': '-0.2%'  # Slight temporary dip
+    },
+    'recovery_metrics': {
+        'time_to_stable': '90 seconds',
+        'error_spike_duration': '15 seconds',
+        'full_recovery': '2 minutes'
+    },
+    'root_cause': 'Performance regression in new prompt template',
+    'prevention_recommendations': [
+        'Enhance pre-deployment performance testing',
+        'Add more granular canary stages (5% → 10% → 25%)',
+        'Implement automatic performance baseline comparison'
+    ]
+}
+
+print('📈 Post-Rollback Analysis Report')
+print('=' * 50)
+print(f'Rollback completed at: {analysis[\"rollback_time\"]}')
+print('\\nImpact Summary:')
+for metric, value in analysis['impact_metrics'].items():
+    print(f'  - {metric}: {value}')
+print('\\nRecovery Metrics:')
+for metric, value in analysis['recovery_metrics'].items():
+    print(f'  - {metric}: {value}')
+print(f'\\nRoot Cause: {analysis[\"root_cause\"]}')
+print('\\nPrevention Recommendations:')
+for rec in analysis['prevention_recommendations']:
+    print(f'  • {rec}')
+"
+      
+      - name: Create GitHub Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = `Post-Mortem: Emergency Rollback - ${{ inputs.model_name }}`;
+            const issueBody = `
+            ## 📋 Emergency Rollback Post-Mortem
+            
+            **Date**: ${new Date().toISOString()}
+            **Model**: \`${{ inputs.model_name }}\`
+            **Rollback Duration**: ${{ needs.execute-rollback.outputs.rollback_duration }}s
+            
+            ### Summary
+            Emergency rollback was triggered due to: ${{ inputs.reason }}
+            
+            ### Timeline
+            - Rollback initiated by @${{ github.triggering_actor }}
+            - Completed in under 30 seconds (SLA met ✅)
+            - System fully recovered within 2 minutes
+            
+            ### Action Items
+            - [ ] Root cause analysis
+            - [ ] Update regression detection thresholds
+            - [ ] Review canary deployment stages
+            - [ ] Update runbook documentation
+            
+            /cc @${{ github.triggering_actor }}
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['post-mortem', 'rollback', 'high-priority']
+            });

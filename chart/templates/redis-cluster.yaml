@@ -1,0 +1,321 @@
+# chart/templates/redis-cluster.yaml - High-performance Redis cluster for caching
+{{- if .Values.redis.cluster.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-cluster-config
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-cluster
+data:
+  redis.conf: |
+    # High-performance Redis configuration for CI/CD workloads
+    
+    # Memory optimization
+    maxmemory {{ .Values.redis.cluster.maxMemory | default "512mb" }}
+    maxmemory-policy allkeys-lru
+    
+    # Performance tuning
+    save ""  # Disable RDB for performance (using AOF)
+    appendonly yes
+    appendfsync everysec
+    no-appendfsync-on-rewrite yes
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    
+    # Network optimization
+    tcp-keepalive 300
+    timeout 0
+    tcp-backlog 511
+    
+    # Client optimization
+    maxclients 10000
+    
+    # Database optimization
+    databases 16
+    
+    # Keyspace notifications for cache invalidation
+    notify-keyspace-events Ex
+    
+    # Cluster-specific settings
+    cluster-enabled no  # Single instance with sharding via client
+    
+    # CI/CD specific optimization
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    list-max-ziplist-size -2
+    set-max-intset-entries 512
+    zset-max-ziplist-entries 128
+    zset-max-ziplist-value 64
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-cluster
+spec:
+  serviceName: redis-cluster-headless
+  replicas: {{ .Values.redis.cluster.replicas | default 3 }}
+  selector:
+    matchLabels:
+      app: redis-cluster
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+        component: redis-cluster
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9121"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Anti-affinity for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - redis-cluster
+              topologyKey: kubernetes.io/hostname
+      
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        
+        ports:
+        - name: redis
+          containerPort: 6379
+        
+        env:
+        - name: REDIS_PORT
+          value: "6379"
+        
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 2
+        
+        resources:
+          requests:
+            memory: {{ .Values.redis.cluster.resources.requests.memory | default "256Mi" }}
+            cpu: {{ .Values.redis.cluster.resources.requests.cpu | default "100m" }}
+          limits:
+            memory: {{ .Values.redis.cluster.resources.limits.memory | default "512Mi" }}
+            cpu: {{ .Values.redis.cluster.resources.limits.cpu | default "500m" }}
+        
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis
+          readOnly: true
+        - name: redis-data
+          mountPath: /data
+      
+      # Redis Exporter for monitoring
+      - name: redis-exporter
+        image: oliver006/redis_exporter:v1.58.0
+        
+        env:
+        - name: REDIS_ADDR
+          value: "redis://127.0.0.1:6379"
+        - name: REDIS_EXPORTER_CHECK_KEYS
+          value: "performance:*,cicd:*,test:*,rollout:*"
+        
+        ports:
+        - name: metrics
+          containerPort: 9121
+        
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9121
+          initialDelaySeconds: 15
+          periodSeconds: 30
+        
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+      
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-cluster-config
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: {{ .Values.redis.cluster.storageClass | default "local-path" }}
+      resources:
+        requests:
+          storage: {{ .Values.redis.cluster.storage | default "2Gi" }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster-headless
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-cluster
+spec:
+  clusterIP: None
+  selector:
+    app: redis-cluster
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  - name: metrics
+    port: 9121
+    targetPort: 9121
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-cluster
+spec:
+  type: ClusterIP
+  selector:
+    app: redis-cluster
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  - name: metrics
+    port: 9121
+    targetPort: 9121
+
+---
+# Redis connection pooling proxy for better performance
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-proxy
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-proxy
+spec:
+  replicas: {{ .Values.redis.proxy.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: redis-proxy
+  template:
+    metadata:
+      labels:
+        app: redis-proxy
+        component: redis-proxy
+    spec:
+      containers:
+      - name: twemproxy
+        image: nutcracker/nutcracker:0.4.1
+        
+        ports:
+        - name: proxy
+          containerPort: 22121
+        
+        livenessProbe:
+          tcpSocket:
+            port: 22121
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        
+        readinessProbe:
+          tcpSocket:
+            port: 22121
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        
+        volumeMounts:
+        - name: proxy-config
+          mountPath: /etc/nutcracker/nutcracker.yml
+          subPath: nutcracker.yml
+          readOnly: true
+      
+      volumes:
+      - name: proxy-config
+        configMap:
+          name: redis-proxy-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-proxy-config
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-proxy
+data:
+  nutcracker.yml: |
+    redis_cluster:
+      listen: 0.0.0.0:22121
+      hash: fnv1a_64
+      distribution: ketama
+      auto_eject_hosts: true
+      redis: true
+      server_retry_timeout: 2000
+      server_failure_limit: 1
+      servers:
+       - redis-cluster-0.redis-cluster-headless:6379:1
+       - redis-cluster-1.redis-cluster-headless:6379:1
+       - redis-cluster-2.redis-cluster-headless:6379:1
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-proxy
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: redis-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: redis-proxy
+  ports:
+  - name: proxy
+    port: 6379
+    targetPort: 22121
+{{- end }}

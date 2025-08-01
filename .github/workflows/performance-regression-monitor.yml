@@ -1,0 +1,858 @@
+# .github/workflows/performance-regression-monitor.yml
+# Continuous Performance Regression Detection and Monitoring
+name: Performance Regression Monitor
+
+on:
+  # Scheduled monitoring every 2 hours during business hours
+  schedule:
+    - cron: '0 8-20/2 * * MON-FRI'  # Every 2 hours, 8 AM to 8 PM, weekdays
+    - cron: '0 12,18 * * SAT,SUN'   # Twice daily on weekends
+  
+  # Manual trigger for immediate analysis
+  workflow_dispatch:
+    inputs:
+      monitoring_window_hours:
+        description: 'Hours of historical data to analyze'
+        required: false
+        default: '24'
+        type: string
+      alert_severity:
+        description: 'Minimum alert severity to report'
+        required: false
+        default: 'medium'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - critical
+      metrics_to_analyze:
+        description: 'Comma-separated list of metrics to analyze'
+        required: false
+        default: 'response_time,accuracy,error_rate,cost_per_request'
+        type: string
+
+  # Trigger on deployment completion
+  workflow_run:
+    workflows: ["Gradual Rollout"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+concurrency:
+  group: performance-regression-monitor
+  cancel-in-progress: false  # Don't cancel monitoring runs
+
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_S3_ENDPOINT_URL: ${{ secrets.MLFLOW_S3_ENDPOINT_URL }}
+  PROMETHEUS_URL: ${{ secrets.PROMETHEUS_URL || 'http://prometheus.monitoring.svc.cluster.local:9090' }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  PAGERDUTY_INTEGRATION_KEY: ${{ secrets.PAGERDUTY_INTEGRATION_KEY }}
+
+jobs:
+  setup-monitoring:
+    name: Setup Performance Monitoring
+    runs-on: ubuntu-22.04
+    timeout-minutes: 3
+    outputs:
+      monitoring-enabled: ${{ steps.config.outputs.enabled }}
+      metrics-list: ${{ steps.config.outputs.metrics }}
+      window-hours: ${{ steps.config.outputs.window }}
+      alert-threshold: ${{ steps.config.outputs.threshold }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure monitoring parameters
+        id: config
+        run: |
+          # Set monitoring window
+          WINDOW_HOURS="${{ github.event.inputs.monitoring_window_hours || '24' }}"
+          echo "window=${WINDOW_HOURS}" >> $GITHUB_OUTPUT
+          
+          # Set metrics to analyze
+          METRICS="${{ github.event.inputs.metrics_to_analyze || 'response_time,accuracy,error_rate,cost_per_request' }}"
+          echo "metrics=${METRICS}" >> $GITHUB_OUTPUT
+          
+          # Set alert threshold
+          THRESHOLD="${{ github.event.inputs.alert_severity || 'medium' }}"
+          echo "threshold=${THRESHOLD}" >> $GITHUB_OUTPUT
+          
+          # Check if monitoring should be enabled (skip if it's a weekend and not manual)
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
+            if [ "$DAY_OF_WEEK" -ge 6 ]; then  # Weekend
+              echo "enabled=weekend" >> $GITHUB_OUTPUT
+            else
+              echo "enabled=full" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "enabled=full" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "🔧 Monitoring configuration:"
+          echo "  - Window: ${WINDOW_HOURS} hours"
+          echo "  - Metrics: ${METRICS}"
+          echo "  - Alert threshold: ${THRESHOLD}"
+
+  collect-performance-data:
+    name: Collect Performance Data
+    runs-on: ubuntu-22.04
+    needs: setup-monitoring
+    if: needs.setup-monitoring.outputs.monitoring-enabled != 'false'
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        data-source: [prometheus, mlflow, application-logs]
+    outputs:
+      data-available: ${{ steps.collection.outputs.available }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: perf-monitor-${{ runner.os }}-py3.12-${{ hashFiles('services/common/requirements.txt') }}
+          restore-keys: |
+            perf-monitor-${{ runner.os }}-py3.12-
+            perf-monitor-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+          pip install -U pip wheel setuptools
+          pip install -r services/common/requirements.txt
+          pip install prometheus-client requests pandas numpy scipy
+
+      - name: Collect ${{ matrix.data-source }} data
+        id: collection
+        env:
+          WINDOW_HOURS: ${{ needs.setup-monitoring.outputs.window-hours }}
+          METRICS_LIST: ${{ needs.setup-monitoring.outputs.metrics-list }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          mkdir -p performance-data/${{ matrix.data-source }}
+          
+          case "${{ matrix.data-source }}" in
+            prometheus)
+              echo "📊 Collecting Prometheus metrics..."
+              python -c "
+import os
+import json
+import requests
+from datetime import datetime, timedelta
+from services.common.performance_regression_detector import PerformanceData
+
+window_hours = int(os.getenv('WINDOW_HOURS', '24'))
+metrics = os.getenv('METRICS_LIST', '').split(',')
+prometheus_url = os.getenv('PROMETHEUS_URL', 'http://localhost:9090')
+
+# Mock data collection for now (in production, this would query Prometheus)
+performance_data = []
+current_time = datetime.now()
+
+for metric in metrics:
+    metric = metric.strip()
+    if not metric:
+        continue
+    
+    # Generate mock historical data points
+    for i in range(window_hours * 2):  # 2 data points per hour
+        timestamp = current_time - timedelta(hours=window_hours) + timedelta(minutes=i * 30)
+        
+        # Mock values based on metric type
+        if 'response_time' in metric:
+            value = 150 + (i % 50)  # Simulate response time in ms
+        elif 'accuracy' in metric:
+            value = 0.85 + (i % 10) * 0.01  # Simulate accuracy
+        elif 'error_rate' in metric:
+            value = 0.02 + (i % 5) * 0.001  # Simulate error rate
+        elif 'cost_per_request' in metric:
+            value = 0.005 + (i % 10) * 0.0001  # Simulate cost
+        else:
+            value = 100 + (i % 20)
+        
+        data = {
+            'timestamp': timestamp.isoformat(),
+            'metric_name': metric,
+            'value': value,
+            'metadata': {'source': 'prometheus', 'collection_run': '${{ github.run_id }}'}
+        }
+        performance_data.append(data)
+
+# Save collected data
+with open('performance-data/${{ matrix.data-source }}/data.json', 'w') as f:
+    json.dump(performance_data, f, indent=2, default=str)
+
+print(f'✅ Collected {len(performance_data)} data points from Prometheus')
+              "
+              ;;
+            mlflow)
+              echo "🧪 Collecting MLflow experiment data..."
+              python -c "
+import os
+import json
+import mlflow
+from datetime import datetime, timedelta
+
+window_hours = int(os.getenv('WINDOW_HOURS', '24'))
+current_time = datetime.now()
+
+# Mock MLflow data collection
+performance_data = []
+
+# Simulate MLflow experiment metrics
+metrics = ['model_accuracy', 'inference_latency', 'model_quality_score']
+for metric in metrics:
+    for i in range(window_hours):
+        timestamp = current_time - timedelta(hours=window_hours) + timedelta(hours=i)
+        
+        if 'accuracy' in metric:
+            value = 0.88 + (i % 8) * 0.005
+        elif 'latency' in metric:
+            value = 200 + (i % 30)
+        else:
+            value = 0.92 + (i % 5) * 0.01
+        
+        data = {
+            'timestamp': timestamp.isoformat(),
+            'metric_name': metric,
+            'value': value,
+            'metadata': {'source': 'mlflow', 'experiment_id': 'exp_001'}
+        }
+        performance_data.append(data)
+
+# Save collected data
+with open('performance-data/${{ matrix.data-source }}/data.json', 'w') as f:
+    json.dump(performance_data, f, indent=2, default=str)
+
+print(f'✅ Collected {len(performance_data)} data points from MLflow')
+              "
+              ;;
+            application-logs)
+              echo "📝 Collecting application log metrics..."
+              python -c "
+import os
+import json
+from datetime import datetime, timedelta
+
+window_hours = int(os.getenv('WINDOW_HOURS', '24'))
+current_time = datetime.now()
+
+# Mock application log data collection
+performance_data = []
+
+# Simulate application metrics from logs
+metrics = ['request_throughput', 'memory_usage', 'cpu_utilization']
+for metric in metrics:
+    for i in range(window_hours * 4):  # 4 data points per hour
+        timestamp = current_time - timedelta(hours=window_hours) + timedelta(minutes=i * 15)
+        
+        if 'throughput' in metric:
+            value = 1000 + (i % 100)
+        elif 'memory' in metric:
+            value = 512 + (i % 50)
+        else:
+            value = 45 + (i % 20)
+        
+        data = {
+            'timestamp': timestamp.isoformat(),
+            'metric_name': metric,
+            'value': value,
+            'metadata': {'source': 'application-logs', 'service': 'orchestrator'}
+        }
+        performance_data.append(data)
+
+# Save collected data
+with open('performance-data/${{ matrix.data-source }}/data.json', 'w') as f:
+    json.dump(performance_data, f, indent=2, default=str)
+
+print(f'✅ Collected {len(performance_data)} data points from application logs')
+              "
+              ;;
+          esac
+          
+          # Check if data was collected successfully
+          if [ -f "performance-data/${{ matrix.data-source }}/data.json" ]; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload performance data
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-data-${{ matrix.data-source }}
+          path: performance-data/${{ matrix.data-source }}/
+          retention-days: 7
+
+  analyze-performance-regression:
+    name: Analyze Performance Regression
+    runs-on: ubuntu-22.04
+    needs: [setup-monitoring, collect-performance-data]
+    if: needs.collect-performance-data.result == 'success'
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        analysis-type: [statistical, trend, anomaly]
+        include:
+          - analysis-type: statistical
+            confidence-level: 0.95
+            min-samples: 20
+          - analysis-type: trend
+            window-size: 12
+            trend-threshold: 0.1
+          - analysis-type: anomaly
+            anomaly-threshold: 2.0
+            outlier-filter: true
+    outputs:
+      regressions-detected: ${{ steps.analysis.outputs.detected }}
+      critical-alerts: ${{ steps.analysis.outputs.critical }}
+      analysis-results: ${{ steps.analysis.outputs.results }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: perf-monitor-${{ runner.os }}-py3.12-${{ hashFiles('services/common/requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+          pip install -U pip wheel setuptools
+          pip install -r services/common/requirements.txt
+
+      - name: Download all performance data
+        uses: actions/download-artifact@v4
+        with:
+          pattern: performance-data-*
+          path: all-performance-data/
+
+      - name: Run ${{ matrix.analysis-type }} regression analysis
+        id: analysis
+        env:
+          ANALYSIS_TYPE: ${{ matrix.analysis-type }}
+          CONFIDENCE_LEVEL: ${{ matrix.confidence-level || '0.95' }}
+          MIN_SAMPLES: ${{ matrix.min-samples || '10' }}
+          WINDOW_SIZE: ${{ matrix.window-size || '12' }}
+          TREND_THRESHOLD: ${{ matrix.trend-threshold || '0.1' }}
+          ANOMALY_THRESHOLD: ${{ matrix.anomaly-threshold || '2.0' }}
+          OUTLIER_FILTER: ${{ matrix.outlier-filter || 'false' }}
+          ALERT_THRESHOLD: ${{ needs.setup-monitoring.outputs.alert-threshold }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          mkdir -p analysis-results/${{ matrix.analysis-type }}
+          
+          echo "🔍 Running ${{ matrix.analysis-type }} performance regression analysis..."
+          
+          python -c "
+import os
+import json
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from services.common.performance_regression_detector import (
+    PerformanceRegressionDetector, PerformanceData, MetricType, 
+    SignificanceLevel, StatisticalTest
+)
+
+# Load all performance data
+all_data = []
+data_dir = Path('all-performance-data')
+for data_file in data_dir.glob('*/data.json'):
+    try:
+        with open(data_file, 'r') as f:
+            data = json.load(f)
+            all_data.extend(data)
+    except Exception as e:
+        print(f'⚠️ Failed to load {data_file}: {e}')
+        continue
+
+if not all_data:
+    print('❌ No performance data available for analysis')
+    sys.exit(1)
+
+print(f'📊 Loaded {len(all_data)} performance data points')
+
+# Group data by metric
+metrics_data = {}
+for item in all_data:
+    metric_name = item['metric_name']
+    if metric_name not in metrics_data:
+        metrics_data[metric_name] = []
+    
+    # Convert to PerformanceData object
+    perf_data = PerformanceData(
+        timestamp=datetime.fromisoformat(item['timestamp'].replace('Z', '+00:00')),
+        metric_name=metric_name,
+        value=float(item['value']),
+        metadata=item.get('metadata', {})
+    )
+    metrics_data[metric_name].append(perf_data)
+
+# Configure detector based on analysis type
+analysis_type = os.getenv('ANALYSIS_TYPE', 'statistical')
+confidence_level = float(os.getenv('CONFIDENCE_LEVEL', '0.95'))
+min_samples = int(os.getenv('MIN_SAMPLES', '10'))
+outlier_filter = os.getenv('OUTLIER_FILTER', 'false').lower() == 'true'
+
+# Create detector
+detector = PerformanceRegressionDetector(
+    significance_level=SignificanceLevel.ALPHA_05,
+    statistical_tests=[StatisticalTest.T_TEST, StatisticalTest.MANN_WHITNEY],
+    minimum_samples=min_samples,
+    baseline_window_days=1,  # Use 1 day for recent baseline
+    filter_outliers=outlier_filter,
+    outlier_threshold=float(os.getenv('ANOMALY_THRESHOLD', '2.0'))
+)
+
+# Analyze each metric
+results = {}
+regressions_detected = 0
+critical_alerts = 0
+
+for metric_name, data_points in metrics_data.items():
+    if len(data_points) < min_samples * 2:  # Need enough data for both baseline and current
+        print(f'⚠️ Insufficient data for {metric_name}: {len(data_points)} points')
+        continue
+    
+    # Sort by timestamp
+    data_points.sort(key=lambda x: x.timestamp)
+    
+    # Split into baseline (first 70%) and current (last 30%)
+    split_point = int(len(data_points) * 0.7)
+    baseline_data = data_points[:split_point]
+    current_data = data_points[split_point:]
+    
+    try:
+        # Determine metric type based on name
+        if 'error' in metric_name.lower() or 'latency' in metric_name.lower() or 'response_time' in metric_name.lower():
+            metric_type = MetricType.LOWER_IS_BETTER
+        elif 'accuracy' in metric_name.lower() or 'throughput' in metric_name.lower():
+            metric_type = MetricType.HIGHER_IS_BETTER
+        else:
+            metric_type = MetricType.NEUTRAL
+        
+        # Run regression analysis
+        result = detector.detect_regression(
+            baseline_data, current_data, metric_name, metric_type
+        )
+        
+        results[metric_name] = {
+            'is_regression': result.is_regression,
+            'is_significant_change': result.is_significant_change,
+            'p_value': result.p_value,
+            'effect_size': result.effect_size,
+            'effect_size_magnitude': result.effect_size_magnitude,
+            'confidence_level': result.confidence_level,
+            'baseline_mean': result.baseline_mean,
+            'current_mean': result.current_mean,
+            'baseline_samples': len(baseline_data),
+            'current_samples': len(current_data)
+        }
+        
+        if result.is_regression:
+            regressions_detected += 1
+            print(f'🚨 Regression detected in {metric_name}: p={result.p_value:.4f}, effect={result.effect_size:.2f}')
+            
+            # Check if it's critical
+            if result.effect_size_magnitude == 'large' and result.p_value < 0.01:
+                critical_alerts += 1
+        
+        print(f'✅ Analyzed {metric_name}: regression={result.is_regression}, p={result.p_value:.4f}')
+        
+    except Exception as e:
+        print(f'❌ Failed to analyze {metric_name}: {e}')
+        results[metric_name] = {'error': str(e)}
+
+# Generate analysis report
+analysis_report = {
+    'analysis_type': analysis_type,
+    'timestamp': datetime.now().isoformat(),
+    'configuration': {
+        'confidence_level': confidence_level,
+        'min_samples': min_samples,
+        'outlier_filter': outlier_filter
+    },
+    'summary': {
+        'total_metrics': len(metrics_data),
+        'analyzed_metrics': len([r for r in results.values() if 'error' not in r]),
+        'regressions_detected': regressions_detected,
+        'critical_alerts': critical_alerts
+    },
+    'results': results
+}
+
+# Save results
+with open(f'analysis-results/${{ matrix.analysis-type }}/results.json', 'w') as f:
+    json.dump(analysis_report, f, indent=2, default=str)
+
+print(f'📈 Analysis complete: {regressions_detected} regressions, {critical_alerts} critical alerts')
+          "
+          
+          # Set outputs
+          if [ -f "analysis-results/${{ matrix.analysis-type }}/results.json" ]; then
+            REGRESSIONS=$(python -c "
+import json
+with open('analysis-results/${{ matrix.analysis-type }}/results.json', 'r') as f:
+    data = json.load(f)
+print(data['summary']['regressions_detected'])
+            ")
+            CRITICAL=$(python -c "
+import json
+with open('analysis-results/${{ matrix.analysis-type }}/results.json', 'r') as f:
+    data = json.load(f)
+print(data['summary']['critical_alerts'])
+            ")
+            
+            echo "detected=${REGRESSIONS}" >> $GITHUB_OUTPUT
+            echo "critical=${CRITICAL}" >> $GITHUB_OUTPUT
+            echo "results=analysis-results/${{ matrix.analysis-type }}/results.json" >> $GITHUB_OUTPUT
+          else
+            echo "detected=0" >> $GITHUB_OUTPUT
+            echo "critical=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-results-${{ matrix.analysis-type }}
+          path: analysis-results/${{ matrix.analysis-type }}/
+          retention-days: 30
+
+  generate-alerts:
+    name: Generate Performance Alerts
+    runs-on: ubuntu-22.04
+    needs: [setup-monitoring, analyze-performance-regression]
+    if: always() && needs.analyze-performance-regression.result == 'success'
+    timeout-minutes: 3
+    outputs:
+      alerts-generated: ${{ steps.alerts.outputs.generated }}
+      critical-count: ${{ steps.alerts.outputs.critical_count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download analysis results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: analysis-results-*
+          path: all-analysis-results/
+
+      - name: Generate alerts
+        id: alerts
+        env:
+          ALERT_THRESHOLD: ${{ needs.setup-monitoring.outputs.alert-threshold }}
+        run: |
+          echo "🚨 Generating performance alerts..."
+          
+          python -c "
+import os
+import json
+from pathlib import Path
+from datetime import datetime
+
+alert_threshold = os.getenv('ALERT_THRESHOLD', 'medium')
+severity_levels = {'low': 0, 'medium': 1, 'high': 2, 'critical': 3}
+min_severity = severity_levels.get(alert_threshold, 1)
+
+# Load all analysis results
+all_results = {}
+results_dir = Path('all-analysis-results')
+for result_file in results_dir.glob('*/results.json'):
+    try:
+        with open(result_file, 'r') as f:
+            data = json.load(f)
+            analysis_type = data['analysis_type']
+            all_results[analysis_type] = data
+    except Exception as e:
+        print(f'⚠️ Failed to load {result_file}: {e}')
+
+if not all_results:
+    print('📭 No analysis results found')
+    exit(0)
+
+# Generate consolidated alerts
+alerts = []
+total_regressions = 0
+critical_count = 0
+
+for analysis_type, data in all_results.items():
+    summary = data['summary']
+    regressions = summary.get('regressions_detected', 0)
+    critical = summary.get('critical_alerts', 0)
+    
+    total_regressions += regressions
+    critical_count += critical
+    
+    # Generate alert for each regression
+    for metric_name, result in data['results'].items():
+        if result.get('error'):
+            continue
+            
+        if not result.get('is_regression', False):
+            continue
+        
+        # Determine severity
+        effect_magnitude = result.get('effect_size_magnitude', 'small')
+        p_value = result.get('p_value', 1.0)
+        
+        if effect_magnitude == 'large' and p_value < 0.01:
+            severity = 'critical'
+        elif effect_magnitude == 'large' or p_value < 0.05:
+            severity = 'high'
+        elif effect_magnitude == 'medium':
+            severity = 'medium'
+        else:
+            severity = 'low'
+        
+        # Check if alert meets threshold
+        if severity_levels.get(severity, 0) >= min_severity:
+            alert = {
+                'severity': severity,
+                'metric': metric_name,
+                'analysis_type': analysis_type,
+                'p_value': p_value,
+                'effect_size': result.get('effect_size', 0),
+                'effect_magnitude': effect_magnitude,
+                'baseline_mean': result.get('baseline_mean', 0),
+                'current_mean': result.get('current_mean', 0),
+                'timestamp': datetime.now().isoformat()
+            }
+            alerts.append(alert)
+
+# Save alerts
+alerts_summary = {
+    'timestamp': datetime.now().isoformat(),
+    'total_alerts': len(alerts),
+    'critical_alerts': critical_count,
+    'total_regressions': total_regressions,
+    'alert_threshold': alert_threshold,
+    'alerts': alerts
+}
+
+with open('performance-alerts.json', 'w') as f:
+    json.dump(alerts_summary, f, indent=2, default=str)
+
+print(f'🚨 Generated {len(alerts)} alerts ({critical_count} critical)')
+
+# Create human-readable alert summary
+with open('alert-summary.md', 'w') as f:
+    f.write('# 🚨 Performance Regression Alerts\\n\\n')
+    f.write(f'**Generated**: {datetime.now().strftime(\"%Y-%m-%d %H:%M:%S UTC\")}\\n')
+    f.write(f'**Total Alerts**: {len(alerts)}\\n')
+    f.write(f'**Critical Alerts**: {critical_count}\\n\\n')
+    
+    if alerts:
+        f.write('## Alert Details\\n\\n')
+        f.write('| Severity | Metric | Analysis | P-Value | Effect Size |\\n')
+        f.write('|----------|--------|----------|---------|-------------|\\n')
+        
+        for alert in sorted(alerts, key=lambda x: severity_levels.get(x['severity'], 0), reverse=True):
+            severity_emoji = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '🔵'}.get(alert['severity'], '⚪')
+            f.write(f'| {severity_emoji} {alert[\"severity\"].title()} | {alert[\"metric\"]} | {alert[\"analysis_type\"]} | {alert[\"p_value\"]:.4f} | {alert[\"effect_size\"]:.2f} ({alert[\"effect_magnitude\"]}) |\\n')
+    else:
+        f.write('✅ No performance regressions detected.\\n')
+
+print('📄 Alert summary generated')
+          "
+          
+          # Set outputs
+          if [ -f "performance-alerts.json" ]; then
+            ALERT_COUNT=$(python -c "
+import json
+with open('performance-alerts.json', 'r') as f:
+    data = json.load(f)
+print(data['total_alerts'])
+            ")
+            CRITICAL_COUNT=$(python -c "
+import json
+with open('performance-alerts.json', 'r') as f:
+    data = json.load(f)
+print(data['critical_alerts'])
+            ")
+            
+            echo "generated=${ALERT_COUNT}" >> $GITHUB_OUTPUT
+            echo "critical_count=${CRITICAL_COUNT}" >> $GITHUB_OUTPUT
+          else
+            echo "generated=0" >> $GITHUB_OUTPUT
+            echo "critical_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload alerts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-alerts
+          path: |
+            performance-alerts.json
+            alert-summary.md
+          retention-days: 30
+
+  send-notifications:
+    name: Send Performance Alerts
+    runs-on: ubuntu-22.04
+    needs: [generate-alerts]
+    if: needs.generate-alerts.outputs.alerts-generated != '0'
+    timeout-minutes: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        notification-type: [slack, email, github-issue]
+        include:
+          - notification-type: slack
+            condition: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+          - notification-type: email
+            condition: true
+          - notification-type: github-issue
+            condition: ${{ needs.generate-alerts.outputs.critical-count != '0' }}
+    steps:
+      - name: Download alerts
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-alerts
+          path: alerts/
+
+      - name: Send ${{ matrix.notification-type }} notification
+        if: matrix.condition
+        env:
+          CRITICAL_COUNT: ${{ needs.generate-alerts.outputs.critical-count }}
+          TOTAL_ALERTS: ${{ needs.generate-alerts.outputs.alerts-generated }}
+        run: |
+          case "${{ matrix.notification-type }}" in
+            slack)
+              echo "📨 Sending Slack notification..."
+              if [ ! -z "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+                curl -X POST -H 'Content-type: application/json' \
+                  --data "{
+                    \"text\": \"🚨 Performance Regression Alert\",
+                    \"blocks\": [
+                      {
+                        \"type\": \"header\",
+                        \"text\": {
+                          \"type\": \"plain_text\",
+                          \"text\": \"🚨 Performance Regression Detected\"
+                        }
+                      },
+                      {
+                        \"type\": \"section\",
+                        \"text\": {
+                          \"type\": \"mrkdwn\",
+                          \"text\": \"*Total Alerts:* ${TOTAL_ALERTS}\\n*Critical Alerts:* ${CRITICAL_COUNT}\\n*Time:* $(date)\"
+                        }
+                      },
+                      {
+                        \"type\": \"actions\",
+                        \"elements\": [
+                          {
+                            \"type\": \"button\",
+                            \"text\": {
+                              \"type\": \"plain_text\",
+                              \"text\": \"View Details\"
+                            },
+                            \"url\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+                          }
+                        ]
+                      }
+                    ]
+                  }" \
+                  "${{ secrets.SLACK_WEBHOOK_URL }}"
+              fi
+              ;;
+            email)
+              echo "📧 Email notification would be sent (not implemented in this demo)"
+              ;;
+            github-issue)
+              echo "📝 Creating GitHub issue for critical alerts..."
+              # This would create a GitHub issue for critical alerts
+              echo "Critical performance regression detected with ${CRITICAL_COUNT} critical alerts"
+              ;;
+          esac
+
+  summary:
+    name: Performance Monitoring Summary
+    runs-on: ubuntu-22.04
+    needs: [setup-monitoring, collect-performance-data, analyze-performance-regression, generate-alerts]
+    if: always()
+    timeout-minutes: 2
+    steps:
+      - name: Generate monitoring summary
+        run: |
+          echo "# 📊 Performance Regression Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Monitoring Run**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Job status summary
+          echo "## 🔄 Job Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Setup | ${{ needs.setup-monitoring.result == 'success' && '✅ Success' || '❌ Failed' }} | ~3 min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Data Collection | ${{ needs.collect-performance-data.result == 'success' && '✅ Success' || '❌ Failed' }} | ~5 min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Regression Analysis | ${{ needs.analyze-performance-regression.result == 'success' && '✅ Success' || '❌ Failed' }} | ~8 min |" >> $GITHUB_STEP_SUMMARY
+          echo "| Alert Generation | ${{ needs.generate-alerts.result == 'success' && '✅ Success' || '❌ Failed' }} | ~3 min |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Alert summary
+          ALERTS_GENERATED="${{ needs.generate-alerts.outputs.alerts-generated || '0' }}"
+          CRITICAL_COUNT="${{ needs.generate-alerts.outputs.critical-count || '0' }}"
+          
+          echo "## 🚨 Alert Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$ALERTS_GENERATED" != "0" ]; then
+            echo "- **Total Alerts**: $ALERTS_GENERATED" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical Alerts**: $CRITICAL_COUNT" >> $GITHUB_STEP_SUMMARY
+            if [ "$CRITICAL_COUNT" != "0" ]; then
+              echo "- **Status**: 🔴 **Critical performance issues detected**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- **Status**: 🟡 **Performance regressions detected**" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "- **Status**: ✅ **No performance regressions detected**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📈 What Was Monitored" >> $GITHUB_STEP_SUMMARY
+          echo "- Response time and latency metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Accuracy and quality metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Error rates and reliability metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Cost and resource utilization metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next monitoring run**: Scheduled in 2 hours (business hours)" >> $GITHUB_STEP_SUMMARY
