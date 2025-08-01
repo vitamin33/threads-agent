@@ -26,7 +26,7 @@ Located in `./claude-integration/`:
 ### Viral Engine Documentation
 Located in `./viral-engine/`:
 - [README.md](./viral-engine/README.md) - Viral Engine overview and components
-- [PATTERN_FATIGUE_DETECTION_ENGINE.md](./viral-engine/PATTERN_FATIGUE_DETECTION_ENGINE.md) - Complete pattern fatigue system documentation
+- [PATTERN_FATIGUE_DETECTION_ENGINE.md](./viral-engine/PATTERN_FATIGUE_DETECTION_ENGINE.md) - Complete pattern fatigue system documentation (CRA-233)
 - [PATTERN_FATIGUE_MIGRATION_GUIDE.md](./viral-engine/PATTERN_FATIGUE_MIGRATION_GUIDE.md) - Integration and migration guide
 
 ## 🔗 Quick Links
