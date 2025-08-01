@@ -52,10 +52,19 @@ def upgrade():
         ["persona_id", "used_at"],
         postgresql_where=sa.text("used_at >= (CURRENT_TIMESTAMP - INTERVAL '7 days')"),
     )
+    
+    # CRITICAL: Composite index for fatigue queries - covers the exact query pattern
+    op.create_index(
+        "idx_pattern_usage_fatigue_check",
+        "pattern_usage",
+        ["persona_id", "pattern_id", "used_at"],
+        postgresql_where=sa.text("used_at >= (CURRENT_TIMESTAMP - INTERVAL '7 days')")
+    )
 
 
 def downgrade():
     # Drop indexes
+    op.drop_index("idx_pattern_usage_fatigue_check", table_name="pattern_usage")
     op.drop_index("idx_pattern_usage_persona_used_at", table_name="pattern_usage")
     op.drop_index("idx_pattern_usage_used_at", table_name="pattern_usage")
     op.drop_index("idx_pattern_usage_persona_pattern", table_name="pattern_usage")

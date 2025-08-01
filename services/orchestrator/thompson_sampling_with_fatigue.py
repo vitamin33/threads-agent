@@ -2,14 +2,14 @@
 
 from typing import List, Dict, Any
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 
 from services.orchestrator.thompson_sampling_optimized import ThompsonSamplingOptimized
 from services.pattern_analyzer.service import PatternAnalyzerService
 from services.pattern_analyzer.pattern_extractor import PatternExtractor
 from services.pattern_analyzer.models import PatternUsage
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 import os
 
@@ -149,41 +149,83 @@ class ThompsonSamplingWithFatigue(ThompsonSamplingOptimized):
         if not patterns:
             return 1.0  # No patterns = maximum freshness
 
-        # Get fatigue scores for each pattern
-        fatigue_scores = []
-        for pattern in patterns:
-            score = self.pattern_service.get_pattern_freshness(persona_id, pattern)
-            fatigue_scores.append(score)
-
-        # Return average fatigue score
-        return sum(fatigue_scores) / len(fatigue_scores) if fatigue_scores else 1.0
+        # Batch query all patterns at once to avoid N+1
+        with SessionLocal() as db:
+            now = datetime.now()
+            seven_days_ago = now - timedelta(days=7)
+            
+            # Single query for all patterns
+            pattern_counts = (
+                db.query(
+                    PatternUsage.pattern_id,
+                    func.count(PatternUsage.id).label("usage_count")
+                )
+                .filter(
+                    PatternUsage.persona_id == persona_id,
+                    PatternUsage.pattern_id.in_(patterns),
+                    PatternUsage.used_at > seven_days_ago
+                )
+                .group_by(PatternUsage.pattern_id)
+                .all()
+            )
+            
+            # Convert to dict for O(1) lookups
+            usage_map = {pattern: count for pattern, count in pattern_counts}
+            
+            # Calculate scores without additional queries
+            fatigue_scores = []
+            for pattern in patterns:
+                recent_uses = usage_map.get(pattern, 0)
+                if recent_uses >= 3:
+                    score = 0.0
+                elif recent_uses == 2:
+                    score = 0.25
+                elif recent_uses == 1:
+                    score = 0.5
+                else:
+                    score = 1.0
+                fatigue_scores.append(score)
+            
+            return sum(fatigue_scores) / len(fatigue_scores) if fatigue_scores else 1.0
 
     def _record_pattern_usage(
         self, selected_variants: List[Dict[str, Any]], persona_id: str
     ) -> None:
-        """Record pattern usage for selected variants."""
+        """Record pattern usage for selected variants with bulk insert."""
+        db = None
         try:
             db = SessionLocal()
+            
+            # Prepare bulk insert data
+            pattern_usages = []
+            timestamp = datetime.now()
+            
             for item in selected_variants:
                 variant_id = item["variant_id"]
                 patterns = item.get("patterns", [])
-
+                
                 for pattern in patterns:
-                    usage = PatternUsage(
-                        persona_id=persona_id,
-                        pattern_id=pattern,
-                        post_id=variant_id,
-                        used_at=datetime.now(),
-                    )
-                    db.add(usage)
-
-            db.commit()
-            logger.info(f"Recorded pattern usage for {len(selected_variants)} variants")
-            db.close()
+                    pattern_usages.append({
+                        "persona_id": persona_id,
+                        "pattern_id": pattern,
+                        "post_id": variant_id,
+                        "used_at": timestamp
+                    })
+            
+            # Bulk insert all pattern usages at once
+            if pattern_usages:
+                db.bulk_insert_mappings(PatternUsage, pattern_usages)
+                db.commit()
+                logger.info(f"Recorded {len(pattern_usages)} pattern usages in bulk")
 
         except Exception as e:
             logger.error(f"Error recording pattern usage: {e}")
+            if db:
+                db.rollback()
             # Don't fail the selection if recording fails
+        finally:
+            if db:
+                db.close()
 
     def generate_variants_with_freshness(
         self,
