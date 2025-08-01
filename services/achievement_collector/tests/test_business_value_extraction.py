@@ -17,9 +17,11 @@ class TestBusinessValueExtraction:
         pr_description = "This optimization reduces cloud costs by $15,000 per year"
 
         # Mock the business value calculator to not interfere
-        with patch('services.achievement_collector.services.ai_analyzer.AgileBusinessValueCalculator') as mock_calc:
+        with patch(
+            "services.achievement_collector.services.ai_analyzer.AgileBusinessValueCalculator"
+        ) as mock_calc:
             mock_calc.return_value.extract_business_value.return_value = None
-            
+
             # Act
             result = await analyzer.extract_business_value(pr_description)
 
@@ -28,7 +30,9 @@ class TestBusinessValueExtraction:
             assert result["total_value"] == 15000
             assert result["currency"] == "USD"
             assert result["period"] == "yearly"
-            assert result["type"] == "cost_savings"  # offline extractor uses cost_savings
+            assert (
+                result["type"] == "cost_savings"
+            )  # offline extractor uses cost_savings
 
     @pytest.mark.asyncio
     async def test_extract_time_saved_converts_to_dollars(self):
@@ -38,9 +42,11 @@ class TestBusinessValueExtraction:
         pr_description = "This automation saves 200 developer hours annually"
 
         # Mock the business value calculator to not interfere
-        with patch('services.achievement_collector.services.ai_analyzer.AgileBusinessValueCalculator') as mock_calc:
+        with patch(
+            "services.achievement_collector.services.ai_analyzer.AgileBusinessValueCalculator"
+        ) as mock_calc:
             mock_calc.return_value.extract_business_value.return_value = None
-            
+
             # Act
             result = await analyzer.extract_business_value(pr_description)
 
@@ -100,7 +106,9 @@ class TestBusinessValueExtraction:
 
         # Assert
         assert result is not None
-        assert result["total_value"] == 50000 or result["total_value"] == 50  # May extract '50k' as 50
+        assert (
+            result["total_value"] == 50000 or result["total_value"] == 50
+        )  # May extract '50k' as 50
         assert result["currency"] == "USD"
         assert result["type"] == "performance_improvement"
         assert result["confidence"] == 0.85
@@ -202,6 +210,7 @@ class TestBusinessValueUpdater:
         # Act
         # The method requires a db parameter
         from unittest.mock import MagicMock
+
         mock_db = MagicMock()
         updated = await analyzer.update_achievement_business_value(mock_db, achievement)
 
@@ -246,6 +255,7 @@ class TestBusinessValueUpdater:
         # Act
         # The method requires a db parameter
         from unittest.mock import MagicMock
+
         mock_db = MagicMock()
         results = await analyzer.batch_update_business_values(mock_db, achievements)
 

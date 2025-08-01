@@ -99,6 +99,93 @@ threadsAdaptor:
       cpu: "500m"
   extraEnv: []
 
+# MLflow Performance Optimization Configuration
+mlflow:
+  trackingUri: "http://mlflow:5000"
+  registryUri: "http://mlflow:5000"
+  performanceOptimization:
+    enabled: true
+    
+    # Connection Pool Settings
+    clientPoolSize: 10
+    maxIdleTime: 600               # seconds
+    cleanupInterval: 300           # seconds
+    
+    # Cache Configuration
+    cacheEnabled: true
+    cacheTtl: 300                  # seconds
+    cacheMaxSize: 128              # number of cached items
+    
+    # Batch Operation Settings
+    batchSize: 50
+    batchTimeout: 30               # seconds
+    
+    # Thread Pool Configuration
+    threadPoolSize: 4
+    
+    # Memory Management
+    memoryLimitMb: 512
+    gcInterval: 60                 # seconds
+    
+    # Performance Monitoring
+    monitoring:
+      enabled: true
+      prometheus: true
+      serviceMonitor:
+        enabled: true
+        interval: "30s"
+        scrapeTimeout: "10s"
+    
+    # Auto-scaling Configuration
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPU: 70
+      targetMemory: 80
+      customMetrics:
+        enabled: true
+        targetOpsPerSecond: "100"
+      scaleUp:
+        stabilizationWindowSeconds: 60
+        percentPolicy: 100
+        periodSeconds: 15
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        percentPolicy: 50
+        periodSeconds: 60
+
+# Enhanced resource limits for services using MLflow
+orchestrator:
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  env:
+    - name: MLFLOW_CLIENT_POOL_SIZE
+      value: "10"
+    - name: MLFLOW_CACHE_ENABLED
+      value: "true"
+    - name: MLFLOW_PERFORMANCE_MONITORING_ENABLED
+      value: "true"
+
+personaRuntime:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  env:
+    - name: MLFLOW_CLIENT_POOL_SIZE
+      value: "5"
+    - name: MLFLOW_CACHE_ENABLED
+      value: "true"
+
 # ───────── generic chart knobs ─────────
 replicaCount: 1
 
