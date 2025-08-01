@@ -46,19 +46,20 @@ def upgrade():
     op.create_index("idx_pattern_usage_used_at", "pattern_usage", ["used_at"])
 
     # Create composite index for efficient rolling window queries
+    # Note: We can't use CURRENT_TIMESTAMP in index WHERE clause as it's not immutable
+    # Instead, create a regular index and rely on query planner to filter by date
     op.create_index(
         "idx_pattern_usage_persona_used_at",
         "pattern_usage",
         ["persona_id", "used_at"],
-        postgresql_where=sa.text("used_at >= (CURRENT_TIMESTAMP - INTERVAL '7 days')"),
     )
     
     # CRITICAL: Composite index for fatigue queries - covers the exact query pattern
+    # This index will help with queries that filter by persona_id, pattern_id, and used_at
     op.create_index(
         "idx_pattern_usage_fatigue_check",
         "pattern_usage",
         ["persona_id", "pattern_id", "used_at"],
-        postgresql_where=sa.text("used_at >= (CURRENT_TIMESTAMP - INTERVAL '7 days')")
     )
 
 
