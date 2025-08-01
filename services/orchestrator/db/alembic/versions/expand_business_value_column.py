@@ -1,7 +1,7 @@
 """Expand business_value column from varchar(255) to TEXT for achievement tables
 
 Revision ID: expand_business_value_column
-Revises: bac48e1b2394_add_variant_performance_table
+Revises: bac48e1b2394
 Create Date: 2025-07-29 17:30:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "expand_business_value_column"
-down_revision = "bac48e1b2394_add_variant_performance_table"
+down_revision = "bac48e1b2394"
 branch_labels = None
 depends_on = None
 

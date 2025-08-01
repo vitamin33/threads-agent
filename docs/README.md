@@ -23,6 +23,12 @@ Located in `./claude-integration/`:
 ### Revenue & Infrastructure
 - [REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md](./REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md) - Revenue service implementation
 
+### Viral Engine Documentation
+Located in `./viral-engine/`:
+- [README.md](./viral-engine/README.md) - Viral Engine overview and components
+- [PATTERN_FATIGUE_DETECTION_ENGINE.md](./viral-engine/PATTERN_FATIGUE_DETECTION_ENGINE.md) - Complete pattern fatigue system documentation (CRA-233)
+- [PATTERN_FATIGUE_MIGRATION_GUIDE.md](./viral-engine/PATTERN_FATIGUE_MIGRATION_GUIDE.md) - Integration and migration guide
+
 ### MLOps & Infrastructure Documentation
 Located in `./mlops-infrastructure/`:
 - [E4.5_MLOPS_FOUNDATION_EPIC.md](./mlops-infrastructure/E4.5_MLOPS_FOUNDATION_EPIC.md) - MLOps epic overview and progress

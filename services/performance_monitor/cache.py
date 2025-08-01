@@ -1,9 +1,9 @@
 """Redis caching layer for performance data."""
 
 import json
+import os
 from typing import Dict, List, Optional, Any
-
-from services.common.database import get_redis_client
+import redis
 
 
 class PerformanceCache:
@@ -11,7 +11,8 @@ class PerformanceCache:
 
     def __init__(self, ttl: int = 30):
         """Initialize cache with TTL in seconds."""
-        self.redis = get_redis_client()
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        self.redis = redis.from_url(redis_url)
         self.ttl = ttl
 
     def get_performance(self, post_id: str) -> Optional[Dict[str, Any]]:
@@ -25,7 +26,9 @@ class PerformanceCache:
         key = f"perf:{post_id}"
         self.redis.setex(key, self.ttl, json.dumps(data))
 
-    def bulk_get_performance(self, post_ids: List[str]) -> Dict[str, Optional[Dict]]:
+    def bulk_get_performance(
+        self, post_ids: List[str]
+    ) -> Dict[str, Optional[Dict[str, Any]]]:
         """Bulk get with pipeline for efficiency."""
         if not post_ids:
             return {}
