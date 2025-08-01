@@ -23,6 +23,12 @@ Located in `./claude-integration/`:
 ### Revenue & Infrastructure
 - [REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md](./REVENUE_INFRASTRUCTURE_IMPLEMENTATION.md) - Revenue service implementation
 
+### Viral Engine Documentation
+Located in `./viral-engine/`:
+- [README.md](./viral-engine/README.md) - Viral Engine overview and components
+- [PATTERN_FATIGUE_DETECTION_ENGINE.md](./viral-engine/PATTERN_FATIGUE_DETECTION_ENGINE.md) - Complete pattern fatigue system documentation
+- [PATTERN_FATIGUE_MIGRATION_GUIDE.md](./viral-engine/PATTERN_FATIGUE_MIGRATION_GUIDE.md) - Integration and migration guide
+
 ## 🔗 Quick Links
 
 - **Main README**: [/README.md](../README.md)
