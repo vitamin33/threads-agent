@@ -10,7 +10,7 @@ from services.achievement_collector.services.business_value_calculator import (
 )
 
 
-def test_comprehensive_integration():
+def test_comprehensive_integration() -> None:
     """Test the comprehensive business value model integration."""
 
     calculator = AgileBusinessValueCalculator()

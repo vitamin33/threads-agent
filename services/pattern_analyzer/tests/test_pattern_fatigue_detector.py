@@ -7,7 +7,7 @@ from services.pattern_analyzer.pattern_fatigue_detector import PatternFatigueDet
 class TestPatternFatigueDetector:
     """Test the PatternFatigueDetector class."""
 
-    def test_pattern_not_fatigued_when_used_less_than_threshold(self):
+    def test_pattern_not_fatigued_when_used_less_than_threshold(self) -> None:
         """Test that a pattern used fewer than 3 times in 7 days is not fatigued."""
         # Arrange
         detector = PatternFatigueDetector()
@@ -20,7 +20,7 @@ class TestPatternFatigueDetector:
         # Assert
         assert is_fatigued is False
 
-    def test_pattern_is_fatigued_when_used_three_times_in_past_week(self):
+    def test_pattern_is_fatigued_when_used_three_times_in_past_week(self) -> None:
         """Test that a pattern used 3 times in past 7 days is fatigued."""
         # Arrange
         detector = PatternFatigueDetector()
@@ -39,7 +39,7 @@ class TestPatternFatigueDetector:
         # Assert
         assert is_fatigued is True
 
-    def test_pattern_usage_older_than_7_days_not_counted(self):
+    def test_pattern_usage_older_than_7_days_not_counted(self) -> None:
         """Test that pattern uses older than 7 days are not counted toward fatigue."""
         # Arrange
         detector = PatternFatigueDetector()
@@ -64,7 +64,7 @@ class TestPatternFatigueDetector:
         # Assert
         assert is_fatigued is False  # Only 1 recent use, not fatigued
 
-    def test_get_freshness_score_for_unused_pattern(self):
+    def test_get_freshness_score_for_unused_pattern(self) -> None:
         """Test that completely unused patterns get a high freshness score (novelty bonus)."""
         # Arrange
         detector = PatternFatigueDetector()
@@ -77,7 +77,7 @@ class TestPatternFatigueDetector:
         # Assert
         assert freshness_score == 1.0  # Maximum freshness for never-used pattern
 
-    def test_get_freshness_score_decreases_with_usage(self):
+    def test_get_freshness_score_decreases_with_usage(self) -> None:
         """Test that freshness score decreases as pattern usage increases."""
         # Arrange
         detector = PatternFatigueDetector()
@@ -100,7 +100,7 @@ class TestPatternFatigueDetector:
         detector.record_pattern_usage(pattern, persona_id, now - timedelta(days=3))
         assert detector.get_freshness_score(pattern, persona_id) == 0.0
 
-    def test_fatigue_check_latency_under_100ms(self):
+    def test_fatigue_check_latency_under_100ms(self) -> None:
         """Test that fatigue checking completes in under 100ms even with many patterns."""
         # Arrange
         detector = PatternFatigueDetector()

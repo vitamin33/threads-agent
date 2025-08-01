@@ -50,11 +50,11 @@ class EarlyKillMonitor:
 
     def __init__(self, max_sessions: int = 1000):
         """Initialize the early kill monitor with bounded session storage."""
-        self.active_sessions = OrderedDict()
+        self.active_sessions: OrderedDict[str, MonitoringSession] = OrderedDict()
         self.max_sessions = max_sessions
         self._last_cleanup = datetime.now()
 
-    def _cleanup_expired(self):
+    def _cleanup_expired(self) -> None:
         """Remove expired sessions to prevent memory leaks."""
         if datetime.now() - self._last_cleanup < timedelta(minutes=1):
             return

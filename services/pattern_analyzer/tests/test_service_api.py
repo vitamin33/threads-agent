@@ -4,7 +4,7 @@ from services.pattern_analyzer.service import PatternAnalyzerService
 class TestPatternAnalyzerService:
     """Test the PatternAnalyzerService API."""
 
-    def test_check_pattern_fatigue_returns_status_and_score(self):
+    def test_check_pattern_fatigue_returns_status_and_score(self) -> None:
         """Test that the service API returns both fatigue status and freshness score."""
         # Arrange
         service = PatternAnalyzerService()

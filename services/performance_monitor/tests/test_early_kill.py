@@ -11,7 +11,7 @@ from services.performance_monitor.early_kill import (
 class TestEarlyKillMonitor:
     """Test suite for early kill monitoring functionality."""
 
-    def test_monitor_starts_automatically_when_variant_posted(self):
+    def test_monitor_starts_automatically_when_variant_posted(self) -> None:
         """Test that monitoring begins automatically when a variant is posted."""
         # Arrange
         monitor = EarlyKillMonitor()
@@ -33,7 +33,7 @@ class TestEarlyKillMonitor:
         assert monitoring_session.is_active is True
         assert monitoring_session.started_at is not None
 
-    def test_kill_decision_when_engagement_below_threshold(self):
+    def test_kill_decision_when_engagement_below_threshold(self) -> None:
         """Test that variants with <50% expected ER after 10 interactions are marked for killing."""
         # Arrange
         monitor = EarlyKillMonitor()
@@ -66,7 +66,7 @@ class TestEarlyKillMonitor:
         assert decision.reason == "Below 50% of expected engagement rate"
         assert decision.evaluation_time <= 5.0  # Must be under 5 seconds
 
-    def test_monitoring_timeout_after_10_minutes(self):
+    def test_monitoring_timeout_after_10_minutes(self) -> None:
         """Test that monitoring automatically times out after 10 minutes."""
         # Arrange
         monitor = EarlyKillMonitor()
@@ -89,7 +89,7 @@ class TestEarlyKillMonitor:
         assert session_status.timed_out is True
         assert session_status.reason == "10-minute monitoring window expired"
 
-    def test_no_kill_decision_with_insufficient_interactions(self):
+    def test_no_kill_decision_with_insufficient_interactions(self) -> None:
         """Test that no kill decision is made with less than 10 interactions."""
         # Arrange
         monitor = EarlyKillMonitor()
@@ -117,7 +117,7 @@ class TestEarlyKillMonitor:
         # Assert
         assert decision is None  # No decision made yet
 
-    def test_no_kill_decision_when_performance_above_threshold(self):
+    def test_no_kill_decision_when_performance_above_threshold(self) -> None:
         """Test that variants above 50% threshold are not killed."""
         # Arrange
         monitor = EarlyKillMonitor()

@@ -6,10 +6,16 @@ from unittest.mock import patch, AsyncMock
 
 import pytest
 
-from services.historical_pr_analyzer import HistoricalPRAnalyzer
-from services.portfolio_validator import PortfolioValidator
-from mlops.mlflow_registry import MLflowRegistry
-from ai_pipeline.intelligent_llm_router import IntelligentLLMRouter
+from services.achievement_collector.services.historical_pr_analyzer import (
+    HistoricalPRAnalyzer,
+)
+from services.achievement_collector.services.portfolio_validator import (
+    PortfolioValidator,
+)
+from services.achievement_collector.mlops.mlflow_registry import MLflowRegistry
+from services.achievement_collector.ai_pipeline.intelligent_llm_router import (
+    IntelligentLLMRouter,
+)
 
 
 class TestEndToEndIntegration:
