@@ -15,14 +15,24 @@ The Viral Engine is the core content generation and optimization system for the 
   - Thompson Sampling integration
 - **Added in**: CRA-233
 
-### 2. Thompson Sampling Algorithm
+### 2. [Real-Time Variant Performance Dashboard](./REAL_TIME_VARIANT_DASHBOARD.md)
+- **Purpose**: Provides comprehensive monitoring and analytics for variant performance
+- **Key Features**:
+  - Live WebSocket updates (<1s latency)
+  - Early kill notifications
+  - Pattern fatigue warnings
+  - AI-driven optimization suggestions
+  - Support for 500+ concurrent connections
+- **Added in**: CRA-234
+
+### 3. Thompson Sampling Algorithm
 - **Purpose**: Optimizes content variant selection using multi-armed bandit approach
 - **Key Features**:
   - Exploration vs exploitation balance
   - Performance-based selection
   - Real-time adaptation
 
-### 3. Content Generation Pipeline
+### 4. Content Generation Pipeline
 - **Purpose**: Orchestrates the end-to-end content creation process
 - **Key Features**:
   - Multi-stage generation
@@ -63,18 +73,32 @@ viral_engine:
 ## Architecture
 
 ```
+                                   ┌─────────────────┐
+                                   │                 │
+                            ┌─────▶│  Dashboard API  │◄─────┐
+                            │      │  (Real-time)    │      │
+                            │      └─────────────────┘      │
+                            │                               │
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │                 │     │                  │     │                 │
 │  Orchestrator   │────▶│  Viral Engine    │────▶│ Content Output  │
 │                 │     │                  │     │                 │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Pattern Analyzer   │
-                    │  - Fatigue Detection│
-                    │  - Freshness Scores │
-                    └─────────────────────┘
+                               │                           │
+                               ▼                           │
+                    ┌─────────────────────┐                │
+                    │  Pattern Analyzer   │                │
+                    │  - Fatigue Detection│                │
+                    │  - Freshness Scores │                │
+                    └─────────────────────┘                │
+                               │                           │
+                               ▼                           ▼
+                    ┌─────────────────────────────────────────────┐
+                    │         Performance Monitoring              │
+                    │  - Early Kill Detection                     │
+                    │  - Variant Performance Tracking             │
+                    │  - Real-time Metrics                        │
+                    └─────────────────────────────────────────────┘
 ```
 
 ## Performance Metrics

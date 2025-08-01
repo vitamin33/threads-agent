@@ -264,8 +264,8 @@ just token-batch     # Batch processing (80% savings)
 
 ## Resources
 
-- **[DAILY_PLAYBOOK.md](./DAILY_PLAYBOOK.md)** - Daily cheat sheet
-- **[PRODUCTIVITY_GUIDE.md](./PRODUCTIVITY_GUIDE.md)** - Full productivity guide
+- **[DAILY_PLAYBOOK.md](./docs/DAILY_PLAYBOOK.md)** - Daily cheat sheet
+- **[PRODUCTIVITY_GUIDE.md](./docs/PRODUCTIVITY_GUIDE.md)** - Full productivity guide
 - **[docs/](./docs/)** - Additional documentation
 
 ---
