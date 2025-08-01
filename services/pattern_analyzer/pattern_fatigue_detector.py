@@ -20,7 +20,9 @@ class PatternFatigueDetector:
             self._usage_history: Dict[Tuple[str, str], List[datetime]] = defaultdict(
                 list
             )
-            self._pattern_usage: List[Dict[str, Any]] = []  # For compatibility with get_recent_pattern_usage
+            self._pattern_usage: List[
+                Dict[str, Any]
+            ] = []  # For compatibility with get_recent_pattern_usage
 
     def record_pattern_usage(
         self, pattern: str, persona_id: str, timestamp: datetime

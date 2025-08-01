@@ -53,7 +53,7 @@ def upgrade():
         "pattern_usage",
         ["persona_id", "used_at"],
     )
-    
+
     # CRITICAL: Composite index for fatigue queries - covers the exact query pattern
     # This index will help with queries that filter by persona_id, pattern_id, and used_at
     op.create_index(

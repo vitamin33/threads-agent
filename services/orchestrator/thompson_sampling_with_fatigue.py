@@ -153,25 +153,25 @@ class ThompsonSamplingWithFatigue(ThompsonSamplingOptimized):
         with SessionLocal() as db:
             now = datetime.now()
             seven_days_ago = now - timedelta(days=7)
-            
+
             # Single query for all patterns
             pattern_counts = (
                 db.query(
                     PatternUsage.pattern_id,
-                    func.count(PatternUsage.id).label("usage_count")
+                    func.count(PatternUsage.id).label("usage_count"),
                 )
                 .filter(
                     PatternUsage.persona_id == persona_id,
                     PatternUsage.pattern_id.in_(patterns),
-                    PatternUsage.used_at > seven_days_ago
+                    PatternUsage.used_at > seven_days_ago,
                 )
                 .group_by(PatternUsage.pattern_id)
                 .all()
             )
-            
+
             # Convert to dict for O(1) lookups
             usage_map = {pattern: count for pattern, count in pattern_counts}
-            
+
             # Calculate scores without additional queries
             fatigue_scores = []
             for pattern in patterns:
@@ -185,7 +185,7 @@ class ThompsonSamplingWithFatigue(ThompsonSamplingOptimized):
                 else:
                     score = 1.0
                 fatigue_scores.append(score)
-            
+
             return sum(fatigue_scores) / len(fatigue_scores) if fatigue_scores else 1.0
 
     def _record_pattern_usage(
@@ -195,23 +195,25 @@ class ThompsonSamplingWithFatigue(ThompsonSamplingOptimized):
         db = None
         try:
             db = SessionLocal()
-            
+
             # Prepare bulk insert data
             pattern_usages = []
             timestamp = datetime.now()
-            
+
             for item in selected_variants:
                 variant_id = item["variant_id"]
                 patterns = item.get("patterns", [])
-                
+
                 for pattern in patterns:
-                    pattern_usages.append({
-                        "persona_id": persona_id,
-                        "pattern_id": pattern,
-                        "post_id": variant_id,
-                        "used_at": timestamp
-                    })
-            
+                    pattern_usages.append(
+                        {
+                            "persona_id": persona_id,
+                            "pattern_id": pattern,
+                            "post_id": variant_id,
+                            "used_at": timestamp,
+                        }
+                    )
+
             # Bulk insert all pattern usages at once
             if pattern_usages:
                 db.bulk_insert_mappings(PatternUsage, pattern_usages)

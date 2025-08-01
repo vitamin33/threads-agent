@@ -31,7 +31,7 @@ class TestPatternUsageModel:
             pattern_id=pattern,
             persona_id=persona_id,
             post_id="test_post_123",
-            used_at=used_at
+            used_at=used_at,
         )
         db_session.add(usage)
         db_session.commit()

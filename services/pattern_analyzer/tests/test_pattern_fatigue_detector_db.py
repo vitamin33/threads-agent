@@ -44,7 +44,8 @@ class TestPatternFatigueDetectorWithDB:
         usage_count = (
             db_session.query(PatternUsage)
             .filter(
-                PatternUsage.pattern_id == pattern, PatternUsage.persona_id == persona_id
+                PatternUsage.pattern_id == pattern,
+                PatternUsage.persona_id == persona_id,
             )
             .count()
         )

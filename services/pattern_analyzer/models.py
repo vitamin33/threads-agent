@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, BigInteger, Float, Index, Integer
+from sqlalchemy import Column, String, DateTime, Float, Index, Integer
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
