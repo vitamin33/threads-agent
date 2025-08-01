@@ -112,15 +112,54 @@ class PromptModel:
                     "Invalid template format: mismatched brackets"
                 )
 
+            # Check for empty variable names
+            for var in variables:
+                var_name = var.split(":")[0] if ":" in var else var
+                if not var_name.strip():
+                    raise ModelValidationError(
+                        "Invalid template format: empty variable name"
+                    )
+
             # Try formatting with dummy values to catch invalid format specifiers
             dummy_values: dict[str, Any] = {}
             for var in variables:
                 # Handle format specifiers like {price:.2f}
-                var_name = var.split(":")[0] if ":" in var else var
-                if var_name:  # Skip empty variable names
+                var_name = var.split(":")[0].strip()
+
+                # Handle dictionary/attribute access like {config[key]} or {obj.attr}
+                if "[" in var_name or "." in var_name:
+                    # Extract base variable name
+                    base_name = var_name.split("[")[0].split(".")[0]
+                    if base_name and base_name not in dummy_values:
+                        # Create nested structure for testing
+                        class DummyNested:
+                            def __getitem__(self, key):
+                                return self
+
+                            def __getattr__(self, attr):
+                                return self
+
+                            def __str__(self):
+                                return "dummy"
+
+                            def __format__(self, spec):
+                                return "dummy"
+
+                        dummy_values[base_name] = DummyNested()
+                elif var_name:  # Simple variable
                     # Use appropriate dummy values based on format specifier
-                    if ":" in var and ("f" in var or "d" in var):
-                        dummy_values[var_name] = 1.0  # Use number for numeric formats
+                    if ":" in var:
+                        format_spec = var.split(":", 1)[1]
+                        # Check for numeric format specifiers
+                        if (
+                            any(c in format_spec for c in "efgEFGn")
+                            or "%" in format_spec
+                        ):
+                            dummy_values[var_name] = 1.0  # Float
+                        elif any(c in format_spec for c in "bdoxX"):
+                            dummy_values[var_name] = 42  # Integer
+                        else:
+                            dummy_values[var_name] = "dummy"  # String
                     else:
                         dummy_values[var_name] = "dummy"
 
@@ -254,12 +293,23 @@ class PromptModel:
         Extract variable names from template.
 
         Returns:
-            List of variable names used in template
+            List of unique variable names used in template
         """
         import re
 
         variables = re.findall(r"\{([^}:]*)", self.template)
-        return [var.strip() for var in variables if var.strip()]
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_vars = []
+        for var in variables:
+            var = var.strip()
+            # Extract base variable name for nested access
+            if "[" in var or "." in var:
+                var = var.split("[")[0].split(".")[0]
+            if var and var not in seen:
+                seen.add(var)
+                unique_vars.append(var)
+        return unique_vars
 
     def render(self, **kwargs: Any) -> str:
         """
@@ -304,8 +354,15 @@ class PromptModel:
                 }
             )
 
-        # Sort by version number
-        lineage.sort(key=lambda x: int(x["version"] or "0"))
+        # Sort by version number (handle invalid versions gracefully)
+        def safe_version_to_int(version):
+            try:
+                return int(version) if version else 0
+            except (ValueError, TypeError):
+                # For non-numeric versions, return 0
+                return 0
+
+        lineage.sort(key=lambda x: safe_version_to_int(x.get("version")))
         return lineage
 
     def get_parent_version(self) -> Optional["PromptModel"]:

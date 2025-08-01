@@ -15,7 +15,7 @@ import os
 # Add the parent directory to the path so we can import our modules
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from prompt_model_registry import PromptModel, ModelValidationError
+from services.common.prompt_model_registry import PromptModel, ModelValidationError
 
 
 def main():

@@ -11,6 +11,7 @@ This test file follows strict TDD practices and covers all requirements:
 """
 
 import pytest
+import os
 from unittest.mock import Mock, patch
 
 # Import the class we'll be implementing (will fail initially - TDD!)
@@ -932,13 +933,19 @@ class TestPromptModelRegistryIntegration:
             if "MLFLOW_REGISTRY_URI" in os.environ:
                 del os.environ["MLFLOW_REGISTRY_URI"]
 
+    @pytest.mark.skipif(
+        os.getenv("MLFLOW_TRACKING_URI") is None,
+        reason="Requires MLflow server (set MLFLOW_TRACKING_URI to run)",
+    )
     def test_full_model_lifecycle_integration(self, mlflow_server_setup):
         """Test complete model lifecycle: register → promote → compare → track lineage."""
         from services.common.prompt_model_registry import PromptModel, ModelStage
 
         # Create initial model version
+        import time
+        unique_name = f"integration-test-model-{int(time.time())}"
         model_v1 = PromptModel(
-            name="integration-test-model",
+            name=unique_name,
             template="Hello {name}! Welcome to {service}.",
             version="1.0.0",
             metadata={"author": "integration_test", "purpose": "testing"},
@@ -958,7 +965,7 @@ class TestPromptModelRegistryIntegration:
 
         # Create second version
         model_v2 = PromptModel(
-            name="integration-test-model",
+            name=unique_name,
             template="Hello {name}! Welcome to our {service}. Your session ID is {session_id}.",
             version="2.0.0",
             metadata={"author": "integration_test", "purpose": "enhanced_testing"},
@@ -984,6 +991,10 @@ class TestPromptModelRegistryIntegration:
         assert "MLflow" in rendered
         assert "12345" in rendered
 
+    @pytest.mark.skipif(
+        os.getenv("MLFLOW_TRACKING_URI") is None,
+        reason="Requires MLflow server (set MLFLOW_TRACKING_URI to run)",
+    )
     def test_concurrent_model_operations_integration(self, mlflow_server_setup):
         """Test concurrent model operations don't interfere with each other."""
         import threading
@@ -1064,6 +1075,10 @@ class TestPromptModelRegistryIntegration:
         assert latest_version.tags["version"] == "1.0.0"
         assert latest_version.tags["test_type"] == "persistence"
 
+    @pytest.mark.skipif(
+        os.getenv("MLFLOW_TRACKING_URI") is None,
+        reason="Requires MLflow server (set MLFLOW_TRACKING_URI to run)",
+    )
     def test_model_registry_error_handling_integration(self, mlflow_server_setup):
         """Test error handling with real MLflow operations."""
         from services.common.prompt_model_registry import (
@@ -1101,6 +1116,10 @@ class TestPromptModelRegistryIntegration:
         model3.promote_to_staging()
         model3.promote_to_production()  # Should work now
 
+    @pytest.mark.skipif(
+        os.getenv("MLFLOW_TRACKING_URI") is None,
+        reason="Requires MLflow server (set MLFLOW_TRACKING_URI to run)",
+    )
     def test_large_scale_model_operations_integration(self, mlflow_server_setup):
         """Test operations with multiple models and versions."""
         from services.common.prompt_model_registry import PromptModel
@@ -1109,7 +1128,7 @@ class TestPromptModelRegistryIntegration:
 
         # Create multiple models with multiple versions each
         for model_idx in range(3):
-            model_name = f"large-scale-test-{model_idx}"
+            model_name = f"large-scale-test-{model_idx}-{int(time.time())}"
 
             for version_idx in range(3):
                 model = PromptModel(
@@ -1511,6 +1530,10 @@ class TestPromptModelPerformanceAndConcurrency:
         )  # 10 complex comparisons in under 2 seconds
 
     @pytest.mark.e2e
+    @pytest.mark.skipif(
+        os.getenv("MLFLOW_TRACKING_URI") is None,
+        reason="Requires MLflow server (set MLFLOW_TRACKING_URI to run)",
+    )
     def test_stress_test_with_real_mlflow(self):
         """Stress test with real MLflow operations (requires e2e environment)."""
         import tempfile
