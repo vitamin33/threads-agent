@@ -1,0 +1,208 @@
+{{- if .Values.restore.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "mlflow.fullname" . }}-restore-{{ .Values.restore.timestamp | default "manual" }}
+  labels:
+    {{- include "mlflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: restore
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.restore.backoffLimit | default 1 }}
+  activeDeadlineSeconds: {{ .Values.restore.activeDeadlineSeconds | default 7200 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mlflow.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: restore
+    spec:
+      {{- if .Values.rbac.create }}
+      serviceAccountName: {{ include "mlflow.fullname" . }}
+      {{- end }}
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999  # postgres user
+        fsGroup: 999
+      containers:
+        - name: restore
+          image: {{ .Values.restore.image.repository | default "postgres" }}:{{ .Values.restore.image.tag | default "15-alpine" }}
+          imagePullPolicy: {{ .Values.restore.image.pullPolicy | default "IfNotPresent" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              BACKUP_FILE="{{ .Values.restore.backupFile }}"
+              
+              if [ -z "$BACKUP_FILE" ]; then
+                echo "ERROR: No backup file specified!"
+                exit 1
+              fi
+              
+              echo "Starting restore process..."
+              
+              # Download from S3 if needed
+              if [ "$RESTORE_FROM_S3" = "true" ]; then
+                echo "Downloading backup from S3..."
+                apk add --no-cache aws-cli
+                
+                aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                
+                aws s3 cp "s3://${S3_BUCKET}/postgres-backups/${BACKUP_FILE}" "/backup/${BACKUP_FILE}" \
+                  --endpoint-url $S3_ENDPOINT_URL
+                
+                aws s3 cp "s3://${S3_BUCKET}/postgres-backups/${BACKUP_FILE}.sha256" "/backup/${BACKUP_FILE}.sha256" \
+                  --endpoint-url $S3_ENDPOINT_URL
+                
+                # Verify checksum
+                echo "Verifying backup integrity..."
+                cd /backup
+                sha256sum -c "${BACKUP_FILE}.sha256"
+              fi
+              
+              # Check if backup file exists
+              if [ ! -f "/backup/${BACKUP_FILE}" ]; then
+                echo "ERROR: Backup file not found: /backup/${BACKUP_FILE}"
+                exit 1
+              fi
+              
+              # Create restore point
+              echo "Creating restore point before restoration..."
+              RESTORE_POINT="mlflow_restore_point_$(date +%Y%m%d_%H%M%S).sql"
+              pg_dump \
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER \
+                -d $POSTGRES_DB \
+                --verbose \
+                --format=custom \
+                --compress=9 \
+                --file="/backup/${RESTORE_POINT}" || true
+              
+              # Stop MLflow during restore
+              echo "Scaling down MLflow deployment..."
+              kubectl scale deployment {{ include "mlflow.fullname" . }} --replicas=0 || true
+              
+              # Perform restore
+              echo "Restoring database from ${BACKUP_FILE}..."
+              
+              # Drop and recreate database
+              PGPASSWORD=$PGPASSWORD psql \
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER \
+                -d postgres \
+                -c "DROP DATABASE IF EXISTS ${POSTGRES_DB};"
+              
+              PGPASSWORD=$PGPASSWORD psql \
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER \
+                -d postgres \
+                -c "CREATE DATABASE ${POSTGRES_DB};"
+              
+              # Restore from backup
+              if [[ "${BACKUP_FILE}" == *.gz ]]; then
+                gunzip -c "/backup/${BACKUP_FILE}" | pg_restore \
+                  -h $POSTGRES_HOST \
+                  -p $POSTGRES_PORT \
+                  -U $POSTGRES_USER \
+                  -d $POSTGRES_DB \
+                  --verbose \
+                  --no-owner \
+                  --no-privileges \
+                  --if-exists \
+                  --clean
+              else
+                pg_restore \
+                  -h $POSTGRES_HOST \
+                  -p $POSTGRES_PORT \
+                  -U $POSTGRES_USER \
+                  -d $POSTGRES_DB \
+                  --verbose \
+                  --no-owner \
+                  --no-privileges \
+                  --if-exists \
+                  --clean \
+                  "/backup/${BACKUP_FILE}"
+              fi
+              
+              # Verify restore
+              echo "Verifying restore..."
+              PGPASSWORD=$PGPASSWORD psql \
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER \
+                -d $POSTGRES_DB \
+                -c "SELECT COUNT(*) FROM alembic_version;" || echo "Warning: Could not verify restore"
+              
+              # Scale MLflow back up
+              echo "Scaling up MLflow deployment..."
+              kubectl scale deployment {{ include "mlflow.fullname" . }} --replicas={{ .Values.replicaCount | default 1 }}
+              
+              echo "Restore completed successfully!"
+          env:
+            - name: POSTGRES_HOST
+              value: {{ include "mlflow.fullname" . }}-postgresql
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mlflow.fullname" . }}-secret
+                  key: postgres-user
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mlflow.fullname" . }}-secret
+                  key: postgres-password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mlflow.fullname" . }}-secret
+                  key: postgres-database
+            - name: RESTORE_FROM_S3
+              value: {{ .Values.restore.fromS3 | default false | quote }}
+            - name: S3_BUCKET
+              value: {{ .Values.backup.s3.bucket | default "mlflow-backups" | quote }}
+            - name: S3_ENDPOINT_URL
+              value: "http://{{ include "mlflow.fullname" . }}-minio:9000"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mlflow.fullname" . }}-secret
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mlflow.fullname" . }}-secret
+                  key: aws-secret-access-key
+          volumeMounts:
+            - name: backup
+              mountPath: /backup
+          resources:
+            requests:
+              cpu: {{ .Values.restore.resources.requests.cpu | default "200m" }}
+              memory: {{ .Values.restore.resources.requests.memory | default "512Mi" }}
+            limits:
+              cpu: {{ .Values.restore.resources.limits.cpu | default "1000m" }}
+              memory: {{ .Values.restore.resources.limits.memory | default "2Gi" }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false  # Needed for restore operations
+            runAsNonRoot: true
+            runAsUser: 999
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: backup
+          persistentVolumeClaim:
+            claimName: {{ include "mlflow.fullname" . }}-backup-pvc
+{{- end }}

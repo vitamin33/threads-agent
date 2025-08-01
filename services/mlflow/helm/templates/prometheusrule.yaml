@@ -1,0 +1,121 @@
+{{- if .Values.metrics.prometheusRule.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mlflow.fullname" . }}
+  labels:
+    {{- include "mlflow.labels" . | nindent 4 }}
+    {{- with .Values.metrics.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mlflow.availability
+      interval: 30s
+      rules:
+        - alert: MLflowDown
+          expr: up{job="{{ include "mlflow.fullname" . }}"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: mlflow
+          annotations:
+            summary: "MLflow service is down"
+            description: "MLflow service {{ "{{ $labels.instance }}" }} has been down for more than 5 minutes."
+            
+        - alert: MLflowHighErrorRate
+          expr: |
+            (
+              sum(rate(mlflow_http_requests_total{job="{{ include "mlflow.fullname" . }}",status=~"5.."}[5m]))
+              /
+              sum(rate(mlflow_http_requests_total{job="{{ include "mlflow.fullname" . }}"}[5m]))
+            ) > 0.05
+          for: 10m
+          labels:
+            severity: warning
+            component: mlflow
+          annotations:
+            summary: "High error rate on MLflow"
+            description: "MLflow is experiencing {{ "{{ $value | humanizePercentage }}" }} error rate."
+            
+    - name: mlflow.performance
+      interval: 30s
+      rules:
+        - alert: MLflowHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(mlflow_http_request_duration_seconds_bucket{job="{{ include "mlflow.fullname" . }}"}[5m])) by (le)
+            ) > 1
+          for: 10m
+          labels:
+            severity: warning
+            component: mlflow
+          annotations:
+            summary: "High latency on MLflow"
+            description: "MLflow 95th percentile latency is {{ "{{ $value }}" }}s."
+            
+        - alert: MLflowHighMemoryUsage
+          expr: |
+            (
+              container_memory_working_set_bytes{pod=~"{{ include "mlflow.fullname" . }}-.*",container="mlflow"}
+              / 
+              container_spec_memory_limit_bytes{pod=~"{{ include "mlflow.fullname" . }}-.*",container="mlflow"}
+            ) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+            component: mlflow
+          annotations:
+            summary: "High memory usage on MLflow"
+            description: "MLflow pod {{ "{{ $labels.pod }}" }} is using {{ "{{ $value | humanizePercentage }}" }} of its memory limit."
+            
+    - name: mlflow.storage
+      interval: 60s
+      rules:
+        - alert: MLflowDatabaseConnectionFailure
+          expr: |
+            mlflow_database_connections_active{job="{{ include "mlflow.fullname" . }}"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: mlflow
+          annotations:
+            summary: "MLflow database connection failure"
+            description: "MLflow cannot connect to the database."
+            
+        - alert: MLflowArtifactStorageFailure
+          expr: |
+            increase(mlflow_artifact_upload_failures_total{job="{{ include "mlflow.fullname" . }}"}[5m]) > 5
+          for: 10m
+          labels:
+            severity: warning
+            component: mlflow
+          annotations:
+            summary: "MLflow artifact storage failures"
+            description: "MLflow is experiencing {{ "{{ $value }}" }} artifact upload failures in the last 5 minutes."
+            
+    - name: mlflow.experiments
+      interval: 60s
+      rules:
+        - alert: MLflowExperimentCreationFailure
+          expr: |
+            increase(mlflow_experiment_creation_failures_total{job="{{ include "mlflow.fullname" . }}"}[5m]) > 3
+          for: 5m
+          labels:
+            severity: warning
+            component: mlflow
+          annotations:
+            summary: "MLflow experiment creation failures"
+            description: "Failed to create {{ "{{ $value }}" }} experiments in the last 5 minutes."
+            
+        - alert: MLflowHighTokenUsage
+          expr: |
+            sum(increase(mlflow_llm_tokens_used_total{job="{{ include "mlflow.fullname" . }}"}[1h])) > 1000000
+          for: 5m
+          labels:
+            severity: info
+            component: mlflow
+          annotations:
+            summary: "High LLM token usage"
+            description: "MLflow tracked {{ "{{ $value | humanize }}" }} tokens used in the last hour."
+{{- end }}

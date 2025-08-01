@@ -1,0 +1,225 @@
+{{- if .Values.backup.enabled -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mlflow.fullname" . }}-backup
+  labels:
+    {{- include "mlflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | default "0 2 * * *" | quote }}
+  concurrencyPolicy: {{ .Values.backup.concurrencyPolicy | default "Forbid" }}
+  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit | default 3 }}
+  startingDeadlineSeconds: {{ .Values.backup.startingDeadlineSeconds | default 300 }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "mlflow.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backup
+    spec:
+      backoffLimit: {{ .Values.backup.backoffLimit | default 3 }}
+      activeDeadlineSeconds: {{ .Values.backup.activeDeadlineSeconds | default 3600 }}
+      template:
+        metadata:
+          labels:
+            {{- include "mlflow.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          {{- if .Values.rbac.create }}
+          serviceAccountName: {{ include "mlflow.fullname" . }}
+          {{- end }}
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999  # postgres user
+            fsGroup: 999
+          initContainers:
+            # Test database connection
+            - name: test-connection
+              image: postgres:15-alpine
+              command:
+                - sh
+                - -c
+                - |
+                  echo "Testing database connection..."
+                  until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
+                    echo "Waiting for database..."
+                    sleep 2
+                  done
+                  echo "Database is ready!"
+              env:
+                - name: POSTGRES_HOST
+                  value: {{ include "mlflow.fullname" . }}-postgresql
+                - name: POSTGRES_PORT
+                  value: "5432"
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: postgres-user
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: postgres-password
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                runAsUser: 999
+                capabilities:
+                  drop:
+                    - ALL
+          containers:
+            - name: backup
+              image: {{ .Values.backup.image.repository | default "postgres" }}:{{ .Values.backup.image.tag | default "15-alpine" }}
+              imagePullPolicy: {{ .Values.backup.image.pullPolicy | default "IfNotPresent" }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  
+                  # Set backup filename with timestamp
+                  BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
+                  BACKUP_FILE="mlflow_backup_${BACKUP_DATE}.sql.gz"
+                  
+                  echo "Starting backup for MLflow database..."
+                  
+                  # Perform backup with custom format for faster restore
+                  pg_dump \
+                    -h $POSTGRES_HOST \
+                    -p $POSTGRES_PORT \
+                    -U $POSTGRES_USER \
+                    -d $POSTGRES_DB \
+                    --verbose \
+                    --no-owner \
+                    --no-privileges \
+                    --if-exists \
+                    --clean \
+                    --create \
+                    --format=custom \
+                    --compress=9 \
+                    --file="/backup/${BACKUP_FILE%.gz}"
+                  
+                  # Compress the backup
+                  gzip -9 "/backup/${BACKUP_FILE%.gz}"
+                  
+                  # Calculate checksum
+                  sha256sum "/backup/${BACKUP_FILE}" > "/backup/${BACKUP_FILE}.sha256"
+                  
+                  # Upload to S3/MinIO if configured
+                  if [ "$ENABLE_S3_BACKUP" = "true" ]; then
+                    echo "Uploading backup to S3..."
+                    # Install aws-cli
+                    apk add --no-cache aws-cli
+                    
+                    # Configure S3
+                    aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                    aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                    
+                    # Upload with server-side encryption
+                    aws s3 cp "/backup/${BACKUP_FILE}" "s3://${S3_BUCKET}/postgres-backups/${BACKUP_FILE}" \
+                      --endpoint-url $S3_ENDPOINT_URL \
+                      --sse AES256
+                    
+                    aws s3 cp "/backup/${BACKUP_FILE}.sha256" "s3://${S3_BUCKET}/postgres-backups/${BACKUP_FILE}.sha256" \
+                      --endpoint-url $S3_ENDPOINT_URL \
+                      --sse AES256
+                  fi
+                  
+                  # Cleanup old backups (keep last N backups)
+                  if [ "$CLEANUP_OLD_BACKUPS" = "true" ]; then
+                    echo "Cleaning up old backups..."
+                    cd /backup
+                    ls -t mlflow_backup_*.sql.gz | tail -n +$((BACKUP_RETENTION_COUNT + 1)) | xargs -r rm -f
+                    ls -t mlflow_backup_*.sql.gz.sha256 | tail -n +$((BACKUP_RETENTION_COUNT + 1)) | xargs -r rm -f
+                  fi
+                  
+                  # Verify backup
+                  echo "Verifying backup integrity..."
+                  gunzip -t "/backup/${BACKUP_FILE}"
+                  
+                  echo "Backup completed successfully: ${BACKUP_FILE}"
+                  echo "Backup size: $(du -h /backup/${BACKUP_FILE} | cut -f1)"
+              env:
+                - name: POSTGRES_HOST
+                  value: {{ include "mlflow.fullname" . }}-postgresql
+                - name: POSTGRES_PORT
+                  value: "5432"
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: postgres-user
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: postgres-password
+                - name: POSTGRES_DB
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: postgres-database
+                - name: ENABLE_S3_BACKUP
+                  value: {{ .Values.backup.s3.enabled | default false | quote }}
+                - name: S3_BUCKET
+                  value: {{ .Values.backup.s3.bucket | default "mlflow-backups" | quote }}
+                - name: S3_ENDPOINT_URL
+                  value: "http://{{ include "mlflow.fullname" . }}-minio:9000"
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: aws-access-key-id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mlflow.fullname" . }}-secret
+                      key: aws-secret-access-key
+                - name: CLEANUP_OLD_BACKUPS
+                  value: {{ .Values.backup.cleanup.enabled | default true | quote }}
+                - name: BACKUP_RETENTION_COUNT
+                  value: {{ .Values.backup.cleanup.retentionCount | default 7 | quote }}
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+              resources:
+                requests:
+                  cpu: {{ .Values.backup.resources.requests.cpu | default "100m" }}
+                  memory: {{ .Values.backup.resources.requests.memory | default "256Mi" }}
+                limits:
+                  cpu: {{ .Values.backup.resources.limits.cpu | default "500m" }}
+                  memory: {{ .Values.backup.resources.limits.memory | default "1Gi" }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: false  # Needed for backup operations
+                runAsNonRoot: true
+                runAsUser: 999
+                capabilities:
+                  drop:
+                    - ALL
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: {{ include "mlflow.fullname" . }}-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mlflow.fullname" . }}-backup-pvc
+  labels:
+    {{- include "mlflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.backup.storageClass }}
+  storageClassName: {{ .Values.backup.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.backup.storageSize | default "20Gi" }}
+{{- end }}
