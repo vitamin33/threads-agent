@@ -373,3 +373,38 @@ performanceMonitor:
     type: ClusterIP
     httpPort: 8085
     metricsPort: 9095
+
+# ───────── Viral Metrics Collection (E6) ─────────
+viralMetrics:
+  enabled: false                   # turn ON in dev/prod values
+  replicas: 2
+  image:
+    repository: viral-metrics
+    tag: "local"
+    pullPolicy: IfNotPresent
+  
+  # Performance tuning
+  batchSize: 25                    # Posts per batch (optimized from 50)
+  maxParallelTasks: 10             # Max concurrent metric calculations
+  cacheTtl: 300                    # Redis cache TTL in seconds
+  
+  # Autoscaling configuration
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    
+  # Resource requests/limits optimized for viral metrics workload
+  resources:
+    requests:
+      memory: "256Mi"              # Minimum for efficient processing
+      cpu: "100m"                  # Baseline CPU requirement
+    limits:
+      memory: "1Gi"                # Prevent memory leaks from impacting cluster
+      cpu: "500m"                  # Allow burst processing for batch operations
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 9090
