@@ -1,18 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "threads-agent.fullname" . }}-viral-metrics
+  name: viral-metrics
   labels:
-    {{- include "threads-agent.labels" . | nindent 4 }}
-    app.kubernetes.io/component: viral-metrics
+    app: viral-metrics
 spec:
   {{- if not .Values.viralMetrics.autoscaling.enabled }}
   replicas: {{ .Values.viralMetrics.replicas }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "threads-agent.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: viral-metrics
+      app: viral-metrics
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -20,14 +18,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "threads-agent.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: viral-metrics
+        app: viral-metrics
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "threads-agent.serviceAccountName" . }}
+      serviceAccountName: viral-metrics-sa
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       affinity:
@@ -37,7 +34,7 @@ spec:
             podAffinityTerm:
               labelSelector:
                 matchExpressions:
-                - key: app.kubernetes.io/component
+                - key: app
                   operator: In
                   values:
                   - viral-metrics
@@ -57,17 +54,11 @@ spec:
           protocol: TCP
         env:
         - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "threads-agent.fullname" . }}-secrets
-              key: database-url
+          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/threads_agent"
         - name: REDIS_URL
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "threads-agent.fullname" . }}-secrets
-              key: redis-url
+          value: "redis://redis:6379/0"
         - name: FAKE_THREADS_URL
-          value: "http://{{ include "threads-agent.fullname" . }}-fake-threads:9009"
+          value: "http://fake-threads:9009"
         - name: BATCH_SIZE
           value: "{{ .Values.viralMetrics.batchSize }}"
         - name: MAX_PARALLEL_TASKS

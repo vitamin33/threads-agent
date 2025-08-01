@@ -2,15 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "threads-agent.fullname" . }}-viral-metrics
+  name: viral-metrics-hpa
   labels:
-    {{- include "threads-agent.labels" . | nindent 4 }}
-    app.kubernetes.io/component: viral-metrics
+    app: viral-metrics
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "threads-agent.fullname" . }}-viral-metrics
+    name: viral-metrics
   minReplicas: {{ .Values.viralMetrics.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.viralMetrics.autoscaling.maxReplicas }}
   metrics:
