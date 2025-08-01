@@ -1,0 +1,155 @@
+/* Dashboard Frontend Styles */
+.App {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.dashboard {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.dashboard-header {
+  background: #2c3e50;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.connection-status {
+  font-size: 0.9rem;
+}
+
+.dashboard-content {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.main-content {
+  flex: 1;
+}
+
+.sidebar {
+  width: 300px;
+}
+
+/* Variant Table Styles */
+.variant-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.variant-table th,
+.variant-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.variant-table th {
+  background: #34495e;
+  color: white;
+  font-weight: 600;
+}
+
+.variant-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.variant-table tr.warning {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+}
+
+.variant-table tr.pattern-fatigue {
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
+}
+
+/* Alert Panel Styles */
+.alert-panel {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.alert-panel h3 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.no-alerts {
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem;
+}
+
+.alert {
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-left: 4px solid;
+}
+
+.alert.severity-high {
+  background-color: #f8d7da;
+  border-left-color: #dc3545;
+}
+
+.alert.severity-medium {
+  background-color: #fff3cd;
+  border-left-color: #ffc107;
+}
+
+.alert.severity-low {
+  background-color: #d1ecf1;
+  border-left-color: #17a2b8;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.alert-type {
+  color: #495057;
+}
+
+.alert-timestamp {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.alert-message {
+  margin-bottom: 4px;
+}
+
+.alert-variant {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 4rem;
+  font-size: 1.2rem;
+  color: #6c757d;
+}
