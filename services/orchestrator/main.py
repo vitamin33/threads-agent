@@ -42,6 +42,7 @@ app.include_router(search_router)
 # Include performance monitor API if enabled
 try:
     from services.performance_monitor.api import router as performance_router
+
     app.include_router(performance_router, prefix="/performance", tags=["performance"])
 except ImportError:
     # Performance monitor service not available in this container

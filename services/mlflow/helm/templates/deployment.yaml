@@ -1,0 +1,224 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mlflow.fullname" . }}
+  labels:
+    {{- include "mlflow.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 3 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.rollingUpdate.maxSurge | default "25%" }}
+      maxUnavailable: {{ .Values.rollingUpdate.maxUnavailable | default "0" }}
+  selector:
+    matchLabels:
+      {{- include "mlflow.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mlflow.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.targetPort }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      {{- if .Values.rbac.create }}
+      serviceAccountName: {{ include "mlflow.fullname" . }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.securityContext.runAsUser | default 1000 }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup | default 1000 }}
+        fsGroup: {{ .Values.securityContext.fsGroup | default 1000 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - {{ include "mlflow.name" . }}
+                topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.postgresql.enabled }}
+        - name: wait-for-postgres
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z {{ include "mlflow.fullname" . }}-postgresql 5432; do echo waiting for postgres; sleep 2; done']
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+        {{- end }}
+      containers:
+      - name: mlflow
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        env:
+        # PostgreSQL connection from secret
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mlflow.fullname" . }}-secret
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mlflow.fullname" . }}-secret
+              key: postgres-password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mlflow.fullname" . }}-secret
+              key: postgres-database
+        - name: POSTGRES_HOST
+          value: {{ include "mlflow.fullname" . }}-postgresql
+        - name: POSTGRES_PORT
+          value: "5432"
+        # S3/MinIO credentials from secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mlflow.fullname" . }}-secret
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mlflow.fullname" . }}-secret
+              key: aws-secret-access-key
+        # MLflow configuration
+        - name: MLFLOW_S3_ENDPOINT_URL
+          value: "http://{{ include "mlflow.fullname" . }}-minio:9000"
+        - name: MLFLOW_S3_IGNORE_TLS
+          value: "true"
+        # Jaeger tracing configuration
+        - name: JAEGER_AGENT_HOST
+          value: {{ .Values.tracing.jaeger.agentHost | default "jaeger-agent.monitoring.svc.cluster.local" | quote }}
+        - name: JAEGER_AGENT_PORT
+          value: {{ .Values.tracing.jaeger.agentPort | default "6831" | quote }}
+        - name: JAEGER_SERVICE_NAME
+          value: {{ include "mlflow.fullname" . }}
+        - name: JAEGER_SAMPLER_TYPE
+          value: {{ .Values.tracing.jaeger.samplerType | default "probabilistic" | quote }}
+        - name: JAEGER_SAMPLER_PARAM
+          value: {{ .Values.tracing.jaeger.samplerParam | default "0.1" | quote }}
+        - name: JAEGER_REPORTER_LOG_SPANS
+          value: {{ .Values.tracing.jaeger.reporterLogSpans | default "false" | quote }}
+        - name: JAEGER_PROPAGATION
+          value: {{ .Values.tracing.jaeger.propagation | default "b3" | quote }}
+        # OpenTelemetry configuration
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.tracing.otel.endpoint | default "http://otel-collector.monitoring.svc.cluster.local:4317" | quote }}
+        - name: OTEL_SERVICE_NAME
+          value: {{ include "mlflow.fullname" . }}
+        - name: OTEL_TRACES_EXPORTER
+          value: {{ .Values.tracing.otel.tracesExporter | default "otlp" | quote }}
+        - name: OTEL_METRICS_EXPORTER
+          value: {{ .Values.tracing.otel.metricsExporter | default "prometheus" | quote }}
+        # Additional environment variables
+        {{- range .Values.env }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.livenessProbe.path | default "/health" }}
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds | default 30 }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 10 }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold | default 1 }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold | default 3 }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.readinessProbe.path | default "/health" }}
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds | default 10 }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 5 }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds | default 3 }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold | default 1 }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold | default 3 }}
+        startupProbe:
+          httpGet:
+            path: {{ .Values.startupProbe.path | default "/health" }}
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds | default 0 }}
+          periodSeconds: {{ .Values.startupProbe.periodSeconds | default 10 }}
+          timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds | default 5 }}
+          successThreshold: {{ .Values.startupProbe.successThreshold | default 1 }}
+          failureThreshold: {{ .Values.startupProbe.failureThreshold | default 30 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        command:
+          - /bin/sh
+          - -c
+          - |
+            # Create necessary directories
+            mkdir -p /tmp/mlflow/logs
+            # Start MLflow server with proper configuration
+            exec mlflow server \
+              --host 0.0.0.0 \
+              --port {{ .Values.service.targetPort }} \
+              --backend-store-uri "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}" \
+              --default-artifact-root "s3://mlflow-artifacts/" \
+              --serve-artifacts \
+              --gunicorn-opts "--workers {{ .Values.mlflow.workers | default 4 }} --threads {{ .Values.mlflow.threads | default 2 }} --timeout {{ .Values.mlflow.timeout | default 120 }} --keep-alive {{ .Values.mlflow.keepAlive | default 5 }}"
+        volumeMounts:
+        - name: config
+          mountPath: /etc/mlflow
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        {{- if .Values.persistence.enabled }}
+        - name: mlflow-data
+          mountPath: /mlflow
+        {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "mlflow.fullname" . }}-config
+      - name: tmp
+        emptyDir: {}
+      {{- if .Values.persistence.enabled }}
+      - name: mlflow-data
+        persistentVolumeClaim:
+          claimName: {{ include "mlflow.fullname" . }}-pvc
+      {{- end }}

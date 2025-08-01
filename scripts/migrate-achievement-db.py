@@ -10,7 +10,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
 
-def migrate_database():
+def migrate_database() -> None:
     """Add social media columns to achievements table."""
     db_path = os.path.join(project_root, "test_achievements.db")
 

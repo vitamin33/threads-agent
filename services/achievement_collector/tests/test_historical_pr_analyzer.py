@@ -9,7 +9,9 @@ import pytest
 from unittest.mock import patch, AsyncMock
 from datetime import datetime
 
-from services.historical_pr_analyzer import HistoricalPRAnalyzer
+from services.achievement_collector.services.historical_pr_analyzer import (
+    HistoricalPRAnalyzer,
+)
 
 
 class TestHistoricalPRAnalyzer:
@@ -262,7 +264,9 @@ class TestHistoricalPRAnalyzer:
 
     def test_can_be_used_as_module(self):
         """Test that the module can be imported and used."""
-        from services.historical_pr_analyzer import HistoricalPRAnalyzer
+        from services.achievement_collector.services.historical_pr_analyzer import (
+            HistoricalPRAnalyzer,
+        )
 
         # Should be able to create instance
         analyzer = HistoricalPRAnalyzer(github_token="test-token")
