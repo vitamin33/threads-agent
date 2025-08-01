@@ -16,3 +16,6 @@ stripe>=7.12.0           # Stripe payment processing
 email-validator>=2.1.1   # Email validation for lead capture
 psycopg2-binary>=2.9.9   # PostgreSQL adapter
 alembic>=1.13.1          # Database migrations
+
+# MLflow experiment tracking
+mlflow>=2.9.0            # Experiment tracking for LLM calls
