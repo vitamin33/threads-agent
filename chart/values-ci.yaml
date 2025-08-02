@@ -108,6 +108,8 @@ viralMetrics:
 
 # MLflow configuration - disabled in CI to avoid CRD dependencies
 mlflow:
+  trackingUri: "http://mlflow:5000"
+  registryUri: "http://mlflow:5000"
   performanceOptimization:
     enabled: false
 

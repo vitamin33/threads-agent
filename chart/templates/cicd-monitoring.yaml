@@ -1,5 +1,5 @@
 # chart/templates/cicd-monitoring.yaml - Enhanced monitoring for CI/CD pipeline
-{{- if .Values.cicdPipeline.monitoring.enabled }}
+{{- if and .Values.cicdPipeline.enabled .Values.cicdPipeline.monitoring.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

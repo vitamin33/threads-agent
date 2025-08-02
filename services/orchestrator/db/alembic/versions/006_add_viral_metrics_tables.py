@@ -107,12 +107,12 @@ def upgrade() -> None:
 
     # Create indexes for pattern_usage_history
     op.create_index(
-        "idx_pattern_usage_pattern_created",
+        "idx_pattern_usage_history_pattern_created",
         "pattern_usage_history",
         ["pattern_id", "created_at"],
     )
     op.create_index(
-        "idx_pattern_usage_persona_pattern",
+        "idx_pattern_usage_history_persona_pattern",
         "pattern_usage_history",
         ["persona_id", "pattern_id"],
     )
@@ -160,10 +160,10 @@ def downgrade() -> None:
     op.drop_index("idx_viral_anomalies_post_id", table_name="viral_metrics_anomalies")
 
     op.drop_index(
-        "idx_pattern_usage_persona_pattern", table_name="pattern_usage_history"
+        "idx_pattern_usage_history_persona_pattern", table_name="pattern_usage_history"
     )
     op.drop_index(
-        "idx_pattern_usage_pattern_created", table_name="pattern_usage_history"
+        "idx_pattern_usage_history_pattern_created", table_name="pattern_usage_history"
     )
 
     op.drop_index(
