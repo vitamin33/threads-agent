@@ -152,7 +152,7 @@ jobs:
         if: steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           # Try to pull from GHCR first, build only if not found or force_build is true
-          SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_engine revenue"
+          SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_engine revenue viral_metrics"
           FORCE_BUILD="${{ github.event.inputs.force_build || 'false' }}"
 
           # Determine image tag based on event type
@@ -194,6 +194,7 @@ jobs:
             fake-threads:local \
             viral-engine:local \
             revenue:local \
+            viral-metrics:local \
             qdrant/qdrant:v1.9.4 \
             -c dev
 

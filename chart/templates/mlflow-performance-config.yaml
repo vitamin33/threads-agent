@@ -1,0 +1,192 @@
+{{- if .Values.mlflow.performanceOptimization.enabled }}
+# MLflow Performance Optimization ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mlflow-performance-config
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    component: mlflow-performance
+data:
+  # Connection Pool Configuration
+  MLFLOW_CLIENT_POOL_SIZE: "{{ .Values.mlflow.performanceOptimization.clientPoolSize | default 10 }}"
+  MLFLOW_CLIENT_POOL_MAX_IDLE_TIME: "{{ .Values.mlflow.performanceOptimization.maxIdleTime | default 600 }}"
+  MLFLOW_CLIENT_POOL_CLEANUP_INTERVAL: "{{ .Values.mlflow.performanceOptimization.cleanupInterval | default 300 }}"
+  
+  # Cache Configuration
+  MLFLOW_CACHE_ENABLED: "{{ .Values.mlflow.performanceOptimization.cacheEnabled | default true }}"
+  MLFLOW_CACHE_TTL: "{{ .Values.mlflow.performanceOptimization.cacheTtl | default 300 }}"
+  MLFLOW_CACHE_MAX_SIZE: "{{ .Values.mlflow.performanceOptimization.cacheMaxSize | default 128 }}"
+  
+  # Batch Operation Configuration
+  MLFLOW_BATCH_SIZE: "{{ .Values.mlflow.performanceOptimization.batchSize | default 50 }}"
+  MLFLOW_BATCH_TIMEOUT: "{{ .Values.mlflow.performanceOptimization.batchTimeout | default 30 }}"
+  
+  # Performance Monitoring
+  MLFLOW_PERFORMANCE_MONITORING_ENABLED: "{{ .Values.mlflow.performanceOptimization.monitoring.enabled | default true }}"
+  MLFLOW_PROMETHEUS_METRICS_ENABLED: "{{ .Values.mlflow.performanceOptimization.monitoring.prometheus | default true }}"
+  
+  # Thread Pool Configuration
+  MLFLOW_THREAD_POOL_SIZE: "{{ .Values.mlflow.performanceOptimization.threadPoolSize | default 4 }}"
+  
+  # Memory Optimization
+  MLFLOW_MEMORY_LIMIT_MB: "{{ .Values.mlflow.performanceOptimization.memoryLimitMb | default 512 }}"
+  MLFLOW_GARBAGE_COLLECTION_INTERVAL: "{{ .Values.mlflow.performanceOptimization.gcInterval | default 60 }}"
+
+---
+# MLflow Performance Monitor Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow-performance-monitor
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    component: mlflow-performance-monitor
+spec:
+  type: ClusterIP
+  selector:
+    app: mlflow-performance-monitor
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: metrics
+      protocol: TCP
+
+---
+# MLflow Performance Monitor Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-performance-monitor
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    app: mlflow-performance-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow-performance-monitor
+  template:
+    metadata:
+      labels:
+        app: mlflow-performance-monitor
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: performance-monitor
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          command: ["python", "-m", "services.common.mlflow_performance_monitor"]
+          envFrom:
+            - configMapRef:
+                name: mlflow-performance-config
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+            - name: MLFLOW_TRACKING_URI
+              value: "{{ .Values.mlflow.trackingUri | default "http://mlflow:5000" }}"
+            - name: MLFLOW_REGISTRY_URI
+              value: "{{ .Values.mlflow.registryUri | default .Values.mlflow.trackingUri | default "http://mlflow:5000" }}"
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+{{- if and .Values.mlflow.performanceOptimization.monitoring.serviceMonitor.enabled .Values.monitoring.prometheus.enabled }}
+---
+# Service Monitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mlflow-performance-monitor
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    component: mlflow-performance-monitor
+spec:
+  selector:
+    matchLabels:
+      component: mlflow-performance-monitor
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.mlflow.performanceOptimization.monitoring.serviceMonitor.interval | default "30s" }}
+      path: /metrics
+      scrapeTimeout: {{ .Values.mlflow.performanceOptimization.monitoring.serviceMonitor.scrapeTimeout | default "10s" }}
+{{- end }}
+
+---
+# Horizontal Pod Autoscaler for MLflow services
+{{- if .Values.mlflow.performanceOptimization.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orchestrator-hpa
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    component: orchestrator-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orchestrator
+  minReplicas: {{ .Values.mlflow.performanceOptimization.autoscaling.minReplicas | default 1 }}
+  maxReplicas: {{ .Values.mlflow.performanceOptimization.autoscaling.maxReplicas | default 10 }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.mlflow.performanceOptimization.autoscaling.targetCPU | default 70 }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.mlflow.performanceOptimization.autoscaling.targetMemory | default 80 }}
+    {{- if .Values.mlflow.performanceOptimization.autoscaling.customMetrics.enabled }}
+    - type: Pods
+      pods:
+        metric:
+          name: mlflow_operations_per_second
+        target:
+          type: AverageValue
+          averageValue: {{ .Values.mlflow.performanceOptimization.autoscaling.customMetrics.targetOpsPerSecond | default "100" }}
+    {{- end }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.mlflow.performanceOptimization.autoscaling.scaleUp.stabilizationWindowSeconds | default 60 }}
+      policies:
+      - type: Percent
+        value: {{ .Values.mlflow.performanceOptimization.autoscaling.scaleUp.percentPolicy | default 100 }}
+        periodSeconds: {{ .Values.mlflow.performanceOptimization.autoscaling.scaleUp.periodSeconds | default 15 }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.mlflow.performanceOptimization.autoscaling.scaleDown.stabilizationWindowSeconds | default 300 }}
+      policies:
+      - type: Percent
+        value: {{ .Values.mlflow.performanceOptimization.autoscaling.scaleDown.percentPolicy | default 50 }}
+        periodSeconds: {{ .Values.mlflow.performanceOptimization.autoscaling.scaleDown.periodSeconds | default 60 }}
+{{- end }}
+
+{{- end }}

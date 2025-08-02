@@ -219,6 +219,31 @@ SYSTEM_HEALTH_STATUS = _safe_metric(
     ["component", "service"],  # component: database, queue, api, llm
 )
 
+
+# ───── Prometheus Client Helper Class ────────────────────────────────────────────────
+class PrometheusClient:
+    """Helper class for emitting Prometheus metrics."""
+
+    def __init__(self):
+        """Initialize Prometheus client with viral metrics."""
+        self.viral_metrics = {}
+
+    def gauge(self, name: str, value: float, labels: dict = None):
+        """Emit a gauge metric."""
+        # In production, this would emit to actual Prometheus
+        # For now, store for testing
+        self.viral_metrics[name] = {"value": value, "labels": labels or {}}
+
+    def histogram(self, name: str, value: float, labels: dict = None):
+        """Emit a histogram metric."""
+        # In production, this would emit to actual Prometheus
+        # For now, store for testing
+        self.viral_metrics[f"{name}_histogram"] = {
+            "value": value,
+            "labels": labels or {},
+        }
+
+
 # ───── Search Integration Metrics ────────────────────────────────────────────────────
 search_requests_total = _safe_metric(
     Counter,
