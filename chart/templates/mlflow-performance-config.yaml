@@ -114,9 +114,9 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
 
+{{- if and .Values.mlflow.performanceOptimization.monitoring.serviceMonitor.enabled .Values.monitoring.prometheus.enabled }}
 ---
 # Service Monitor for Prometheus
-{{- if .Values.mlflow.performanceOptimization.monitoring.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
