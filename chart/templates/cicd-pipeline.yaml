@@ -1,4 +1,5 @@
 # chart/templates/cicd-pipeline.yaml - Optimized CI/CD Pipeline Components
+{{- if .Values.cicdPipeline.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -55,8 +56,8 @@ spec:
       
       containers:
       - name: cicd-pipeline
-        image: "{{ tpl .Values.image.repository $ }}:{{ tpl .Values.image.tag $ }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        image: "{{ .Values.cicdPipeline.image.repository }}:{{ .Values.cicdPipeline.image.tag }}"
+        imagePullPolicy: {{ .Values.cicdPipeline.image.pullPolicy | default "IfNotPresent" }}
         
         # Environment optimized for performance
         env:
@@ -105,7 +106,7 @@ spec:
         
         ports:
         - name: http
-          containerPort: 8085
+          containerPort: 8080
         - name: metrics
           containerPort: 9090
         
@@ -113,7 +114,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 8085
+            port: 8080
           initialDelaySeconds: 15
           periodSeconds: 30
           timeoutSeconds: 5
@@ -121,8 +122,8 @@ spec:
         
         readinessProbe:
           httpGet:
-            path: /ready
-            port: 8085
+            path: /health
+            port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 3
@@ -132,7 +133,7 @@ spec:
         startupProbe:
           httpGet:
             path: /health
-            port: 8085
+            port: 8080
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
@@ -176,8 +177,8 @@ spec:
     app: cicd-pipeline
   ports:
   - name: http
-    port: 8085
-    targetPort: 8085
+    port: 8080
+    targetPort: 8080
   - name: metrics
     port: 9090
     targetPort: 9090
@@ -340,4 +341,5 @@ spec:
     matchLabels:
       app: cicd-pipeline
   minAvailable: {{ .Values.cicdPipeline.podDisruptionBudget.minAvailable | default 1 }}
+{{- end }}
 {{- end }}
