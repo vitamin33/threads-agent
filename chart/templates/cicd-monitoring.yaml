@@ -293,11 +293,11 @@ data:
             "targets": [
               {
                 "expr": "rate(container_cpu_usage_seconds_total{pod=~\"cicd-pipeline-.*\"}[5m])",
-                "legendFormat": "CPU {{pod}}"
+                "legendFormat": "CPU {{ "{{pod}}" }}"
               },
               {
                 "expr": "container_memory_usage_bytes{pod=~\"cicd-pipeline-.*\"} / 1024 / 1024",
-                "legendFormat": "Memory {{pod}} (MB)"
+                "legendFormat": "Memory {{ "{{pod}}" }} (MB)"
               }
             ],
             "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
