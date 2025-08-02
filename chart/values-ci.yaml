@@ -98,6 +98,14 @@ openai:
   enabled: true
   apiKey: "REPLACE_IN_RUNTIME"
 
+# Viral Metrics service for real-time metrics collection
+viralMetrics:
+  enabled: true
+  image:
+    repository: viral-metrics
+    tag: "local"
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
+
 global:
   storageClass: local-path
 
