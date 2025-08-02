@@ -1,0 +1,183 @@
+id: feature-14-5-career-focused-content-strategy
+epic_id: epic-14-ai-career-content-automation
+title: "AI Job Strategy Content Automation"
+description: |
+  Implement intelligent content strategy system specifically designed to support the AI Job
+  Strategy outlined in AI_JOB_STRATEGY.md. This system will generate targeted content that
+  showcases MLOps/AI engineering skills, highlights real project achievements, and positions
+  the user as an ideal candidate for remote US-based AI roles.
+
+priority: high
+estimated_hours: 25
+complexity: medium-high
+
+business_value: |
+  - Directly supports AI Job Strategy goals with targeted content
+  - Showcases specific MLOps and AI engineering competencies
+  - Demonstrates business value thinking for hiring managers
+  - Creates consistent professional brand aligned with career goals
+  - Generates portfolio content highlighting real achievements
+
+technical_requirements:
+  - Integration with AI_JOB_STRATEGY.md goals and metrics
+  - Content templates focused on MLOps and AI engineering
+  - Hiring manager persona-specific content generation
+  - Achievement highlighting and metric showcasing
+  - Job market trend integration
+
+tasks:
+  - task_001_ai_job_strategy_integration:
+      title: "Integrate AI Job Strategy goals into content planning"
+      description: |
+        Connect content system with AI Job Strategy objectives:
+        - Parse AI_JOB_STRATEGY.md for key goals and metrics
+        - Create content calendar aligned with job search timeline
+        - Implement success metric tracking (profile visits, inquiries)
+        - Align content themes with target company interests
+        - Track progress against strategy milestones
+      estimated_hours: 3
+      tags: [integration, strategy, planning]
+      dependencies: []
+
+  - task_002_mlops_competency_showcase_system:
+      title: "Build MLOps competency showcase content system"
+      description: |
+        Create content focused on MLOps skills demonstration:
+        - Kubernetes deployment story templates
+        - ML pipeline architecture explanations
+        - Model monitoring and observability content
+        - Infrastructure as Code showcases
+        - Performance optimization case studies
+        - Automated testing strategy articles
+      estimated_hours: 4
+      tags: [content, mlops, competency]
+      dependencies: []
+
+  - task_003_hiring_manager_persona_content:
+      title: "Develop hiring manager targeted content generator"
+      description: |
+        Create content specifically for hiring manager audience:
+        - Business value focused narratives
+        - ROI calculations and cost savings stories
+        - Team productivity improvement examples
+        - Risk mitigation and reliability stories
+        - Scalability and growth enablement content
+        - Technical leadership demonstration pieces
+      estimated_hours: 4
+      tags: [content, hiring-manager, business-value]
+      dependencies: []
+
+  - task_004_achievement_highlighting_system:
+      title: "Build real achievement highlighting system"
+      description: |
+        Create system to highlight actual project achievements:
+        - Integration with achievement_collector metrics
+        - Real performance numbers presentation
+        - Before/after improvement stories
+        - Technical challenge resolution narratives
+        - Innovation and creative solution showcases
+        - Measurable impact demonstration
+      estimated_hours: 3
+      tags: [integration, achievements, metrics]
+      dependencies: []
+
+  - task_005_target_company_alignment:
+      title: "Implement target company content alignment"
+      description: |
+        Create content aligned with target company interests:
+        - Company-specific technology stack content
+        - Industry-relevant problem solving examples
+        - Technology trend alignment (based on job postings)
+        - Competitive analysis and positioning
+        - Culture fit demonstration through content tone
+        - Remote work capability showcasing
+      estimated_hours: 4
+      tags: [content, targeting, companies]
+      dependencies: [task_001_ai_job_strategy_integration]
+
+  - task_006_professional_brand_consistency:
+      title: "Ensure professional brand consistency across content"
+      description: |
+        Implement brand consistency across all generated content:
+        - Consistent voice and tone guidelines
+        - Professional image and positioning
+        - Technical credibility maintenance
+        - Business acumen demonstration
+        - Thought leadership positioning
+        - Authenticity and genuine expertise focus
+      estimated_hours: 2
+      tags: [branding, consistency, professional]
+      dependencies: [task_002_mlops_competency_showcase_system, task_003_hiring_manager_persona_content]
+
+  - task_007_job_market_trend_integration:
+      title: "Integrate current job market trends into content"
+      description: |
+        Build system to align content with job market trends:
+        - AI/ML job posting analysis
+        - In-demand skill identification
+        - Salary trend awareness
+        - Geographic market analysis (US remote focus)
+        - Technology adoption trend integration
+        - Industry-specific customization
+      estimated_hours: 3
+      tags: [trends, job-market, analysis]
+      dependencies: []
+
+  - task_008_content_performance_tracking:
+      title: "Implement career-focused content performance tracking"
+      description: |
+        Track content performance specific to career goals:
+        - Profile visit rate tracking
+        - Job inquiry generation monitoring
+        - Recruiter engagement metrics
+        - Interview request correlation
+        - Professional network growth tracking
+        - Content-to-opportunity conversion rates
+      estimated_hours: 2
+      tags: [tracking, metrics, career]
+      dependencies: []
+
+  - task_009_automated_portfolio_updates:
+      title: "Build automated portfolio website content updates"
+      description: |
+        Automate portfolio website updates with generated content:
+        - Blog section automatic updates
+        - Project showcase content generation
+        - Resume/CV automatic enhancement
+        - Case study creation and updates
+        - Technical writing samples maintenance
+        - SEO optimization for recruiter discoverability
+      estimated_hours: 3
+      tags: [automation, portfolio, seo]
+      dependencies: [task_004_achievement_highlighting_system]
+
+  - task_010_unit_tests_career_strategy:
+      title: "Write unit tests for career strategy content system"
+      description: |
+        Create comprehensive tests for career strategy system:
+        - AI Job Strategy integration tests
+        - MLOps content validation tests
+        - Hiring manager persona content tests
+        - Achievement highlighting accuracy tests
+        - Brand consistency validation tests
+        - Performance tracking system tests
+      estimated_hours: 3
+      tags: [testing, unit-tests, validation]
+      dependencies: [task_006_professional_brand_consistency, task_008_content_performance_tracking]
+
+acceptance_criteria:
+  - Generates content directly aligned with AI Job Strategy goals
+  - Showcases specific MLOps and AI engineering competencies
+  - Creates measurable increase in professional visibility
+  - Demonstrates clear business value thinking in all content
+  - Maintains consistent professional brand across platforms
+  - Tracks and reports career-specific performance metrics
+  - Comprehensive test coverage above 85%
+
+testing_strategy:
+  - Content quality validation with MLOps experts
+  - A/B testing for hiring manager appeal
+  - Performance tracking validation
+  - Brand consistency verification
+  - Achievement accuracy verification
+  - Integration tests with existing systems

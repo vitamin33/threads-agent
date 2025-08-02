@@ -1,0 +1,132 @@
+id: feature-14-1-codebase-intelligence-engine
+epic_id: epic-14-ai-career-content-automation
+title: "Advanced Codebase Intelligence Engine"
+description: |
+  Develop a sophisticated code analysis system that automatically extracts meaningful insights,
+  technical stories, and architecture decisions from the threads-agent codebase. This engine
+  will identify patterns, performance improvements, and unique solutions that demonstrate
+  MLOps engineering expertise to potential employers.
+
+priority: high
+estimated_hours: 25
+complexity: medium
+
+business_value: |
+  - Automatically identifies technical achievements for portfolio content
+  - Extracts real metrics and performance data for credible claims
+  - Discovers unique architectural decisions that differentiate from competitors
+  - Provides concrete examples of MLOps and AI engineering skills
+
+technical_requirements:
+  - AST-based code analysis for Python services
+  - Git history parsing for evolution stories
+  - Metrics extraction from Prometheus and application logs
+  - Pattern recognition for architectural insights
+  - Integration with achievement_collector for real project data
+
+tasks:
+  - task_001_setup_ast_analyzer:
+      title: "Implement AST-based code analyzer"
+      description: |
+        Create Python AST analyzer that can parse service codebases and extract:
+        - Function complexity metrics
+        - Class hierarchy patterns
+        - Import dependency graphs
+        - Design pattern usage (Factory, Observer, etc.)
+        - Code quality indicators
+      estimated_hours: 4
+      tags: [development, python, ast]
+      dependencies: []
+      
+  - task_002_git_history_analyzer:
+      title: "Build git history analyzer for evolution insights"
+      description: |
+        Develop analyzer to extract interesting stories from git history:
+        - Major refactoring events and their impact
+        - Performance improvement commits with metrics
+        - Bug fix patterns and resolution strategies
+        - Feature evolution over time
+        - Collaboration patterns from commit messages
+      estimated_hours: 3
+      tags: [development, git, analysis]
+      dependencies: []
+
+  - task_003_metrics_extraction_pipeline:
+      title: "Create metrics extraction pipeline"
+      description: |
+        Build pipeline to extract real performance metrics:
+        - Prometheus metrics aggregation
+        - Test coverage analysis from pytest reports
+        - Deployment success rates from k8s events
+        - API response time trends
+        - Resource utilization patterns
+      estimated_hours: 4
+      tags: [development, metrics, prometheus]
+      dependencies: []
+
+  - task_004_architecture_pattern_detector:
+      title: "Implement architecture pattern detection"
+      description: |
+        Create system to identify and explain architectural patterns:
+        - Microservices communication patterns
+        - Event-driven architecture usage
+        - Database design patterns
+        - Kubernetes deployment strategies
+        - Monitoring and observability setups
+      estimated_hours: 5
+      tags: [development, architecture, patterns]
+      dependencies: [task_001_setup_ast_analyzer]
+
+  - task_005_insight_scoring_algorithm:
+      title: "Develop insight scoring and ranking system"
+      description: |
+        Build algorithm to score and rank extracted insights:
+        - Technical complexity scoring
+        - Business impact assessment
+        - Uniqueness evaluation
+        - Hiring manager appeal rating
+        - Content potential scoring
+      estimated_hours: 3
+      tags: [development, algorithm, scoring]
+      dependencies: [task_001_setup_ast_analyzer, task_002_git_history_analyzer]
+
+  - task_006_unit_tests_intelligence_engine:
+      title: "Write comprehensive unit tests for intelligence engine"
+      description: |
+        Create test suite covering all analysis components:
+        - AST analyzer with sample codebases
+        - Git history analyzer with mock repositories
+        - Metrics extraction with test data
+        - Pattern detector with known patterns
+        - Insight scoring with expected results
+      estimated_hours: 3
+      tags: [testing, unit-tests]
+      dependencies: [task_001_setup_ast_analyzer, task_002_git_history_analyzer, task_003_metrics_extraction_pipeline]
+
+  - task_007_integration_with_achievement_collector:
+      title: "Integrate with existing achievement_collector service"
+      description: |
+        Connect intelligence engine with achievement_collector:
+        - Share extracted metrics and insights
+        - Avoid duplicate analysis work
+        - Leverage existing PR analysis capabilities
+        - Create unified insight database
+        - Add API endpoints for insight retrieval
+      estimated_hours: 3
+      tags: [integration, api]
+      dependencies: [task_005_insight_scoring_algorithm]
+
+acceptance_criteria:
+  - Successfully analyzes all 5 microservices in threads-agent
+  - Extracts minimum 20 unique technical insights per week
+  - Integrates seamlessly with achievement_collector
+  - Produces insights with 7+ quality scores consistently
+  - Zero performance impact on existing services
+  - Comprehensive test coverage above 85%
+
+testing_strategy:
+  - Unit tests for each analysis component
+  - Integration tests with real codebase samples
+  - Performance tests with large codebases
+  - Mock data tests for git history analysis
+  - End-to-end tests with achievement_collector integration

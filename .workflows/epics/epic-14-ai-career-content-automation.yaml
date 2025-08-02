@@ -1,0 +1,63 @@
+id: epic-14-ai-career-content-automation
+title: "AI Career Content Automation System"
+description: |
+  Comprehensive automated article/content generation system that integrates with the existing 
+  threads-agent architecture to boost visibility for AI job opportunities. The system will 
+  automatically analyze the codebase to extract technical insights, generate varied content 
+  targeting hiring managers and technical leaders, and publish across multiple platforms 
+  (Dev.to, LinkedIn, Twitter, GitHub) with intelligent scheduling and engagement prediction.
+
+  This epic directly supports the AI Job Strategy by:
+  - Showcasing MLOps/AI engineering skills through automated content
+  - Demonstrating production system architecture and business value focus
+  - Creating consistent technical presence across professional platforms
+  - Generating portfolio content that highlights real project achievements
+
+status: planned
+priority: high
+business_value: 85
+complexity_score: 75
+estimated_hours: 120
+
+kpis:
+  - articles_generated_weekly: 3-5
+  - insight_quality_score: 7+ (1-10 scale)
+  - platform_engagement_rate: 6%+
+  - profile_visits_increase: 150%
+  - job_inquiry_conversion: 2+ per month
+
+integration_points:
+  - orchestrator: API coordination and scheduling
+  - celery_worker: Background content processing
+  - persona_runtime: AI content generation workflows
+  - viral_engine: Trend matching and engagement optimization
+  - achievement_collector: Real project metrics extraction
+
+features:
+  - feature-14-1-codebase-intelligence-engine
+  - feature-14-2-multi-angle-content-generator
+  - feature-14-3-insight-quality-predictor
+  - feature-14-4-multi-platform-publisher
+  - feature-14-5-career-focused-content-strategy
+  - feature-14-6-engagement-analytics-dashboard
+
+success_criteria:
+  - Generate 3-5 high-quality articles per week automatically
+  - Achieve 7+ insight quality score across all content
+  - Successfully publish to 4+ platforms with optimized timing
+  - Demonstrate measurable increase in professional visibility
+  - Integration with existing monitoring and metrics systems
+  - Zero-downtime deployment in production k3d cluster
+
+dependencies:
+  - OpenAI API for content generation
+  - Platform APIs (Dev.to, LinkedIn, Twitter)
+  - Existing orchestrator and celery_worker services
+  - Achievement collector metrics for real project data
+  - Viral engine patterns for engagement optimization
+
+risks:
+  - Platform API rate limiting
+  - Content quality consistency
+  - Over-automation appearing impersonal
+  - Managing multiple platform authentication
