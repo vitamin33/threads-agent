@@ -40,8 +40,8 @@ class ViralMetricsCollector:
     def __init__(self):
         """Initialize metrics collector with all dependencies."""
         self.prometheus_client = PrometheusClient()
-        self.redis_client = get_redis_connection()
-        self.db = get_db_connection()
+        self._redis_client = None
+        self._db = None
 
         # Initialize metric calculators
         self.calculators = {
@@ -58,6 +58,20 @@ class ViralMetricsCollector:
             "viral_metrics_collection_latency_seconds",
             "Time taken to collect all viral metrics",
         )
+    
+    @property
+    def redis_client(self):
+        """Lazy-load Redis client."""
+        if self._redis_client is None:
+            self._redis_client = get_redis_connection()
+        return self._redis_client
+    
+    @property
+    def db(self):
+        """Lazy-load database connection."""
+        if self._db is None:
+            self._db = get_db_connection()
+        return self._db
 
     async def collect_viral_metrics(
         self, post_id: str, timeframe: str = "1h"

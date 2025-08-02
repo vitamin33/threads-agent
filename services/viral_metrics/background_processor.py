@@ -30,12 +30,19 @@ class ViralMetricsProcessor:
         """Initialize processor with dependencies."""
         self.metrics_collector = ViralMetricsCollector()
         self.celery_app = get_celery_app()
-        self.db = get_db_connection()
+        self._db = None
 
         # Performance configuration
         self.batch_size = 50
         self.max_parallel_tasks = 10
         self.metrics_ttl_hours = 24  # Process posts from last 24 hours
+    
+    @property
+    def db(self):
+        """Lazy-load database connection."""
+        if self._db is None:
+            self._db = get_db_connection()
+        return self._db
 
     async def process_active_posts(self, batch_size: int = None) -> Dict[str, Any]:
         """

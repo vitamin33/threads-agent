@@ -55,9 +55,23 @@ class AnomalyAlert(BaseModel):
     baseline_value: Optional[float]
 
 
-# Initialize collectors
-metrics_collector = ViralMetricsCollector()
-batch_processor = ViralMetricsProcessor()
+# Initialize collectors lazily
+_metrics_collector = None
+_batch_processor = None
+
+def get_metrics_collector():
+    """Get or create metrics collector instance."""
+    global _metrics_collector
+    if _metrics_collector is None:
+        _metrics_collector = ViralMetricsCollector()
+    return _metrics_collector
+
+def get_batch_processor():
+    """Get or create batch processor instance."""
+    global _batch_processor
+    if _batch_processor is None:
+        _batch_processor = ViralMetricsProcessor()
+    return _batch_processor
 
 
 @router.get("/health")
@@ -75,7 +89,7 @@ async def readiness_check():
     """Readiness check for Kubernetes."""
     try:
         # Check if we can access cache and database
-        await metrics_collector.get_cached_metrics("test_post")
+        await get_metrics_collector().get_cached_metrics("test_post")
         return {"status": "ready", "cache": "connected", "timestamp": datetime.utcnow()}
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
@@ -99,7 +113,7 @@ async def get_post_metrics(
     try:
         # Try cache first if enabled
         if use_cache:
-            cached_metrics = await metrics_collector.get_cached_metrics(post_id)
+            cached_metrics = await get_metrics_collector().get_cached_metrics(post_id)
             if cached_metrics:
                 logger.info(f"Returning cached metrics for post {post_id}")
                 return MetricsResponse(
@@ -107,7 +121,7 @@ async def get_post_metrics(
                 )
 
         # Collect fresh metrics
-        metrics = await metrics_collector.collect_viral_metrics(post_id, timeframe)
+        metrics = await get_metrics_collector().collect_viral_metrics(post_id, timeframe)
 
         return MetricsResponse(
             post_id=post_id, collected_at=datetime.utcnow(), **metrics
@@ -135,7 +149,7 @@ async def collect_batch_metrics(
         # Process each post
         for post_id in request.post_ids:
             try:
-                metrics = await metrics_collector.collect_viral_metrics(
+                metrics = await get_metrics_collector().collect_viral_metrics(
                     post_id, request.timeframe
                 )
                 results.append(
@@ -168,7 +182,7 @@ async def trigger_active_posts_processing(
     try:
         # Add to background tasks for async processing
         background_tasks.add_task(
-            batch_processor.process_active_posts, batch_size=batch_size
+            get_batch_processor().process_active_posts, batch_size=batch_size
         )
 
         return {
