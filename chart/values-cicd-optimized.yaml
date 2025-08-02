@@ -1,0 +1,403 @@
+# values-cicd-optimized.yaml - Optimized configuration for CI/CD pipeline components
+# This extends the base values.yaml with CI/CD specific optimizations
+
+# ───────── CI/CD Pipeline Configuration ─────────
+cicdPipeline:
+  enabled: true
+  replicas: 2  # High availability for CI/CD
+  
+  # Deployment strategy selection
+  deploymentStrategy: "standalone"  # Options: "standalone", "sidecar"
+  
+  # Standalone deployment configuration
+  image:
+    repository: orchestrator  # Reuse orchestrator image with CI/CD components
+    tag: local
+    pullPolicy: IfNotPresent
+  
+  # Resource allocation optimized for CI/CD workloads
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  
+  # Auto-scaling configuration
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPU: 70
+    targetMemory: 80
+    
+    # Custom metrics for CI/CD workloads
+    customMetrics:
+      enabled: true
+      targetQueueLength: "10"
+      targetTestRate: "50"
+    
+    # Scaling behavior
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      percentPolicy: 100
+      periodSeconds: 15
+    
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      percentPolicy: 50
+      periodSeconds: 60
+  
+  # Sidecar deployment configuration
+  sidecar:
+    enabled: false  # Set to true to use sidecar mode
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+  
+  # Security configuration
+  networkPolicy:
+    enabled: true
+  
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  
+  # GitHub integration for CI/CD
+  github:
+    enabled: false
+    webhookSecret: ""
+    token: ""
+  
+  # Performance monitoring
+  monitoring:
+    enabled: true
+    metricsPort: 9090
+    healthCheckPath: "/health"
+    readinessPath: "/ready"
+
+# ───────── Enhanced Redis Configuration ─────────
+redis:
+  enabled: true
+  
+  # High-performance single instance (default)
+  image:
+    repository: redis
+    tag: "7-alpine"
+  
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: local-path
+  
+  # Redis cluster for high-throughput workloads
+  cluster:
+    enabled: false  # Set to true for cluster mode
+    replicas: 3
+    maxMemory: "512mb"
+    
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    
+    storage: 2Gi
+    storageClass: local-path
+  
+  # Connection pooling proxy
+  proxy:
+    enabled: false  # Enable with cluster
+    replicas: 2
+
+# ───────── Enhanced Orchestrator Configuration ─────────
+orchestrator:
+  # Enhanced resource allocation for CI/CD integration
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  
+  # CI/CD integration environment variables
+  env:
+    - name: MLFLOW_CLIENT_POOL_SIZE
+      value: "10"
+    - name: MLFLOW_CACHE_ENABLED
+      value: "true"
+    - name: MLFLOW_PERFORMANCE_MONITORING_ENABLED
+      value: "true"
+    - name: CICD_PIPELINE_ENABLED
+      value: "true"
+    - name: PERFORMANCE_CACHE_ENABLED
+      value: "true"
+    - name: REDIS_CACHE_TTL
+      value: "300"
+
+# ───────── Performance Monitor Enhanced Configuration ─────────
+performanceMonitor:
+  enabled: true
+  replicas: 2
+  
+  image:
+    repository: performance-monitor
+    tag: "local"
+    pullPolicy: IfNotPresent
+  
+  # Optimized for fast CI/CD cycles
+  resources:
+    requests:
+      memory: "384Mi"
+      cpu: "150m"
+    limits:
+      memory: "768Mi"
+      cpu: "800m"
+  
+  # Fast response configuration
+  logLevel: "INFO"
+  killThreshold: 0.6  # 60% threshold
+  minInteractions: 15
+  timeoutMinutes: 8
+  checkIntervalSeconds: 20
+  
+  # Auto-scaling for performance monitoring
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPU: 75
+    targetMemory: 80
+  
+  service:
+    type: ClusterIP
+    httpPort: 8085
+    metricsPort: 9095
+
+# ───────── MLflow Performance Optimization ─────────
+mlflow:
+  trackingUri: "http://mlflow:5000"
+  registryUri: "http://mlflow:5000"
+  
+  performanceOptimization:
+    enabled: true
+    
+    # Optimized connection pool settings for CI/CD
+    clientPoolSize: 15
+    maxIdleTime: 300  # Reduced for faster turnover
+    cleanupInterval: 120
+    
+    # Enhanced cache configuration
+    cacheEnabled: true
+    cacheTtl: 180  # Reduced TTL for CI/CD
+    cacheMaxSize: 256
+    
+    # Batch operation settings
+    batchSize: 100  # Increased for better throughput
+    batchTimeout: 20
+    
+    # Thread pool configuration
+    threadPoolSize: 8  # Increased for CI/CD workload
+    
+    # Memory management
+    memoryLimitMb: 768
+    gcInterval: 30
+    
+    # Performance monitoring
+    monitoring:
+      enabled: true
+      prometheus: true
+      serviceMonitor:
+        enabled: true
+        interval: "15s"  # More frequent for CI/CD
+        scrapeTimeout: "8s"
+    
+    # Auto-scaling configuration
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 12
+      targetCPU: 65
+      targetMemory: 75
+      
+      customMetrics:
+        enabled: true
+        targetOpsPerSecond: "150"
+      
+      scaleUp:
+        stabilizationWindowSeconds: 30  # Faster scaling
+        percentPolicy: 100
+        periodSeconds: 10
+      
+      scaleDown:
+        stabilizationWindowSeconds: 180
+        percentPolicy: 25  # More conservative scale down
+        periodSeconds: 45
+
+# ───────── Monitoring Enhanced Configuration ─────────
+monitoring:
+  prometheus:
+    enabled: true
+    url: http://prometheus:9090
+    
+    # Enhanced scraping for CI/CD metrics
+    scrapeConfigs:
+      - job_name: 'cicd-pipeline'
+        static_configs:
+          - targets: ['cicd-pipeline:9090']
+        scrape_interval: 15s
+        metrics_path: '/metrics'
+      
+      - job_name: 'redis-cluster'
+        static_configs:
+          - targets: ['redis-cluster:9121']
+        scrape_interval: 30s
+    
+    # Increased resources for CI/CD monitoring
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 256Mi
+    
+    persistence:
+      enabled: true
+      size: 4Gi  # Increased for CI/CD metrics
+      storageClass: local-path
+  
+  grafana:
+    enabled: true
+    adminPassword: admin123
+    
+    # Additional dashboards for CI/CD
+    dashboards:
+      cicd:
+        enabled: true
+        configMapName: cicd-dashboards
+    
+    resources:
+      limits:
+        cpu: 300m
+        memory: 384Mi
+      requests:
+        cpu: 150m
+        memory: 192Mi
+  
+  alertmanager:
+    enabled: true
+    
+    # CI/CD specific alerts
+    rules:
+      cicd:
+        enabled: true
+        regressionThreshold: 0.05
+        rollbackTimeThreshold: 30
+        testFailureRate: 0.1
+
+# ───────── Database Configuration ─────────
+postgres:
+  enabled: true
+  auth:
+    postgresPassword: pass
+  storage: 2Gi  # Increased for CI/CD data
+  
+  # Connection pooling for better performance
+  primary:
+    configuration: |
+      max_connections = 200
+      shared_buffers = 128MB
+      effective_cache_size = 256MB
+      work_mem = 4MB
+      maintenance_work_mem = 64MB
+      
+      # Optimized for CI/CD workloads
+      checkpoint_completion_target = 0.9
+      wal_buffers = 16MB
+      default_statistics_target = 100
+      random_page_cost = 1.1
+      
+      # Performance logging
+      log_min_duration_statement = 1000
+      log_checkpoints = on
+      log_connections = on
+      log_disconnections = on
+  
+  resources:
+    requests:
+      memory: "384Mi"
+      cpu: "150m"
+    limits:
+      memory: "768Mi"
+      cpu: "800m"
+
+# ───────── General Performance Optimizations ─────────
+global:
+  storageClass: local-path
+  
+  # Image pull optimization
+  imagePullPolicy: IfNotPresent
+  
+  # Security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  
+  # Resource quotas
+  resourceQuota:
+    enabled: false
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"
+
+# ───────── Service Configuration ─────────
+service:
+  type: ClusterIP
+  port: 8080
+  
+  # Service mesh integration (future)
+  mesh:
+    enabled: false
+    provider: "istio"  # Options: istio, linkerd
+
+# ───────── Networking ─────────
+networking:
+  # Network policies for security
+  networkPolicies:
+    enabled: true
+    defaultDeny: false
+  
+  # Ingress configuration
+  ingress:
+    enabled: false
+    className: "nginx"
+    annotations: {}
+    hosts: []
+    tls: []
+
+# Backward compatibility
+replicaCount: 1
+image:
+  repository: orchestrator
+  tag: local

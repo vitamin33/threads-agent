@@ -11,7 +11,18 @@ personaRuntime:
   image:
     repository: ghcr.io/threads-agent-stack/persona-runtime
     tag: "0.3.0"
-  env: []
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  env:
+    - name: MLFLOW_CLIENT_POOL_SIZE
+      value: "5"
+    - name: MLFLOW_CACHE_ENABLED
+      value: "true"
 
 # RabbitMQ broker DSN used by orchestrator / Celery
 rabbitmq:
@@ -21,6 +32,9 @@ rabbitmq:
 postgres:
   enabled: false                   # turn ON in dev/ci values
   storage: 1Gi                     # PVC size; template uses .Values.postgres.storage
+  auth:
+    postgresPassword: "postgres"   # override in production
+    database: "threads"
 
 minio:
   enabled: false                   # turn ON in dev values
@@ -172,20 +186,6 @@ orchestrator:
     - name: MLFLOW_PERFORMANCE_MONITORING_ENABLED
       value: "true"
 
-personaRuntime:
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
-  env:
-    - name: MLFLOW_CLIENT_POOL_SIZE
-      value: "5"
-    - name: MLFLOW_CACHE_ENABLED
-      value: "true"
-
 # ───────── generic chart knobs ─────────
 replicaCount: 1
 
@@ -293,6 +293,10 @@ redis:
     requests:
       cpu: 100m
       memory: 128Mi
+  cluster:
+    enabled: false                        # turn ON for Redis cluster mode
+    nodes: 3
+    replicas: 1
 
 # ───────── CI Monitor (disabled by default) ─────────
 ciMonitor:
@@ -373,3 +377,77 @@ performanceMonitor:
     type: ClusterIP
     httpPort: 8085
     metricsPort: 9095
+
+# ───────── CI/CD Pipeline (disabled by default) ─────────
+cicdPipeline:
+  enabled: false                   # turn ON in dev/prod values
+  replicas: 2
+  image:
+    repository: cicd-pipeline
+    tag: "local"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 8087
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    customMetrics:
+      enabled: false               # turn ON for custom metrics scaling
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      percentPolicy: 100
+      periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      percentPolicy: 50
+      periodSeconds: 60
+  monitoring:
+    enabled: false                 # turn ON in dev/prod values
+  redis:
+    enabled: false                 # turn ON for performance optimization
+    host: redis
+    port: 6379
+  sidecar:
+    enabled: false                 # turn ON for sidecar deployment pattern
+  github:
+    enabled: false                 # turn ON for GitHub integration
+    token: ""                      # GitHub personal access token
+    webhookSecret: ""              # GitHub webhook secret
+  networkPolicy:
+    enabled: false                 # turn ON for network segmentation
+  podDisruptionBudget:
+    enabled: false                 # turn ON for high availability
+    minAvailable: 1
+
+# ───────── OpenAI Configuration ─────────
+openai:
+  enabled: false                   # turn ON when using OpenAI
+  apiKey: ""                       # Set via secret or environment variable
+
+# ───────── Qdrant Vector Database ─────────
+qdrant:
+  enabled: false                   # turn ON for vector search capabilities
+  image:
+    repository: qdrant/qdrant
+    tag: "latest"
+  port: 6333
+  persistence:
+    enabled: false
+    size: 2Gi
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi

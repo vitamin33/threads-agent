@@ -17,25 +17,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create variant_monitoring table for real-time performance tracking
-    op.create_table('variant_monitoring',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('variant_id', sa.Text(), nullable=False),
-        sa.Column('persona_id', sa.Text(), nullable=False),
-        sa.Column('current_er', sa.Float(), nullable=True),
-        sa.Column('interaction_count', sa.Integer(), default=0),
-        sa.Column('view_count', sa.Integer(), default=0),
-        sa.Column('status', sa.Text(), default='active'),
-        sa.Column('last_updated', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-        sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('variant_id')
-    )
-    
-    # Create indexes for efficient querying
-    op.create_index('idx_variant_monitoring_persona', 'variant_monitoring', ['persona_id'])
-    op.create_index('idx_variant_monitoring_status', 'variant_monitoring', ['status'])
-    op.create_index('idx_variant_monitoring_updated', 'variant_monitoring', ['last_updated'])
+    # Skip creating variant_monitoring table as it's already created in add_performance_monitor_tables.py
+    # The add_performance_monitor_tables migration creates this table with a different schema
+    # We'll just ensure any missing columns are added if needed in future migrations
     
     # Create variant_kills table for tracking early kills
     op.create_table('variant_kills',
@@ -93,4 +77,4 @@ def downgrade() -> None:
     op.drop_table('dashboard_events')
     op.drop_table('variants')
     op.drop_table('variant_kills')
-    op.drop_table('variant_monitoring')
+    # Don't drop variant_monitoring as it's managed by add_performance_monitor_tables.py
