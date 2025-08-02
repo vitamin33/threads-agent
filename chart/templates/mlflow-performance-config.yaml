@@ -77,8 +77,8 @@ spec:
     spec:
       containers:
         - name: performance-monitor
-          image: "{{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag }}"
-          imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy | default "IfNotPresent" }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           command: ["python", "-m", "services.common.mlflow_performance_monitor"]
           envFrom:
             - configMapRef:
