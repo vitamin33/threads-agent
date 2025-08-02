@@ -59,12 +59,14 @@ class AnomalyAlert(BaseModel):
 _metrics_collector = None
 _batch_processor = None
 
+
 def get_metrics_collector():
     """Get or create metrics collector instance."""
     global _metrics_collector
     if _metrics_collector is None:
         _metrics_collector = ViralMetricsCollector()
     return _metrics_collector
+
 
 def get_batch_processor():
     """Get or create batch processor instance."""
@@ -121,7 +123,9 @@ async def get_post_metrics(
                 )
 
         # Collect fresh metrics
-        metrics = await get_metrics_collector().collect_viral_metrics(post_id, timeframe)
+        metrics = await get_metrics_collector().collect_viral_metrics(
+            post_id, timeframe
+        )
 
         return MetricsResponse(
             post_id=post_id, collected_at=datetime.utcnow(), **metrics

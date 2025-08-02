@@ -36,7 +36,7 @@ class ViralMetricsProcessor:
         self.batch_size = 50
         self.max_parallel_tasks = 10
         self.metrics_ttl_hours = 24  # Process posts from last 24 hours
-    
+
     @property
     def db(self):
         """Lazy-load database connection."""

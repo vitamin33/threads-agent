@@ -1,0 +1,401 @@
+# chart/templates/cicd-monitoring.yaml - Enhanced monitoring for CI/CD pipeline
+{{- if .Values.cicdPipeline.monitoring.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cicd-prometheus-rules
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-monitoring
+data:
+  cicd-rules.yml: |
+    groups:
+    - name: cicd_pipeline_alerts
+      rules:
+      # CI/CD Pipeline Performance Alerts
+      - alert: CICDPipelineHighLatency
+        expr: histogram_quantile(0.95, rate(cicd_pipeline_duration_seconds_bucket[5m])) > 300
+        for: 2m
+        labels:
+          severity: warning
+          component: cicd-pipeline
+        annotations:
+          summary: "CI/CD Pipeline high latency detected"
+          description: "95th percentile latency is above 300s threshold"
+      
+      - alert: CICDPipelineFailureRate
+        expr: rate(cicd_pipeline_failures_total[5m]) / rate(cicd_pipeline_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+          component: cicd-pipeline
+        annotations:
+          summary: "High CI/CD pipeline failure rate"
+          description: "Failure rate is above 10% threshold"
+      
+      # Performance Regression Detection Alerts
+      - alert: PerformanceRegressionDetected
+        expr: cicd_performance_regression_detected > 0
+        for: 0s  # Immediate alert
+        labels:
+          severity: critical
+          component: performance-regression
+        annotations:
+          summary: "Performance regression detected in deployment"
+          description: "Significant performance regression detected"
+      
+      - alert: RegressionDetectorDown
+        expr: up{job="cicd-pipeline", instance=~".*:9090"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          component: performance-regression
+        annotations:
+          summary: "Performance regression detector is down"
+          description: "Cannot detect performance regressions - service unavailable"
+      
+      # Rollout Management Alerts
+      - alert: RolloutStuck
+        expr: cicd_rollout_stage_duration_seconds > 1800  # 30 minutes
+        for: 5m
+        labels:
+          severity: warning
+          component: rollout-manager
+        annotations:
+          summary: "Rollout stage stuck for too long"
+          description: "Rollout has been stuck in stage for too long"
+      
+      - alert: RolloutFailed
+        expr: cicd_rollout_failed > 0
+        for: 0s
+        labels:
+          severity: critical
+          component: rollout-manager
+        annotations:
+          summary: "Deployment rollout failed"
+          description: "Rollout failed during deployment"
+      
+      # Rollback Controller Alerts
+      - alert: AutomaticRollbackTriggered
+        expr: cicd_automatic_rollback_triggered > 0
+        for: 0s
+        labels:
+          severity: critical
+          component: rollback-controller
+        annotations:
+          summary: "Automatic rollback triggered"
+          description: "Automatic rollback triggered due to performance degradation"
+      
+      - alert: RollbackTimeExceeded
+        expr: cicd_rollback_duration_seconds > 30
+        for: 0s
+        labels:
+          severity: critical
+          component: rollback-controller
+        annotations:
+          summary: "Rollback time exceeded threshold"
+          description: "Rollback exceeded 30s SLA"
+      
+      - alert: RollbackFailed
+        expr: cicd_rollback_failed > 0
+        for: 0s
+        labels:
+          severity: critical
+          component: rollback-controller
+        annotations:
+          summary: "Rollback operation failed"
+          description: "Rollback failed and requires manual intervention"
+      
+      # Prompt Testing Alerts
+      - alert: PromptTestFailureRate
+        expr: rate(cicd_prompt_test_failures_total[5m]) / rate(cicd_prompt_test_total[5m]) > 0.15
+        for: 2m
+        labels:
+          severity: warning
+          component: prompt-test-runner
+        annotations:
+          summary: "High prompt test failure rate"
+          description: "Prompt test failure rate is above 10% threshold"
+      
+      - alert: PromptTestSuiteStuck
+        expr: cicd_prompt_test_suite_duration_seconds > 600  # 10 minutes
+        for: 1m
+        labels:
+          severity: warning
+          component: prompt-test-runner
+        annotations:
+          summary: "Prompt test suite taking too long"
+          description: "Test suite has been running too long"
+      
+      # Resource Utilization Alerts
+      - alert: CICDHighMemoryUsage
+        expr: container_memory_usage_bytes{pod=~"cicd-pipeline-.*"} / container_spec_memory_limit_bytes > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          component: cicd-pipeline
+        annotations:
+          summary: "CI/CD pipeline high memory usage"
+          description: "Memory usage is above 90% of limit"
+      
+      - alert: CICDHighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{pod=~"cicd-pipeline-.*"}[5m]) / container_spec_cpu_quota * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          component: cicd-pipeline
+        annotations:
+          summary: "CI/CD pipeline high CPU usage"
+          description: "CPU usage is above 90% of limit"
+      
+      # Cache Performance Alerts
+      - alert: RedisCacheHighMissRate
+        expr: rate(redis_keyspace_misses_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: redis-cache
+        annotations:
+          summary: "High Redis cache miss rate"
+          description: "Cache miss rate is above 30% threshold"
+      
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          component: redis-cache
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 90% of maximum"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cicd-grafana-dashboard
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-monitoring
+    grafana_dashboard: "1"
+data:
+  cicd-pipeline-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "CI/CD Pipeline Performance",
+        "tags": ["cicd", "performance", "deployment"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Pipeline Execution Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(cicd_pipeline_total[5m])",
+                "legendFormat": "Executions/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Pipeline Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(cicd_pipeline_success_total[5m]) / rate(cicd_pipeline_total[5m])",
+                "legendFormat": "Success Rate"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "min": 0,
+                "max": 1
+              }
+            }
+          },
+          {
+            "id": 3,
+            "title": "Rollback Frequency",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(cicd_rollback_total[1h])",
+                "legendFormat": "Rollbacks/hour"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+          },
+          {
+            "id": 4,
+            "title": "Average Rollback Time",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "avg(cicd_rollback_duration_seconds)",
+                "legendFormat": "Avg Time"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 20},
+                    {"color": "red", "value": 30}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Pipeline Duration Over Time",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, rate(cicd_pipeline_duration_seconds_bucket[5m]))",
+                "legendFormat": "p50"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(cicd_pipeline_duration_seconds_bucket[5m]))",
+                "legendFormat": "p95"
+              },
+              {
+                "expr": "histogram_quantile(0.99, rate(cicd_pipeline_duration_seconds_bucket[5m]))",
+                "legendFormat": "p99"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 6,
+            "title": "Performance Regression Events",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "cicd_performance_regression_detected",
+                "legendFormat": "Regressions Detected"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 7,
+            "title": "Resource Utilization",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"cicd-pipeline-.*\"}[5m])",
+                "legendFormat": "CPU {{ "{{pod}}" }}"
+              },
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"cicd-pipeline-.*\"} / 1024 / 1024",
+                "legendFormat": "Memory {{ "{{pod}}" }} (MB)"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ],
+        "time": {"from": "now-1h", "to": "now"},
+        "refresh": "30s"
+      }
+    }
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cicd-pipeline-metrics
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: cicd-pipeline
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+  - port: metrics
+    path: /metrics/detailed
+    interval: 60s
+    scrapeTimeout: 30s
+
+---
+{{- if .Values.redis.cluster.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-cluster-metrics
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: redis-cluster
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+{{- end }}
+
+---
+# Custom Resource Definition for CI/CD Pipeline Status
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: cicdstatus.pipeline.threads-agent.com
+spec:
+  group: pipeline.threads-agent.com
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              pipelineId:
+                type: string
+              stage:
+                type: string
+              trafficPercentage:
+                type: integer
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    reason:
+                      type: string
+                    message:
+                      type: string
+  scope: Namespaced
+  names:
+    plural: cicdstatus
+    singular: cicdstatus
+    kind: CICDStatus
+{{- end }}

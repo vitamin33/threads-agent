@@ -30,7 +30,7 @@ app = FastAPI(
     title="Variant Performance Dashboard API",
     description="Real-time dashboard for monitoring variant performance",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware for frontend access
@@ -95,8 +95,7 @@ async def handle_early_kill_event(event_data: dict):
     """Handle early kill events from monitoring system."""
     try:
         await event_processor.handle_early_kill_event(
-            event_data["variant_id"],
-            event_data
+            event_data["variant_id"], event_data
         )
         return {"status": "processed"}
     except Exception as e:
@@ -108,8 +107,7 @@ async def handle_performance_update(event_data: dict):
     """Handle performance update events."""
     try:
         await event_processor.handle_performance_update(
-            event_data["variant_id"],
-            event_data
+            event_data["variant_id"], event_data
         )
         return {"status": "processed"}
     except Exception as e:

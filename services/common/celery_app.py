@@ -1,17 +1,15 @@
 """Celery app configuration for viral metrics service."""
+
 import os
 from celery import Celery
+
 
 def get_celery_app():
     """Get configured Celery app instance."""
     broker_url = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
-    
-    app = Celery(
-        "viral_metrics",
-        broker=broker_url,
-        backend="redis://redis:6379/0"
-    )
-    
+
+    app = Celery("viral_metrics", broker=broker_url, backend="redis://redis:6379/0")
+
     app.conf.update(
         task_serializer="json",
         accept_content=["json"],
@@ -19,5 +17,5 @@ def get_celery_app():
         timezone="UTC",
         enable_utc=True,
     )
-    
+
     return app

@@ -1,0 +1,297 @@
+# chart/templates/cicd-sidecar.yaml - Sidecar deployment for CI/CD components
+{{- if .Values.cicdPipeline.sidecar.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cicd-sidecar-config
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: cicd-sidecar
+data:
+  # Shared configuration for sidecar components
+  performance-config.yaml: |
+    regression_detector:
+      significance_level: 0.05
+      minimum_samples: 10
+      baseline_window_days: 7
+      filter_outliers: true
+      statistical_tests:
+        - t_test
+        - mann_whitney
+    
+    rollout_manager:
+      stage_timeout_minutes: 5
+      auto_advance_on_healthy: false
+      stages:
+        - preparation: 0
+        - canary_10: 10
+        - canary_25: 25
+        - canary_50: 50
+        - full_rollout: 100
+    
+    rollback_controller:
+      rollback_threshold_seconds: 15
+      health_check_interval_seconds: 30
+      triggers:
+        - performance_regression
+        - error_rate_spike
+        - health_check_failure
+  
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        upstream cicd_backend {
+            server 127.0.0.1:8085;
+        }
+        
+        # Rate limiting for CI/CD endpoints
+        limit_req_zone $binary_remote_addr zone=cicd_api:10m rate=100r/m;
+        
+        server {
+            listen 8080;
+            
+            # Health check endpoint
+            location /health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+            
+            # CI/CD API endpoints with rate limiting
+            location /api/cicd/ {
+                limit_req zone=cicd_api burst=20 nodelay;
+                proxy_pass http://cicd_backend;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_connect_timeout 5s;
+                proxy_send_timeout 10s;
+                proxy_read_timeout 30s;
+            }
+            
+            # Metrics endpoint
+            location /metrics {
+                proxy_pass http://127.0.0.1:9090;
+                access_log off;
+            }
+        }
+    }
+
+---
+# Patch existing orchestrator deployment to add CI/CD sidecar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator-with-cicd
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: orchestrator-cicd
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: orchestrator-with-cicd
+  template:
+    metadata:
+      labels:
+        app: orchestrator-with-cicd
+        component: orchestrator-cicd
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+        config/checksum: {{ include (print $.Template.BasePath "/cicd-sidecar.yaml") . | sha256sum }}
+    spec:
+      # Shared volume for inter-container communication
+      volumes:
+      - name: shared-cache
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: cicd-config
+        configMap:
+          name: cicd-sidecar-config
+      - name: nginx-cache
+        emptyDir:
+          sizeLimit: 100Mi
+      
+      containers:
+      # Main orchestrator container (existing)
+      - name: orchestrator
+        image: "{{ tpl .Values.image.repository $ }}:{{ tpl .Values.image.tag $ }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        env:
+        - name: RABBITMQ_URL
+          value: {{ .Values.rabbitmq.url }}
+        - name: CELERY_BROKER_URL
+          value: {{ .Values.rabbitmq.url }}
+        - name: THREADS_BASE_URL
+          value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+        - name: POSTGRES_DSN
+          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+        - name: CICD_SIDECAR_ENABLED
+          value: "true"
+        - name: CICD_SIDECAR_URL
+          value: "http://127.0.0.1:8085"
+        envFrom:
+        - secretRef:
+            name: openai-secret
+        
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: metrics
+          containerPort: 9090
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        
+        resources:
+{{- with .Values.orchestrator.resources }}
+{{ toYaml . | nindent 10 }}
+{{- end }}
+        
+        volumeMounts:
+        - name: shared-cache
+          mountPath: /tmp/shared
+      
+      # CI/CD Pipeline Sidecar
+      - name: cicd-sidecar
+        image: "{{ tpl .Values.image.repository $ }}:{{ tpl .Values.image.tag $ }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        
+        env:
+        - name: COMPONENT_MODE
+          value: "cicd_sidecar"
+        - name: POSTGRES_DSN
+          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+        - name: REDIS_URL
+          value: "redis://redis:6379/2"
+        - name: MLFLOW_TRACKING_URI
+          value: {{ .Values.mlflow.trackingUri | default "http://mlflow:5000" }}
+        
+        # Sidecar-specific optimizations
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PERFORMANCE_CACHE_ENABLED
+          value: "true"
+        - name: SHARED_CACHE_PATH
+          value: "/tmp/shared"
+        
+        # CI/CD component configuration
+        - name: PROMPT_TEST_WORKERS
+          value: "4"  # Reduced for sidecar
+        - name: REGRESSION_BATCH_SIZE
+          value: "25"
+        - name: ROLLOUT_FAST_MODE
+          value: "true"
+        
+        envFrom:
+        - secretRef:
+            name: openai-secret
+        
+        ports:
+        - name: cicd-http
+          containerPort: 8085
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 15
+          periodSeconds: 30
+        
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        
+        # Optimized resources for sidecar
+        resources:
+          requests:
+            memory: {{ .Values.cicdPipeline.sidecar.resources.requests.memory | default "256Mi" }}
+            cpu: {{ .Values.cicdPipeline.sidecar.resources.requests.cpu | default "100m" }}
+          limits:
+            memory: {{ .Values.cicdPipeline.sidecar.resources.limits.memory | default "512Mi" }}
+            cpu: {{ .Values.cicdPipeline.sidecar.resources.limits.cpu | default "500m" }}
+        
+        volumeMounts:
+        - name: shared-cache
+          mountPath: /tmp/shared
+        - name: cicd-config
+          mountPath: /etc/cicd
+          readOnly: true
+      
+      # Nginx Reverse Proxy for Load Balancing
+      - name: nginx-proxy
+        image: nginx:1.25-alpine
+        
+        ports:
+        - name: proxy
+          containerPort: 8080
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 15
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+        
+        volumeMounts:
+        - name: cicd-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestrator-with-cicd
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: orchestrator-cicd
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    app: orchestrator-with-cicd
+  ports:
+  - name: http
+    port: {{ .Values.service.port | default 8080 }}
+    targetPort: proxy
+  - name: cicd
+    port: 8085
+    targetPort: cicd-http
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+{{- end }}

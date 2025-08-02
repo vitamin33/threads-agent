@@ -58,14 +58,14 @@ class ViralMetricsCollector:
             "viral_metrics_collection_latency_seconds",
             "Time taken to collect all viral metrics",
         )
-    
+
     @property
     def redis_client(self):
         """Lazy-load Redis client."""
         if self._redis_client is None:
             self._redis_client = get_redis_connection()
         return self._redis_client
-    
+
     @property
     def db(self):
         """Lazy-load database connection."""

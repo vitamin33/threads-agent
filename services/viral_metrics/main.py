@@ -27,25 +27,25 @@ app.add_middleware(
 # Include routers
 app.include_router(viral_metrics_router)
 
+
 # Root endpoint
 @app.get("/")
 async def root():
-    return {
-        "service": "viral-metrics",
-        "version": "1.0.0",
-        "status": "operational"
-    }
+    return {"service": "viral-metrics", "version": "1.0.0", "status": "operational"}
+
 
 # Health check endpoint (for Kubernetes)
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
 
+
 # Readiness check endpoint (for Kubernetes)
 @app.get("/ready")
 async def ready():
     # TODO: Add actual readiness checks (DB connection, etc.)
     return {"status": "ready"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
