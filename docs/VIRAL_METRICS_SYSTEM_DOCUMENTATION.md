@@ -865,6 +865,85 @@ kubectl exec viral-metrics-pod -- ps aux | grep python
 - Implement cleanup: Add explicit object cleanup in batch loops
 - Restart schedule: Add periodic restarts via CronJob
 
+#### 6. Database Migration Index Conflicts
+
+**Symptoms**:
+- Migration failure with "relation already exists" error
+- Specific error: `relation "idx_pattern_usage_persona_pattern" already exists`
+- CI/CD pipeline fails during database migration step
+
+**Diagnosis**:
+```bash
+# Check existing indexes
+kubectl exec postgres-pod -- psql -U postgres -d threads_agent -c "\di pattern_usage*"
+
+# View migration history
+kubectl exec postgres-pod -- psql -U postgres -d threads_agent -c "SELECT * FROM alembic_version;"
+
+# Check migration logs
+kubectl logs -l job-name=migrations
+```
+
+**Root Cause**:
+- Index naming conflict between `pattern_usage` and `pattern_usage_history` tables
+- PostgreSQL requires globally unique index names across the database
+
+**Solutions**:
+- Use table-specific index naming convention: `idx_{table_name}_{columns}`
+- For viral metrics migration, indexes should be:
+  - `idx_pattern_usage_history_persona_pattern` (not `idx_pattern_usage_persona_pattern`)
+  - `idx_pattern_usage_history_pattern_created` (not `idx_pattern_usage_pattern_created`)
+- If migration already failed, clean up and retry:
+  ```bash
+  # Drop the conflicting index if it exists
+  kubectl exec postgres-pod -- psql -U postgres -d threads_agent -c \
+    "DROP INDEX IF EXISTS idx_pattern_usage_persona_pattern;"
+  
+  # Retry migration
+  kubectl delete job migrations
+  helm upgrade threads-agent ./chart
+  ```
+
+#### 7. ServiceMonitor CRD Not Found in CI/CD
+
+**Symptoms**:
+- Helm deployment fails with: `no matches for kind "ServiceMonitor" in version "monitoring.coreos.com/v1"`
+- CI/CD pipeline fails during deployment step
+- Only occurs in environments without Prometheus Operator
+
+**Diagnosis**:
+```bash
+# Check if Prometheus CRDs are installed
+kubectl get crd servicemonitors.monitoring.coreos.com
+
+# Check Helm values for monitoring configuration
+helm get values threads-agent | grep -A 10 monitoring
+```
+
+**Solutions**:
+- Disable monitoring features in CI values:
+  ```yaml
+  # chart/values-ci.yaml
+  mlflow:
+    performanceOptimization:
+      enabled: false
+  
+  cicdPipeline:
+    monitoring:
+      enabled: false
+  ```
+- Ensure proper conditionals in Helm templates:
+  ```yaml
+  {{- if and .Values.cicdPipeline.enabled .Values.cicdPipeline.monitoring.enabled }}
+  # ServiceMonitor resources
+  {{- end }}
+  ```
+- For production environments, install Prometheus Operator first:
+  ```bash
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack
+  ```
+
 ### Performance Debugging
 
 #### Latency Analysis
