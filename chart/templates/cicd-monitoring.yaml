@@ -73,7 +73,7 @@ data:
           component: rollout-manager
         annotations:
           summary: "Deployment rollout failed"
-          description: "Rollout failed in stage {{ $labels.stage }} with reason: {{ $labels.reason }}"
+          description: "Rollout failed during deployment"
       
       # Rollback Controller Alerts
       - alert: AutomaticRollbackTriggered
@@ -84,7 +84,7 @@ data:
           component: rollback-controller
         annotations:
           summary: "Automatic rollback triggered"
-          description: "Automatic rollback triggered due to {{ $labels.trigger }}"
+          description: "Automatic rollback triggered due to performance degradation"
       
       - alert: RollbackTimeExceeded
         expr: cicd_rollback_duration_seconds > 30
@@ -104,7 +104,7 @@ data:
           component: rollback-controller
         annotations:
           summary: "Rollback operation failed"
-          description: "Rollback failed with error: {{ $labels.error }}"
+          description: "Rollback failed and requires manual intervention"
       
       # Prompt Testing Alerts
       - alert: PromptTestFailureRate
