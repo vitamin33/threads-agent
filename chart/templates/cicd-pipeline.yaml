@@ -177,7 +177,7 @@ spec:
     app: cicd-pipeline
   ports:
   - name: http
-    port: 8080
+    port: {{ .Values.cicdPipeline.service.port | default 8080 }}
     targetPort: 8080
   - name: metrics
     port: 9090
