@@ -1,7 +1,7 @@
 """add viral metrics tables
 
 Revision ID: 006_add_viral_metrics
-Revises: 005_add_revenue_tables
+Revises: add_dashboard_tables
 Create Date: 2025-08-01 21:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "006_add_viral_metrics"
-down_revision = "005_add_revenue_tables"
+down_revision = "add_dashboard_tables"
 branch_labels = None
 depends_on = None
 
