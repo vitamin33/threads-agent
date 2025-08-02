@@ -21,7 +21,7 @@ data:
           component: cicd-pipeline
         annotations:
           summary: "CI/CD Pipeline high latency detected"
-          description: "95th percentile latency is {{ $value }}s, above 300s threshold"
+          description: "95th percentile latency is above 300s threshold"
       
       - alert: CICDPipelineFailureRate
         expr: rate(cicd_pipeline_failures_total[5m]) / rate(cicd_pipeline_total[5m]) > 0.1
@@ -31,7 +31,7 @@ data:
           component: cicd-pipeline
         annotations:
           summary: "High CI/CD pipeline failure rate"
-          description: "Failure rate is {{ $value | humanizePercentage }}, above 10% threshold"
+          description: "Failure rate is above 10% threshold"
       
       # Performance Regression Detection Alerts
       - alert: PerformanceRegressionDetected
@@ -42,7 +42,7 @@ data:
           component: performance-regression
         annotations:
           summary: "Performance regression detected in deployment"
-          description: "Significant performance regression detected with p-value {{ $value }}"
+          description: "Significant performance regression detected"
       
       - alert: RegressionDetectorDown
         expr: up{job="cicd-pipeline", instance=~".*:9090"} == 0
@@ -63,7 +63,7 @@ data:
           component: rollout-manager
         annotations:
           summary: "Rollout stage stuck for too long"
-          description: "Rollout has been in stage {{ $labels.stage }} for {{ $value | humanizeDuration }}"
+          description: "Rollout has been stuck in stage for too long"
       
       - alert: RolloutFailed
         expr: cicd_rollout_failed > 0
@@ -94,7 +94,7 @@ data:
           component: rollback-controller
         annotations:
           summary: "Rollback time exceeded threshold"
-          description: "Rollback took {{ $value }}s, exceeding 30s SLA"
+          description: "Rollback exceeded 30s SLA"
       
       - alert: RollbackFailed
         expr: cicd_rollback_failed > 0
@@ -115,7 +115,7 @@ data:
           component: prompt-test-runner
         annotations:
           summary: "High prompt test failure rate"
-          description: "Prompt test failure rate is {{ $value | humanizePercentage }}"
+          description: "Prompt test failure rate is above 10% threshold"
       
       - alert: PromptTestSuiteStuck
         expr: cicd_prompt_test_suite_duration_seconds > 600  # 10 minutes
@@ -125,7 +125,7 @@ data:
           component: prompt-test-runner
         annotations:
           summary: "Prompt test suite taking too long"
-          description: "Test suite {{ $labels.suite }} has been running for {{ $value | humanizeDuration }}"
+          description: "Test suite has been running too long"
       
       # Resource Utilization Alerts
       - alert: CICDHighMemoryUsage
@@ -136,7 +136,7 @@ data:
           component: cicd-pipeline
         annotations:
           summary: "CI/CD pipeline high memory usage"
-          description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+          description: "Memory usage is above 90% of limit"
       
       - alert: CICDHighCPUUsage
         expr: rate(container_cpu_usage_seconds_total{pod=~"cicd-pipeline-.*"}[5m]) / container_spec_cpu_quota * 100 > 90
@@ -146,7 +146,7 @@ data:
           component: cicd-pipeline
         annotations:
           summary: "CI/CD pipeline high CPU usage"
-          description: "CPU usage is {{ $value }}% of limit"
+          description: "CPU usage is above 90% of limit"
       
       # Cache Performance Alerts
       - alert: RedisCacheHighMissRate
@@ -157,7 +157,7 @@ data:
           component: redis-cache
         annotations:
           summary: "High Redis cache miss rate"
-          description: "Cache miss rate is {{ $value | humanizePercentage }}"
+          description: "Cache miss rate is above 30% threshold"
       
       - alert: RedisHighMemoryUsage
         expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
@@ -167,7 +167,7 @@ data:
           component: redis-cache
         annotations:
           summary: "Redis high memory usage"
-          description: "Redis memory usage is {{ $value | humanizePercentage }} of max"
+          description: "Redis memory usage is above 90% of maximum"
 
 ---
 apiVersion: v1

@@ -373,3 +373,33 @@ performanceMonitor:
     type: ClusterIP
     httpPort: 8085
     metricsPort: 9095
+
+# ───────── CI/CD Pipeline (disabled by default) ─────────
+cicdPipeline:
+  enabled: false                   # turn ON in dev/prod values
+  replicas: 2
+  image:
+    repository: cicd-pipeline
+    tag: "local"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 8087
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  monitoring:
+    enabled: false                 # turn ON in dev/prod values
+  redis:
+    enabled: false                 # turn ON for performance optimization
+    host: redis
+    port: 6379
