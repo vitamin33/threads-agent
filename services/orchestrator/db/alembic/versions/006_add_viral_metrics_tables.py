@@ -49,12 +49,12 @@ def upgrade() -> None:
     op.create_index("idx_viral_metrics_collected_at", "viral_metrics", ["collected_at"])
     op.create_index("idx_viral_metrics_persona_id", "viral_metrics", ["persona_id"])
 
-    # Create partial index for recent metrics (performance optimization)
+    # Create composite index for post_id and collected_at (performance optimization)
+    # Note: Cannot use NOW() in partial indexes as it's not immutable
     op.create_index(
-        "idx_viral_metrics_recent",
+        "idx_viral_metrics_post_collected",
         "viral_metrics",
         ["post_id", "collected_at"],
-        postgresql_where=sa.text("collected_at >= NOW() - INTERVAL '7 days'"),
     )
 
     # Create viral_metrics_history table for time series analysis
@@ -173,7 +173,7 @@ def downgrade() -> None:
         "idx_viral_metrics_history_post_metric", table_name="viral_metrics_history"
     )
 
-    op.drop_index("idx_viral_metrics_recent", table_name="viral_metrics")
+    op.drop_index("idx_viral_metrics_post_collected", table_name="viral_metrics")
     op.drop_index("idx_viral_metrics_persona_id", table_name="viral_metrics")
     op.drop_index("idx_viral_metrics_collected_at", table_name="viral_metrics")
     op.drop_index("idx_viral_metrics_post_id", table_name="viral_metrics")
