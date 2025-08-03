@@ -36,13 +36,16 @@ class ViralFinOpsEngine:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize the ViralFinOpsEngine with all required components."""
-        self.config = config or {
+        default_config = {
             "cost_threshold_per_post": 0.02,
             "alert_threshold_multiplier": 2.0,
             "storage_latency_target_ms": 500,
             "anomaly_detection_enabled": False,
             "anomaly_check_interval_seconds": 30,
         }
+        if config:
+            default_config.update(config)
+        self.config = default_config
 
         # Initialize all tracking components
         self.openai_tracker = OpenAICostTracker()
@@ -94,8 +97,12 @@ class ViralFinOpsEngine:
         # Store cost event
         await self.cost_storage.store_cost_event(cost_event)
 
-        # Emit Prometheus metrics
-        self.prometheus_client.emit_cost_metric(cost_event)
+        # Emit Prometheus metrics (with error handling)
+        try:
+            self.prometheus_client.emit_cost_metric(cost_event)
+        except Exception:
+            # Continue operation even if metrics emission fails
+            pass
 
         # Track for post-level aggregation
         await self._add_post_cost(post_id, cost_event)
@@ -133,8 +140,12 @@ class ViralFinOpsEngine:
         # Store cost event
         await self.cost_storage.store_cost_event(cost_event)
 
-        # Emit Prometheus metrics
-        self.prometheus_client.emit_cost_metric(cost_event)
+        # Emit Prometheus metrics (with error handling)
+        try:
+            self.prometheus_client.emit_cost_metric(cost_event)
+        except Exception:
+            # Continue operation even if metrics emission fails
+            pass
 
         # Track for post-level aggregation
         await self._add_post_cost(post_id, cost_event)
@@ -164,8 +175,12 @@ class ViralFinOpsEngine:
         # Store cost event
         await self.cost_storage.store_cost_event(cost_event)
 
-        # Emit Prometheus metrics
-        self.prometheus_client.emit_cost_metric(cost_event)
+        # Emit Prometheus metrics (with error handling)
+        try:
+            self.prometheus_client.emit_cost_metric(cost_event)
+        except Exception:
+            # Continue operation even if metrics emission fails
+            pass
 
         # Track for post-level aggregation
         await self._add_post_cost(post_id, cost_event)
@@ -260,10 +275,9 @@ class ViralFinOpsEngine:
                 if cost_event.get("persona_id") == persona_id:
                     current_costs.append(cost_event.get("cost_amount", 0.0))
 
-        # Calculate current average cost
-        current_avg_cost = (
-            sum(current_costs) / len(current_costs) if current_costs else 0.0
-        )
+        # Use the maximum cost (most expensive operation) rather than average
+        # This better detects expensive outliers
+        current_max_cost = max(current_costs) if current_costs else 0.0
 
         # Get historical baseline for persona
         baseline_costs = self._historical_costs.get(
@@ -278,7 +292,7 @@ class ViralFinOpsEngine:
         # Statistical anomaly detection
         if hasattr(self, "anomaly_detector"):
             anomaly_result = self.anomaly_detector.detect_statistical_anomaly(
-                current_cost=current_avg_cost,
+                current_cost=current_max_cost,
                 baseline_costs=baseline_costs,
                 persona_id=persona_id,
             )

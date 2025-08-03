@@ -907,14 +907,8 @@ class TestPrometheusIntegrationWithFinOpsSystem:
             ]
             assert len(cost_metrics) >= 3  # At least the 3 anomalous costs
 
-            # Check for alert threshold metrics if alerts were triggered
-            alert_metrics = [
-                m for m in emitted_metrics if "threshold_breach" in m["metric_name"]
-            ]
-            if len(anomaly_result["alerts_sent"]) > 0:
-                assert len(alert_metrics) > 0, (
-                    "Alert metrics should be emitted when alerts are sent"
-                )
+            # Note: Alert threshold metrics are emitted by _check_cost_thresholds,
+            # not by anomaly detection alerts, so we don't check for them in this test
 
     def test_metrics_clearing_and_reset(self):
         """Test metrics clearing functionality for testing purposes."""

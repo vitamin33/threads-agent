@@ -95,6 +95,10 @@ class PostCostAttributor:
         Returns:
             Dict containing event tracking information
         """
+        # Validate cost amount
+        if cost_amount < 0:
+            raise ValueError(f"Cost amount cannot be negative: {cost_amount}")
+
         # Create cost event
         timestamp = datetime.now(timezone.utc).isoformat()
         cost_event = {

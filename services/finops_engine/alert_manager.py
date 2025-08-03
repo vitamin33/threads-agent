@@ -20,7 +20,7 @@ class AlertManager:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize alert manager with channel configurations."""
-        self.config = config or {
+        default_config = {
             "channels": {
                 "slack": {
                     "webhook_url": "https://hooks.slack.com/test",
@@ -42,8 +42,92 @@ class AlertManager:
             },
         }
 
+        if config:
+            # Deep merge config to preserve defaults for missing keys
+            self.config = self._merge_configs(default_config, config)
+        else:
+            self.config = default_config
+
+        # Rate limiting state
+        self.alert_history = []
+        self.rate_limit_config = self.config.get("rate_limiting", {})
+        self.deduplication_cache = {}
+
+    def _merge_configs(
+        self, default: Dict[str, Any], override: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Deep merge configuration dictionaries."""
+        result = default.copy()
+
+        for key, value in override.items():
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
+                result[key] = self._merge_configs(result[key], value)
+            else:
+                result[key] = value
+
+        return result
+
+    def _is_rate_limited(self, anomaly_data: Dict[str, Any]) -> bool:
+        """Check if alert should be rate limited."""
+        if not self.rate_limit_config:
+            return False
+
+        max_alerts_per_minute = self.rate_limit_config.get("max_alerts_per_minute", 10)
+        current_time = datetime.now(timezone.utc)
+
+        # Clean old entries (older than 1 minute)
+        cutoff_time = current_time.timestamp() - 60
+        self.alert_history = [t for t in self.alert_history if t > cutoff_time]
+
+        # Check if we're over the limit
+        if len(self.alert_history) >= max_alerts_per_minute:
+            return True
+
+        # Add current alert to history
+        self.alert_history.append(current_time.timestamp())
+        return False
+
+    def _is_duplicate(self, anomaly_data: Dict[str, Any]) -> bool:
+        """Check if this is a duplicate alert."""
+        if not self.rate_limit_config:
+            return False
+
+        # Create a key for deduplication
+        dedup_key = f"{anomaly_data.get('persona_id', '')}-{anomaly_data.get('anomaly_type', '')}"
+        current_time = datetime.now(timezone.utc)
+
+        # Check if we've seen this recently (last 5 minutes)
+        if dedup_key in self.deduplication_cache:
+            last_time = self.deduplication_cache[dedup_key]
+            if (current_time - last_time).total_seconds() < 300:  # 5 minutes
+                return True
+
+        # Update cache
+        self.deduplication_cache[dedup_key] = current_time
+        return False
+
     async def send_alert(self, anomaly_data: Dict[str, Any]) -> Dict[str, Any]:
         """Send alert through appropriate channels based on severity."""
+        # Check rate limiting
+        if self._is_rate_limited(anomaly_data):
+            return {
+                "rate_limited": True,
+                "message": "Alert blocked due to rate limiting",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+        # Check for duplicates
+        if self._is_duplicate(anomaly_data):
+            return {
+                "duplicate": True,
+                "message": "Duplicate alert suppressed",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
         severity = anomaly_data.get("severity", "medium")
         channels_to_notify = self.config.get("severity_routing", {}).get(
             severity, ["slack"]
@@ -129,9 +213,17 @@ class AlertManager:
             message += f"Multiplier: {multiplier:.2f}x baseline"
         elif anomaly_type == "efficiency_drop":
             efficiency_drop_percent = anomaly_data.get("efficiency_drop_percent", 0)
-            message += f"Efficiency drop: {efficiency_drop_percent}%"
+            message += f"Performance efficiency drop: {efficiency_drop_percent}%"
         elif anomaly_type == "negative_roi":
             roi_percent = anomaly_data.get("roi_percent", 0)
             message += f"ROI: {roi_percent}%"
+        elif anomaly_type == "budget_overrun":
+            current_spend = anomaly_data.get("current_spend", 0)
+            budget_limit = anomaly_data.get("budget_limit", 0)
+            budget_usage_percent = anomaly_data.get("budget_usage_percent", 0)
+            message += f"Budget overrun: {budget_usage_percent:.0f}%\n"
+            message += (
+                f"Current spend: ${current_spend:.0f}, Limit: ${budget_limit:.0f}"
+            )
 
         return message

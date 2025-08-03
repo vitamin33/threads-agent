@@ -12,7 +12,7 @@ Target: Automatic cost control when anomalies are detected.
 
 import asyncio
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class CircuitBreaker:
@@ -99,7 +99,7 @@ class CircuitBreaker:
             "action": "throttle_requests",
             "new_rate_limit": new_rate_limit,
             "previous_rate_limit": 100,  # Assume previous was 100 req/min
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     async def switch_to_cheaper_models(
@@ -119,7 +119,7 @@ class CircuitBreaker:
             "executed": True,
             "action": "switch_to_cheaper_models",
             "model_mappings": model_mappings,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     async def pause_persona(self, anomaly_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -133,7 +133,7 @@ class CircuitBreaker:
             "action": "pause_persona",
             "persona_id": persona_id,
             "pause_duration_minutes": 60,  # Pause for 1 hour
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     async def alert_human_operator(
@@ -147,5 +147,5 @@ class CircuitBreaker:
             "action": "alert_human_operator",
             "alert_sent": True,
             "channels": ["slack", "email"],
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
