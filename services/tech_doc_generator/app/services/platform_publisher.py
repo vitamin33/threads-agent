@@ -1,5 +1,6 @@
 import httpx
 import json
+import time
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import structlog
@@ -18,8 +19,7 @@ class PlatformPublisher:
         # Configure async client with connection pooling and timeouts
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(30.0, connect=10.0, read=30.0, write=10.0),
-            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
-            retries=3
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
         )
     
     async def publish_to_platform(
@@ -95,9 +95,23 @@ class PlatformPublisher:
             return {"success": False, "error": str(e)}
     
     async def _publish_to_linkedin(self, content: ArticleContent, custom_content: Optional[str] = None) -> Dict[str, Any]:
-        """Publish to LinkedIn"""
-        if not self.settings.linkedin_access_token:
-            raise ValueError("LinkedIn access token not configured")
+        """Generate LinkedIn post for manual publishing due to API restrictions"""
+        # LinkedIn API doesn't allow automated posting for individual developers
+        # Using manual workflow instead
+        from app.services.manual_publisher import ManualPublishingTracker, LinkedInManualWorkflow
+        
+        # Format content for LinkedIn
+        formatted_content = LinkedInManualWorkflow.format_for_copy_paste(content)
+        
+        # Create draft for tracking
+        tracker = ManualPublishingTracker(db=None)  # Pass DB session in production
+        draft_result = await tracker.create_draft(
+            platform=Platform.LINKEDIN,
+            content=content,
+            formatted_content=formatted_content
+        )
+        
+        return draft_result
         
         # Format content for LinkedIn (shorter post format)
         post_text = custom_content or self._format_for_linkedin(content)
