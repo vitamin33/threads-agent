@@ -18,6 +18,12 @@ viralEngine:
     repository: viral-engine
     tag: local
 
+viralPatternEngine:
+  enabled: true
+  image:
+    repository: viral-pattern-engine
+    tag: local
+
 personaRuntime:
   image:
     repository: persona-runtime

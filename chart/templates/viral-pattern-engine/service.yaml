@@ -1,0 +1,14 @@
+# File: chart/templates/viral-pattern-engine/service.yaml
+{{- if .Values.viralPatternEngine.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: viral-pattern-engine
+spec:
+  selector:
+    app: viral-pattern-engine
+  ports:
+    - port: 8095
+      targetPort: 8095
+      protocol: TCP
+{{- end }}

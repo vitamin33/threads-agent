@@ -6,7 +6,7 @@ Monitors and extracts viral content from high-performing Threads accounts.
 Minimal implementation to pass initial tests.
 """
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException
 from typing import Dict, Optional, Any
 from pydantic import BaseModel
 import uuid
@@ -41,20 +41,20 @@ async def scrape_account(
     # Check rate limit
     if not rate_limiter.check_rate_limit(account_id):
         retry_after = rate_limiter.get_retry_after(account_id)
-        
+
         # Create HTTPException with proper rate limiting headers
         detail = {
             "error": "Rate limit exceeded for this account",
             "retry_after": retry_after,
         }
-        
+
         exception = HTTPException(status_code=429, detail=detail)
         # Add rate limiting headers
         exception.headers = {
             "X-RateLimit-Limit": str(rate_limiter.requests_per_window),
             "X-RateLimit-Remaining": "0",
             "X-RateLimit-Reset": str(retry_after),
-            "Retry-After": str(retry_after)
+            "Retry-After": str(retry_after),
         }
         raise exception
 

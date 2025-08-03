@@ -100,6 +100,7 @@ images:
 	docker build -t persona-runtime:local services/persona_runtime &
 	docker build -t fake-threads:local services/fake_threads &
 	docker build -t viral-engine:local services/viral_engine &
+	docker build -t viral-pattern-engine:local services/viral_pattern_engine &
 	docker build -t achievement-collector:local -f services/achievement_collector/Dockerfile . &
 	
 	# Wait for all builds to complete
@@ -107,7 +108,7 @@ images:
 	
 	# Import to k3d registry
 	echo "📦 Importing images to k3d..."
-	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local achievement-collector:local -c threads-agent
+	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local viral-pattern-engine:local achievement-collector:local -c threads-agent
 	
 	echo "✅ All images built and imported"
 

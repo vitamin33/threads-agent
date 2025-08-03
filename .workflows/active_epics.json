@@ -66,14 +66,52 @@
         "Comprehensive documentation and performance reports",
         "Integration with existing monitoring infrastructure"
       ]
+    },
+    {
+      "id": "epic-281-viral-pattern-extraction-engine",
+      "title": "Viral Pattern Extraction Engine",
+      "status": "planned",
+      "priority": "high",
+      "business_value": 90,
+      "complexity_score": 85,
+      "estimated_hours": 180,
+      "created_date": "2025-08-03",
+      "target_completion": "2025-10-05",
+      "features_count": 8,
+      "tasks_total": 72,
+      "integration_services": [
+        "viral_scraper",
+        "viral_pattern_engine",
+        "persona_runtime",
+        "orchestrator",
+        "celery_worker",
+        "viral_engine"
+      ],
+      "kpis": {
+        "posts_engagement_rate": "8%",
+        "pattern_detection_accuracy": "90%",
+        "content_generation_improvement": "25% higher engagement",
+        "pattern_extraction_latency": "<500ms",
+        "pattern_library_coverage": "50+ validated patterns"
+      },
+      "success_criteria": [
+        "ML pattern analysis pipeline operational with 90% accuracy",
+        "Hook pattern extraction identifies and classifies viral hooks",
+        "Emotion trajectory analysis tracks content emotional arcs",
+        "A/B testing framework validates pattern effectiveness",
+        "Real-time pattern recommendation API serves persona_runtime",
+        "Content engagement improvement of 25% demonstrated",
+        "Integration with existing viral content generation pipeline",
+        "50+ validated patterns in production pattern library"
+      ]
     }
   ],
   "epic_statistics": {
-    "total_active_epics": 2,
-    "total_estimated_hours": 280,
+    "total_active_epics": 3,
+    "total_estimated_hours": 460,
     "average_business_value": 90,
-    "average_complexity": 77.5,
-    "completion_rate": "50%"
+    "average_complexity": 79.3,
+    "completion_rate": "33.3%"
   },
   "last_updated": "2025-08-03T12:00:00Z"
 }
