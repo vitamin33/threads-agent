@@ -1,0 +1,114 @@
+{{- if .Values.finopsEngine.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finops-engine
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.finopsEngine.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: finops-engine
+  template:
+    metadata:
+      labels:
+        app: finops-engine
+    spec:
+      containers:
+      - name: finops-engine
+        image: "{{ .Values.finopsEngine.image.repository }}:{{ .Values.finopsEngine.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.finopsEngine.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.finopsEngine.service.port | default 8095 }}
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgresql:5432/threads"
+        - name: PYTHONPATH
+          value: "/app"
+        - name: RABBITMQ_URL
+          value: "amqp://user:pass@rabbitmq:5672/%2f"
+        - name: QDRANT_URL
+          value: "http://qdrant:6333"
+        {{- if .Values.finopsEngine.env }}
+        {{- toYaml .Values.finopsEngine.env | nindent 8 }}
+        {{- end }}
+        # Alert channel webhooks from secrets
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: finops-secrets
+              key: slack-webhook-url
+              optional: true
+        - name: DISCORD_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: finops-secrets
+              key: discord-webhook-url
+              optional: true
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: finops-secrets
+              key: telegram-bot-token
+              optional: true
+        - name: TELEGRAM_CHAT_ID
+          valueFrom:
+            secretKeyRef:
+              name: finops-secrets
+              key: telegram-chat-id
+              optional: true
+        - name: CUSTOM_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: finops-secrets
+              key: custom-webhook-url
+              optional: true
+        resources:
+          {{- toYaml .Values.finopsEngine.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finops-engine
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.finopsEngine.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ .Values.finopsEngine.service.port | default 8095 }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: finops-engine
+---
+# Secret for alert webhooks
+apiVersion: v1
+kind: Secret
+metadata:
+  name: finops-secrets
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  slack-webhook-url: {{ .Values.finopsEngine.alertWebhooks.slack | default "" | quote }}
+  discord-webhook-url: {{ .Values.finopsEngine.alertWebhooks.discord | default "" | quote }}
+  telegram-bot-token: {{ .Values.finopsEngine.alertWebhooks.telegramBotToken | default "" | quote }}
+  telegram-chat-id: {{ .Values.finopsEngine.alertWebhooks.telegramChatId | default "" | quote }}
+  custom-webhook-url: {{ .Values.finopsEngine.alertWebhooks.customWebhook | default "" | quote }}
+{{- end }}

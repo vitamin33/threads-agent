@@ -69,7 +69,7 @@ def test_rate_limiting_reset_after_time():
     time.sleep(0.1)  # Wait 100ms
 
     # Third request after waiting should succeed (assuming 100ms window for testing)
-    response3 = client.post(f"/scrape/account/{account_id}")
+    # response3 = client.post(f"/scrape/account/{account_id}")
     # This might still be 429 depending on implementation, that's OK for now
 
 
