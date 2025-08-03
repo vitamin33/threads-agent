@@ -6,8 +6,10 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.models.article import ArticleContent
-from app.services.manual_publisher import ManualPublishingTracker, LinkedInManualWorkflow
+from app.services.manual_publisher import (
+    ManualPublishingTracker,
+    LinkedInManualWorkflow,
+)
 from app.models.article import Platform
 
 router = APIRouter(prefix="/manual-publish", tags=["manual-publishing"])
@@ -15,6 +17,7 @@ router = APIRouter(prefix="/manual-publish", tags=["manual-publishing"])
 
 class ConfirmPostRequest(BaseModel):
     """Request model for confirming manual post"""
+
     draft_id: str
     post_url: Optional[str] = None
     notes: Optional[str] = None
@@ -22,6 +25,7 @@ class ConfirmPostRequest(BaseModel):
 
 class AnalyticsUploadRequest(BaseModel):
     """Request model for uploading analytics"""
+
     draft_id: str
     metrics: Dict[str, Any]
     captured_date: Optional[str] = None
@@ -37,24 +41,21 @@ async def get_linkedin_template():
             "Keep paragraphs short (2-3 lines)",
             "Start with a compelling hook",
             "End with a question to encourage engagement",
-            "Post Tuesday-Thursday, 8-10 AM or 5-6 PM (your timezone)"
-        ]
+            "Post Tuesday-Thursday, 8-10 AM or 5-6 PM (your timezone)",
+        ],
     }
 
 
 @router.post("/confirm/{draft_id}")
 async def confirm_manual_post(
-    draft_id: str,
-    request: ConfirmPostRequest,
-    db: Session = Depends(get_db)
+    draft_id: str, request: ConfirmPostRequest, db: Session = Depends(get_db)
 ):
     """Confirm that content was manually posted"""
     tracker = ManualPublishingTracker(db)
-    
+
     try:
         result = await tracker.confirm_manual_post(
-            draft_id=draft_id,
-            post_url=request.post_url
+            draft_id=draft_id, post_url=request.post_url
         )
         return result
     except Exception as e:
@@ -63,17 +64,14 @@ async def confirm_manual_post(
 
 @router.post("/analytics/{draft_id}")
 async def upload_analytics(
-    draft_id: str,
-    request: AnalyticsUploadRequest,
-    db: Session = Depends(get_db)
+    draft_id: str, request: AnalyticsUploadRequest, db: Session = Depends(get_db)
 ):
     """Upload manual analytics for a post"""
     tracker = ManualPublishingTracker(db)
-    
+
     try:
         result = await tracker.upload_analytics(
-            draft_id=draft_id,
-            analytics_data=request.metrics
+            draft_id=draft_id, analytics_data=request.metrics
         )
         return result
     except Exception as e:
@@ -82,16 +80,14 @@ async def upload_analytics(
 
 @router.post("/analytics/{draft_id}/screenshot")
 async def upload_analytics_screenshot(
-    draft_id: str,
-    screenshot: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    draft_id: str, screenshot: UploadFile = File(...), db: Session = Depends(get_db)
 ):
     """Upload analytics screenshot for verification"""
-    
+
     # Validate file type
     if not screenshot.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
-    
+
     # In production, save to S3 or similar
     # For now, just acknowledge receipt
     return {
@@ -99,7 +95,7 @@ async def upload_analytics_screenshot(
         "message": "Screenshot received",
         "draft_id": draft_id,
         "filename": screenshot.filename,
-        "size": screenshot.size
+        "size": screenshot.size,
     }
 
 
@@ -107,10 +103,10 @@ async def upload_analytics_screenshot(
 async def list_drafts(
     platform: Optional[Platform] = None,
     status: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """List all drafts with optional filtering"""
-    
+
     # In production, query from database
     # For now, return example
     return {
@@ -120,24 +116,18 @@ async def list_drafts(
                 "platform": "linkedin",
                 "status": "pending_manual_post",
                 "created_at": "2024-01-15T10:00:00Z",
-                "title": "How I Built an AI System That Measures Developer Impact"
+                "title": "How I Built an AI System That Measures Developer Impact",
             }
         ],
         "total": 1,
-        "filters": {
-            "platform": platform.value if platform else None,
-            "status": status
-        }
+        "filters": {"platform": platform.value if platform else None, "status": status},
     }
 
 
 @router.get("/drafts/{draft_id}")
-async def get_draft_details(
-    draft_id: str,
-    db: Session = Depends(get_db)
-):
+async def get_draft_details(draft_id: str, db: Session = Depends(get_db)):
     """Get detailed information about a specific draft"""
-    
+
     # In production, retrieve from database
     # For now, return example
     return {
@@ -147,16 +137,20 @@ async def get_draft_details(
         "created_at": "2024-01-15T10:00:00Z",
         "content": LinkedInManualWorkflow.format_for_copy_paste(
             # This would be the actual content from DB
-            type('obj', (object,), {
-                'title': 'Example Post',
-                'content': 'Example content...',
-                'insights': ['Insight 1', 'Insight 2'],
-                'tags': ['python', 'ai']
-            })()
+            type(
+                "obj",
+                (object,),
+                {
+                    "title": "Example Post",
+                    "content": "Example content...",
+                    "insights": ["Insight 1", "Insight 2"],
+                    "tags": ["python", "ai"],
+                },
+            )()
         ),
         "instructions": [
             "Copy the content above",
             "Post to LinkedIn",
-            "Return here to confirm posting"
-        ]
+            "Return here to confirm posting",
+        ],
     }
