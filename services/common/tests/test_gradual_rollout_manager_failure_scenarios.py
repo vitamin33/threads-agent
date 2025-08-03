@@ -300,7 +300,6 @@ class TestGradualRolloutManagerConcurrencyAndRaceConditions:
         manager.start_rollout("model_v2.0")
 
         # Simulate high load with many status checks and operations
-        operations_count = 100
         results = []
 
         def mixed_operations_worker(worker_id):
@@ -606,7 +605,7 @@ class TestGradualRolloutManagerResourceExhaustion:
             for _ in range(3):  # Advance 3 stages
                 try:
                     manager.advance_stage(large_historical_data, current_data)
-                except:
+                except Exception:
                     pass  # Ignore errors for memory test
 
             # Measure memory

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 # These imports should fail initially, then succeed after implementation
 try:
-    from services.common.rollback_controller import (
+    from services.common.rollback_controller import (  # noqa: F401
         RollbackController,
         RollbackTrigger,
         RollbackError,
@@ -49,12 +49,12 @@ class TestRollbackControllerBasics:
 
         # Should raise RollbackError when performance detector is None
         with pytest.raises(RollbackError) as exc_info:
-            controller = RollbackController(None, Mock())
+            RollbackController(None, Mock())
         assert "Performance detector cannot be None" in str(exc_info.value)
 
         # Should raise RollbackError when model registry is None
         with pytest.raises(RollbackError) as exc_info:
-            controller = RollbackController(Mock(), None)
+            RollbackController(Mock(), None)
         assert "Model registry cannot be None" in str(exc_info.value)
 
     def test_rollback_controller_initialization_success(self):
@@ -70,7 +70,7 @@ class TestRollbackControllerBasics:
         controller = RollbackController(mock_detector, mock_registry)
         assert controller.performance_detector == mock_detector
         assert controller.model_registry == mock_registry
-        assert controller.is_monitoring == False
+        assert not controller.is_monitoring
         assert controller.rollback_threshold_seconds == 30.0
 
     def test_rollback_triggers_enumeration(self):
@@ -122,8 +122,8 @@ class TestAutomaticRollbackTriggers:
 
         result = controller.start_monitoring("model_v2.0", "model_v1.9")
 
-        assert result.success == True
-        assert controller.is_monitoring == True
+        assert result.success
+        assert controller.is_monitoring
         assert controller.current_model == "model_v2.0"
         assert controller.fallback_model == "model_v1.9"
 
@@ -154,8 +154,8 @@ class TestAutomaticRollbackTriggers:
             health = controller.check_health(historical_data, current_data)
 
             assert isinstance(health, HealthCheck)
-            assert health.is_healthy == False
-            assert health.triggers_rollback == True
+            assert not health.is_healthy
+            assert health.triggers_rollback
             assert RollbackTrigger.PERFORMANCE_REGRESSION in health.detected_issues
 
     def test_automatic_rollback_on_performance_regression(self):
@@ -187,7 +187,7 @@ class TestAutomaticRollbackTriggers:
             )
 
             assert rollback_result is not None
-            assert rollback_result.success == True
+            assert rollback_result.success
             assert rollback_result.trigger == RollbackTrigger.PERFORMANCE_REGRESSION
             assert rollback_result.from_model == "model_v2.0"
             assert rollback_result.to_model == "model_v1.9"
@@ -212,7 +212,7 @@ class TestManualRollbackControl:
 
             result = controller.execute_manual_rollback("Performance issues reported")
 
-            assert result.success == True
+            assert result.success
             assert result.trigger == RollbackTrigger.MANUAL
             assert result.reason == "Performance issues reported"
             assert result.from_model == "model_v2.0"
@@ -271,7 +271,7 @@ class TestRollbackHistoryTracking:
             assert event.trigger == RollbackTrigger.MANUAL
             assert event.from_model == "model_v2.0"
             assert event.to_model == "model_v1.9"
-            assert event.success == True
+            assert event.success
 
     def test_rollback_status_provides_current_state(self):
         """
@@ -288,7 +288,7 @@ class TestRollbackHistoryTracking:
             status = controller.get_rollback_status()
 
             assert isinstance(status, RollbackStatus)
-            assert status.is_monitoring == True
+            assert status.is_monitoring
             assert status.current_model == "model_v2.0"
             assert status.fallback_model == "model_v1.9"
             assert isinstance(status.monitoring_start_time, datetime)
@@ -337,7 +337,7 @@ class TestRollbackEdgeCases:
 
             result = controller.execute_manual_rollback("Test rollback")
 
-            assert result.success == False
+            assert not result.success
             assert "Registry error" in result.error_message
 
     def test_cannot_rollback_without_active_monitoring(self):
@@ -354,7 +354,7 @@ class TestRollbackEdgeCases:
             # Try to rollback without starting monitoring
             result = controller.execute_manual_rollback("Test rollback")
 
-            assert result.success == False
+            assert not result.success
             assert "not monitoring" in result.error_message.lower()
 
     def test_health_check_handles_missing_data(self):
@@ -373,8 +373,8 @@ class TestRollbackEdgeCases:
             health = controller.check_health([], [])
 
             assert isinstance(health, HealthCheck)
-            assert health.is_healthy == False  # Conservative approach
-            assert health.has_sufficient_data == False
+            assert not health.is_healthy  # Conservative approach
+            assert not health.has_sufficient_data
 
 
 if __name__ == "__main__":

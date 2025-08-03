@@ -465,7 +465,7 @@ class TestComprehensiveCICDPipelineIntegration:
         """Test high-frequency monitoring scenario simulating production load."""
         components = production_pipeline_components
         rollback_controller = components["rollback_controller"]
-        regression_detector = components["regression_detector"]
+        components["regression_detector"]
 
         print("\\n=== High-Frequency Production Monitoring ===")
 
@@ -641,7 +641,6 @@ class TestComprehensiveCICDPipelineIntegration:
         self, production_pipeline_components
     ):
         """Test pipeline coordination across multiple environments (dev, staging, prod)."""
-        components = production_pipeline_components
 
         print("\\n=== Multi-Environment Pipeline Coordination ===")
 
@@ -709,7 +708,7 @@ class TestComprehensiveCICDPipelineIntegration:
             rollout_result = components_env["rollout_manager"].start_rollout(
                 f"model_v2.1.0_{env}"
             )
-            rollback_monitor = components_env["rollback_controller"].start_monitoring(
+            components_env["rollback_controller"].start_monitoring(
                 f"model_v2.1.0_{env}", f"model_v2.0.5_{env}"
             )
 
@@ -718,13 +717,10 @@ class TestComprehensiveCICDPipelineIntegration:
                 # Different performance characteristics per environment
                 if env_name == "development":
                     base_accuracy = 0.80  # Lower accuracy in dev
-                    base_latency = 200  # Higher latency in dev
                 elif env_name == "staging":
                     base_accuracy = 0.85  # Medium accuracy in staging
-                    base_latency = 150  # Medium latency in staging
                 else:  # production
                     base_accuracy = 0.90  # High accuracy in prod
-                    base_latency = 100  # Low latency in prod
 
                 historical = [
                     PerformanceData(
@@ -804,7 +800,6 @@ class TestComprehensiveCICDPipelineIntegration:
         self, production_pipeline_components
     ):
         """Test pipeline performance when handling multiple concurrent deployments."""
-        components = production_pipeline_components
 
         print("\\n=== Concurrent Deployments Performance Test ===")
 
@@ -969,7 +964,6 @@ class TestCICDPipelinePerformanceRequirements:
         MAX_PIPELINE_DURATION = 180  # 3 minutes max for complete pipeline
         MAX_TEST_PHASE_DURATION = 30  # 30 seconds for testing phase
         MAX_ROLLOUT_PHASE_DURATION = 120  # 2 minutes for rollout phase
-        MAX_ROLLBACK_DURATION = 30  # 30 seconds for rollback if needed
 
         pipeline_start = time.time()
 
@@ -998,7 +992,7 @@ class TestCICDPipelinePerformanceRequirements:
         )
 
         components["test_runner"].test_suite = test_suite
-        test_results = components["test_runner"].run_test_suite()
+        components["test_runner"].run_test_suite()
 
         phase_times["testing"] = time.time() - test_start
 
@@ -1069,13 +1063,11 @@ class TestCICDPipelinePerformanceRequirements:
         components = production_pipeline_components
 
         # Throughput requirements
-        MIN_DEPLOYMENTS_PER_HOUR = 10
         MIN_TESTS_PER_MINUTE = 100
         MIN_HEALTH_CHECKS_PER_MINUTE = 60
 
         # Test throughput
         test_start = time.time()
-        tests_completed = 0
 
         test_suite = TestSuite(
             name="Throughput Test",

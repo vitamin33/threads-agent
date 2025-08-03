@@ -45,7 +45,7 @@ class TestRegressionBasedRolloutControl:
         # Try to advance stage with regression data - should fail
         result = manager.advance_stage(historical_data, current_data)
 
-        assert result.success == False
+        assert not result.success
         assert "regression detected" in result.error_message.lower()
         assert manager.current_stage == RolloutStage.CANARY_10  # Should not advance
         assert result.health_metrics is not None
@@ -71,7 +71,7 @@ class TestRegressionBasedRolloutControl:
         # Should be able to advance with healthy metrics
         result = manager.advance_stage(historical_data, current_data)
 
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.CANARY_25
         assert result.error_message is None
 
@@ -93,7 +93,7 @@ class TestRegressionBasedRolloutControl:
         # Advance without providing data - should succeed (skip health check)
         result = manager.advance_stage()
 
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.CANARY_25
         # Detector should not be called without data
         detector.detect_regression.assert_not_called()
@@ -126,8 +126,8 @@ class TestRegressionBasedRolloutControl:
         )
 
         # Verify health result
-        assert health.is_healthy == True
-        assert health.regression_detected == False
+        assert health.is_healthy
+        assert not health.regression_detected
         assert "p_value" in health.metrics_summary
         assert health.metrics_summary["p_value"] == 0.7
 
@@ -154,8 +154,8 @@ class TestRolloutStatusAndReporting:
         assert status.traffic_percentage == 10
         assert status.model_version == "model_v2.0"
         assert status.start_time == start_time
-        assert status.is_active == True
-        assert status.is_timed_out == False
+        assert status.is_active
+        assert not status.is_timed_out
 
     def test_rollout_timeout_detection(self):
         """
@@ -175,7 +175,7 @@ class TestRolloutStatusAndReporting:
             mock_datetime.now.return_value = timeout_time
 
             status = manager.get_rollout_status()
-            assert status.is_timed_out == True
+            assert status.is_timed_out
 
     def test_rollout_result_contains_comprehensive_information(self):
         """
@@ -201,7 +201,7 @@ class TestRolloutStatusAndReporting:
             assert hasattr(result, attr), f"RolloutResult missing attribute: {attr}"
 
         # Verify content
-        assert result.success == True
+        assert result.success
         assert result.stage == RolloutStage.CANARY_10
         assert result.traffic_percentage == 10
         assert result.error_message is None
@@ -221,11 +221,11 @@ class TestRolloutEdgeCasesAndErrorHandling:
 
         # Start first rollout
         result1 = manager.start_rollout("model_v2.0")
-        assert result1.success == True
+        assert result1.success
 
         # Try to start second rollout - should fail
         result2 = manager.start_rollout("model_v2.1")
-        assert result2.success == False
+        assert not result2.success
         assert "already active" in result2.error_message.lower()
 
     def test_cannot_advance_stage_without_active_rollout(self):
@@ -238,7 +238,7 @@ class TestRolloutEdgeCasesAndErrorHandling:
         # Try to advance without starting rollout
         result = manager.advance_stage()
 
-        assert result.success == False
+        assert not result.success
         assert "no active rollout" in result.error_message.lower()
 
     def test_cannot_advance_beyond_full_rollout(self):
@@ -260,7 +260,7 @@ class TestRolloutEdgeCasesAndErrorHandling:
         # Try to advance beyond full rollout - should fail because rollout is now inactive
         result = manager.advance_stage()
 
-        assert result.success == False
+        assert not result.success
         assert "no active rollout" in result.error_message.lower()
 
     def test_rollout_becomes_inactive_after_full_rollout(self):
@@ -272,18 +272,18 @@ class TestRolloutEdgeCasesAndErrorHandling:
 
         # Start and advance to full rollout
         manager.start_rollout("model_v2.0")
-        assert manager.is_active == True
+        assert manager.is_active
 
         manager.advance_stage()  # 25%
-        assert manager.is_active == True
+        assert manager.is_active
 
         manager.advance_stage()  # 50%
-        assert manager.is_active == True
+        assert manager.is_active
 
         result = manager.advance_stage()  # 100%
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.FULL_ROLLOUT
-        assert manager.is_active == False  # Should become inactive
+        assert not manager.is_active  # Should become inactive
 
 
 if __name__ == "__main__":
