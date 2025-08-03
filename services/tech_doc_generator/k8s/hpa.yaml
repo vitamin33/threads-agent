@@ -1,0 +1,117 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tech-doc-generator-hpa
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tech-doc-generator
+  
+  # Scaling parameters optimized for AI workloads
+  minReplicas: 2
+  maxReplicas: 8
+  
+  # Scaling behavior for smooth scaling
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100        # Double pods when scaling up
+        periodSeconds: 15
+      - type: Pods
+        value: 2          # Add max 2 pods at once
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+      - type: Percent
+        value: 50         # Remove half the pods max
+        periodSeconds: 60
+      - type: Pods
+        value: 1          # Remove max 1 pod at once
+        periodSeconds: 60
+  
+  metrics:
+  # CPU utilization - primary metric
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  
+  # Memory utilization - secondary metric
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  
+  # Custom metrics for AI workloads
+  - type: Pods
+    pods:
+      metric:
+        name: tech_doc_request_duration_seconds_sum
+      target:
+        type: AverageValue
+        averageValue: "5"    # Scale up if average request time > 5s
+  
+  - type: Pods
+    pods:
+      metric:
+        name: tech_doc_requests_total
+      target:
+        type: AverageValue
+        averageValue: "10"   # Scale up if > 10 requests per pod
+
+---
+apiVersion: autoscaling/v2
+kind: VerticalPodAutoscaler
+metadata:
+  name: tech-doc-generator-vpa
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tech-doc-generator
+  
+  # VPA policy for optimal resource allocation
+  updatePolicy:
+    updateMode: "Auto"    # Automatically apply recommendations
+  
+  resourcePolicy:
+    containerPolicies:
+    - containerName: tech-doc-generator
+      minAllowed:
+        memory: "256Mi"
+        cpu: "100m"
+      maxAllowed:
+        memory: "4Gi"     # Allow scaling up to 4GB for large repos
+        cpu: "2000m"      # Allow up to 2 CPU cores
+      
+      # Control resource recommendations
+      controlledResources: ["cpu", "memory"]
+      controlledValues: RequestsAndLimits
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tech-doc-generator-pdb
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: tech-doc-generator

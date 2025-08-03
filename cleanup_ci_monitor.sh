@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PROJECT_ROOT="/Users/vitaliiserbyn/development/threads-agent"
+PROJECT_ROOT="$(pwd)"
 cd "$PROJECT_ROOT"
 
 echo "🧹 Cleaning up remaining ci-monitor references..."

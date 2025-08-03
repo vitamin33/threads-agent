@@ -4,7 +4,7 @@
 
 1. **Activate virtual environment:**
    ```bash
-   cd /Users/vitaliiserbyn/development/team/jordan-kim/threads-agent
+   cd /path/to/threads-agent
    source venv/bin/activate
    ```
 
@@ -27,7 +27,7 @@ If the script doesn't work, run these commands manually:
 
 ```bash
 # 1. Navigate to project
-cd /Users/vitaliiserbyn/development/team/jordan-kim/threads-agent
+cd /path/to/threads-agent
 
 # 2. Activate virtual environment
 source venv/bin/activate
