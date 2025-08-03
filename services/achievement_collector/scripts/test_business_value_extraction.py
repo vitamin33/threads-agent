@@ -15,8 +15,10 @@ sys.path.insert(0, str(project_root))
 from services.achievement_collector.db.config import get_db  # noqa: E402
 from services.achievement_collector.db.models import Achievement  # noqa: E402
 from services.achievement_collector.services.ai_analyzer import AIAnalyzer  # noqa: E402
+import pytest  # noqa: E402
 
 
+@pytest.mark.asyncio
 async def test_extraction():
     """Test business value extraction on recent achievements."""
     db = next(get_db())

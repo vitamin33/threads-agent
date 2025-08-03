@@ -256,3 +256,4 @@ traces.zip                     # OTEL export artefacts
 test.db
 test_achievements.db
 *.db
+node_modules/

@@ -12,3 +12,5 @@ pre-commit>=3.7
 types-requests>=2.32
 pre-commit>=3.7
 fakeredis>=2.23
+psutil>=5.9.0            # System monitoring for performance tests  
+redis>=5.0.0             # Redis client for testing caching functionality

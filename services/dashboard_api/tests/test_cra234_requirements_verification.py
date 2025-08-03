@@ -12,8 +12,10 @@ from sqlalchemy.orm import sessionmaker
 from services.dashboard_api.main import app, get_db
 from services.orchestrator.db.models import VariantPerformance, Base as OrchestratorBase
 from services.pattern_analyzer.models import Base as PatternBase
-from services.dashboard_api.variant_metrics_api import VariantMetricsAPI
-from services.dashboard_api.websocket_handler import WebSocketHandler
+from services.dashboard_api.variant_metrics import VariantMetricsAPI
+from services.dashboard_api.websocket_handler import (
+    VariantDashboardWebSocket as WebSocketHandler,
+)
 from services.performance_monitor.early_kill import EarlyKillMonitor
 from services.pattern_analyzer.pattern_fatigue_detector import PatternFatigueDetector
 
@@ -54,7 +56,7 @@ def test_cra234_requirement_1_backend_api_service_with_fastapi(complete_test_set
     """
     # Verify FastAPI app exists
     assert app is not None
-    assert app.title == "dashboard_api"
+    assert app.title == "Variant Performance Dashboard API"
 
     # Verify REST endpoints exist
     client = TestClient(app)

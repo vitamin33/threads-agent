@@ -256,7 +256,11 @@ just token-batch     # Batch processing (80% savings)
 ## AI Guidelines
 
 ### Collaboration Practices
-- Don't add Claude as co-author in git commits in PRs
+- **CRITICAL: NEVER add Claude as co-author in git commits**
+- **NEVER include "🤖 Generated with [Claude Code]" in commits**
+- **NEVER include "Co-Authored-By: Claude <noreply@anthropic.com>" in commits**
+- Git commits should ONLY have the actual developer as author
+- This is a strict requirement - no exceptions
 
 ### Development Environment
 - **ALWAYS use virtual environments** for Python services (venv contains all dependencies)

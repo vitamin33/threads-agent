@@ -262,7 +262,7 @@ class EngagementPredictor:
         count = sum(1 for pattern in reply_patterns if pattern in text.lower())
         return min(1.0, count / 2)
 
-    @PREDICTION_LATENCY.time()  # type: ignore[misc]
+    @PREDICTION_LATENCY.time()
     def score_content(self, post: str) -> float:
         """
         Score content for predicted engagement rate.

@@ -66,6 +66,19 @@ viralEngine:
     repository: ghcr.io/threads-agent-stack/viral-engine
     tag: "0.1.0"
 
+viralPatternEngine:
+  enabled: false                   # turn ON in dev/ci values
+  image:
+    repository: ghcr.io/threads-agent-stack/viral-pattern-engine
+    tag: "0.1.0"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
 threadsAdaptor:
   enabled: false                   # turn ON when using real Threads API
   image:

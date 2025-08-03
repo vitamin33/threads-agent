@@ -6,17 +6,18 @@ import subprocess
 import argparse
 import time
 from pathlib import Path
+from typing import Any, Tuple, List, Dict
 
 
 class DashboardTestRunner:
     """Test runner for dashboard API with multiple test categories."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.test_dir = Path(__file__).parent / "tests"
         self.project_root = Path(__file__).parent.parent.parent
-        self.results = {}
+        self.results: Dict[str, Tuple[bool, float]] = {}
 
-    def run_unit_tests(self, verbose=False):
+    def run_unit_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run unit tests."""
         print("\n🧪 Running Unit Tests...")
 
@@ -39,7 +40,7 @@ class DashboardTestRunner:
         self.results["unit"] = result
         return result
 
-    def run_integration_tests(self, verbose=False):
+    def run_integration_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run integration tests."""
         print("\n🔗 Running Integration Tests...")
 
@@ -68,7 +69,7 @@ class DashboardTestRunner:
         self.results["integration"] = result
         return result
 
-    def run_e2e_tests(self, verbose=False):
+    def run_e2e_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run end-to-end tests."""
         print("\n🌐 Running End-to-End Tests...")
 
@@ -94,7 +95,7 @@ class DashboardTestRunner:
         self.results["e2e"] = result
         return result
 
-    def run_performance_tests(self, verbose=False):
+    def run_performance_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run performance tests."""
         print("\n⚡ Running Performance Tests...")
 
@@ -120,7 +121,7 @@ class DashboardTestRunner:
         self.results["performance"] = result
         return result
 
-    def run_edge_case_tests(self, verbose=False):
+    def run_edge_case_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run edge case tests."""
         print("\n🔥 Running Edge Case Tests...")
 
@@ -140,29 +141,29 @@ class DashboardTestRunner:
         self.results["edge_cases"] = result
         return result
 
-    def run_frontend_tests(self, verbose=False):
+    def run_frontend_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run frontend tests."""
         print("\n⚛️  Running Frontend Tests...")
 
         frontend_dir = self.project_root / "services" / "dashboard_frontend"
         if not frontend_dir.exists():
             print("❌ Frontend directory not found, skipping frontend tests")
-            self.results["frontend"] = False
-            return False
+            self.results["frontend"] = (False, 0.0)
+            return (False, 0.0)
 
         # Check for package.json and test script
         package_json = frontend_dir / "package.json"
         if not package_json.exists():
             print("❌ package.json not found, skipping frontend tests")
-            self.results["frontend"] = False
-            return False
+            self.results["frontend"] = (False, 0.0)
+            return (False, 0.0)
 
         cmd = ["npm", "test", "--", "--run"]
         result = self._run_command(cmd, "Frontend Tests", cwd=frontend_dir)
         self.results["frontend"] = result
         return result
 
-    def run_all_tests(self, verbose=False, skip_frontend=False):
+    def run_all_tests(self, verbose: bool = False, skip_frontend: bool = False) -> int:
         """Run all test suites."""
         print("🚀 Running Complete Dashboard Test Suite")
         print("=" * 50)
@@ -188,9 +189,9 @@ class DashboardTestRunner:
         # Print summary
         self._print_summary(total_time, skip_frontend)
 
-        return all(backend_results)
+        return 0 if all(backend_results) else 1
 
-    def run_quick_tests(self, verbose=False):
+    def run_quick_tests(self, verbose: bool = False) -> int:
         """Run a quick subset of tests for rapid feedback."""
         print("⚡ Running Quick Test Suite (Unit + Basic Integration)")
         print("=" * 50)
@@ -215,9 +216,9 @@ class DashboardTestRunner:
         print(f"\n⏱️  Quick tests completed in {total_time:.2f} seconds")
         print(f"✅ Result: {'PASSED' if result else 'FAILED'}")
 
-        return result
+        return 0 if result[0] else 1
 
-    def run_coverage_tests(self, verbose=False):
+    def run_coverage_tests(self, verbose: bool = False) -> Tuple[bool, float]:
         """Run tests with coverage reporting."""
         print("\n📊 Running Tests with Coverage Analysis...")
 
@@ -240,13 +241,16 @@ class DashboardTestRunner:
 
         return result
 
-    def _run_command(self, cmd, test_name, cwd=None):
+    def _run_command(
+        self, cmd: List[str], test_name: str, cwd: Any = None
+    ) -> Tuple[bool, float]:
         """Run a command and return success status."""
         if cwd is None:
             cwd = self.project_root
 
         try:
             print(f"\n▶️  Executing: {' '.join(cmd)}")
+            start_time = time.time()
 
             result = subprocess.run(
                 cmd,
@@ -256,24 +260,25 @@ class DashboardTestRunner:
                 timeout=300,  # 5 minute timeout
             )
 
+            elapsed_time = time.time() - start_time
             success = result.returncode == 0
             status = "✅ PASSED" if success else "❌ FAILED"
-            print(f"\n{status} - {test_name}")
+            print(f"\n{status} - {test_name} ({elapsed_time:.2f}s)")
 
-            return success
+            return (success, elapsed_time)
 
         except subprocess.TimeoutExpired:
             print(f"\n⏰ TIMEOUT - {test_name} (exceeded 5 minutes)")
-            return False
+            return (False, 300.0)
         except FileNotFoundError:
             print(f"\n❌ COMMAND NOT FOUND - {test_name}")
             print(f"   Command: {' '.join(cmd)}")
-            return False
+            return (False, 0.0)
         except Exception as e:
             print(f"\n💥 ERROR - {test_name}: {e}")
-            return False
+            return (False, 0.0)
 
-    def _print_summary(self, total_time, skip_frontend=False):
+    def _print_summary(self, total_time: float, skip_frontend: bool = False) -> None:
         """Print test execution summary."""
         print("\n" + "=" * 50)
         print("📋 TEST EXECUTION SUMMARY")
@@ -283,13 +288,13 @@ class DashboardTestRunner:
             if test_type == "frontend" and skip_frontend:
                 continue
 
-            status = "✅ PASSED" if result else "❌ FAILED"
-            print(f"{test_type.upper():.<20} {status}")
+            status = "✅ PASSED" if result[0] else "❌ FAILED"
+            print(f"{test_type.upper():.<20} {status} ({result[1]:.2f}s)")
 
         print(f"\n⏱️  Total execution time: {total_time:.2f} seconds")
 
         all_passed = all(
-            r
+            r[0]
             for r in self.results.values()
             if not (skip_frontend and "frontend" in str(r))
         )
@@ -302,7 +307,7 @@ class DashboardTestRunner:
             print("   - Check specific test files for detailed error messages")
             print("   - Use pytest --tb=long for full tracebacks")
 
-    def check_dependencies(self):
+    def check_dependencies(self) -> bool:
         """Check if all required dependencies are installed."""
         print("🔍 Checking test dependencies...")
 
@@ -334,7 +339,7 @@ class DashboardTestRunner:
         return True
 
 
-def main():
+def main() -> int:
     """Main entry point for test runner."""
     parser = argparse.ArgumentParser(description="Dashboard API Test Runner")
 
@@ -390,8 +395,13 @@ def main():
     }
 
     if args.test_type in test_methods:
-        success = test_methods[args.test_type](args.verbose)
-        sys.exit(0 if success else 1)
+        result = test_methods[args.test_type](args.verbose)
+        # Handle both return types (int and tuple)
+        if isinstance(result, tuple):
+            success = result[0]
+            sys.exit(0 if success else 1)
+        else:
+            sys.exit(result)
     else:
         print(f"❌ Unknown test type: {args.test_type}")
         sys.exit(1)

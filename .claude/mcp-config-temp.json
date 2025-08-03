@@ -1,0 +1,1 @@
+{"mcpServers": {"linear": {"command": "node", "args": ["mcp/linear/index.js"], "env": {"LINEAR_API_KEY": "lin_api_VIi0UyD5KDmiqSum9o7Rfgehs0zSKHQinh3gYngK"}}}}
