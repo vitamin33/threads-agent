@@ -400,7 +400,7 @@ class TestRedisCachingOptimization:
         redis_client.setex.return_value = True
 
         with (
-            patch("redis.ConnectionPool.from_url") as mock_pool,
+            patch("redis.ConnectionPool.from_url"),
             patch("redis.Redis") as mock_redis_class,
             patch.object(
                 evaluator, "_calculate_metrics_from_db", return_value=test_metrics
@@ -564,12 +564,12 @@ class TestMemoryOptimization:
 
             mock_trainer.return_value.start_fine_tuning = mock_start_fine_tuning
 
-            initial_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+            # Memory tracking not needed for test validation
 
             # Run pipeline with memory monitoring
             result = await pipeline.run()
 
-            final_memory = psutil.Process().memory_info().rss / 1024 / 1024  # MB
+            # Final memory tracking not needed for test
 
             # Verify pipeline completed successfully
             assert result.status == "success"
@@ -624,7 +624,7 @@ class TestMemoryOptimization:
         tracker = MLflowExperimentTracker("test_memory_efficiency")
 
         # Simulate memory usage scenario
-        initial_memory = 100.0  # MB
+        # Initial memory baseline for simulation
         peak_memory = 250.0  # MB
         training_examples = 1000
 
@@ -932,7 +932,7 @@ class TestPerformanceIntegration:
     ):
         """Test end-to-end performance with all optimizations enabled."""
         # Create both standard and optimized pipelines for comparison
-        standard_pipeline = FineTuningPipeline(config=pipeline_config)
+        FineTuningPipeline(config=pipeline_config)  # Create for comparison
         k8s_pipeline = KubernetesOptimizedPipeline(k8s_resource_config)
 
         # Mock components for both pipelines
