@@ -89,18 +89,18 @@ class TestCICDPipelineIntegration:
 
         test_results = test_runner.run_test_suite()
         assert len(test_results) == 1
-        assert test_results[0].passed == True
+        assert test_results[0].passed
 
         # Step 2: Start gradual rollout
         rollout_result = rollout_manager.start_rollout("model_v2.0")
-        assert rollout_result.success == True
+        assert rollout_result.success
         assert rollout_manager.current_stage == RolloutStage.CANARY_10
 
         # Step 3: Start monitoring for rollback
         monitor_result = rollback_controller.start_monitoring(
             "model_v2.0", "model_v1.9"
         )
-        assert monitor_result.success == True
+        assert monitor_result.success
 
         # Step 4: Progress through rollout stages with healthy metrics
         # Generate healthy performance data
@@ -117,8 +117,8 @@ class TestCICDPipelineIntegration:
         ]:
             # Check health before advancing
             health = rollback_controller.check_health(historical_data, current_data)
-            assert health.is_healthy == True
-            assert health.triggers_rollback == False
+            assert health.is_healthy
+            assert not health.triggers_rollback
 
             # Check for automatic rollback triggers (should be None for healthy metrics)
             auto_rollback = rollback_controller.trigger_automatic_rollback_if_needed(
@@ -130,12 +130,12 @@ class TestCICDPipelineIntegration:
             advance_result = rollout_manager.advance_stage(
                 historical_data, current_data
             )
-            assert advance_result.success == True
+            assert advance_result.success
             assert rollout_manager.current_stage == expected_stage
 
         # Verify final state
         assert rollout_manager.current_stage == RolloutStage.FULL_ROLLOUT
-        assert rollout_manager.is_active == False  # Completed
+        assert not rollout_manager.is_active  # Completed
 
         status = rollback_controller.get_rollback_status()
         assert status.rollback_count == 0  # No rollbacks occurred
@@ -157,12 +157,12 @@ class TestCICDPipelineIntegration:
 
         # Step 1: Start rollout and monitoring
         rollout_result = rollout_manager.start_rollout("model_v2.0")
-        assert rollout_result.success == True
+        assert rollout_result.success
 
         monitor_result = rollback_controller.start_monitoring(
             "model_v2.0", "model_v1.9"
         )
-        assert monitor_result.success == True
+        assert monitor_result.success
 
         # Step 2: Generate performance regression data
         historical_data = self._generate_performance_data(baseline_mean=0.85, count=20)
@@ -171,7 +171,7 @@ class TestCICDPipelineIntegration:
 
         # Step 3: Try to advance rollout - should be blocked by regression
         advance_result = rollout_manager.advance_stage(historical_data, regression_data)
-        assert advance_result.success == False
+        assert not advance_result.success
         assert "regression detected" in advance_result.error_message.lower()
         assert (
             rollout_manager.current_stage == RolloutStage.CANARY_10
@@ -182,7 +182,7 @@ class TestCICDPipelineIntegration:
             historical_data, regression_data
         )
         assert auto_rollback is not None
-        assert auto_rollback.success == True
+        assert auto_rollback.success
         assert auto_rollback.trigger == RollbackTrigger.PERFORMANCE_REGRESSION
 
         # Verify rollback was executed
@@ -215,7 +215,7 @@ class TestCICDPipelineIntegration:
         current_data = self._generate_performance_data(baseline_mean=0.86, count=15)
 
         advance_result = rollout_manager.advance_stage(historical_data, current_data)
-        assert advance_result.success == True
+        assert advance_result.success
         assert rollout_manager.current_stage == RolloutStage.CANARY_25
 
         # Trigger manual rollback
@@ -223,7 +223,7 @@ class TestCICDPipelineIntegration:
             "Business decision: rollback due to user feedback"
         )
 
-        assert rollback_result.success == True
+        assert rollback_result.success
         assert rollback_result.trigger == RollbackTrigger.MANUAL
         assert (
             rollback_result.reason == "Business decision: rollback due to user feedback"
@@ -269,7 +269,7 @@ class TestCICDPipelineIntegration:
         test_results = test_runner.run_test_suite()
         test_duration = time.time() - start_time
 
-        assert test_results[0].passed == True
+        assert test_results[0].passed
         assert test_duration < 5.0  # Should be very fast
 
         # Rollout performance
@@ -284,7 +284,7 @@ class TestCICDPipelineIntegration:
         health = rollback_controller.check_health(historical_data, current_data)
         health_check_duration = time.time() - start_time
 
-        assert health.is_healthy == True
+        assert health.is_healthy
         assert health_check_duration < 2.0  # Health checks should be fast
 
         # Rollback performance (critical requirement: <30 seconds)
@@ -294,7 +294,7 @@ class TestCICDPipelineIntegration:
         )
         rollback_duration = time.time() - start_time
 
-        assert rollback_result.success == True
+        assert rollback_result.success
         assert rollback_duration < 30.0  # Meets requirement
         assert rollback_result.duration < 30.0
 
@@ -329,7 +329,7 @@ class TestCICDPipelineIntegration:
 
         test_results = test_runner.run_test_suite()
         assert len(test_results) == 1
-        assert test_results[0].passed == False
+        assert not test_results[0].passed
         assert "failed" in test_results[0].error.lower()
 
         # Test rollback failure handling
@@ -342,13 +342,13 @@ class TestCICDPipelineIntegration:
             "Test rollback failure"
         )
 
-        assert rollback_result.success == False
+        assert not rollback_result.success
         assert "Registry connection failed" in rollback_result.error_message
 
         # Verify error was recorded in history
         history = rollback_controller.get_rollback_history()
         assert len(history) == 1
-        assert history[0].success == False
+        assert not history[0].success
         assert "Registry connection failed" in history[0].error_message
 
     def _generate_performance_data(
