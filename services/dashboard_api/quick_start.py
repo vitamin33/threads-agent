@@ -27,8 +27,8 @@ def check_environment():
 
     # Check if dependencies are available
     try:
-        import uvicorn
-        import fastapi
+        import uvicorn  # noqa: F401
+        import fastapi  # noqa: F401
 
         print("✅ Dependencies OK")
     except ImportError as e:

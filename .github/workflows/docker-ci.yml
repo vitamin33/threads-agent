@@ -43,6 +43,8 @@ jobs:
               - 'services/revenue/**'
             performance_monitor:
               - 'services/performance_monitor/**'
+            viral_metrics:
+              - 'services/viral_metrics/**'
 
       - name: Set outputs
         id: set-matrix
@@ -55,6 +57,7 @@ jobs:
           if [ "${{ steps.changes.outputs.viral_engine }}" == "true" ]; then services+=("viral_engine"); fi
           if [ "${{ steps.changes.outputs.revenue }}" == "true" ]; then services+=("revenue"); fi
           if [ "${{ steps.changes.outputs.performance_monitor }}" == "true" ]; then services+=("performance_monitor"); fi
+          if [ "${{ steps.changes.outputs.viral_metrics }}" == "true" ]; then services+=("viral_metrics"); fi
 
           if [ ${#services[@]} -eq 0 ]; then
             echo "services=[]" >> $GITHUB_OUTPUT

@@ -98,6 +98,21 @@ openai:
   enabled: true
   apiKey: "REPLACE_IN_RUNTIME"
 
+# Viral Metrics service for real-time metrics collection
+viralMetrics:
+  enabled: true
+  image:
+    repository: viral-metrics
+    tag: "local"
+    pullPolicy: IfNotPresent  # Will use local if available, pull if not
+
+# MLflow configuration - disabled in CI to avoid CRD dependencies
+mlflow:
+  trackingUri: "http://mlflow:5000"
+  registryUri: "http://mlflow:5000"
+  performanceOptimization:
+    enabled: false
+
 global:
   storageClass: local-path
 
