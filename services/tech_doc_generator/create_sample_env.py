@@ -5,9 +5,10 @@ Create a sample .env file for the tech doc generator
 
 import os
 
+
 def create_sample_env():
     """Create a sample .env file with instructions"""
-    
+
     env_content = """# Tech Doc Generator Environment Variables
 # Copy this to .env and fill in your actual keys
 
@@ -59,25 +60,26 @@ MIN_INSIGHT_SCORE=7.0
 DEFAULT_PUBLISH_DELAY_HOURS=2
 MAX_DAILY_ARTICLES=3
 """
-    
+
     # Check if .env already exists
-    if os.path.exists('.env'):
+    if os.path.exists(".env"):
         print("⚠️  .env file already exists!")
         response = input("Overwrite? (y/n): ")
-        if response.lower() != 'y':
+        if response.lower() != "y":
             print("Keeping existing .env file.")
             return
-    
+
     # Write the sample env file
-    with open('.env.sample', 'w') as f:
+    with open(".env.sample", "w") as f:
         f.write(env_content)
-    
+
     print("✅ Created .env.sample file")
     print("\nNext steps:")
     print("1. Copy .env.sample to .env")
     print("2. Add your API keys")
     print("3. Start with OPENAI_API_KEY and DEVTO_API_KEY")
     print("\n💡 Tip: You can test without publishing by using mock mode!")
+
 
 if __name__ == "__main__":
     create_sample_env()
