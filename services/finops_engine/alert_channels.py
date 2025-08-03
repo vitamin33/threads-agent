@@ -44,13 +44,16 @@ class AlertChannelManager:
 
         for channel in channels:
             if channel == "slack":
-                if os.environ.get("SLACK_WEBHOOK_URL"):
+                # Support both Bot Token and Webhook URL methods
+                if os.environ.get("SLACK_BOT_TOKEN") or os.environ.get(
+                    "SLACK_WEBHOOK_URL"
+                ):
                     tasks.append(self._send_slack_alert(alert_data))
                     channel_names.append("slack")
                 else:
                     results["slack"] = {
                         "status": "skipped",
-                        "reason": "Slack webhook URL not configured",
+                        "reason": "Slack bot token or webhook URL not configured",
                     }
             elif channel == "discord":
                 if os.environ.get("DISCORD_WEBHOOK_URL"):
@@ -89,8 +92,10 @@ class AlertChannelManager:
         return results
 
     async def _send_slack_alert(self, alert_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Send alert to Slack channel with retry logic."""
+        """Send alert to Slack channel using Bot Token or Webhook URL."""
+        bot_token = os.environ.get("SLACK_BOT_TOKEN")
         webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+        channel = os.environ.get("ALERT_SLACK_CHANNEL", "#alerts")
 
         # Severity color mapping
         color_map = {
@@ -102,29 +107,89 @@ class AlertChannelManager:
         severity = alert_data.get("severity", "info")
         color = color_map.get(severity, "#00FF00")
 
-        payload = {
-            "attachments": [
+        # Format severity emoji
+        emoji_map = {"critical": "🚨", "warning": "⚠️", "info": "💡"}
+        emoji = emoji_map.get(severity, "💡")
+
+        if bot_token:
+            # Use Slack Bot API
+            url = "https://slack.com/api/chat.postMessage"
+
+            # Build message blocks
+            blocks = [
                 {
-                    "color": color,
-                    "title": alert_data.get("title", "Alert"),
-                    "text": alert_data.get("message", ""),
-                    "fields": [],
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"{emoji} *{alert_data.get('title', 'Alert')}*\n{alert_data.get('message', '')}",
+                    },
                 }
             ]
-        }
 
-        # Add additional fields if present
-        for key, value in alert_data.items():
-            if key not in ["title", "message", "severity"]:
-                payload["attachments"][0]["fields"].append(
+            # Add fields as context
+            context_elements = []
+            for key, value in alert_data.items():
+                if key not in ["title", "message", "severity", "timestamp"]:
+                    context_elements.append(
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*{key.replace('_', ' ').title()}:* {value}",
+                        }
+                    )
+
+            if context_elements:
+                blocks.append(
                     {
-                        "title": key.replace("_", " ").title(),
-                        "value": str(value),
-                        "short": True,
+                        "type": "context",
+                        "elements": context_elements[:10],  # Slack limit
                     }
                 )
 
-        return await self._send_http_request(webhook_url, payload)
+            payload = {
+                "channel": channel,
+                "blocks": blocks,
+                "username": "FinOps Alert Bot",
+                "icon_emoji": ":warning:",
+            }
+
+            headers = {
+                "Authorization": f"Bearer {bot_token}",
+                "Content-Type": "application/json",
+            }
+
+            return await self._send_http_request_with_headers(url, payload, headers)
+
+        elif webhook_url:
+            # Use Webhook URL (legacy method)
+            payload = {
+                "attachments": [
+                    {
+                        "color": color,
+                        "title": alert_data.get("title", "Alert"),
+                        "text": alert_data.get("message", ""),
+                        "fields": [],
+                    }
+                ]
+            }
+
+            # Add additional fields if present
+            for key, value in alert_data.items():
+                if key not in ["title", "message", "severity"]:
+                    payload["attachments"][0]["fields"].append(
+                        {
+                            "title": key.replace("_", " ").title(),
+                            "value": str(value),
+                            "short": True,
+                        }
+                    )
+
+            return await self._send_http_request(webhook_url, payload)
+
+        else:
+            return {
+                "status": "failed",
+                "reason": "Neither Slack bot token nor webhook URL configured",
+            }
 
     async def _send_discord_alert(self, alert_data: Dict[str, Any]) -> Dict[str, Any]:
         """Send alert to Discord channel with rich embed formatting."""
@@ -235,6 +300,53 @@ class AlertChannelManager:
                 async with aiohttp.ClientSession(timeout=timeout_session) as session:
                     async with session.post(url, json=payload) as response:
                         if response.status == 200:
+                            return {"status": "success"}
+                        elif attempt < max_retries - 1:
+                            # Wait before retry (exponential backoff)
+                            await asyncio.sleep(2**attempt)
+                            continue
+                        else:
+                            return {
+                                "status": "failed",
+                                "reason": f"HTTP {response.status} after {max_retries} attempts",
+                            }
+            except asyncio.TimeoutError:
+                return {
+                    "status": "failed",
+                    "reason": f"Request timeout after {timeout}s",
+                }
+            except Exception as e:
+                if "timeout" in str(e).lower():
+                    return {
+                        "status": "failed",
+                        "reason": f"Request timeout after {timeout}s",
+                    }
+                elif attempt < max_retries - 1:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                else:
+                    return {
+                        "status": "failed",
+                        "reason": f"Exception after {max_retries} attempts: {str(e)}",
+                    }
+
+        return {"status": "failed", "reason": "Unexpected error"}
+
+    async def _send_http_request_with_headers(
+        self, url: str, payload: Dict[str, Any], headers: Dict[str, str]
+    ) -> Dict[str, Any]:
+        """HTTP request method with custom headers, retry logic and timeout."""
+        max_retries = 3
+        timeout = 30  # 30 second timeout per channel
+
+        for attempt in range(max_retries):
+            try:
+                timeout_session = aiohttp.ClientTimeout(total=timeout)
+                async with aiohttp.ClientSession(timeout=timeout_session) as session:
+                    async with session.post(
+                        url, json=payload, headers=headers
+                    ) as response:
+                        if response.status in [200, 201]:
                             return {"status": "success"}
                         elif attempt < max_retries - 1:
                             # Wait before retry (exponential backoff)
