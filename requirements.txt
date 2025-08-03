@@ -19,3 +19,5 @@ alembic>=1.13.1          # Database migrations
 
 # MLflow experiment tracking
 mlflow>=2.9.0            # Experiment tracking for LLM calls
+psutil>=5.9.0            # System and process monitoring for performance tests
+redis>=5.0.0             # Redis client for caching in fine-tuning pipeline
