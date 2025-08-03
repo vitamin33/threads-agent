@@ -122,8 +122,12 @@ class PlatformPublisher:
         post_text = custom_content or self._format_for_linkedin(content)
 
         # Get user profile ID first (this is simplified - would need proper OAuth flow)
+        headers = {
+            "Authorization": f"Bearer {self.settings.linkedin_access_token}",
+            "Content-Type": "application/json",
+        }
 
-        {
+        payload = {
             "content": {
                 "contentEntities": [],
                 "title": post_text[:150] + "..." if len(post_text) > 150 else post_text,
