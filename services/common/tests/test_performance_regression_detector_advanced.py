@@ -131,7 +131,7 @@ class TestPerformanceRegressionDetectorStatisticalEdgeCases:
         normal_values = [0.85] * 20
         outlier_values = [0.85] * 18 + [0.1, 1.9]  # Extreme outliers
 
-        historical_normal = [
+        [
             PerformanceData(
                 timestamp=datetime.now() - timedelta(days=i),
                 metric_name="accuracy",
@@ -728,7 +728,8 @@ class TestPerformanceRegressionDetectorRealWorldScenarios:
         )
 
         # Simulate microservice latency data (realistic patterns)
-        business_hours_multiplier = lambda hour: 1.5 if 9 <= hour <= 17 else 1.0
+        def business_hours_multiplier(hour):
+            return 1.5 if 9 <= hour <= 17 else 1.0
 
         historical_latencies = []
         for day in range(14):  # 2 weeks of data
@@ -1065,7 +1066,7 @@ class TestPerformanceRegressionDetectorPerformanceRequirements:
 
             # Perform regression detection
             start_time = time.time()
-            result = detector.detect_regression(
+            detector.detect_regression(
                 historical_data=historical_data[-30:],  # Use recent 30 minutes
                 current_data=current_data,
                 metric_name="accuracy",

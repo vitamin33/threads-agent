@@ -1,0 +1,16 @@
+{
+  "epics": [
+    {
+      "id": "epic-240-finops-cost-tracking-optimization",
+      "name": "FinOps Cost Tracking & Optimization Engine",
+      "status": "planning",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "target_date": "2025-09-28",
+      "estimated_effort": "6-8 weeks",
+      "business_value": "critical",
+      "primary_kpi": "cost_per_follow_dollars",
+      "target_value": "$0.01"
+    }
+  ]
+}

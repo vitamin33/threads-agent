@@ -448,7 +448,7 @@ class PerformanceRegressionDetector:
         try:
             _, combined_p = stats.combine_pvalues(valid_p_values, method="fisher")
             return combined_p
-        except:
+        except Exception:
             # Fallback to minimum p-value
             return min(valid_p_values)
 

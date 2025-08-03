@@ -1,0 +1,15 @@
+# services/finops_engine/requirements.txt
+# Real-time Cost Data Collection Engine (CRA-240)
+
+# Core dependencies
+asyncio-python>=0.1.0
+psycopg2-binary==2.9.*
+
+# Testing dependencies
+pytest>=8.2
+pytest-asyncio>=0.23
+
+# Optional: Future production dependencies (commented for now)
+# SQLAlchemy~=2.0.30  # For real database operations
+# prometheus-client>=0.20  # For real Prometheus metrics
+# redis>=5.0  # For caching

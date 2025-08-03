@@ -18,6 +18,7 @@ import json
 import os
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from unittest.mock import patch
 from typing import Dict, Any
@@ -551,11 +552,6 @@ class TestWorkflowPerformanceAndReliability:
 
     def test_workflow_failure_notification_and_alerting(self):
         """Test workflow failure notification and alerting mechanisms."""
-        notification_config = {
-            "channels": ["slack", "email", "pagerduty"],
-            "severity_levels": ["low", "medium", "high", "critical"],
-            "escalation_minutes": [0, 5, 15, 30],
-        }
 
         failure_scenarios = [
             {"type": "test_failure", "severity": "medium", "channel": "slack"},
