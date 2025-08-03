@@ -1,0 +1,200 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tech-doc-generator
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+    service: tech-doc-generator
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: tech-doc-generator
+  template:
+    metadata:
+      labels:
+        app: tech-doc-generator
+        service: tech-doc-generator
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8084"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: tech-doc-generator
+        image: tech-doc-generator:latest
+        ports:
+        - containerPort: 8084
+          name: http
+          protocol: TCP
+        
+        # Optimized resource limits for production
+        resources:
+          requests:
+            memory: "512Mi"      # Base memory for code analysis
+            cpu: "250m"          # 0.25 CPU cores minimum
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "2Gi"        # Max memory for large repository analysis
+            cpu: "1000m"         # 1 CPU core maximum
+            ephemeral-storage: "5Gi"
+        
+        # Environment variables
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: tech-doc-secrets
+              key: database-url
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: tech-doc-secrets
+              key: openai-api-key
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: tech-doc-config
+              key: redis-url
+        - name: DEVTO_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: tech-doc-secrets
+              key: devto-api-key
+              optional: true
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8084
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8084
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volume mounts for temporary files
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.cache
+      
+      # Volumes
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: cache
+        emptyDir:
+          sizeLimit: 500Mi
+      
+      # Pod security and scheduling
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      
+      # Node affinity for performance
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values: ["compute-optimized"]
+        
+        # Pod anti-affinity for availability
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: ["tech-doc-generator"]
+              topologyKey: kubernetes.io/hostname
+      
+      # Tolerations for dedicated nodes
+      tolerations:
+      - key: "ai-workload"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tech-doc-generator
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8084
+    targetPort: 8084
+    protocol: TCP
+    name: http
+  selector:
+    app: tech-doc-generator
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tech-doc-config
+  namespace: threads-agent
+data:
+  redis-url: "redis://redis:6379/0"
+  max-article-length: "5000"
+  analysis-depth: "medium"
+  default-publish-delay-hours: "2"
+  max-daily-articles: "3"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tech-doc-secrets
+  namespace: threads-agent
+type: Opaque
+data:
+  # Base64 encoded values - replace with actual secrets
+  database-url: cG9zdGdyZXNxbDovL3VzZXI6cGFzc0Bwb3N0Z3Jlc3FsOjU0MzIvdGhyZWFkc19hZ2VudA==
+  openai-api-key: eW91ci1vcGVuYWktYXBpLWtleQ==
+  devto-api-key: eW91ci1kZXZ0by1hcGkta2V5

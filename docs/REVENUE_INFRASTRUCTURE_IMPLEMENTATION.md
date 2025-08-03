@@ -313,8 +313,8 @@ TypeError: ForwardRef._evaluate() missing 1 required keyword-only argument: 'rec
 ### Configuration Requirements
 ```yaml
 # Required Environment Variables
-STRIPE_SECRET_KEY: sk_test_...
-STRIPE_WEBHOOK_SECRET: whsec_...
+STRIPE_SECRET_KEY: your_stripe_secret_key_here
+STRIPE_WEBHOOK_SECRET: your_stripe_webhook_secret_here
 DATABASE_URL: postgresql://...
 REVENUE_SERVICE_URL: http://revenue:8000
 ```

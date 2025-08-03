@@ -1,7 +1,10 @@
 <!-- title & badges -->
 
 # Threads-Agent Stack 🧵🤖
-<!-- Achievement tracking with PostgreSQL enabled -->
+
+> **🎯 Portfolio Project** - AI-powered content generation system demonstrating production-grade microservices architecture
+
+**Currently seeking remote opportunities in AI/MLOps!** [LinkedIn](https://www.linkedin.com/in/vitalii-serbyn-b517a083/) | [Email](mailto:serbyn.vitalii@gmail.com)
 
 [![CI (dev)](.github/workflows/dev-ci.yml/badge.svg)](../../actions/workflows/dev-ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -15,11 +18,15 @@
 ## ✨ What is this?
 
 > **Threads-Agent Stack** – a full-stack, multi-persona AI agent that
-> researches trends ➜ writes & posts Threads content ➜ measures ROI – all on a
+> researches trends ➜ writes & posts content ➜ measures ROI – all on a
 > production-grade Kubernetes architecture.
-> **Goal**: prove 6 %+ ER and $0.01 cost/follow, then scale to \$20 k MRR.
->
-> **NEW**: Real Threads API integration for actual posting and engagement tracking!
+> 
+> **This is a portfolio project** demonstrating:
+> - Microservices architecture with Kubernetes (k3d/k8s)
+> - AI/ML integration (LangGraph, OpenAI, vector databases)
+> - Production monitoring (Prometheus, Grafana, Jaeger)
+> - Test-driven development (90%+ coverage)
+> - CI/CD automation with GitHub Actions
 
 _Micro-services:_ Orchestrator · Persona-runtime (LangGraph + LoRA) · Revenue (Stripe + Affiliate) · Bandit
 online A/B · Trend & Pain Flywheel · FinOps board · SRE/Chaos add-ons.
@@ -79,7 +86,7 @@ export OPENAI_API_KEY="your-key"
 ### Traditional Setup
 ```bash
 # 0 · prereqs: Docker >= 24, k3d >= 5.6, Helm >= 3.14, Python 3.11
-git clone git@github.com:threads-agent-stack/threads-agent.git
+git clone https://github.com/vitalii-serbyn/threads-agent.git
 cd threads-agent
 just bootstrap        # → k3d cluster dev
 just deploy-dev       # → helm install threads

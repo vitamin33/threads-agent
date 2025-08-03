@@ -1,0 +1,229 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tech-doc-generator
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+spec:
+  selector:
+    matchLabels:
+      app: tech-doc-generator
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: tech-doc-generator-alerts
+  namespace: threads-agent
+  labels:
+    app: tech-doc-generator
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: tech-doc-generator.rules
+    rules:
+    
+    # High error rate
+    - alert: TechDocHighErrorRate
+      expr: rate(tech_doc_requests_total{status=~"5.."}[5m]) / rate(tech_doc_requests_total[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate in tech doc generator"
+        description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+    
+    # High response time
+    - alert: TechDocHighLatency
+      expr: histogram_quantile(0.95, rate(tech_doc_request_duration_seconds_bucket[5m])) > 30
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency in tech doc generator"
+        description: "95th percentile latency is {{ $value }}s for the last 5 minutes"
+    
+    # Memory usage
+    - alert: TechDocHighMemoryUsage
+      expr: container_memory_usage_bytes{pod=~"tech-doc-generator-.*"} / container_spec_memory_limit_bytes > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage in tech doc generator"
+        description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+    
+    # CPU usage
+    - alert: TechDocHighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total{pod=~"tech-doc-generator-.*"}[5m]) / container_spec_cpu_quota > 0.9
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage in tech doc generator"
+        description: "CPU usage is {{ $value | humanizePercentage }} of limit"
+    
+    # OpenAI API failures
+    - alert: TechDocOpenAIFailures
+      expr: rate(openai_api_failures_total[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "OpenAI API failures detected"
+        description: "OpenAI API failure rate is {{ $value }} per second"
+    
+    # Cache misses
+    - alert: TechDocHighCacheMissRate
+      expr: rate(cache_misses_total[5m]) / rate(cache_requests_total[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: info
+      annotations:
+        summary: "High cache miss rate"
+        description: "Cache miss rate is {{ $value | humanizePercentage }}"
+    
+    # No recent articles generated
+    - alert: TechDocNoArticlesGenerated
+      expr: increase(articles_generated_total[24h]) == 0
+      for: 30m
+      labels:
+        severity: warning
+      annotations:
+        summary: "No articles generated in 24 hours"
+        description: "No articles have been generated in the last 24 hours"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-tech-doc
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  tech-doc-generator.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Tech Doc Generator Performance",
+        "description": "Performance metrics for AI-powered tech documentation generator",
+        "tags": ["tech-doc", "ai", "performance"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(tech_doc_requests_total[5m])",
+                "legendFormat": "{{method}} {{endpoint}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(tech_doc_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(tech_doc_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "Median"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"tech-doc-generator-.*\"}",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "CPU Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"tech-doc-generator-.*\"}[5m])",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Articles Generated",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "increase(articles_generated_total[24h])",
+                "legendFormat": "Last 24h"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "Cache Hit Rate",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "rate(cache_hits_total[5m]) / rate(cache_requests_total[5m])",
+                "legendFormat": "Hit Rate"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16}
+          },
+          {
+            "id": 7,
+            "title": "OpenAI API Calls",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(openai_api_calls_total[5m])",
+                "legendFormat": "{{operation}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+          },
+          {
+            "id": 8,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(tech_doc_requests_total{status=~\"5..\"}[5m])",
+                "legendFormat": "5xx errors"
+              },
+              {
+                "expr": "rate(tech_doc_requests_total{status=~\"4..\"}[5m])",
+                "legendFormat": "4xx errors"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
+          }
+        ],
+        "time": {"from": "now-1h", "to": "now"},
+        "refresh": "30s"
+      }
+    }
