@@ -1,0 +1,364 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finops-engine
+  namespace: threads-agent
+  labels:
+    app: finops-engine
+    component: cost-tracking
+    version: optimized
+spec:
+  replicas: 3  # High availability with load distribution
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: finops-engine
+  template:
+    metadata:
+      labels:
+        app: finops-engine
+        component: cost-tracking
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      # PERFORMANCE OPTIMIZATIONS
+      affinity:
+        # Spread pods across nodes for better performance
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - finops-engine
+              topologyKey: kubernetes.io/hostname
+        # Prefer nodes with SSD storage
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - compute-optimized
+      
+      # Priority class for critical cost tracking
+      priorityClassName: high-priority
+      
+      containers:
+      - name: finops-engine
+        image: finops-engine:optimized
+        imagePullPolicy: IfNotPresent
+        
+        # RESOURCE OPTIMIZATION
+        resources:
+          requests:
+            # Conservative requests for scheduling
+            cpu: 200m          # 0.2 CPU cores
+            memory: 256Mi      # 256MB base memory
+            ephemeral-storage: 100Mi
+          limits:
+            # Allow bursting for peak loads
+            cpu: 1000m         # 1 CPU core max
+            memory: 512Mi      # 512MB max memory  
+            ephemeral-storage: 500Mi
+        
+        # ENVIRONMENT CONFIGURATION
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: finops-database
+              key: url
+        - name: REDIS_URL
+          value: "redis://redis-cluster:6379/0"
+        - name: PROMETHEUS_ENABLED
+          value: "true"
+        
+        # Performance tuning
+        - name: FINOPS_BATCH_SIZE
+          value: "100"
+        - name: FINOPS_MAX_MEMORY_MB
+          value: "400"  # Leave 112MB headroom
+        - name: FINOPS_CACHE_TTL_SECONDS
+          value: "300"
+        - name: FINOPS_DB_POOL_MIN
+          value: "5"
+        - name: FINOPS_DB_POOL_MAX
+          value: "20"
+        
+        # JVM/Python optimization (if applicable)
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONASYNCIODEBUG
+          value: "0"
+        
+        # HEALTH CHECKS OPTIMIZED
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # STARTUP PROBE for slow initialization
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 10  # Allow 50 seconds for startup
+        
+        # PORTS
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        
+        # VOLUME MOUNTS for temporary storage
+        volumeMounts:
+        - name: tmp-storage
+          mountPath: /tmp
+        - name: cache-storage
+          mountPath: /app/cache
+      
+      # INIT CONTAINERS for database setup
+      initContainers:
+      - name: db-migration
+        image: finops-engine:optimized
+        command: ['python', '-m', 'alembic', 'upgrade', 'head']
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: finops-database
+              key: url
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      
+      # VOLUMES
+      volumes:
+      - name: tmp-storage
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: cache-storage
+        emptyDir:
+          sizeLimit: 200Mi
+          medium: Memory  # In-memory cache for performance
+      
+      # SECURITY CONTEXT
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      
+      # DNS CONFIGURATION for faster lookups
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: edns0
+      
+      # TERMINATION GRACE PERIOD
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finops-engine
+  namespace: threads-agent
+  labels:
+    app: finops-engine
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: finops-engine
+
+---
+# HORIZONTAL POD AUTOSCALER for automatic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: finops-engine-hpa
+  namespace: threads-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: finops-engine
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  # Scale based on CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Scale based on memory utilization
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Scale based on custom metrics (cost events per second)
+  - type: Pods
+    pods:
+      metric:
+        name: finops_cost_events_per_second
+      target:
+        type: AverageValue
+        averageValue: "50"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+
+---
+# POD DISRUPTION BUDGET for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: finops-engine-pdb
+  namespace: threads-agent
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: finops-engine
+
+---
+# NETWORK POLICY for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: finops-engine-netpol
+  namespace: threads-agent
+spec:
+  podSelector:
+    matchLabels:
+      app: finops-engine
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from orchestrator and other services
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: threads-agent
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow metrics scraping from Prometheus
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  # Allow database connections
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis connections
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# SERVICE MONITOR for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: finops-engine-metrics
+  namespace: threads-agent
+  labels:
+    app: finops-engine
+spec:
+  selector:
+    matchLabels:
+      app: finops-engine
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+  namespaceSelector:
+    matchNames:
+    - threads-agent

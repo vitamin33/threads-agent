@@ -1,0 +1,84 @@
+{
+  "features": [
+    {
+      "id": "feat-240-001-cost-data-collection",
+      "name": "Real-time Cost Data Collection Engine",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "effort": "large",
+      "estimated_hours": 152
+    },
+    {
+      "id": "feat-240-002-per-post-attribution",
+      "name": "Per-Post Cost Attribution System",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "effort": "large",
+      "estimated_hours": 132
+    },
+    {
+      "id": "feat-240-003-anomaly-detection",
+      "name": "Cost Anomaly Detection & Alerting",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "effort": "medium",
+      "estimated_hours": 100
+    },
+    {
+      "id": "feat-240-004-optimization-recommendations",
+      "name": "Intelligent Cost Optimization Engine",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "medium",
+      "effort": "large",
+      "estimated_hours": 132
+    },
+    {
+      "id": "feat-240-005-roi-calculator",
+      "name": "ROI Efficiency Calculator",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "medium",
+      "effort": "medium",
+      "estimated_hours": 64
+    },
+    {
+      "id": "feat-240-006-cost-dashboards",
+      "name": "FinOps Monitoring Dashboards",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "medium",
+      "effort": "medium",
+      "estimated_hours": 64
+    },
+    {
+      "id": "feat-240-007-budget-controls",
+      "name": "Automated Budget Controls & Rate Limiting",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "medium",
+      "effort": "medium",
+      "estimated_hours": 80
+    },
+    {
+      "id": "feat-240-008-reporting-api",
+      "name": "Cost Reporting & Analytics API",
+      "epic": "epic-240-finops-cost-tracking-optimization",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "low",
+      "effort": "small",
+      "estimated_hours": 48
+    }
+  ]
+}
