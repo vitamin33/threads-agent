@@ -14,13 +14,13 @@ from datetime import datetime, timedelta
 
 # These imports should fail initially, then succeed after implementation
 try:
-    from services.common.gradual_rollout_manager import (  # noqa: F401
-        GradualRolloutManager,
-        RolloutStage,
-        RolloutError,
-        RolloutStatus,
-        RolloutResult,
-        DeploymentHealth,
+    from services.common.gradual_rollout_manager import (
+        GradualRolloutManager,  # noqa: F401
+        RolloutStage,  # noqa: F401
+        RolloutError,  # noqa: F401
+        RolloutStatus,  # noqa: F401
+        RolloutResult,  # noqa: F401
+        DeploymentHealth,  # noqa: F401
     )
 except ImportError:
     # Expected initially - will be implemented during TDD
@@ -222,7 +222,7 @@ class TestRolloutHealthMonitoring:
         # For now this test documents expected behavior but will be failing
         # We need to implement regression checking in advance_stage method
         # Expected behavior (not yet implemented):
-        # assert result.success == False
+        # assert not result.success
         # assert "regression detected" in result.error_message.lower()
         # assert manager.current_stage == RolloutStage.CANARY_10  # Should not advance
 

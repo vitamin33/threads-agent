@@ -131,7 +131,7 @@ class PerformanceRegressionDetector:
     def __init__(
         self,
         significance_level: SignificanceLevel = SignificanceLevel.ALPHA_05,
-        statistical_tests: List[StatisticalTest] = None,
+        statistical_tests: Optional[List[StatisticalTest]] = None,
         minimum_samples: int = 10,
         baseline_window_days: int = 30,
         filter_outliers: bool = False,

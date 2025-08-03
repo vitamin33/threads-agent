@@ -1,0 +1,308 @@
+{
+  "timestamp": "2025-08-03T17:36:06.547511",
+  "total_execution_time": 20.030183792114258,
+  "overall_success_rate": 0,
+  "coverage_percentage": 0,
+  "sla_compliance": true,
+  "suite_metrics": [
+    {
+      "suite_name": "test_rollback_controller",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7252058982849121,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_mlflow_integration_e2e",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7030117511749268,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_comprehensive_cicd_suite",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6973428726196289,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_github_workflows",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7064309120178223,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_performance_regression_detector_advanced",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6922900676727295,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_gradual_rollout_manager_advanced",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7030408382415771,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_prompt_test_runner",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6997020244598389,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_prompt_model_registry",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6825268268585205,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_kubernetes_fine_tuning_optimization",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.695404052734375,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_gradual_rollout_manager_failure_scenarios",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6908881664276123,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_gradual_rollout_manager",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6990406513214111,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_mlflow_config",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7087588310241699,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_performance_regression_detector",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6892290115356445,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_cicd_pipeline_integration",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7210569381713867,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_mlflow_tracking",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7430219650268555,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_fine_tuning_pipeline",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7138919830322266,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_prompt_test_runner_advanced",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7227809429168701,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_rollback_controller_performance_sla",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6996753215789795,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_mlflow_integration_complete",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.693821907043457,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_mlflow_openai_integration",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6975452899932861,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_enhanced_metrics",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.696868896484375,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_rollback_controller_core",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.699897050857544,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_cicd_pipeline_integration",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.696556568145752,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_mlflow_openai_integration",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7375900745391846,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_rollback_controller_performance_sla",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.6498029232025146,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_performance_regression_detector_advanced",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.5960488319396973,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_gradual_rollout_manager_advanced",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.7022809982299805,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_prompt_test_runner_advanced",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.577592134475708,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    },
+    {
+      "suite_name": "test_gradual_rollout_manager_failure_scenarios",
+      "total_tests": 0,
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "execution_time": 0.5852780342102051,
+      "coverage_percentage": 0.0,
+      "performance_sla_met": true,
+      "error_count": 0
+    }
+  ],
+  "performance_benchmarks": {
+    "integration_avg_execution_time": 0.7082637548446655,
+    "performance_avg_execution_time": 0.6654092311859131,
+    "advanced_avg_execution_time": 0.6656723022460938,
+    "failure_avg_execution_time": 0.6380831003189087
+  },
+  "recommendations": [
+    "Increase test coverage from 0.0% to 95.0%"
+  ]
+}

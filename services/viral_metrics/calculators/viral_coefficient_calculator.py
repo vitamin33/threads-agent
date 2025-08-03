@@ -17,7 +17,7 @@ class ViralCoefficientCalculator:
     and generates discussions.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize calculator with configuration."""
         self.max_coefficient = 50.0  # Cap at 50% to prevent outliers
 
@@ -47,4 +47,4 @@ class ViralCoefficientCalculator:
         viral_coefficient = ((shares + comments) / views) * 100
 
         # Cap at reasonable maximum to prevent outliers
-        return min(viral_coefficient, self.max_coefficient)
+        return float(min(viral_coefficient, self.max_coefficient))

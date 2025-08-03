@@ -6,7 +6,7 @@ import time
 import sys
 
 
-def test_dashboard_api():
+def test_dashboard_api() -> bool:
     """Test the dashboard API endpoints."""
     base_url = "http://localhost:8081"
 
@@ -70,7 +70,7 @@ def test_dashboard_api():
     return True
 
 
-def main():
+def main() -> None:
     """Run the test client."""
     if len(sys.argv) > 1 and sys.argv[1] == "--wait":
         print("⏳ Waiting for server to start...")

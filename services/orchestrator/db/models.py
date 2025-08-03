@@ -13,11 +13,21 @@ class Post(Base):
     __tablename__ = "posts"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    persona_id: Mapped[str] = mapped_column(Text)
+    persona_id: Mapped[str] = mapped_column(
+        Text, index=True
+    )  # Add index for faster filtering
     hook: Mapped[str] = mapped_column(Text)
     body: Mapped[str] = mapped_column(Text)
     tokens_used: Mapped[int] = mapped_column(default=0)
-    ts: Mapped[datetime] = mapped_column(default=func.now())
+    ts: Mapped[datetime] = mapped_column(
+        default=func.now(), index=True
+    )  # Add index for time-based queries
+    engagement_rate: Mapped[float] = mapped_column(
+        default=0.0, index=True
+    )  # Add engagement tracking with index
+    original_input: Mapped[str] = mapped_column(
+        Text, nullable=True
+    )  # Store original input for training
 
 
 class Task(Base):

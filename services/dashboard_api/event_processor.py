@@ -2,7 +2,7 @@
 
 from typing import Dict, Any
 
-from websocket_handler import VariantDashboardWebSocket
+from .websocket_handler import VariantDashboardWebSocket
 
 
 class DashboardEventProcessor:
@@ -12,7 +12,9 @@ class DashboardEventProcessor:
         """Initialize with WebSocket handler."""
         self.websocket_handler = websocket_handler
 
-    async def handle_early_kill_event(self, variant_id: str, kill_data: Dict[str, Any]):
+    async def handle_early_kill_event(
+        self, variant_id: str, kill_data: Dict[str, Any]
+    ) -> None:
         """Process early kill events for dashboard updates."""
         persona_id = kill_data.get("persona_id")
 
@@ -32,7 +34,7 @@ class DashboardEventProcessor:
 
     async def handle_performance_update(
         self, variant_id: str, performance_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Process variant performance updates."""
         persona_id = performance_data.get("persona_id")
 
@@ -52,7 +54,7 @@ class DashboardEventProcessor:
 
     async def handle_pattern_fatigue_alert(
         self, persona_id: str, fatigue_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Process pattern fatigue alerts."""
         update = {
             "event_type": "pattern_fatigue",
@@ -66,7 +68,7 @@ class DashboardEventProcessor:
 
     async def handle_optimization_alert(
         self, persona_id: str, optimization_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Process optimization alerts."""
         update = {
             "event_type": "optimization_alert",
