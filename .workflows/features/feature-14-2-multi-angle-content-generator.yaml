@@ -1,0 +1,152 @@
+id: feature-14-2-multi-angle-content-generator
+epic_id: epic-14-ai-career-content-automation
+title: "Multi-Angle Content Generation System"
+description: |
+  Build an AI-powered content generation system that creates varied technical content
+  (serious, funny, professional) from extracted codebase insights. The system will
+  generate different content types targeting specific audiences: hiring managers,
+  technical leads, and developer communities, showcasing MLOps expertise through
+  compelling storytelling.
+
+priority: high
+estimated_hours: 30
+complexity: high
+
+business_value: |
+  - Creates diverse content to reach different professional audiences
+  - Demonstrates AI/LLM integration skills to potential employers
+  - Generates consistent technical thought leadership content
+  - Showcases real project achievements through compelling narratives
+  - Supports AI Job Strategy with targeted content for hiring managers
+
+technical_requirements:
+  - Integration with OpenAI GPT-4 for high-quality content generation
+  - LangGraph workflows for complex content generation pipelines
+  - Template system for different content formats and tones
+  - Persona-based content customization
+  - Integration with viral_engine for engagement optimization
+
+tasks:
+  - task_001_content_generation_pipeline:
+      title: "Build LangGraph content generation pipeline"
+      description: |
+        Create sophisticated content generation workflow:
+        - LangGraph nodes for different generation stages
+        - Context preparation from extracted insights
+        - Multi-stage refinement process
+        - Quality validation gates
+        - Error handling and retry logic
+      estimated_hours: 5
+      tags: [development, langgraph, ai]
+      dependencies: []
+
+  - task_002_persona_system:
+      title: "Implement audience persona system"
+      description: |
+        Create persona-based content customization:
+        - Hiring Manager persona (business value focus)
+        - Technical Lead persona (architecture deep-dives)
+        - Developer Community persona (practical tutorials)
+        - Startup Founder persona (scalability stories)
+        - Each persona with tone, language, and focus preferences
+      estimated_hours: 4
+      tags: [development, personas, content]
+      dependencies: []
+
+  - task_003_content_templates:
+      title: "Design content templates and formats"
+      description: |
+        Create comprehensive template system:
+        - "How I Built X" story templates
+        - "Performance Optimization Journey" templates
+        - "Architecture Decision" explanation templates
+        - "Problem-Solution" narrative templates
+        - "Best Practices Learned" templates
+        - Platform-specific formatting (LinkedIn vs Dev.to)
+      estimated_hours: 3
+      tags: [design, templates, content]
+      dependencies: [task_002_persona_system]
+
+  - task_004_tone_variation_system:
+      title: "Implement tone and style variation system"
+      description: |
+        Build system for content tone variation:
+        - Professional/serious tone for LinkedIn articles
+        - Casual/friendly tone for Twitter threads
+        - Educational tone for Dev.to tutorials
+        - Storytelling tone for Medium posts
+        - Technical tone for GitHub documentation
+      estimated_hours: 4
+      tags: [development, nlp, tone]
+      dependencies: [task_002_persona_system, task_003_content_templates]
+
+  - task_005_viral_engine_integration:
+      title: "Integrate with viral_engine for engagement optimization"
+      description: |
+        Connect content generator with viral_engine:
+        - Apply engagement patterns to generated content
+        - Use hook optimization for article titles
+        - Implement curiosity gaps in introductions
+        - Add social proof elements
+        - Optimize for platform-specific algorithms
+      estimated_hours: 4
+      tags: [integration, viral-engine, engagement]
+      dependencies: [task_001_content_generation_pipeline]
+
+  - task_006_content_validation_system:
+      title: "Build content quality validation system"
+      description: |
+        Create multi-layer content validation:
+        - Technical accuracy checking
+        - Tone consistency validation
+        - Readability score calculation
+        - SEO optimization validation
+        - Factual consistency with source insights
+        - Professional appropriateness checking
+      estimated_hours: 4
+      tags: [development, validation, quality]
+      dependencies: [task_001_content_generation_pipeline, task_004_tone_variation_system]
+
+  - task_007_batch_generation_system:
+      title: "Implement batch content generation for efficiency"
+      description: |
+        Build system for generating multiple articles efficiently:
+        - Batch processing of insights
+        - Parallel content generation
+        - Content variation to avoid repetition
+        - Token usage optimization
+        - Generation queue management
+      estimated_hours: 3
+      tags: [development, optimization, batch]
+      dependencies: [task_001_content_generation_pipeline]
+
+  - task_008_unit_tests_content_generator:
+      title: "Write comprehensive unit tests for content generator"
+      description: |
+        Create extensive test suite:
+        - LangGraph workflow tests with mock LLM responses
+        - Persona system tests with different audiences
+        - Template rendering tests
+        - Tone variation validation tests
+        - Content quality validation tests
+        - Batch generation performance tests
+      estimated_hours: 3
+      tags: [testing, unit-tests]
+      dependencies: [task_001_content_generation_pipeline, task_006_content_validation_system]
+
+acceptance_criteria:
+  - Generates 5+ different article formats from single insight
+  - Successfully varies tone and style for different platforms
+  - Integrates seamlessly with viral_engine patterns
+  - Maintains consistent quality across all generated content
+  - Processes batch generation requests efficiently
+  - Comprehensive test coverage above 90%
+  - Zero factual inconsistencies in generated content
+
+testing_strategy:
+  - Unit tests for each generation component
+  - Integration tests with real insight data
+  - A/B testing for different content variations
+  - Quality validation with manual review samples
+  - Performance tests for batch generation
+  - End-to-end tests with viral_engine integration
