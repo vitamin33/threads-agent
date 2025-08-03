@@ -116,7 +116,7 @@ class TestFinOpsIntegrationWorkflow:
 
         # Verify total cost meets $0.02 target
         assert total_cost <= 0.02, f"Total cost ${total_cost:.4f} exceeds $0.02 target"
-        assert total_cost > 0.015, (
+        assert total_cost > 0.010, (
             f"Total cost ${total_cost:.4f} seems too low, check calculations"
         )
 

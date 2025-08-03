@@ -12,7 +12,7 @@ Target: Support all notification channels with proper routing.
 
 import asyncio
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class AlertManager:
@@ -45,18 +45,27 @@ class AlertManager:
     async def send_alert(self, anomaly_data: Dict[str, Any]) -> Dict[str, Any]:
         """Send alert through appropriate channels based on severity."""
         severity = anomaly_data.get("severity", "medium")
-        channels_to_notify = self.config["severity_routing"].get(severity, ["slack"])
+        channels_to_notify = self.config.get("severity_routing", {}).get(
+            severity, ["slack"]
+        )
 
         results = {}
 
         # Send to each required channel
         for channel in channels_to_notify:
-            if channel == "slack":
-                results[channel] = await self.send_slack_alert(anomaly_data)
-            elif channel == "pagerduty":
-                results[channel] = await self.send_pagerduty_alert(anomaly_data)
-            elif channel == "email":
-                results[channel] = await self.send_email_alert(anomaly_data)
+            try:
+                if channel == "slack":
+                    results[channel] = await self.send_slack_alert(anomaly_data)
+                elif channel == "pagerduty":
+                    results[channel] = await self.send_pagerduty_alert(anomaly_data)
+                elif channel == "email":
+                    results[channel] = await self.send_email_alert(anomaly_data)
+            except Exception as e:
+                results[channel] = {
+                    "success": False,
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
 
         return results
 
@@ -72,7 +81,7 @@ class AlertManager:
             "success": True,
             "channel": "slack",
             "message": message,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     async def send_pagerduty_alert(
@@ -86,7 +95,7 @@ class AlertManager:
             "success": True,
             "channel": "pagerduty",
             "incident_key": f"cost-anomaly-{anomaly_data.get('persona_id', 'unknown')}",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     async def send_email_alert(self, anomaly_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -98,7 +107,7 @@ class AlertManager:
             "success": True,
             "channel": "email",
             "recipients": self.config["channels"]["email"]["recipients"],
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def format_slack_message(self, anomaly_data: Dict[str, Any]) -> str:
@@ -118,5 +127,11 @@ class AlertManager:
             multiplier = anomaly_data.get("multiplier", 0)
             message += f"Current cost: ${current_cost:.3f}\n"
             message += f"Multiplier: {multiplier:.2f}x baseline"
+        elif anomaly_type == "efficiency_drop":
+            efficiency_drop_percent = anomaly_data.get("efficiency_drop_percent", 0)
+            message += f"Efficiency drop: {efficiency_drop_percent}%"
+        elif anomaly_type == "negative_roi":
+            roi_percent = anomaly_data.get("roi_percent", 0)
+            message += f"ROI: {roi_percent}%"
 
         return message

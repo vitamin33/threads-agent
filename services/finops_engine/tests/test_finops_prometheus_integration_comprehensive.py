@@ -21,7 +21,7 @@ Key Prometheus Integration Requirements:
 import pytest
 import asyncio
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 import statistics
 import random
 
@@ -696,7 +696,7 @@ class TestPrometheusMetricsAccuracy:
         emission_times = []
 
         for i in range(5):
-            before_emission = datetime.utcnow()
+            before_emission = datetime.now(timezone.utc)
 
             event = {
                 "cost_amount": 0.01,
@@ -708,7 +708,7 @@ class TestPrometheusMetricsAccuracy:
 
             emitter.emit_cost_metric(event)
 
-            after_emission = datetime.utcnow()
+            after_emission = datetime.now(timezone.utc)
             emission_times.append((before_emission, after_emission))
 
             # Small delay between emissions
