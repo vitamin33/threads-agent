@@ -45,7 +45,8 @@ class TestFineTuningPipeline:
         assert pipeline.is_enabled is True
         assert pipeline.last_run_timestamp is None
 
-    def test_pipeline_run_orchestrates_all_components(self):
+    @pytest.mark.asyncio
+    async def test_pipeline_run_orchestrates_all_components(self):
         """Test that pipeline.run() orchestrates all components in correct order."""
         # Setup
         config = PipelineConfig(
@@ -75,12 +76,12 @@ class TestFineTuningPipeline:
             
             # Setup mocks
             mock_data_collector.return_value.collect_training_data.return_value = mock_training_data
-            mock_trainer.return_value.start_fine_tuning.return_value = mock_model_version
+            mock_trainer.return_value.start_fine_tuning = AsyncMock(return_value=mock_model_version)
             
             pipeline = FineTuningPipeline(config=config)
             
             # Run pipeline
-            result = pipeline.run()
+            result = await pipeline.run()
             
             # Verify orchestration
             assert result.status == "success"
@@ -92,7 +93,8 @@ class TestFineTuningPipeline:
             mock_data_collector.return_value.collect_training_data.assert_called_once()
             mock_trainer.return_value.start_fine_tuning.assert_called_once_with(mock_training_data)
 
-    def test_pipeline_skips_run_when_insufficient_data(self):
+    @pytest.mark.asyncio
+    async def test_pipeline_skips_run_when_insufficient_data(self):
         """Test that pipeline skips training when insufficient training data is available."""
         config = PipelineConfig(
             training_data_threshold=100,
@@ -110,7 +112,7 @@ class TestFineTuningPipeline:
             )
             mock_collector.return_value.collect_training_data.return_value = insufficient_data
             
-            result = pipeline.run()
+            result = await pipeline.run()
             
             assert result.status == "skipped"
             assert result.reason == "insufficient_training_data"
@@ -170,7 +172,8 @@ class TestDataCollector:
 class TestModelTrainer:
     """Test the ModelTrainer component."""
 
-    def test_start_fine_tuning_creates_openai_job(self):
+    @pytest.mark.asyncio
+    async def test_start_fine_tuning_creates_openai_job(self):
         """Test that ModelTrainer creates an OpenAI fine-tuning job."""
         # This test will fail - ModelTrainer class doesn't exist yet
         trainer = ModelTrainer(base_model="gpt-3.5-turbo-0125")
@@ -181,25 +184,29 @@ class TestModelTrainer:
             metadata={"collected_at": datetime.now()},
         )
         
-        with patch('openai.OpenAI') as mock_openai:
-            mock_client = Mock()
+        with patch('openai.AsyncOpenAI') as mock_openai:
+            mock_client = AsyncMock()
             mock_openai.return_value = mock_client
             
             # Mock OpenAI fine-tuning job creation
-            mock_client.fine_tuning.jobs.create.return_value = Mock(
+            mock_file_create = AsyncMock(return_value=Mock(id="file-123"))
+            mock_client.files.create = mock_file_create
+            
+            mock_job_create = AsyncMock(return_value=Mock(
                 id="ftjob-123",
                 model="gpt-3.5-turbo-0125",
                 status="validating_files",
-            )
+            ))
+            mock_client.fine_tuning.jobs.create = mock_job_create
             
-            model_version = trainer.start_fine_tuning(training_data)
+            model_version = await trainer.start_fine_tuning(training_data)
             
             assert model_version.training_job_id == "ftjob-123"
             assert model_version.base_model == "gpt-3.5-turbo-0125"
             assert model_version.status == "training"
             
             # Verify OpenAI API was called
-            mock_client.fine_tuning.jobs.create.assert_called_once()
+            mock_job_create.assert_called_once()
 
     def test_monitor_training_job_tracks_status(self):
         """Test that ModelTrainer monitors training job status."""
@@ -447,7 +454,8 @@ class TestMLflowIntegration:
 class TestEndToEndIntegration:
     """End-to-end integration test of the complete fine-tuning pipeline."""
 
-    def test_complete_pipeline_with_mlflow_tracking(self):
+    @pytest.mark.asyncio
+    async def test_complete_pipeline_with_mlflow_tracking(self):
         """Test the complete pipeline from data collection to model deployment with MLflow."""
         config = PipelineConfig(
             training_data_threshold=50,
@@ -478,7 +486,7 @@ class TestEndToEndIntegration:
                 base_model="gpt-3.5-turbo-0125",
                 status="completed"
             )
-            mock_trainer.return_value.start_fine_tuning.return_value = model_version
+            mock_trainer.return_value.start_fine_tuning = AsyncMock(return_value=model_version)
             
             # Setup successful evaluation
             evaluation = EvaluationResult(
@@ -495,7 +503,7 @@ class TestEndToEndIntegration:
             
             # Run complete pipeline
             pipeline = FineTuningPipeline(config=config)
-            result = pipeline.run()
+            result = await pipeline.run()
             
             # Verify pipeline execution
             assert result.status == "success"
