@@ -315,7 +315,7 @@ class ContentGenerator:
             )
 
             return float(score_text.strip())
-        except:
+        except Exception:
             return 5.0  # Default score if parsing fails
 
     async def _generate_full_content(

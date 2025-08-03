@@ -25,7 +25,7 @@ class ManualPublishingTracker:
         draft_id = f"{platform.value}_draft_{int(time.time())}"
 
         # Store draft metadata (in production, this would go to database)
-        draft_data = {
+        {
             "draft_id": draft_id,
             "platform": platform.value,
             "created_at": datetime.utcnow().isoformat(),

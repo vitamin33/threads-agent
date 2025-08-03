@@ -1,0 +1,202 @@
+apiVersion: 1
+
+# Grafana data source configuration for FinOps Engine
+# This file configures multiple data sources for the executive dashboards
+
+datasources:
+  # Prometheus data source for metrics
+  - name: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    basicAuth: false
+    withCredentials: false
+    jsonData:
+      httpMethod: POST
+      prometheusType: Prometheus
+      prometheusVersion: "2.40.0"
+      cacheLevel: 'High'
+      disableMetricsLookup: false
+      incrementalQuerying: true
+      exemplarTraceIdDestinations: []
+    secureJsonData: {}
+
+  # Loki data source for logs  
+  - name: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: true
+    basicAuth: false
+    withCredentials: false
+    jsonData:
+      maxLines: 1000
+      timeout: 60
+      derivedFields:
+        - datasourceUid: "jaeger"
+          matcherRegex: "trace_id=(\\w+)"
+          name: "TraceID"
+          url: "$${__value.raw}"
+    secureJsonData: {}
+
+  # Jaeger data source for distributed tracing
+  - name: jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:14268
+    isDefault: false
+    editable: true
+    basicAuth: false
+    withCredentials: false
+    jsonData:
+      tracesToLogs:
+        datasourceUid: "loki"
+        tags: ['job', 'instance', 'pod', 'namespace']
+        mappedTags: [
+          { key: 'service.name', value: 'job' }
+        ]
+        mapTagNamesEnabled: false
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: "prometheus"
+        tags: [
+          { key: 'service.name', value: 'job' },
+          { key: 'job' }
+        ]
+        queries: [
+          {
+            name: 'Sample query',
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+          }
+        ]
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      spanBar:
+        type: 'Tag'
+        tag: 'http.path'
+    secureJsonData: {}
+
+  # FinOps Engine API JSON data source for custom endpoints
+  - name: finops-api
+    type: marcusolsson-json-datasource
+    access: proxy
+    url: http://finops-engine:8000
+    isDefault: false
+    editable: true
+    basicAuth: false
+    withCredentials: false
+    jsonData:
+      timeout: 30
+      cacheDurationSeconds: 300
+      queryParams: ''
+      headers: [
+        {
+          name: 'Content-Type',
+          value: 'application/json'
+        },
+        {
+          name: 'Accept',
+          value: 'application/json'
+        }
+      ]
+    secureJsonData: {}
+
+  # PostgreSQL data source for raw data access
+  - name: postgres-finops
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: threads_agent
+    user: threads_agent
+    isDefault: false
+    editable: true
+    basicAuth: false
+    withCredentials: false
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 100
+      maxIdleConns: 100
+      maxIdleConnsAuto: true
+      connMaxLifetime: 14400
+      postgresVersion: 1300
+      timescaledb: false
+    secureJsonData:
+      password: threads_agent_password
+
+  # InfluxDB data source for time-series analytics (if used)
+  - name: influxdb-finops
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    database: finops_metrics
+    user: finops
+    isDefault: false
+    editable: true
+    basicAuth: false
+    withCredentials: false
+    jsonData:
+      httpMode: GET
+      keepCookies: []
+      timeout: 30
+      version: InfluxQL
+      organization: threads-agent
+      defaultBucket: finops-metrics
+      maxSeries: 1000
+      httpHeaderName1: 'Authorization'
+    secureJsonData:
+      password: finops_password
+      httpHeaderValue1: 'Token your-influxdb-token'
+
+  # TestData DB for demo/testing purposes
+  - name: testdata
+    type: testdata
+    isDefault: false
+    editable: true
+
+  # CloudWatch data source (if using AWS infrastructure)
+  - name: cloudwatch
+    type: cloudwatch
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      authType: keys
+      defaultRegion: us-east-1
+      customMetricsNamespaces: 'ThreadsAgent/FinOps'
+      assumeRoleArn: ''
+      externalId: ''
+      profile: ''
+      endpoint: ''
+      logGroups: [
+        {
+          arn: 'arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/finops-engine',
+          name: '/aws/lambda/finops-engine'
+        }
+      ]
+    secureJsonData:
+      accessKey: ''
+      secretKey: ''
+
+  # Azure Monitor data source (if using Azure infrastructure)
+  - name: azure-monitor
+    type: grafana-azure-monitor-datasource
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      azureAuthType: msi
+      subscriptionId: ''
+      tenantId: ''
+      clientId: ''
+      cloudName: azuremonitor
+      resourceGroup: 'threads-agent-rg'
+    secureJsonData:
+      clientSecret: ''
