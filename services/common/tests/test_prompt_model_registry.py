@@ -1130,6 +1130,7 @@ class TestPromptModelRegistryIntegration:
         # Create multiple models with multiple versions each
         for model_idx in range(3):
             import time
+
             model_name = f"large-scale-test-{model_idx}-{int(time.time())}"
 
             for version_idx in range(3):
