@@ -8,6 +8,7 @@ import asyncio
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+import pytest
 
 # Add current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -18,62 +19,73 @@ def test_imports():
     print("🔍 Testing imports...")
 
     try:
-        from services.historical_pr_analyzer import HistoricalPRAnalyzer  # noqa: F401
+        from services.achievement_collector.services.historical_pr_analyzer import (
+            HistoricalPRAnalyzer,  # noqa: F401
+        )
 
         print("✅ Historical PR Analyzer import successful")
     except ImportError as e:
         print(f"❌ Historical PR Analyzer import failed: {e}")
-        return False
+        assert False
 
     try:
-        from services.portfolio_validator import PortfolioValidator  # noqa: F401
+        from services.achievement_collector.services.portfolio_validator import (
+            PortfolioValidator,  # noqa: F401
+        )
 
         print("✅ Portfolio Validator import successful")
     except ImportError as e:
         print(f"❌ Portfolio Validator import failed: {e}")
-        return False
+        assert False
 
     try:
-        from mlops.mlflow_registry import MLflowRegistry  # noqa: F401
+        from services.achievement_collector.mlops.mlflow_registry import MLflowRegistry  # noqa: F401
 
         print("✅ MLflow Registry import successful")
     except ImportError as e:
         print(f"❌ MLflow Registry import failed: {e}")
-        return False
+        assert False
 
     try:
-        from ai_pipeline.intelligent_llm_router import IntelligentLLMRouter  # noqa: F401
+        from services.achievement_collector.ai_pipeline.intelligent_llm_router import (
+            IntelligentLLMRouter,  # noqa: F401
+        )
 
         print("✅ LLM Router import successful")
     except ImportError as e:
         print(f"❌ LLM Router import failed: {e}")
-        return False
+        assert False
 
     try:
-        from pipeline.end_to_end_integration import EndToEndPipeline  # noqa: F401
+        from services.achievement_collector.pipeline.end_to_end_integration import (
+            EndToEndPipeline,  # noqa: F401
+        )
 
         print("✅ End-to-End Pipeline import successful")
     except ImportError as e:
         print(f"❌ End-to-End Pipeline import failed: {e}")
-        return False
+        assert False
 
     try:
-        from models import Achievement, PRAchievement  # noqa: F401
+        from services.achievement_collector.models import Achievement, PRAchievement  # noqa: F401
 
         print("✅ Database models import successful")
     except ImportError as e:
         print(f"❌ Database models import failed: {e}")
-        return False
+        assert False
 
-    return True
+    assert True  # All imports successful
 
 
+@pytest.mark.asyncio
 async def test_historical_pr_analyzer():
     """Test Historical PR Analyzer functionality."""
     print("\n📊 Testing Historical PR Analyzer...")
 
     try:
-        from services.historical_pr_analyzer import HistoricalPRAnalyzer
+        from services.achievement_collector.services.historical_pr_analyzer import (
+            HistoricalPRAnalyzer,
+        )
 
         # Test initialization
         analyzer = HistoricalPRAnalyzer(github_token="test-token")
@@ -92,19 +104,22 @@ async def test_historical_pr_analyzer():
         impact = await analyzer.analyze_business_impact(mock_pr_data)
         print(f"✅ Business impact analysis successful: {impact}")
 
-        return True
+        assert True  # Test passed
 
     except Exception as e:
         print(f"❌ Historical PR Analyzer test failed: {e}")
-        return False
+        assert False
 
 
+@pytest.mark.asyncio
 async def test_portfolio_validator():
     """Test Portfolio Validator functionality."""
     print("\n💼 Testing Portfolio Validator...")
 
     try:
-        from services.portfolio_validator import PortfolioValidator
+        from services.achievement_collector.services.portfolio_validator import (
+            PortfolioValidator,
+        )
 
         # Test initialization
         validator = PortfolioValidator()
@@ -142,19 +157,20 @@ async def test_portfolio_validator():
             f"✅ Portfolio validation successful: Total value ${result['total_value']:,.2f}"
         )
 
-        return True
+        assert True  # Test passed
 
     except Exception as e:
         print(f"❌ Portfolio Validator test failed: {e}")
-        return False
+        assert False
 
 
+@pytest.mark.asyncio
 async def test_mlflow_registry():
     """Test MLflow Registry functionality."""
     print("\n🤖 Testing MLflow Registry...")
 
     try:
-        from mlops.mlflow_registry import MLflowRegistry
+        from services.achievement_collector.mlops.mlflow_registry import MLflowRegistry
 
         # Test initialization
         registry = MLflowRegistry()
@@ -173,19 +189,22 @@ async def test_mlflow_registry():
         models = await registry.list_models()
         print(f"✅ Model listing successful: Found {len(models)} models")
 
-        return True
+        assert True  # Test passed
 
     except Exception as e:
         print(f"❌ MLflow Registry test failed: {e}")
-        return False
+        assert False
 
 
+@pytest.mark.asyncio
 async def test_llm_router():
     """Test LLM Router functionality."""
     print("\n🧠 Testing LLM Router...")
 
     try:
-        from ai_pipeline.intelligent_llm_router import IntelligentLLMRouter
+        from services.achievement_collector.ai_pipeline.intelligent_llm_router import (
+            IntelligentLLMRouter,
+        )
 
         # Test initialization
         config = {
@@ -207,11 +226,11 @@ async def test_llm_router():
         )
         print(f"✅ Routing decision successful: {decision.selected_model}")
 
-        return True
+        assert True  # Test passed
 
     except Exception as e:
         print(f"❌ LLM Router test failed: {e}")
-        return False
+        assert False
 
 
 def test_database_models():
@@ -240,19 +259,22 @@ def test_database_models():
         )
         print("✅ PR Achievement model creation successful")
 
-        return True
+        assert True  # Test passed
 
     except Exception as e:
         print(f"❌ Database models test failed: {e}")
-        return False
+        assert False
 
 
+@pytest.mark.asyncio
 async def test_end_to_end_pipeline():
     """Test End-to-End Pipeline functionality."""
     print("\n🔗 Testing End-to-End Pipeline...")
 
     try:
-        from pipeline.end_to_end_integration import EndToEndPipeline
+        from services.achievement_collector.pipeline.end_to_end_integration import (
+            EndToEndPipeline,
+        )
 
         # Test initialization
         pipeline = EndToEndPipeline()
@@ -266,11 +288,11 @@ async def test_end_to_end_pipeline():
         metrics = pipeline.get_metrics()
         print(f"✅ Metrics collection successful: {len(metrics)} metrics")
 
-        return True
+        assert True  # Test passed
 
     except Exception as e:
         print(f"❌ End-to-End Pipeline test failed: {e}")
-        return False
+        assert False
 
 
 async def main():

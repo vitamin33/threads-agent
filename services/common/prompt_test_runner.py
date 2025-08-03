@@ -111,7 +111,9 @@ class PromptTestRunner:
     Integrates with existing PromptModel infrastructure for seamless CI/CD workflows.
     """
 
-    def __init__(self, prompt_model, test_suite: Optional[TestSuite] = None):
+    def __init__(
+        self, prompt_model: Any, test_suite: Optional[TestSuite] = None
+    ) -> None:
         """
         Initialize PromptTestRunner.
 

@@ -1,5 +1,6 @@
 """Integration test for production database schema and migration system (CRA-299)."""
 
+import os
 import tempfile
 from datetime import datetime, timezone, timedelta
 
@@ -8,12 +9,21 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
-from models import Base, Achievement, PRAchievement, PRCodeChange
+from services.achievement_collector.models import (
+    Base,
+    Achievement,
+    PRAchievement,
+    PRCodeChange,
+)
 
 
 class TestProductionSchemaIntegration:
     """Test the complete production database schema implementation."""
 
+    @pytest.mark.skipif(
+        os.getenv("USE_SQLITE") == "true",
+        reason="SQLite doesn't preserve timezone info",
+    )
     def test_models_use_timezone_aware_datetime(self):
         """Test that all datetime fields are timezone-aware."""
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:

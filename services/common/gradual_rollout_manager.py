@@ -118,10 +118,10 @@ class GradualRolloutManager:
 
     def __init__(
         self,
-        performance_detector,
+        performance_detector: Any,
         stage_timeout_minutes: int = 30,
         auto_advance_on_healthy: bool = False,
-    ):
+    ) -> None:
         """
         Initialize GradualRolloutManager.
 
@@ -197,7 +197,9 @@ class GradualRolloutManager:
         )
 
     def advance_stage(
-        self, historical_data: List[Any] = None, current_data: List[Any] = None
+        self,
+        historical_data: Optional[List[Any]] = None,
+        current_data: Optional[List[Any]] = None,
     ) -> RolloutResult:
         """
         Advance to the next rollout stage.

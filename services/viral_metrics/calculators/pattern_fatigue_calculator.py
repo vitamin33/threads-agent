@@ -17,7 +17,7 @@ class PatternFatigueCalculator:
     Score ranges from 0.0 (fresh) to 1.0 (highly fatigued).
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with decay configuration."""
         self.decay_factor = 0.95  # How quickly fatigue decays
         self.lookback_days = 7  # How far back to check pattern usage

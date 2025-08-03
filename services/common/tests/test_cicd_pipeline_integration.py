@@ -192,7 +192,7 @@ class TestCICDPipelineIntegration:
         history = rollback_controller.get_rollback_history()
         assert len(history) == 1
         assert history[0].trigger == RollbackTrigger.PERFORMANCE_REGRESSION
-        assert history[0].success == True
+        assert history[0].success
 
     def test_manual_rollback_during_rollout(self, pipeline_components):
         """

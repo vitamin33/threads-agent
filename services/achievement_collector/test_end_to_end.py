@@ -7,18 +7,22 @@ Tests the complete pipeline from PR analysis to portfolio generation.
 import asyncio
 import sys
 from pathlib import Path
+import pytest
 
 # Add current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
 
+@pytest.mark.asyncio
 async def test_complete_pipeline():
     """Test the complete pipeline with realistic data."""
     print("🚀 Testing Complete Achievement Collector Pipeline")
     print("=" * 60)
 
     try:
-        from pipeline.end_to_end_integration import EndToEndPipeline
+        from services.achievement_collector.pipeline.end_to_end_integration import (
+            EndToEndPipeline,
+        )
 
         # Initialize pipeline
         pipeline = EndToEndPipeline()
@@ -52,13 +56,16 @@ async def test_complete_pipeline():
         return False
 
 
+@pytest.mark.asyncio
 async def test_performance_benchmarks():
     """Test system performance benchmarks."""
     print("\n⚡ Testing Performance Benchmarks")
     print("=" * 40)
 
     try:
-        from pipeline.end_to_end_integration import EndToEndPipeline
+        from services.achievement_collector.pipeline.end_to_end_integration import (
+            EndToEndPipeline,
+        )
         import time
 
         pipeline = EndToEndPipeline()
@@ -91,6 +98,7 @@ async def test_performance_benchmarks():
         return False
 
 
+@pytest.mark.asyncio
 async def test_portfolio_generation():
     """Test portfolio generation with realistic data."""
     print("\n📄 Testing Portfolio Generation")
@@ -166,6 +174,7 @@ async def test_portfolio_generation():
         return False
 
 
+@pytest.mark.asyncio
 async def test_mlops_pipeline():
     """Test MLOps pipeline functionality."""
     print("\n🤖 Testing MLOps Pipeline")

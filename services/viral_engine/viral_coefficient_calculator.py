@@ -44,7 +44,7 @@ class ViralCoefficientCalculator:
 
         return viral_coefficient
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize calculator with tracking capabilities"""
         self._calculation_history: List[float] = []
 

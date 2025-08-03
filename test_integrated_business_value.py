@@ -64,7 +64,7 @@ def test_comprehensive_integration() -> None:
 
         # Extract business value
         result = calculator.extract_business_value(
-            test_case["description"], test_case["metrics"]
+            test_case["description"], test_case.get("metrics", {})
         )
 
         if result:
@@ -106,7 +106,7 @@ def test_comprehensive_integration() -> None:
         print()
 
 
-def test_ai_mlops_focused_extraction():
+def test_ai_mlops_focused_extraction() -> None:
     """Test extraction focused on AI/MLOps scenarios for job applications."""
 
     calculator = AgileBusinessValueCalculator()
@@ -137,7 +137,7 @@ def test_ai_mlops_focused_extraction():
         print(f"🤖 {scenario['title']}:")
 
         result = calculator.extract_business_value(
-            scenario["description"], scenario["metrics"]
+            scenario["description"], scenario.get("metrics", {})
         )
 
         if result:

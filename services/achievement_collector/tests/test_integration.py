@@ -23,8 +23,10 @@ from services.achievement_collector.services.db_operations import (  # noqa: E40
     create_achievement_from_pr,
 )
 from services.achievement_collector.services.story_generator import StoryGenerator  # noqa: E402
+import pytest  # noqa: E402
 
 
+@pytest.mark.asyncio
 async def test_full_integration():
     """Test the complete workflow from PR data to stored achievement."""
 

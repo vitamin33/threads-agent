@@ -30,7 +30,7 @@ class TestRollbackControllerCore:
 
         assert controller.performance_detector == detector
         assert controller.model_registry == registry
-        assert controller.is_monitoring == False
+        assert not controller.is_monitoring
         assert controller.rollback_threshold_seconds == 30.0
         assert isinstance(controller.rollback_history, list)
         assert len(controller.rollback_history) == 0
@@ -45,14 +45,14 @@ class TestRollbackControllerCore:
         result = controller.start_monitoring("model_v2.0", "model_v1.9")
 
         assert result.success
-        assert controller.is_monitoring == True
+        assert controller.is_monitoring
         assert controller.current_model == "model_v2.0"
         assert controller.fallback_model == "model_v1.9"
         assert controller.monitoring_start_time is not None
 
         # Stop monitoring
         controller.stop_monitoring()
-        assert controller.is_monitoring == False
+        assert not controller.is_monitoring
         assert controller.current_model is None
         assert controller.fallback_model is None
 
@@ -79,9 +79,9 @@ class TestRollbackControllerCore:
 
         assert isinstance(health, HealthCheck)
         assert not health.is_healthy
-        assert health.triggers_rollback == True
+        assert health.triggers_rollback
         assert RollbackTrigger.PERFORMANCE_REGRESSION in health.detected_issues
-        assert health.has_sufficient_data == True
+        assert health.has_sufficient_data
         assert controller.last_health_check is not None
 
         # Verify detector was called

@@ -17,13 +17,13 @@ class PatternFatigueDetector:
     pass
 
 
-def get_db_connection():
+def get_db_connection() -> Any:
     """Get database connection."""
     # This will be properly implemented with actual DB connection
     pass
 
 
-def get_redis_connection():
+def get_redis_connection() -> Any:
     """Get Redis connection."""
     # This will be properly implemented with actual Redis connection
     pass
@@ -38,7 +38,7 @@ class PerformanceMonitor:
 class VariantMetricsAPI:
     """API for fetching variant performance metrics for dashboard."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with database and service connections."""
         self.db = get_db_connection()
         self.redis = get_redis_connection()

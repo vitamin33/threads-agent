@@ -5,18 +5,18 @@ from typing import Dict, Set, Any
 import json
 from fastapi import WebSocket
 
-from variant_metrics import VariantMetricsAPI
+from .variant_metrics import VariantMetricsAPI  # type: ignore[import-not-found]
 
 
 class VariantDashboardWebSocket:
     """Handles WebSocket connections for real-time dashboard updates."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize WebSocket handler."""
         self.connections: Dict[str, Set[WebSocket]] = {}
         self.metrics_api = VariantMetricsAPI()
 
-    async def handle_connection(self, websocket: WebSocket, persona_id: str):
+    async def handle_connection(self, websocket: WebSocket, persona_id: str) -> None:
         """Handle new dashboard WebSocket connection."""
         await websocket.accept()
 
@@ -44,12 +44,14 @@ class VariantDashboardWebSocket:
             if not self.connections[persona_id]:
                 del self.connections[persona_id]
 
-    async def send_initial_data(self, websocket: WebSocket, persona_id: str):
+    async def send_initial_data(self, websocket: WebSocket, persona_id: str) -> None:
         """Send initial dashboard data to newly connected client."""
         initial_data = await self.metrics_api.get_live_metrics(persona_id)
         await websocket.send_json({"type": "initial_data", "data": initial_data})
 
-    async def handle_message(self, websocket: WebSocket, persona_id: str, message: str):
+    async def handle_message(
+        self, websocket: WebSocket, persona_id: str, message: str
+    ) -> None:
         """Handle incoming WebSocket messages."""
         try:
             data = json.loads(message)
@@ -67,7 +69,7 @@ class VariantDashboardWebSocket:
 
     async def broadcast_variant_update(
         self, persona_id: str, update_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Broadcast variant performance updates to connected dashboards."""
         if persona_id not in self.connections:
             return
@@ -91,7 +93,9 @@ class VariantDashboardWebSocket:
         for websocket in disconnected:
             self.connections[persona_id].discard(websocket)
 
-    async def broadcast_early_kill(self, persona_id: str, kill_data: Dict[str, Any]):
+    async def broadcast_early_kill(
+        self, persona_id: str, kill_data: Dict[str, Any]
+    ) -> None:
         """Broadcast early kill event."""
         update = {
             "event_type": "early_kill",

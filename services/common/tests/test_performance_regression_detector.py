@@ -555,7 +555,7 @@ class TestPerformanceRegressionDetectorAdvancedFeatures:
         detector = PerformanceRegressionDetector(filter_outliers=True)
 
         # Create data with obvious outliers
-        normal_data = [0.85] * 20
+        # normal_data = [0.85] * 20  # Not used
         outlier_data = [0.85] * 18 + [0.3, 1.5]  # Two obvious outliers
 
         historical_with_outliers = [
