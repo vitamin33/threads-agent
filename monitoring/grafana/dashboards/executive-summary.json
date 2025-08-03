@@ -1,0 +1,694 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Executive Summary - FinOps Dashboard",
+    "tags": ["executive", "finops", "roi", "summary"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5m",
+    "schemaVersion": 39,
+    "version": 1,
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "time_range",
+          "type": "interval",
+          "current": {
+            "selected": false,
+            "text": "1h",
+            "value": "1h"
+          },
+          "options": [
+            {
+              "selected": true,
+              "text": "1h",
+              "value": "1h"
+            },
+            {
+              "selected": false,
+              "text": "6h",
+              "value": "6h"
+            },
+            {
+              "selected": false,
+              "text": "24h",
+              "value": "24h"
+            },
+            {
+              "selected": false,
+              "text": "7d",
+              "value": "7d"
+            }
+          ]
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "ROI Percentage (Target: 300%+)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "finops_roi_percentage",
+            "refId": "A",
+            "legendFormat": "Current ROI",
+            "exemplar": true,
+            "interval": "",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 500,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 200
+                },
+                {
+                  "color": "green",
+                  "value": 300
+                },
+                {
+                  "color": "super-light-green",
+                  "value": 400
+                }
+              ]
+            },
+            "mappings": [],
+            "custom": {
+              "displayMode": "basic",
+              "orientation": "horizontal"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Monthly Revenue Progress ($20k Target)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "finops_total_revenue / 20000 * 100",
+            "refId": "A",
+            "legendFormat": "Revenue Progress",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "green",
+                  "value": 80
+                },
+                {
+                  "color": "super-light-green",
+                  "value": 100
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Engagement Rate (Target: 6%+)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "finops_engagement_rate * 100",
+            "refId": "A",
+            "legendFormat": "Current Engagement",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 15,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 4
+                },
+                {
+                  "color": "green",
+                  "value": 6
+                },
+                {
+                  "color": "super-light-green",
+                  "value": 8
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background",
+          "graphMode": "area"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Cost per Post Efficiency",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "finops_cost_per_post",
+            "refId": "A",
+            "legendFormat": "Cost/Post",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "min": 0,
+            "max": 0.10,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.02
+                },
+                {
+                  "color": "red",
+                  "value": 0.05
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 5,
+        "title": "Revenue vs Cost Trends",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "finops_total_revenue",
+            "refId": "A",
+            "legendFormat": "Total Revenue",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_total_costs",
+            "refId": "B",
+            "legendFormat": "Total Costs",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_total_revenue - finops_total_costs",
+            "refId": "C",
+            "legendFormat": "Net Profit",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "min": 0,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "opacity",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "axisColorMode": "text",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "axisCenteredZero": false,
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Net Profit"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "green"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "none"
+          },
+          "legend": {
+            "displayMode": "visible",
+            "placement": "bottom",
+            "calcs": ["lastNotNull", "max"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "Growth Rate Indicators",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "finops_growth_rate",
+            "refId": "A",
+            "legendFormat": "Growth Rate",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": -10
+                },
+                {
+                  "color": "yellow",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 10
+                },
+                {
+                  "color": "super-light-green",
+                  "value": 25
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background",
+          "graphMode": "area"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 7,
+        "title": "Monthly Target Achievement",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "finops_monthly_target_achievement{metric=\"revenue\"}",
+            "refId": "A",
+            "legendFormat": "Revenue Target",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_monthly_target_achievement{metric=\"engagement\"}",
+            "refId": "B",
+            "legendFormat": "Engagement Target",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_monthly_target_achievement{metric=\"cost_efficiency\"}",
+            "refId": "C",
+            "legendFormat": "Cost Efficiency Target",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 120,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 80
+                },
+                {
+                  "color": "green",
+                  "value": 100
+                }
+              ]
+            },
+            "custom": {
+              "displayMode": "basic",
+              "orientation": "horizontal"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "displayMode": "basic",
+          "showValue": "auto",
+          "barWidth": 0.97,
+          "groupWidth": 0.7
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 8,
+        "title": "Efficiency Score Trends",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "finops_efficiency_score",
+            "refId": "A",
+            "legendFormat": "Overall Efficiency",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_content_quality_score",
+            "refId": "B",
+            "legendFormat": "Content Quality",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_cost_efficiency_score",
+            "refId": "C",
+            "legendFormat": "Cost Efficiency",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "axisColorMode": "text",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "axisCenteredZero": false,
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "line"
+              }
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "transparent",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 0.95
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "none"
+          },
+          "legend": {
+            "displayMode": "visible",
+            "placement": "bottom",
+            "calcs": ["lastNotNull", "mean"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployment Events",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "enable": true,
+          "expr": "changes(finops_deployment_timestamp[1h]) > 0",
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Deployments",
+          "titleFormat": "Deployment: {{instance}}",
+          "tagKeys": "version"
+        }
+      ]
+    },
+    "links": [
+      {
+        "asDropdown": false,
+        "icon": "external link",
+        "includeVars": false,
+        "keepTime": false,
+        "tags": [],
+        "targetBlank": true,
+        "title": "FinOps API",
+        "tooltip": "Open FinOps Engine API",
+        "type": "link",
+        "url": "http://localhost:8000/docs"
+      }
+    ]
+  }
+}
