@@ -1,5 +1,6 @@
 # .github/workflows/docker-ci-optimized.yml
 # Phase 2: Optimized Docker builds with self-hosted runners
+# TEMPORARILY DISABLED - Self-hosted runners not available
 name: docker-ci-optimized
 
 on:
@@ -9,6 +10,10 @@ on:
       - 'services/**/requirements.txt'
       - 'services/**/*.py'
       - 'docker-compose*.yml'
+
+# Temporarily disable self-hosted until runners are available
+env:
+  SKIP_SELF_HOSTED: true
 
 jobs:
   detect-changes:
@@ -63,7 +68,7 @@ jobs:
   build-self-hosted:
     name: Build ${{ matrix.service }} (Self-Hosted)
     needs: detect-changes
-    if: needs.detect-changes.outputs.any_changed == 'true' && !github.event.repository.fork
+    if: needs.detect-changes.outputs.any_changed == 'true' && !github.event.repository.fork && !env.SKIP_SELF_HOSTED
     runs-on: [self-hosted, heavy, docker]
     timeout-minutes: 10
     strategy:
