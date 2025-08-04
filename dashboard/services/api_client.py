@@ -123,17 +123,21 @@ class ThreadsAgentAPI:
         """Analyze recent pull requests for achievements"""
         try:
             with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
-                params = {
-                    "days": days,
-                    "repo": repo
-                } if repo else {"days": days}
-                
-                response = client.post(
-                    f"{self.achievement_url}/analysis/pull-requests",
-                    json=params
+                # Use the correct endpoint for listing PR achievements
+                response = client.get(
+                    f"{self.achievement_url}/achievements/source/github_pr",
+                    params={
+                        "page": 1,
+                        "per_page": 50
+                    }
                 )
                 response.raise_for_status()
-                return response.json()
+                data = response.json()
+                
+                # Return items if paginated response, otherwise return as-is
+                if isinstance(data, dict) and 'items' in data:
+                    return data['items']
+                return data if isinstance(data, list) else []
         except Exception as e:
             st.error(f"PR analysis failed: {str(e)}")
             return []
