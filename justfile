@@ -243,6 +243,51 @@ ship message:
 	
 	echo "✅ Changes shipped successfully"
 
+# Auto-commit system for working states
+checkpoint message="checkpoint":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "💾 Creating checkpoint commit..."
+	./scripts/auto-commit.sh
+
+# Auto-commit with push
+checkpoint-push message="checkpoint":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "💾 Creating checkpoint commit with push..."
+	./scripts/auto-commit.sh --push
+
+# Enable auto-commit on test success
+auto-commit-enable:
+	#!/usr/bin/env bash
+	echo "🔧 Enabling auto-commit system..."
+	# Create symlink for post-commit hook
+	ln -sf ../../scripts/auto-commit-hook.sh .git/hooks/post-test || true
+	echo "✅ Auto-commit enabled!"
+	echo "📝 Commits will be created automatically after successful tests"
+
+# Disable auto-commit
+auto-commit-disable:
+	#!/usr/bin/env bash
+	echo "🔧 Disabling auto-commit system..."
+	rm -f .git/hooks/post-test
+	echo "✅ Auto-commit disabled"
+
+# Safe development workflow with auto-commits
+safe-dev:
+	#!/usr/bin/env bash
+	echo "🛡️ Starting safe development mode..."
+	echo "📝 Auto-commits will be created every 30 minutes if tests pass"
+	while true; do
+		sleep 1800  # 30 minutes
+		if git diff --quiet && git diff --cached --quiet; then
+			echo "No changes to commit"
+		else
+			echo "⏰ Auto-checkpoint time!"
+			just checkpoint "Auto-checkpoint: $(date '+%Y-%m-%d %H:%M')"
+		fi
+	done
+
 # Service scaffolding
 scaffold service:
 	#!/usr/bin/env bash
