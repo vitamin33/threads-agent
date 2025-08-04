@@ -131,12 +131,31 @@ class PRValueAnalyzer:
     def analyze_code_changes(self) -> Dict[str, Any]:
         """Analyze code changes in the PR."""
         try:
-            # Get PR diff statistics
-            result = subprocess.run(
-                ["gh", "pr", "diff", self.pr_number, "--stat"],
+            # Get PR diff statistics using git since gh doesn't support --stat
+            # First get the base branch
+            base_result = subprocess.run(
+                ["gh", "pr", "view", self.pr_number, "--json", "baseRefName"],
                 capture_output=True,
                 text=True,
             )
+            
+            if base_result.returncode == 0:
+                base_data = json.loads(base_result.stdout)
+                base_branch = base_data.get("baseRefName", "main")
+                
+                # Use git diff --stat with the base branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", f"origin/{base_branch}"],
+                    capture_output=True,
+                    text=True,
+                )
+            else:
+                # Fallback to main branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", "origin/main"],
+                    capture_output=True,
+                    text=True,
+                )
 
             if result.returncode == 0:
                 stats_text = result.stdout
@@ -159,6 +178,9 @@ class PRValueAnalyzer:
                     )
                     + (int(deletions_match.group(1)) if deletions_match else 0),
                 }
+            else:
+                print(f"Failed to get PR diff: {result.stderr}")
+                return {}
         except Exception as e:
             print(f"Error analyzing code changes: {e}")
             return {}
@@ -224,14 +246,44 @@ class PRValueAnalyzer:
                 ["gh", "pr", "view", self.pr_number, "--json", "body,title,author"],
                 capture_output=True,
                 text=True,
+                timeout=30,  # Add timeout to prevent hanging
             )
 
             if result.returncode != 0:
                 print(f"❌ Failed to fetch PR details: {result.stderr}")
                 return None
 
-            pr_data = json.loads(result.stdout)
+            if not result.stdout.strip():
+                print(f"❌ Empty response from GitHub CLI")
+                return None
+
+            try:
+                pr_data = json.loads(result.stdout)
+            except json.JSONDecodeError as e:
+                print(f"❌ Failed to parse JSON response: {e}")
+                print(f"Response: {result.stdout[:500]}...")
+                return None
+
+            if pr_data is None:
+                print(f"❌ GitHub returned null data")
+                return None
+
             pr_body = pr_data.get("body", "")
+            
+            # Fallback: if PR body is empty, try alternative fetch
+            if not pr_body:
+                print("ℹ️ PR body empty, trying alternative fetch...")
+                fallback_result = subprocess.run(
+                    ["gh", "pr", "view", self.pr_number],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                if fallback_result.returncode == 0:
+                    pr_body = fallback_result.stdout
+                    print(f"✅ Retrieved PR content via fallback method")
+                else:
+                    print("⚠️ No PR body available, continuing with limited analysis")
 
             # Extract performance metrics
             performance = self.analyze_performance_metrics(pr_body)
