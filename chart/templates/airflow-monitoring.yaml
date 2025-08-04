@@ -1,0 +1,280 @@
+# Airflow Monitoring Configuration (CRA-284)
+# AlertManager Rules and Grafana Dashboards for Airflow orchestration
+{{- if and .Values.airflow.enabled .Values.monitoring.prometheus.enabled }}
+---
+# PrometheusRule for Airflow Alerts
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: airflow-alerts
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    monitoring: airflow
+spec:
+  groups:
+  - name: airflow.rules
+    interval: 30s
+    rules:
+    # High-level service availability
+    - alert: AirflowWebserverDown
+      expr: up{job="airflow-webserver"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        service: airflow
+        component: webserver
+      annotations:
+        summary: "Airflow webserver is down"
+        description: "Airflow webserver has been down for more than 2 minutes"
+        runbook_url: "https://threads-agent.com/runbooks/airflow-webserver-down"
+        
+    - alert: AirflowSchedulerDown
+      expr: up{job="airflow-scheduler"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: airflow
+        component: scheduler
+      annotations:
+        summary: "Airflow scheduler is down"
+        description: "Airflow scheduler has been down for more than 1 minute"
+        runbook_url: "https://threads-agent.com/runbooks/airflow-scheduler-down"
+        
+    # DAG execution health
+    - alert: AirflowDagFailureRate
+      expr: |
+        (
+          rate(airflow_dag_run_failed_total[5m]) /
+          (rate(airflow_dag_run_failed_total[5m]) + rate(airflow_dag_run_success_total[5m]))
+        ) * 100 > 20
+      for: 5m
+      labels:
+        severity: warning
+        service: airflow
+        component: dag
+      annotations:
+        summary: "High DAG failure rate detected"
+        description: "DAG failure rate is {{ `{{ $value }}` }}% over the last 5 minutes"
+        
+    - alert: AirflowTaskStuck
+      expr: |
+        airflow_dag_task_duration_seconds{state="running"} > 3600
+      for: 10m
+      labels:
+        severity: warning
+        service: airflow
+        component: task
+      annotations:
+        summary: "Airflow task running for too long"
+        description: "Task {{ `{{ $labels.task_id }}` }} in DAG {{ `{{ $labels.dag_id }}` }} has been running for more than 1 hour"
+        
+    # Resource utilization
+    - alert: AirflowHighMemoryUsage
+      expr: |
+        (
+          container_memory_working_set_bytes{pod=~"airflow-.*"} /
+          container_spec_memory_limit_bytes{pod=~"airflow-.*"}
+        ) * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        service: airflow
+        component: resource
+      annotations:
+        summary: "Airflow component using high memory"
+        description: "{{ `{{ $labels.pod }}` }} is using {{ `{{ $value }}` }}% of memory limit"
+        
+    - alert: AirflowHighCPUUsage
+      expr: |
+        (
+          rate(container_cpu_usage_seconds_total{pod=~"airflow-.*"}[5m]) /
+          container_spec_cpu_quota{pod=~"airflow-.*"} * container_spec_cpu_period{pod=~"airflow-.*"}
+        ) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+        service: airflow
+        component: resource
+      annotations:
+        summary: "Airflow component using high CPU"
+        description: "{{ `{{ $labels.pod }}` }} is using {{ `{{ $value }}` }}% of CPU limit"
+        
+    # Database connectivity
+    - alert: AirflowDatabaseConnectionFailure
+      expr: |
+        increase(airflow_database_connection_error_total[5m]) > 0
+      for: 1m
+      labels:
+        severity: critical
+        service: airflow
+        component: database
+      annotations:
+        summary: "Airflow database connection failures"
+        description: "Airflow is experiencing database connection failures"
+        
+    # Queue health
+    - alert: AirflowTaskQueueBacklog
+      expr: |
+        airflow_task_instance_created_total - airflow_task_instance_finished_total > 100
+      for: 10m
+      labels:
+        severity: warning
+        service: airflow
+        component: queue
+      annotations:
+        summary: "Large task queue backlog"
+        description: "Task queue has {{ `{{ $value }}` }} pending tasks"
+        
+    # Viral Learning Flywheel specific alerts
+    - alert: ViralContentGenerationFailure
+      expr: |
+        increase(airflow_dag_run_failed_total{dag_id="viral_learning_flywheel"}[1h]) > 2
+      for: 5m
+      labels:
+        severity: critical
+        service: airflow
+        component: viral-content
+      annotations:
+        summary: "Viral content generation failing repeatedly"
+        description: "Viral Learning Flywheel DAG has failed {{ `{{ $value }}` }} times in the last hour"
+        runbook_url: "https://threads-agent.com/runbooks/viral-content-failure"
+
+---
+# Grafana Dashboard ConfigMap for Airflow
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-dashboard
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  airflow-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Airflow - Viral Learning Flywheel",
+        "tags": ["airflow", "orchestration", "viral-content"],
+        "style": "dark",
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Service Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=\"airflow-webserver\"}",
+                "legendFormat": "Webserver"
+              },
+              {
+                "expr": "up{job=\"airflow-scheduler\"}",
+                "legendFormat": "Scheduler"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "green", "value": 1}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "DAG Run Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(airflow_dag_run_success_total[5m]) / (rate(airflow_dag_run_success_total[5m]) + rate(airflow_dag_run_failed_total[5m])) * 100",
+                "legendFormat": "Success Rate %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 80},
+                    {"color": "green", "value": 95}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Task Execution Duration",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(airflow_task_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(airflow_task_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "unit": "s",
+                "logBase": 1
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Resource Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"airflow-.*\"}[5m]) * 100",
+                "legendFormat": "CPU % - {{ `{{ $labels.pod }}` }}"
+              },
+              {
+                "expr": "container_memory_working_set_bytes{pod=~\"airflow-.*\"} / 1024 / 1024",
+                "legendFormat": "Memory MB - {{ `{{ $labels.pod }}` }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "unit": "short",
+                "logBase": 1
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          },
+          {
+            "id": 5,
+            "title": "Viral Content Generation Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "increase(airflow_dag_run_success_total{dag_id=\"viral_learning_flywheel\"}[1h])",
+                "legendFormat": "Successful Runs"
+              },
+              {
+                "expr": "increase(airflow_dag_run_failed_total{dag_id=\"viral_learning_flywheel\"}[1h])",
+                "legendFormat": "Failed Runs"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+          }
+        ]
+      }
+    }
+
+{{- end }}
