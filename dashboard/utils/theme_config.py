@@ -156,6 +156,31 @@ DARK_THEME_CSS = """
         padding: 1rem;
     }
     
+    /* Fix metric value text color - IMPORTANT */
+    [data-testid="metric-container"] [data-testid="stMetricValue"] {
+        color: #FAFAFA !important;
+    }
+    
+    /* Fix metric label text color */
+    [data-testid="metric-container"] [data-testid="stMetricLabel"] {
+        color: #B0B0B0 !important;
+    }
+    
+    /* Fix metric delta text color */
+    [data-testid="metric-container"] [data-testid="stMetricDelta"] {
+        opacity: 1 !important;
+    }
+    
+    /* Fix all text in metric containers */
+    [data-testid="metric-container"] * {
+        color: inherit !important;
+    }
+    
+    /* Force metric value visibility */
+    div[data-testid="metric-container"] > div:first-child > div {
+        color: #FAFAFA !important;
+    }
+    
     /* Fix dataframe styling */
     .dataframe {
         color: #FAFAFA !important;
@@ -173,6 +198,16 @@ DARK_THEME_CSS = """
     /* Progress bars */
     .stProgress > div > div > div > div {
         background-color: #2E86AB;
+    }
+    
+    /* Additional fix for metric text */
+    .css-1xarl3l, .css-1wivap2, div[data-testid="stMetricValue"] > div {
+        color: #FAFAFA !important;
+    }
+    
+    /* Target metric values more specifically */
+    [data-testid="metric-container"] > label > div > div > div > div:first-child {
+        color: #FAFAFA !important;
     }
 </style>
 """
