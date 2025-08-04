@@ -1,157 +1,22 @@
 {
-  "active_epics": [
+  "epics": [
     {
-      "id": "epic-14-ai-career-content-automation",
-      "title": "AI Career Content Automation System",
-      "status": "planned",
-      "priority": "high",
-      "business_value": 85,
-      "complexity_score": 75,
-      "estimated_hours": 120,
-      "created_date": "2025-01-25",
-      "target_completion": "2025-03-15",
-      "features_count": 6,
-      "tasks_total": 58,
-      "integration_services": [
-        "orchestrator",
-        "celery_worker", 
-        "persona_runtime",
-        "viral_engine",
-        "achievement_collector"
-      ],
-      "kpis": {
-        "articles_generated_weekly": "3-5",
-        "insight_quality_score": "7+ (1-10 scale)",
-        "platform_engagement_rate": "6%+",
-        "profile_visits_increase": "150%",
-        "job_inquiry_conversion": "2+ per month"
-      },
-      "success_criteria": [
-        "Generate 3-5 high-quality articles per week automatically",
-        "Achieve 7+ insight quality score across all content",
-        "Successfully publish to 4+ platforms with optimized timing",
-        "Demonstrate measurable increase in professional visibility",
-        "Integration with existing monitoring and metrics systems",
-        "Zero-downtime deployment in production k3d cluster"
-      ]
+      "id": "ai-job-week1",
+      "name": "[AI Job] Week 1: Foundation - Service Integration & Content Pipeline",
+      "status": "active",
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "epic-240-finops-cost-tracking-optimization",
-      "title": "FinOps Cost Tracking & Optimization Engine",
-      "status": "completed",
-      "priority": "high",
-      "business_value": 95,
-      "complexity_score": 80,
-      "estimated_hours": 160,
-      "created_date": "2025-08-03",
-      "target_completion": "2025-09-28",
-      "features_count": 8,
-      "tasks_total": 64,
-      "integration_services": [
-        "orchestrator",
-        "celery_worker", 
-        "persona_runtime",
-        "finops_engine"
-      ],
-      "kpis": {
-        "cost_per_follow_dollars": "$0.01",
-        "test_pass_rate": "100%",
-        "anomaly_detection_accuracy": "95%+",
-        "alert_response_time": "<60s"
-      },
-      "success_criteria": [
-        "100% test pass rate achieved (159/159 tests)",
-        "Real-time cost tracking across all services",
-        "Anomaly detection with multi-channel alerting",
-        "Comprehensive documentation and performance reports",
-        "Integration with existing monitoring infrastructure"
-      ]
+      "id": "ai-job-week2",
+      "name": "[AI Job] Week 2: Automation - Scheduled Jobs & ROI Tools",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "epic-281-viral-pattern-extraction-engine",
-      "title": "Viral Pattern Extraction Engine",
+      "id": "ai-job-week3",
+      "name": "[AI Job] Week 3: Optimization - AI Enhancement & Multi-Platform",
       "status": "planned",
-      "priority": "high",
-      "business_value": 90,
-      "complexity_score": 85,
-      "estimated_hours": 180,
-      "created_date": "2025-08-03",
-      "target_completion": "2025-10-05",
-      "features_count": 8,
-      "tasks_total": 72,
-      "integration_services": [
-        "viral_scraper",
-        "viral_pattern_engine",
-        "persona_runtime",
-        "orchestrator",
-        "celery_worker",
-        "viral_engine"
-      ],
-      "kpis": {
-        "posts_engagement_rate": "8%",
-        "pattern_detection_accuracy": "90%",
-        "content_generation_improvement": "25% higher engagement",
-        "pattern_extraction_latency": "<500ms",
-        "pattern_library_coverage": "50+ validated patterns"
-      },
-      "success_criteria": [
-        "ML pattern analysis pipeline operational with 90% accuracy",
-        "Hook pattern extraction identifies and classifies viral hooks",
-        "Emotion trajectory analysis tracks content emotional arcs",
-        "A/B testing framework validates pattern effectiveness",
-        "Real-time pattern recommendation API serves persona_runtime",
-        "Content engagement improvement of 25% demonstrated",
-        "Integration with existing viral content generation pipeline",
-        "50+ validated patterns in production pattern library"
-      ]
-    },
-    {
-      "id": "epic-282-emotion-trajectory-mapping",
-      "title": "Advanced Emotion Trajectory Mapping for Viral Content Optimization",
-      "status": "planned",
-      "priority": "high",
-      "business_value": 92,
-      "complexity_score": 88,
-      "estimated_hours": 1144,
-      "created_date": "2025-08-03",
-      "target_completion": "2025-11-15",
-      "features_count": 8,
-      "tasks_total": 72,
-      "integration_services": [
-        "viral_pattern_engine",
-        "orchestrator",
-        "persona_runtime",
-        "celery_worker",
-        "fake_threads",
-        "common"
-      ],
-      "kpis": {
-        "posts_engagement_rate": "10%+",
-        "emotion_detection_accuracy": "90%+",
-        "trajectory_analysis_speed": "<300ms",
-        "emotion_pattern_coverage": "100+ validated patterns",
-        "engagement_improvement": "40% increase",
-        "cost_per_follow_dollars": "$0.007",
-        "revenue_projection_monthly": "$35,000"
-      },
-      "success_criteria": [
-        "Multi-model emotion detection with 90%+ accuracy across 8+ emotion categories",
-        "Real-time emotion trajectory analysis processing 100+ concurrent requests",
-        "Emotion-engagement correlation engine with 85%+ prediction accuracy",
-        "100+ validated emotion pattern templates for content optimization",
-        "Integration with persona_runtime providing real-time emotion guidance",
-        "Comprehensive emotion analytics dashboard with actionable insights",
-        "Performance benchmarks: <300ms analysis, <500MB memory per worker",
-        "40% improvement in engagement rates through emotion optimization"
-      ]
+      "created": "2025-08-04T00:00:00Z"
     }
-  ],
-  "epic_statistics": {
-    "total_active_epics": 4,
-    "total_estimated_hours": 1604,
-    "average_business_value": 90.5,
-    "average_complexity": 81.8,
-    "completion_rate": "25%"
-  },
-  "last_updated": "2025-08-03T12:00:00Z"
+  ]
 }

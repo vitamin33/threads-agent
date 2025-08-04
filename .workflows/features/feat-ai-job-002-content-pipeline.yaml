@@ -1,0 +1,68 @@
+feature_id: feat-ai-job-002
+feature_name: "Automated Content Generation Pipeline"
+description: |
+  Build an intelligent pipeline that automatically generates high-quality technical articles,
+  LinkedIn posts, and blog content from achievements. The pipeline should optimize content
+  for job search visibility and demonstrate thought leadership.
+epic_id: ai-job-week1
+priority: high
+estimated_effort: 12
+technical_requirements:
+  - "Multi-format content generation (LinkedIn, Medium, Dev.to)"
+  - "AI-powered content optimization for engagement"
+  - "Template system for different article types"
+  - "Async processing with Celery for scalability"
+  - "Content quality scoring and selection"
+acceptance_criteria:
+  - "Generate 3+ article variations from single achievement"
+  - "Each article optimized for specific platform requirements"
+  - "Content includes relevant keywords for AI/MLOps roles"
+  - "Quality score > 0.8 for all generated content"
+  - "Processing time < 30 seconds per article"
+  - "Support for batch processing of multiple achievements"
+implementation_details:
+  - file: "services/tech_doc_generator/app/pipelines/achievement_pipeline.py"
+    changes: |
+      - Create AchievementContentPipeline class
+      - Implement multi-stage processing: fetch → analyze → generate → optimize
+      - Add platform-specific formatters
+  - file: "services/tech_doc_generator/app/services/job_optimized_generator.py"
+    changes: |
+      - Extend ContentGenerator with job search optimization
+      - Add keyword injection for AI/MLOps roles
+      - Implement engagement prediction scoring
+  - file: "services/tech_doc_generator/app/templates/achievement/"
+    changes: |
+      - Create templates: case_study.md, technical_insight.md, lessons_learned.md
+      - Add platform-specific formatting templates
+  - file: "services/common/celery_tasks/content_generation.py"
+    changes: |
+      - Create async task for pipeline processing
+      - Implement progress tracking and notifications
+business_value: |
+  - Automates $500-1000/article technical writing opportunity
+  - Creates consistent thought leadership presence
+  - Demonstrates advanced AI/LLM integration skills
+  - Supports "Build in Public" strategy for job search
+success_metrics:
+  - "10+ high-quality articles generated weekly"
+  - "Content engagement rate > 5%"
+  - "Keywords match 90%+ of target job descriptions"
+  - "Zero manual editing required for 80% of content"
+tags:
+  - content-generation
+  - ai-automation
+  - thought-leadership
+tasks:
+  - task_id: task-ai-job-002-1
+    title: "Build AchievementContentPipeline class"
+    effort: 4
+  - task_id: task-ai-job-002-2
+    title: "Create job-optimized content generator"
+    effort: 4
+  - task_id: task-ai-job-002-3
+    title: "Develop content templates and formatters"
+    effort: 2
+  - task_id: task-ai-job-002-4
+    title: "Implement async processing with Celery"
+    effort: 2

@@ -1,0 +1,48 @@
+epic_id: ai-job-week2
+epic_name: "[AI Job] Week 2: Automation - Scheduled Jobs & ROI Tools"
+description: |
+  Implement automated content generation schedules, build the public AI ROI Calculator tool,
+  and add comprehensive analytics to track content performance. This week focuses on creating
+  systems that run autonomously to maintain consistent professional presence while providing
+  data-driven insights for optimization.
+status: planned
+priority: critical
+business_value: |
+  - Saves 15+ hours/week through automation
+  - Creates public tools that demonstrate expertise
+  - Provides data for content optimization
+  - Establishes thought leadership presence
+target_completion: 2025-08-18
+features:
+  - feature_id: feat-ai-job-004
+    name: "Weekly Content Generation Scheduler"
+    description: "Automated system for regular content creation"
+    priority: high
+    estimated_effort: 8
+  - feature_id: feat-ai-job-005
+    name: "AI ROI Calculator Public Tool"
+    description: "Interactive calculator showcasing business value"
+    priority: high
+    estimated_effort: 10
+  - feature_id: feat-ai-job-006
+    name: "Content Performance Analytics"
+    description: "Track and optimize content effectiveness"
+    priority: high
+    estimated_effort: 8
+success_metrics:
+  - "3+ pieces of content published weekly without intervention"
+  - "ROI Calculator gets 100+ unique visitors"
+  - "Analytics dashboard shows clear content performance trends"
+  - "20% improvement in content engagement metrics"
+dependencies:
+  - "Week 1 integration layer completed"
+  - "Content pipeline operational"
+  - "Analytics infrastructure available"
+tags:
+  - automation
+  - public-tools
+  - analytics
+  - thought-leadership
+notes: |
+  This week transforms manual processes into automated systems that work 24/7
+  to build professional brand and generate job opportunities.
