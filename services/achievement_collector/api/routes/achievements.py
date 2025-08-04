@@ -26,7 +26,9 @@ from services.achievement_collector.services.db_operations import (
     update_achievement_with_stories,
     get_achievement_by_pr,
 )
-from services.achievement_collector.utils.calculation_metadata import CalculationMetadata
+from services.achievement_collector.utils.calculation_metadata import (
+    CalculationMetadata,
+)
 
 logger = setup_logging(__name__)
 router = APIRouter()
@@ -45,20 +47,20 @@ def create_achievement_sync(
     enhanced_metrics = {}
     if achievement.metrics_after:
         # Enhance business metrics with calculation transparency
-        business_enhanced = CalculationMetadata.enhance_business_metrics(achievement.metrics_after)
-        performance_enhanced = CalculationMetadata.enhance_performance_metrics(achievement.metrics_after)
-        
+        business_enhanced = CalculationMetadata.enhance_business_metrics(
+            achievement.metrics_after
+        )
+        performance_enhanced = CalculationMetadata.enhance_performance_metrics(
+            achievement.metrics_after
+        )
+
         # Combine enhanced metrics with original data
         enhanced_metrics = {
             **achievement.metrics_after,
-            "enhanced_calculations": {
-                **business_enhanced,
-                **performance_enhanced
-            },
-            "calculation_summary": CalculationMetadata.create_calculation_summary({
-                **business_enhanced,
-                **performance_enhanced
-            })
+            "enhanced_calculations": {**business_enhanced, **performance_enhanced},
+            "calculation_summary": CalculationMetadata.create_calculation_summary(
+                {**business_enhanced, **performance_enhanced}
+            ),
         }
 
     # Enhance metadata with calculation version
@@ -70,7 +72,7 @@ def create_achievement_sync(
     achievement_data = achievement.model_dump()
     achievement_data["metrics_after"] = enhanced_metrics or achievement.metrics_after
     achievement_data["metadata"] = enhanced_metadata
-    
+
     db_achievement = AchievementModel(
         **achievement_data,
         duration_hours=duration,
@@ -79,7 +81,9 @@ def create_achievement_sync(
     db.commit()
     db.refresh(db_achievement)
 
-    logger.info(f"Created achievement with enhanced metrics: {db_achievement.id} - {db_achievement.title}")
+    logger.info(
+        f"Created achievement with enhanced metrics: {db_achievement.id} - {db_achievement.title}"
+    )
     return db_achievement
 
 
@@ -257,23 +261,22 @@ async def get_achievement_stats(
 
 @router.get("/{achievement_id}/calculation-transparency")
 async def get_calculation_transparency(
-    achievement_id: int,
-    db: Session = Depends(get_db)
+    achievement_id: int, db: Session = Depends(get_db)
 ):
     """Get calculation transparency details for an achievement."""
     achievement = (
         db.query(AchievementModel).filter(AchievementModel.id == achievement_id).first()
     )
-    
+
     if not achievement:
         raise HTTPException(status_code=404, detail="Achievement not found")
-    
+
     # Extract calculation metadata
     metrics_after = achievement.metrics_after or {}
     enhanced_calculations = metrics_after.get("enhanced_calculations", {})
     calculation_summary = metrics_after.get("calculation_summary", {})
     metadata = achievement.metadata or {}
-    
+
     return {
         "achievement_id": achievement_id,
         "calculation_version": metadata.get("calculation_version", "unknown"),
@@ -282,7 +285,7 @@ async def get_calculation_transparency(
         "calculation_summary": calculation_summary,
         "formulas_used": calculation_summary.get("formulas_used", []),
         "confidence_scores": calculation_summary.get("confidence_scores", {}),
-        "methodology_notes": calculation_summary.get("methodology_notes", [])
+        "methodology_notes": calculation_summary.get("methodology_notes", []),
     }
 
 
