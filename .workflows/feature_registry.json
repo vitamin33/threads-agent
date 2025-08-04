@@ -1,164 +1,67 @@
 {
   "features": [
     {
-      "id": "feat-240-001-cost-data-collection",
-      "name": "Real-time Cost Data Collection Engine",
-      "epic": "epic-240-finops-cost-tracking-optimization",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "large",
-      "estimated_hours": 152
+      "id": "feat-ai-job-001",
+      "epic_id": "ai-job-week1",
+      "name": "Achievement-to-Article Integration Layer",
+      "status": "ready",
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-002-per-post-attribution",
-      "name": "Per-Post Cost Attribution System",
-      "epic": "epic-240-finops-cost-tracking-optimization",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "large",
-      "estimated_hours": 132
+      "id": "feat-ai-job-002",
+      "epic_id": "ai-job-week1",
+      "name": "Automated Content Generation Pipeline",
+      "status": "ready",
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-003-anomaly-detection",
-      "name": "Cost Anomaly Detection & Alerting",
-      "epic": "epic-240-finops-cost-tracking-optimization",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "medium",
-      "estimated_hours": 100
+      "id": "feat-ai-job-003",
+      "epic_id": "ai-job-week1",
+      "name": "Company-Specific Portfolio API",
+      "status": "ready",
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-004-optimization-recommendations",
-      "name": "Intelligent Cost Optimization Engine",
-      "epic": "epic-240-finops-cost-tracking-optimization",
+      "id": "feat-ai-job-004",
+      "epic_id": "ai-job-week2",
+      "name": "Weekly Content Generation Scheduler",
       "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "large",
-      "estimated_hours": 132
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-005-roi-calculator",
-      "name": "ROI Efficiency Calculator",
-      "epic": "epic-240-finops-cost-tracking-optimization",
+      "id": "feat-ai-job-005",
+      "epic_id": "ai-job-week2",
+      "name": "AI ROI Calculator Public Tool",
       "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "medium",
-      "estimated_hours": 64
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-006-cost-dashboards",
-      "name": "FinOps Monitoring Dashboards",
-      "epic": "epic-240-finops-cost-tracking-optimization",
+      "id": "feat-ai-job-006",
+      "epic_id": "ai-job-week2",
+      "name": "Content Performance Analytics",
       "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "medium",
-      "estimated_hours": 64
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-007-budget-controls",
-      "name": "Automated Budget Controls & Rate Limiting",
-      "epic": "epic-240-finops-cost-tracking-optimization",
+      "id": "feat-ai-job-007",
+      "epic_id": "ai-job-week3",
+      "name": "AI-Powered Content Optimization",
       "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "medium",
-      "estimated_hours": 80
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-240-008-reporting-api",
-      "name": "Cost Reporting & Analytics API",
-      "epic": "epic-240-finops-cost-tracking-optimization",
+      "id": "feat-ai-job-008",
+      "epic_id": "ai-job-week3",
+      "name": "Multi-Platform Publishing Expansion",
       "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "low",
-      "effort": "small",
-      "estimated_hours": 48
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "feat-281-001-pattern-analysis-pipeline",
-      "name": "ML Pattern Analysis Pipeline",
-      "epic": "epic-281-viral-pattern-extraction-engine",
+      "id": "feat-ai-job-009",
+      "epic_id": "ai-job-week3",
+      "name": "A/B Testing Framework",
       "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "large",
-      "estimated_hours": 218
-    },
-    {
-      "id": "feat-281-002-hook-pattern-extractor",
-      "name": "Advanced Hook Pattern Extractor",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "large",
-      "estimated_hours": 154
-    },
-    {
-      "id": "feat-281-003-emotion-trajectory-analyzer",
-      "name": "Emotion Trajectory Analysis Engine",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "medium",
-      "estimated_hours": 126
-    },
-    {
-      "id": "feat-281-004-content-structure-analyzer",
-      "name": "Content Structure Pattern Recognition",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "medium",
-      "estimated_hours": 100
-    },
-    {
-      "id": "feat-281-005-timing-pattern-detector",
-      "name": "Viral Timing Pattern Detection",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "medium",
-      "estimated_hours": 100
-    },
-    {
-      "id": "feat-281-006-pattern-validation-framework",
-      "name": "A/B Testing Pattern Validation",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "high",
-      "effort": "large",
-      "estimated_hours": 158
-    },
-    {
-      "id": "feat-281-007-pattern-storage-optimization",
-      "name": "High-Performance Pattern Storage",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "small",
-      "estimated_hours": 74
-    },
-    {
-      "id": "feat-281-008-real-time-pattern-api",
-      "name": "Real-time Pattern Recommendation API",
-      "epic": "epic-281-viral-pattern-extraction-engine",
-      "status": "planned",
-      "created": "2025-08-03T12:00:00+00:00",
-      "priority": "medium",
-      "effort": "medium",
-      "estimated_hours": 102
+      "created": "2025-08-04T00:00:00Z"
     }
   ]
 }

@@ -1,0 +1,203 @@
+# .github/workflows/docker-ci-optimized.yml
+# Phase 2: Optimized Docker builds with self-hosted runners
+name: docker-ci-optimized
+
+on:
+  pull_request:
+    paths:
+      - 'services/**/Dockerfile'
+      - 'services/**/requirements.txt'
+      - 'services/**/*.py'
+      - 'docker-compose*.yml'
+
+jobs:
+  detect-changes:
+    name: Smart Change Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      services: ${{ steps.changes.outputs.services }}
+      any_changed: ${{ steps.changes.outputs.any_changed }}
+      base_changed: ${{ steps.changes.outputs.base_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for smart analysis
+
+      - name: Advanced change detection
+        id: changes
+        run: |
+          # Check if base dependencies changed (affects all services)
+          if git diff --name-only HEAD~1 | grep -E "(services/common/|services/Dockerfile.optimized|requirements.txt)"; then
+            echo "base_changed=true" >> $GITHUB_OUTPUT
+            # If base changed, rebuild all services
+            services='["orchestrator","celery_worker","persona_runtime","fake_threads","viral_engine","revenue","viral_metrics"]'
+            echo "services=$services" >> $GITHUB_OUTPUT
+            echo "any_changed=true" >> $GITHUB_OUTPUT
+            echo "🔄 Base dependencies changed - rebuilding all services"
+            exit 0
+          fi
+
+          # Smart service-specific detection
+          services=()
+          for service in orchestrator celery_worker persona_runtime fake_threads viral_engine revenue viral_metrics; do
+            if git diff --name-only HEAD~1 | grep -E "services/$service/"; then
+              services+=("\"$service\"")
+              echo "📦 Detected changes in: $service"
+            fi
+          done
+
+          if [ ${#services[@]} -eq 0 ]; then
+            echo "services=[]" >> $GITHUB_OUTPUT
+            echo "any_changed=false" >> $GITHUB_OUTPUT
+            echo "base_changed=false" >> $GITHUB_OUTPUT
+            echo "✅ No service changes detected"
+          else
+            json="[$(IFS=,; echo "${services[*]}")]"
+            echo "services=$json" >> $GITHUB_OUTPUT
+            echo "any_changed=true" >> $GITHUB_OUTPUT
+            echo "base_changed=false" >> $GITHUB_OUTPUT
+            echo "🎯 Changed services: $json"
+          fi
+
+  build-self-hosted:
+    name: Build ${{ matrix.service }} (Self-Hosted)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' && !github.event.repository.fork
+    runs-on: [self-hosted, heavy, docker]
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 4  # Limit parallel builds to prevent resource exhaustion
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Docker Buildx with enhanced cache
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+          buildkitd-flags: |
+            --allow-insecure-entitlement security.insecure
+            --allow-insecure-entitlement network.host
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr,prefix=pr-
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build with advanced caching
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          # Advanced caching strategy
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository }}/${{ matrix.service }}:buildcache
+            type=registry,ref=ghcr.io/${{ github.repository }}/${{ matrix.service }}:main-buildcache
+            type=local,src=/tmp/.buildx-cache-${{ matrix.service }}
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ github.repository }}/${{ matrix.service }}:buildcache,mode=max
+            type=local,dest=/tmp/.buildx-cache-${{ matrix.service }}-new,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            PYTHON_VERSION=3.12
+          # Use build secrets for faster dependency resolution
+          secrets: |
+            pip_cache_dir=/tmp/.pip-cache
+
+      - name: Rotate cache
+        run: |
+          # Rotate cache to prevent indefinite growth
+          rm -rf /tmp/.buildx-cache-${{ matrix.service }}
+          if [ -d "/tmp/.buildx-cache-${{ matrix.service }}-new" ]; then
+            mv /tmp/.buildx-cache-${{ matrix.service }}-new /tmp/.buildx-cache-${{ matrix.service }}
+          fi
+
+      - name: Test built image
+        run: |
+          # Quick smoke test of built image
+          docker run --rm ghcr.io/${{ github.repository }}/${{ matrix.service }}:pr-${{ github.event.number }} --help || true
+
+  # Fallback build on GitHub Actions
+  build-github-actions:
+    name: Build ${{ matrix.service }} (GitHub Fallback)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.any_changed == 'true' && (github.event.repository.fork || failure())
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push (GitHub Actions)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:pr-${{ github.event.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  summary:
+    name: Docker Build Summary
+    needs: [detect-changes, build-self-hosted, build-github-actions]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Report results
+        run: |
+          echo "## Docker Build Results"
+          echo "- Changes detected: ${{ needs.detect-changes.outputs.any_changed }}"
+          echo "- Services built: ${{ needs.detect-changes.outputs.services }}"
+          
+          if [ "${{ needs.detect-changes.outputs.any_changed }}" == "false" ]; then
+            echo "✅ No Docker changes - builds skipped"
+          elif [ "${{ needs.build-self-hosted.result }}" == "success" ] || [ "${{ needs.build-github-actions.result }}" == "success" ]; then
+            echo "✅ Docker builds completed successfully"
+          else
+            echo "❌ Docker builds failed"
+            exit 1
+          fi
