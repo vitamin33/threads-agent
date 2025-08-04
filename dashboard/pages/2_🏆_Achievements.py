@@ -107,23 +107,30 @@ def get_filtered_achievements(days: int, min_value: float) -> List[Dict]:
             # Parse business value
             a['parsed_value'] = parse_business_value(a.get('business_value'))
             
-            # Determine type based on tags/title
-            if not a.get('category'):
+            # Determine type based on tags/title if category is missing/generic
+            if not a.get('category') or a.get('category', '').lower() in ['feature', 'development']:
                 title_lower = a.get('title', '').lower()
-                if any(term in title_lower for term in ['ai', 'ml', 'machine learning', 'predictor']):
-                    a['category'] = 'AI/ML'
-                elif any(term in title_lower for term in ['performance', 'optimize', 'speed', 'latency']):
-                    a['category'] = 'Performance'
-                elif any(term in title_lower for term in ['kubernetes', 'docker', 'infra', 'deploy']):
-                    a['category'] = 'Infrastructure'
-                elif any(term in title_lower for term in ['test', 'unit', 'integration']):
-                    a['category'] = 'Testing'
-                elif any(term in title_lower for term in ['doc', 'readme', 'guide']):
-                    a['category'] = 'Documentation'
-                elif any(term in title_lower for term in ['fix', 'bug', 'issue']):
-                    a['category'] = 'Bug Fix'
+                description_lower = a.get('description', '').lower()
+                
+                # Check title and description for type indicators
+                combined_text = f"{title_lower} {description_lower}"
+                
+                if any(term in combined_text for term in ['test', 'testing', 'unit test', 'integration test', 'coverage']):
+                    a['category'] = 'testing'
+                elif any(term in combined_text for term in ['fix', 'bug', 'issue', 'error', 'debug']):
+                    a['category'] = 'bugfix'
+                elif any(term in combined_text for term in ['optimize', 'optimization', 'performance', 'speed', 'latency', 'efficiency']):
+                    a['category'] = 'optimization'
+                elif any(term in combined_text for term in ['business', 'strategy', 'value', 'roi', 'revenue']):
+                    a['category'] = 'business'
+                elif any(term in combined_text for term in ['ai', 'ml', 'machine learning', 'predictor', 'model']):
+                    a['category'] = 'ai/ml'
+                elif any(term in combined_text for term in ['kubernetes', 'docker', 'infra', 'deploy', 'k8s', 'helm']):
+                    a['category'] = 'infrastructure'
+                elif any(term in combined_text for term in ['doc', 'documentation', 'readme', 'guide', 'manual']):
+                    a['category'] = 'documentation'
                 else:
-                    a['category'] = 'Feature'
+                    a['category'] = 'feature'
             
             # Determine status
             if a.get('source_type') == 'github_pr':
@@ -185,11 +192,32 @@ if achievements:
     # Prepare data for display
     display_data = []
     for a in achievements:
+        # Map category to proper display type
+        category = a.get('category', 'feature').lower()
+        
+        # Normalize category names for display
+        type_mapping = {
+            'feature': 'Feature',
+            'testing': 'Testing',
+            'bugfix': 'Bug Fix',
+            'bug fix': 'Bug Fix',
+            'optimization': 'Performance',
+            'performance': 'Performance',
+            'business': 'Business',
+            'infrastructure': 'Infrastructure',
+            'ai/ml': 'AI/ML',
+            'ai_ml': 'AI/ML',
+            'documentation': 'Documentation',
+            'doc': 'Documentation'
+        }
+        
+        display_type = type_mapping.get(category, category.title())
+        
         display_data.append({
             'ID': f"ACH-{a.get('id', 0):03d}",
             'Title': a.get('title', 'Untitled')[:80],
             'Business Value': a.get('parsed_value', 0),
-            'Type': a.get('category', 'Feature'),
+            'Type': display_type,
             'Status': a.get('status', 'Draft'),
             'Date': pd.to_datetime(a.get('created_at', datetime.now())).strftime('%Y-%m-%d'),
             'Impact': 'Critical' if a.get('impact_score', 0) > 80 else 'High' if a.get('impact_score', 0) > 60 else 'Medium' if a.get('impact_score', 0) > 40 else 'Low'
