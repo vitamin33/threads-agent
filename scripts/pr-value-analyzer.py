@@ -159,9 +159,22 @@ class PRValueAnalyzer:
                     )
                     + (int(deletions_match.group(1)) if deletions_match else 0),
                 }
+            else:
+                print(f"Warning: Failed to get PR diff stats: {result.stderr}")
+                return {
+                    "files_changed": 0,
+                    "lines_added": 0,
+                    "lines_deleted": 0,
+                    "code_churn": 0,
+                }
         except Exception as e:
             print(f"Error analyzing code changes: {e}")
-            return {}
+            return {
+                "files_changed": 0,
+                "lines_added": 0,
+                "lines_deleted": 0,
+                "code_churn": 0,
+            }
 
     def calculate_innovation_score(self, pr_body: str, code_metrics: Dict) -> float:
         """Calculate innovation score based on PR content."""
