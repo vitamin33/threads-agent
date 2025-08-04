@@ -4,7 +4,7 @@ from prometheus_client import Counter, Histogram, generate_latest
 from starlette.responses import Response
 import structlog
 
-from .routers import articles, manual_publish
+from .routers import articles, manual_publish, auto_publish
 from .core.config import get_settings
 from .core.database import init_database, close_database
 from .core.cache import get_cache_manager
@@ -73,6 +73,7 @@ app.add_middleware(
 # Include routers
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(manual_publish.router, prefix="/api", tags=["manual-publishing"])
+app.include_router(auto_publish.router, prefix="/api", tags=["auto-publishing"])
 
 @app.get("/")
 async def root():

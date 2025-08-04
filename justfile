@@ -46,11 +46,12 @@ dev-start-multi: bootstrap-multi deploy-dev mcp-setup dev-dashboard
 alias persona-hot-reload := hot-reload-persona
 alias ai-test-gen := ai-generate-tests
 alias smart-deploy := deploy-strategy
-dev-dashboard: prometheus-dashboard grafana business-dashboard
+dev-dashboard: prometheus-dashboard grafana business-dashboard ui-dashboard
 cache-set key value:
-	just redis-cache-set {{key}} {{value}}
+	@redis-cli -h localhost -p 6379 SET "{{key}}" "{{value}}"
+	@echo "✅ Cached {{key}}"
 cache-get key:
-	just redis-cache-get {{key}}
+	@redis-cli -h localhost -p 6379 GET "{{key}}"
 trend-check topic:
 	just trend-detection {{topic}}
 
@@ -95,11 +96,11 @@ images:
 	echo "🔨 Building Docker images..."
 	
 	# Build all service images in parallel
-	docker build -t orchestrator:local services/orchestrator &
-	docker build -t celery-worker:local services/celery_worker &
-	docker build -t persona-runtime:local services/persona_runtime &
-	docker build -t fake-threads:local services/fake_threads &
-	docker build -t viral-engine:local services/viral_engine &
+	docker build -t orchestrator:local -f services/orchestrator/Dockerfile . &
+	docker build -t celery-worker:local -f services/celery_worker/Dockerfile . &
+	docker build -t persona-runtime:local -f services/persona_runtime/Dockerfile . &
+	docker build -t fake-threads:local -f services/fake_threads/Dockerfile . &
+	docker build -t viral-engine:local -f services/viral_engine/Dockerfile . &
 	docker build -t achievement-collector:local -f services/achievement_collector/Dockerfile . &
 	
 	# Wait for all builds to complete
@@ -653,3 +654,36 @@ k3d-nuke-all:
 	else
 		echo "Operation cancelled"
 	fi
+
+# UI Dashboard Commands
+ui-dashboard:
+	@echo "🎨 Starting Streamlit Dashboard..."
+	@cd dashboard && ./start-dev.sh
+
+ui-setup:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚀 Setting up Streamlit UI Dashboard..."
+	./scripts/setup_ui_dashboard.sh
+	echo "✅ Dashboard setup complete"
+
+ui-docker:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🐳 Building and running Dashboard in Docker..."
+	cd dashboard && docker-compose up --build
+
+ui-deploy:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "☸️ Deploying Dashboard to Kubernetes..."
+	kubectl apply -f dashboard/k8s/deployment.yaml
+	echo "✅ Dashboard deployed"
+	echo "🔗 Access with: kubectl port-forward -n threads-agent svc/threads-agent-dashboard 8501:80"
+
+ui-logs:
+	@kubectl logs -n threads-agent -l app=threads-agent-dashboard --tail=100 -f
+
+ui-port-forward:
+	@echo "🔗 Creating port-forward for Dashboard..."
+	@kubectl port-forward -n threads-agent svc/threads-agent-dashboard 8501:80

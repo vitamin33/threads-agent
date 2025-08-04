@@ -166,3 +166,41 @@ async def health() -> Status:
     finally:
         duration = time.time() - start_time
         record_http_request("GET", "/health", status, duration)
+
+
+@app.get("/metrics/summary")
+async def metrics_summary():
+    """Get system-wide metrics summary for dashboard"""
+    start_time = time.time()
+    status = 500
+    
+    try:
+        # Return mock data for now
+        summary = {
+            "services_health": {
+                "healthy": 5,
+                "total": 5,
+                "details": {
+                    "orchestrator": "healthy",
+                    "celery_worker": "healthy", 
+                    "persona_runtime": "healthy",
+                    "fake_threads": "healthy",
+                    "achievement_collector": "healthy"
+                }
+            },
+            "api_latency_ms": 45,
+            "success_rate": 99.9,
+            "queue_size": 12,
+            "active_tasks": 3,
+            "completed_today": 89,
+            "avg_processing_time_s": 2.3
+        }
+        
+        status = 200
+        return summary
+    except Exception:
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("GET", "/metrics/summary", status, duration)
