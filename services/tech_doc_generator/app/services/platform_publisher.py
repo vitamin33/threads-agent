@@ -117,6 +117,7 @@ class PlatformPublisher:
         )
 
         return draft_result
+
     async def _publish_to_twitter(
         self, content: ArticleContent, custom_content: Optional[str] = None
     ) -> Dict[str, Any]:

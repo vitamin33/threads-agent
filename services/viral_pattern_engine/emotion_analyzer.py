@@ -75,7 +75,7 @@ class EmotionAnalyzer:
 
         # Calculate overall confidence
         confidence = self._calculate_confidence(bert_results, vader_scores)
-        
+
         # Find dominant emotion
         dominant_emotion = max(final_emotions, key=final_emotions.get)
 
@@ -167,7 +167,7 @@ class EmotionAnalyzer:
 
         # Find dominant emotion
         dominant_emotion = max(emotions, key=emotions.get)
-        
+
         return {
             "emotions": emotions,
             "dominant_emotion": dominant_emotion,

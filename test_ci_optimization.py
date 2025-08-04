@@ -19,12 +19,14 @@ def test_caching_strategy():
     """Test that the new caching strategy is functional."""
     # This will test our enhanced caching
     import os
+
     assert os.path.exists(__file__), "File system access works"
 
 
 def test_parallel_execution():
     """Test that parallel test execution doesn't break anything."""
     import time
+
     start = time.time()
     # Simple computation to verify parallel execution works
     result = sum(range(100))

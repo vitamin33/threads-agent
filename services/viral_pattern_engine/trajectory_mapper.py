@@ -11,12 +11,12 @@ class TrajectoryMapper:
         """Initialize the trajectory mapper with emotion analyzer."""
         self.emotion_analyzer = EmotionAnalyzer()
 
-    def map_emotion_trajectory(self, content_segments: List[str]) -> Dict[str, Any]:
+    def map_emotion_trajectory(self, content_segments) -> Dict[str, Any]:
         """
         Map emotion trajectory across content segments.
 
         Args:
-            content_segments: List of text segments to analyze
+            content_segments: List of text segments (str) or analyzed segments (dict) to analyze
 
         Returns:
             Dictionary containing arc classification and emotion progression
@@ -24,9 +24,24 @@ class TrajectoryMapper:
         # Analyze emotions for each segment
         emotion_progression = []
         for segment in content_segments:
-            segment_emotions = self.emotion_analyzer.analyze_emotions(segment)[
-                "emotions"
-            ]
+            if isinstance(segment, str):
+                # Raw text segment - analyze emotions
+                segment_emotions = self.emotion_analyzer.analyze_emotions(segment)[
+                    "emotions"
+                ]
+            elif isinstance(segment, dict) and "emotions" in segment:
+                # Already analyzed segment - use existing emotions
+                segment_emotions = segment["emotions"]
+            elif isinstance(segment, dict) and "text" in segment:
+                # Dictionary with text key - analyze the text
+                segment_emotions = self.emotion_analyzer.analyze_emotions(
+                    segment["text"]
+                )["emotions"]
+            else:
+                # Fallback - treat as string
+                segment_emotions = self.emotion_analyzer.analyze_emotions(str(segment))[
+                    "emotions"
+                ]
             emotion_progression.append(segment_emotions)
 
         # Classify the emotional arc
@@ -46,14 +61,12 @@ class TrajectoryMapper:
             "emotional_variance": emotional_variance,
         }
 
-    def analyze_emotion_transitions(
-        self, content_segments: List[str]
-    ) -> Dict[str, Any]:
+    def analyze_emotion_transitions(self, content_segments) -> Dict[str, Any]:
         """
         Analyze emotion transitions between content segments.
 
         Args:
-            content_segments: List of text segments to analyze
+            content_segments: List of text segments (str) or analyzed segments (dict) to analyze
 
         Returns:
             Dictionary containing transition patterns and strengths
@@ -61,9 +74,24 @@ class TrajectoryMapper:
         # Get emotion progression
         emotion_progression = []
         for segment in content_segments:
-            segment_emotions = self.emotion_analyzer.analyze_emotions(segment)[
-                "emotions"
-            ]
+            if isinstance(segment, str):
+                # Raw text segment - analyze emotions
+                segment_emotions = self.emotion_analyzer.analyze_emotions(segment)[
+                    "emotions"
+                ]
+            elif isinstance(segment, dict) and "emotions" in segment:
+                # Already analyzed segment - use existing emotions
+                segment_emotions = segment["emotions"]
+            elif isinstance(segment, dict) and "text" in segment:
+                # Dictionary with text key - analyze the text
+                segment_emotions = self.emotion_analyzer.analyze_emotions(
+                    segment["text"]
+                )["emotions"]
+            else:
+                # Fallback - treat as string
+                segment_emotions = self.emotion_analyzer.analyze_emotions(str(segment))[
+                    "emotions"
+                ]
             emotion_progression.append(segment_emotions)
 
         transitions = []
