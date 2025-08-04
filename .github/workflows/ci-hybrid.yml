@@ -1,5 +1,6 @@
 # .github/workflows/ci-hybrid.yml
 # Phase 2: Hybrid CI with self-hosted runners for heavy workloads
+# TEMPORARILY DISABLED - Self-hosted runners not available
 name: ci-hybrid
 
 on:
@@ -11,6 +12,10 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - '.env.example'
+
+# Temporarily disable until self-hosted runners are available
+env:
+  SKIP_SELF_HOSTED: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -61,7 +66,7 @@ jobs:
     name: Integration Tests (Self-Hosted)
     runs-on: [self-hosted, heavy, docker, k3d]
     timeout-minutes: 15
-    if: ${{ !github.event.repository.fork }}  # Security: only for trusted repos
+    if: ${{ !github.event.repository.fork && !env.SKIP_SELF_HOSTED }}  # Security: only for trusted repos, skip if self-hosted unavailable
     steps:
       - uses: actions/checkout@v4
         with:
@@ -132,7 +137,7 @@ jobs:
     name: Unit Tests (Self-Hosted Light)
     runs-on: [self-hosted, light, unit-tests]
     timeout-minutes: 5
-    if: ${{ !github.event.repository.fork }}
+    if: ${{ !github.event.repository.fork && !env.SKIP_SELF_HOSTED }}
     strategy:
       fail-fast: false
       matrix:

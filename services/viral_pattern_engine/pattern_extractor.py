@@ -3,10 +3,17 @@
 import re
 from typing import Dict, List, Any
 from services.viral_scraper.models import ViralPost
+from services.viral_pattern_engine.emotion_analyzer import EmotionAnalyzer
+from services.viral_pattern_engine.trajectory_mapper import TrajectoryMapper
 
 
 class ViralPatternExtractor:
     """Extracts viral patterns from post content using ML and NLP techniques."""
+
+    def __init__(self):
+        """Initialize the pattern extractor with advanced emotion analysis capabilities."""
+        self.emotion_analyzer = EmotionAnalyzer()
+        self.trajectory_mapper = TrajectoryMapper()
 
     def extract_patterns(self, post: ViralPost) -> Dict[str, Any]:
         """
@@ -42,8 +49,15 @@ class ViralPatternExtractor:
             self._extract_hook_patterns(content, original_content)
         )
 
-        # Emotion pattern detection
-        patterns["emotion_patterns"].extend(self._extract_emotion_patterns(content))
+        # Emotion pattern detection (enhanced with multi-model analysis)
+        patterns["emotion_patterns"].extend(
+            self._extract_emotion_patterns(original_content)
+        )
+
+        # Emotion trajectory analysis for longer content
+        patterns["emotion_trajectory"] = self._extract_emotion_trajectory(
+            original_content
+        )
 
         # Structure pattern detection
         patterns["structure_patterns"].extend(
@@ -142,26 +156,63 @@ class ViralPatternExtractor:
         return hook_patterns
 
     def _extract_emotion_patterns(self, content: str) -> List[Dict[str, Any]]:
-        """Extract emotion patterns from content."""
+        """Extract emotion patterns from content using advanced multi-model analysis."""
         emotion_patterns = []
 
-        # Excitement/amazement
-        if any(
-            word in content
-            for word in [
-                "amazing",
-                "incredible",
-                "mind-blown",
-                "can't believe",
-                "shock",
-                "breaking",
-            ]
-        ):
+        # Use advanced emotion analyzer for comprehensive emotion detection
+        emotion_analysis = self.emotion_analyzer.analyze_emotions(content)
+
+        # Convert to the pattern format expected by the system
+        emotion_pattern = {
+            "emotions": emotion_analysis["emotions"],
+            "confidence": emotion_analysis["confidence"],
+            "model_info": emotion_analysis["model_info"],
+            "ensemble_info": emotion_analysis["ensemble_info"],
+        }
+
+        emotion_patterns.append(emotion_pattern)
+
+        # Keep backward compatibility: add legacy excitement pattern if joy is high
+        if emotion_analysis["emotions"]["joy"] > 0.7:
             emotion_patterns.append(
-                {"type": "excitement", "intensity": 0.8, "confidence": 0.7}
+                {
+                    "type": "excitement",
+                    "intensity": emotion_analysis["emotions"]["joy"],
+                    "confidence": emotion_analysis["confidence"],
+                }
             )
 
         return emotion_patterns
+
+    def _extract_emotion_trajectory(self, content: str) -> Dict[str, Any]:
+        """Extract emotion trajectory for longer content by segmenting and analyzing progression."""
+        # Only analyze trajectory for content longer than 50 words
+        word_count = len(content.split())
+        if word_count < 50:
+            return {
+                "arc_type": "steady",
+                "emotion_progression": [],
+                "segments_analyzed": 0,
+            }
+
+        # Segment content by sentences for trajectory analysis
+        sentences = [
+            s.strip() for s in content.split(".") if s.strip() and len(s.strip()) > 10
+        ]
+
+        if len(sentences) < 3:
+            # Not enough segments for trajectory analysis
+            return {
+                "arc_type": "steady",
+                "emotion_progression": [],
+                "segments_analyzed": len(sentences),
+            }
+
+        # Use trajectory mapper to analyze emotion progression
+        trajectory_result = self.trajectory_mapper.map_emotion_trajectory(sentences)
+        trajectory_result["segments_analyzed"] = len(sentences)
+
+        return trajectory_result
 
     def _extract_structure_patterns(self, content: str) -> List[Dict[str, Any]]:
         """Extract content structure patterns."""
