@@ -186,7 +186,9 @@ def emotion_test_db():
         Column("to_segment_index", Integer, nullable=False),
         Column("from_emotion", String(20), nullable=False),
         Column("to_emotion", String(20), nullable=False),
+        Column("transition_type", String(30), nullable=False),
         Column("intensity_change", Float, nullable=False),
+        Column("transition_speed", Float, nullable=False),
         Column("strength_score", Float, nullable=False),
         Column("created_at", DateTime, nullable=True),
     )
@@ -200,13 +202,15 @@ def emotion_test_db():
         Column("post_id", String(100), nullable=False),
         Column("persona_id", String(50), nullable=False),
         Column("engagement_rate", Float, nullable=False),
-        Column("view_count", Integer, nullable=False),
-        Column("like_count", Integer, nullable=False),
-        Column("comment_count", Integer, nullable=False),
-        Column("share_count", Integer, nullable=False),
-        Column("completion_rate", Float, nullable=True),
-        Column("emotion_correlation_score", Float, nullable=True),
-        Column("performance_timestamp", DateTime, nullable=False),
+        Column("likes_count", Integer, nullable=False),
+        Column("shares_count", Integer, nullable=False),
+        Column("comments_count", Integer, nullable=False),
+        Column("reach", Integer, nullable=False),
+        Column("impressions", Integer, nullable=False),
+        Column("emotion_effectiveness", Float, nullable=False),
+        Column("predicted_engagement", Float, nullable=False),
+        Column("actual_vs_predicted", Float, nullable=False),
+        Column("measured_at", DateTime, nullable=False),
         Column("created_at", DateTime, nullable=True),
     )
 
@@ -244,6 +248,14 @@ def db_session(emotion_test_db):
     """Create a new database session for each test."""
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=emotion_test_db)
     session = SessionLocal()
+
+    # Clean up any existing data before each test
+    from sqlalchemy import MetaData
+    metadata = MetaData()
+    metadata.reflect(bind=emotion_test_db)
+    for table in reversed(metadata.sorted_tables):
+        session.execute(table.delete())
+    session.commit()
 
     try:
         yield session
