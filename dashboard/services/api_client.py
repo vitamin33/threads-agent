@@ -177,6 +177,20 @@ class ThreadsAgentAPI:
         except Exception as e:
             return {"error": str(e), "success": False}
     
+    def create_achievement(self, achievement_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new achievement"""
+        try:
+            with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
+                response = client.post(
+                    f"{self.achievement_url}/achievements/",
+                    json=achievement_data
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            st.error(f"Failed to create achievement: {str(e)}")
+            return {"error": str(e), "success": False}
+    
     def export_portfolio(
         self,
         format: str = "pdf",
