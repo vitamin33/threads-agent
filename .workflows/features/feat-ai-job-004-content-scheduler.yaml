@@ -1,0 +1,70 @@
+feature_id: feat-ai-job-004
+feature_name: "Weekly Content Generation Scheduler"
+description: |
+  Build an intelligent scheduling system that automatically generates and publishes content
+  on optimal days/times. The system should analyze achievements, select the best content
+  for the week, and maintain a consistent publishing cadence across multiple platforms.
+epic_id: ai-job-week2
+priority: high
+estimated_effort: 8
+technical_requirements:
+  - "Celery Beat for scheduled task execution"
+  - "Smart content selection algorithm"
+  - "Platform-specific timing optimization"
+  - "Content calendar management"
+  - "Failure handling and notifications"
+acceptance_criteria:
+  - "Publishes 3+ pieces of content weekly automatically"
+  - "Content selected based on quality and diversity"
+  - "Posts at platform-optimal times (LinkedIn: Tue-Thu 9-10am)"
+  - "Maintains 30-day content calendar"
+  - "Sends weekly performance summary"
+  - "Zero duplicate content across platforms"
+implementation_details:
+  - file: "services/common/schedulers/content_scheduler.py"
+    changes: |
+      - Create ContentScheduler class with Celery Beat
+      - Implement smart selection algorithm
+      - Add platform timing optimization
+  - file: "services/achievement_collector/services/content_calendar.py"
+    changes: |
+      - Build ContentCalendar model and manager
+      - Track published content to avoid duplicates
+      - Generate 30-day forward calendar
+  - file: "services/tech_doc_generator/app/tasks/scheduled_generation.py"
+    changes: |
+      - Create weekly generation tasks
+      - Add batch processing for efficiency
+      - Implement quality thresholds
+  - file: "services/common/notifications/content_alerts.py"
+    changes: |
+      - Weekly summary email generation
+      - Slack notifications for published content
+      - Error alerting system
+business_value: |
+  - Maintains consistent professional presence without manual effort
+  - Increases visibility to recruiters and hiring managers
+  - Demonstrates automation and DevOps skills
+  - Supports $180K+ positioning through thought leadership
+success_metrics:
+  - "100% weekly publishing success rate"
+  - "Content engagement increases 25% with optimal timing"
+  - "Zero manual intervention required for 4 weeks"
+  - "Generated content leads to 5+ recruiter contacts"
+tags:
+  - automation
+  - scheduling
+  - content-strategy
+tasks:
+  - task_id: task-ai-job-004-1
+    title: "Set up Celery Beat scheduling infrastructure"
+    effort: 2
+  - task_id: task-ai-job-004-2
+    title: "Build content selection algorithm"
+    effort: 3
+  - task_id: task-ai-job-004-3
+    title: "Create content calendar system"
+    effort: 2
+  - task_id: task-ai-job-004-4
+    title: "Implement notifications and monitoring"
+    effort: 1

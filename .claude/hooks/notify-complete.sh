@@ -5,7 +5,7 @@ TASK_TYPE="${1:-task}"
 
 # macOS voice notification
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    say "Claude Code has completed the $TASK_TYPE" &
+    say "Claude Code has completed the $TASK_TYPE" --rate=200 --volume=50 &
     osascript -e "display notification \"$TASK_TYPE completed successfully\" with title \"Claude Code\" sound name \"Blow\""
 fi
 

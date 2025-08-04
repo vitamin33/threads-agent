@@ -9,7 +9,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         afplay "$AUDIO_FILE" &
     else
         # Option 2: Fallback to system voice
-        say -v "Samantha" -r 180 "Claude Code is waiting, motherfucker" &
+        say -v "Samantha" -r 180 --volume=50 "Claude Code is waiting, motherfucker" &
     fi
     
     # Also show system notification

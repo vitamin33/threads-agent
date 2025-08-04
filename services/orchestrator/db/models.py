@@ -1,10 +1,21 @@
 # /services/orchestrator/db/models.py
 from datetime import datetime
-from typing import Any
+from typing import Any, List
 
-from sqlalchemy import BigInteger, Text, func, JSON, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    BigInteger,
+    Text,
+    func,
+    JSON,
+    Integer,
+    Float,
+    String,
+    Boolean,
+    ForeignKey,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects import postgresql
 
 from . import Base
 
@@ -55,3 +66,267 @@ class VariantPerformance(Base):
         if self.impressions == 0:
             return 0.0
         return self.successes / self.impressions
+
+
+class EmotionTrajectory(Base):
+    """Store emotion analysis results for content pieces."""
+
+    __tablename__ = "emotion_trajectories"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    post_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    persona_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    segment_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_duration_words: Mapped[int] = mapped_column(Integer, nullable=False)
+    analysis_model: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="bert_vader"
+    )
+    confidence_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+
+    # Trajectory characteristics
+    trajectory_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    emotional_variance: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    peak_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    valley_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    transition_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # Primary emotions (BERT model outputs)
+    joy_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    anger_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    fear_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    sadness_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    surprise_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    disgust_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    trust_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    anticipation_avg: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+
+    # Sentiment analysis (VADER outputs)
+    sentiment_compound: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    sentiment_positive: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    sentiment_neutral: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    sentiment_negative: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+
+    # Performance metrics
+    processing_time_ms: Mapped[int] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=func.now(), index=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    segments: Mapped[List["EmotionSegment"]] = relationship(
+        "EmotionSegment", back_populates="trajectory", cascade="all, delete-orphan"
+    )
+    transitions: Mapped[List["EmotionTransition"]] = relationship(
+        "EmotionTransition", back_populates="trajectory", cascade="all, delete-orphan"
+    )
+    performance: Mapped[List["EmotionPerformance"]] = relationship(
+        "EmotionPerformance", back_populates="trajectory", cascade="all, delete-orphan"
+    )
+
+    @hybrid_property
+    def dominant_emotion(self) -> str:
+        """Get the dominant emotion from averages."""
+        emotions = {
+            "joy": self.joy_avg,
+            "anger": self.anger_avg,
+            "fear": self.fear_avg,
+            "sadness": self.sadness_avg,
+            "surprise": self.surprise_avg,
+            "disgust": self.disgust_avg,
+            "trust": self.trust_avg,
+            "anticipation": self.anticipation_avg,
+        }
+        return max(emotions, key=emotions.get)
+
+
+class EmotionSegment(Base):
+    """Store detailed segment-level emotion analysis."""
+
+    __tablename__ = "emotion_segments"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trajectory_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("emotion_trajectories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    segment_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_text: Mapped[str] = mapped_column(Text, nullable=False)
+    word_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    sentence_count: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Segment-level emotions (BERT outputs)
+    joy_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    anger_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    fear_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    sadness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    surprise_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    disgust_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    trust_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    anticipation_score: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+
+    # Segment-level sentiment (VADER outputs)
+    sentiment_compound: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    sentiment_positive: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    sentiment_neutral: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    sentiment_negative: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+
+    # Analysis metadata
+    dominant_emotion: Mapped[str] = mapped_column(
+        String(20), nullable=False, index=True
+    )
+    confidence_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    is_peak: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    is_valley: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+
+    # Relationships
+    trajectory: Mapped["EmotionTrajectory"] = relationship(
+        "EmotionTrajectory", back_populates="segments"
+    )
+
+
+class EmotionTransition(Base):
+    """Store emotion transition patterns between segments."""
+
+    __tablename__ = "emotion_transitions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trajectory_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("emotion_trajectories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    from_segment_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    to_segment_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    from_emotion: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    to_emotion: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    transition_type: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    intensity_change: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    transition_speed: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    strength_score: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+
+    # Relationships
+    trajectory: Mapped["EmotionTrajectory"] = relationship(
+        "EmotionTrajectory", back_populates="transitions"
+    )
+
+
+class EmotionTemplate(Base):
+    """Store reusable emotion pattern templates."""
+
+    __tablename__ = "emotion_templates"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    template_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    template_type: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    pattern_description: Mapped[str] = mapped_column(Text, nullable=False)
+    segment_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    optimal_duration_words: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Template characteristics
+    trajectory_pattern: Mapped[str] = mapped_column(String(20), nullable=False)
+    primary_emotions: Mapped[List[str]] = mapped_column(
+        postgresql.ARRAY(String), nullable=False
+    )
+    emotion_sequence: Mapped[str] = mapped_column(Text, nullable=False)  # JSON string
+    transition_patterns: Mapped[str] = mapped_column(
+        Text, nullable=False
+    )  # JSON string
+
+    # Performance metrics
+    usage_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, index=True
+    )
+    average_engagement: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    engagement_correlation: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    effectiveness_score: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0, index=True
+    )
+
+    # Version control
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        default=func.now(), onupdate=func.now()
+    )
+
+
+class EmotionPerformance(Base):
+    """Track emotion-engagement correlations and performance metrics."""
+
+    __tablename__ = "emotion_performance"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    trajectory_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("emotion_trajectories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    post_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    persona_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+
+    # Engagement metrics
+    engagement_rate: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0, index=True
+    )
+    likes_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    shares_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    comments_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reach: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    impressions: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # Performance correlation
+    emotion_effectiveness: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    predicted_engagement: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    actual_vs_predicted: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+
+    # Time tracking
+    measured_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+
+    # Relationships
+    trajectory: Mapped["EmotionTrajectory"] = relationship(
+        "EmotionTrajectory", back_populates="performance"
+    )

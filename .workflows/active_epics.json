@@ -1,79 +1,22 @@
 {
-  "active_epics": [
+  "epics": [
     {
-      "id": "epic-14-ai-career-content-automation",
-      "title": "AI Career Content Automation System",
-      "status": "planned",
-      "priority": "high",
-      "business_value": 85,
-      "complexity_score": 75,
-      "estimated_hours": 120,
-      "created_date": "2025-01-25",
-      "target_completion": "2025-03-15",
-      "features_count": 6,
-      "tasks_total": 58,
-      "integration_services": [
-        "orchestrator",
-        "celery_worker", 
-        "persona_runtime",
-        "viral_engine",
-        "achievement_collector"
-      ],
-      "kpis": {
-        "articles_generated_weekly": "3-5",
-        "insight_quality_score": "7+ (1-10 scale)",
-        "platform_engagement_rate": "6%+",
-        "profile_visits_increase": "150%",
-        "job_inquiry_conversion": "2+ per month"
-      },
-      "success_criteria": [
-        "Generate 3-5 high-quality articles per week automatically",
-        "Achieve 7+ insight quality score across all content",
-        "Successfully publish to 4+ platforms with optimized timing",
-        "Demonstrate measurable increase in professional visibility",
-        "Integration with existing monitoring and metrics systems",
-        "Zero-downtime deployment in production k3d cluster"
-      ]
+      "id": "ai-job-week1",
+      "name": "[AI Job] Week 1: Foundation - Service Integration & Content Pipeline",
+      "status": "active",
+      "created": "2025-08-04T00:00:00Z"
     },
     {
-      "id": "epic-240-finops-cost-tracking-optimization",
-      "title": "FinOps Cost Tracking & Optimization Engine",
-      "status": "completed",
-      "priority": "high",
-      "business_value": 95,
-      "complexity_score": 80,
-      "estimated_hours": 160,
-      "created_date": "2025-08-03",
-      "target_completion": "2025-09-28",
-      "features_count": 8,
-      "tasks_total": 64,
-      "integration_services": [
-        "orchestrator",
-        "celery_worker", 
-        "persona_runtime",
-        "finops_engine"
-      ],
-      "kpis": {
-        "cost_per_follow_dollars": "$0.01",
-        "test_pass_rate": "100%",
-        "anomaly_detection_accuracy": "95%+",
-        "alert_response_time": "<60s"
-      },
-      "success_criteria": [
-        "100% test pass rate achieved (159/159 tests)",
-        "Real-time cost tracking across all services",
-        "Anomaly detection with multi-channel alerting",
-        "Comprehensive documentation and performance reports",
-        "Integration with existing monitoring infrastructure"
-      ]
+      "id": "ai-job-week2",
+      "name": "[AI Job] Week 2: Automation - Scheduled Jobs & ROI Tools",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "ai-job-week3",
+      "name": "[AI Job] Week 3: Optimization - AI Enhancement & Multi-Platform",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
     }
-  ],
-  "epic_statistics": {
-    "total_active_epics": 2,
-    "total_estimated_hours": 280,
-    "average_business_value": 90,
-    "average_complexity": 77.5,
-    "completion_rate": "50%"
-  },
-  "last_updated": "2025-08-03T12:00:00Z"
+  ]
 }

@@ -66,6 +66,19 @@ viralEngine:
     repository: ghcr.io/threads-agent-stack/viral-engine
     tag: "0.1.0"
 
+viralPatternEngine:
+  enabled: false                   # turn ON in dev/ci values
+  image:
+    repository: ghcr.io/threads-agent-stack/viral-pattern-engine
+    tag: "0.1.0"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
 threadsAdaptor:
   enabled: false                   # turn ON when using real Threads API
   image:
@@ -99,6 +112,31 @@ revenue:
     limits:
       memory: "512Mi"
       cpu: "500m"
+
+finopsEngine:
+  enabled: false                   # turn ON to enable FinOps monitoring
+  image:
+    repository: finops-engine
+    tag: "local"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 8095
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  # Alert webhook configuration
+  alertWebhooks:
+    slack: ""                      # Slack webhook URL
+    discord: ""                    # Discord webhook URL
+    telegramBotToken: ""          # Telegram bot token
+    telegramChatId: ""            # Telegram chat ID
+    customWebhook: ""             # Custom webhook URL
 
 threadsAdaptor:
   credentials:
