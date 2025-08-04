@@ -85,6 +85,16 @@ with st.sidebar:
         st.session_state.last_refresh = datetime.now()
         st.rerun()
 
+# Import theme config for dark mode support
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+try:
+    from utils.theme_config import inject_dark_theme_css
+    inject_dark_theme_css()
+except:
+    pass
+
 # Main content
 st.title("Threads Agent Dashboard")
 st.markdown("**Real-time monitoring and control center for your AI-powered content automation system**")
@@ -95,11 +105,22 @@ try:
     from services.api_client import get_api_client
     api = get_api_client()
     
-    # Fetch real data
+    # Fetch real data with retry
     try:
-        achievements = api.get_achievements(days=30)
-        content_status = api.get_content_pipeline()
-        system_metrics = api.get_system_metrics()
+        import time
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                achievements = api.get_achievements(days=30)
+                content_status = api.get_content_pipeline()
+                system_metrics = api.get_system_metrics()
+                break  # Success, exit retry loop
+            except Exception as e:
+                if "Connection refused" in str(e) and attempt < max_retries - 1:
+                    time.sleep(1)  # Wait 1 second before retry
+                    continue
+                else:
+                    raise  # Re-raise on last attempt or different error
         
         # Calculate real metrics
         # Parse business value from JSON string if needed
