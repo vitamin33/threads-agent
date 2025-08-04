@@ -383,7 +383,7 @@ class InsightPredictor:
 
             score = float(response.choices[0].message.content.strip())
             return min(max(score, 1.0), 10.0)
-        except:
+        except Exception:
             # Fallback heuristic
             base_score = 5.0
             base_score += features.get("sophisticated_patterns", 0) * 0.8
@@ -395,7 +395,7 @@ class InsightPredictor:
 
         # Multiple readability metrics
         flesch_ease = textstat.flesch_reading_ease(content)
-        flesch_kincaid = textstat.flesch_kincaid_grade(content)
+        textstat.flesch_kincaid_grade(content)
 
         # Convert to 1-10 scale
         # Flesch Reading Ease: 0-100 (higher is better)

@@ -159,6 +159,86 @@
       "priority": "medium",
       "effort": "medium",
       "estimated_hours": 102
+    },
+    {
+      "id": "feat-282-001-multi-model-emotion-detector",
+      "name": "Multi-Model Emotion Detection System",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "critical",
+      "effort": "high",
+      "estimated_hours": 98
+    },
+    {
+      "id": "feat-282-002-temporal-trajectory-analyzer",
+      "name": "Temporal Emotion Trajectory Analyzer",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "critical",
+      "effort": "high",
+      "estimated_hours": 138
+    },
+    {
+      "id": "feat-282-003-emotion-engagement-correlator",
+      "name": "Emotion-Engagement Correlation Engine",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "effort": "high",
+      "estimated_hours": 136
+    },
+    {
+      "id": "feat-282-004-emotion-pattern-templates",
+      "name": "Emotion Pattern Template Generation System",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "effort": "medium",
+      "estimated_hours": 104
+    },
+    {
+      "id": "feat-282-005-realtime-pacing-optimizer",
+      "name": "Real-time Emotion Pacing Optimizer",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "high",
+      "effort": "medium",
+      "estimated_hours": 100
+    },
+    {
+      "id": "feat-282-006-emotion-database-schema",
+      "name": "Emotion Database Schema and Storage System",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "medium",
+      "effort": "medium",
+      "estimated_hours": 88
+    },
+    {
+      "id": "feat-282-007-content-pipeline-integration",
+      "name": "Content Pipeline Emotion Integration",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "critical",
+      "effort": "high",
+      "estimated_hours": 138
+    },
+    {
+      "id": "feat-282-008-monitoring-analytics",
+      "name": "Emotion Analytics and Monitoring System",
+      "epic": "epic-282-emotion-trajectory-mapping",
+      "status": "planned",
+      "created": "2025-08-03T12:00:00+00:00",
+      "priority": "medium",
+      "effort": "medium",
+      "estimated_hours": 108
     }
   ]
 }

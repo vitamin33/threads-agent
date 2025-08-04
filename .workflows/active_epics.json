@@ -104,14 +104,54 @@
         "Integration with existing viral content generation pipeline",
         "50+ validated patterns in production pattern library"
       ]
+    },
+    {
+      "id": "epic-282-emotion-trajectory-mapping",
+      "title": "Advanced Emotion Trajectory Mapping for Viral Content Optimization",
+      "status": "planned",
+      "priority": "high",
+      "business_value": 92,
+      "complexity_score": 88,
+      "estimated_hours": 1144,
+      "created_date": "2025-08-03",
+      "target_completion": "2025-11-15",
+      "features_count": 8,
+      "tasks_total": 72,
+      "integration_services": [
+        "viral_pattern_engine",
+        "orchestrator",
+        "persona_runtime",
+        "celery_worker",
+        "fake_threads",
+        "common"
+      ],
+      "kpis": {
+        "posts_engagement_rate": "10%+",
+        "emotion_detection_accuracy": "90%+",
+        "trajectory_analysis_speed": "<300ms",
+        "emotion_pattern_coverage": "100+ validated patterns",
+        "engagement_improvement": "40% increase",
+        "cost_per_follow_dollars": "$0.007",
+        "revenue_projection_monthly": "$35,000"
+      },
+      "success_criteria": [
+        "Multi-model emotion detection with 90%+ accuracy across 8+ emotion categories",
+        "Real-time emotion trajectory analysis processing 100+ concurrent requests",
+        "Emotion-engagement correlation engine with 85%+ prediction accuracy",
+        "100+ validated emotion pattern templates for content optimization",
+        "Integration with persona_runtime providing real-time emotion guidance",
+        "Comprehensive emotion analytics dashboard with actionable insights",
+        "Performance benchmarks: <300ms analysis, <500MB memory per worker",
+        "40% improvement in engagement rates through emotion optimization"
+      ]
     }
   ],
   "epic_statistics": {
-    "total_active_epics": 3,
-    "total_estimated_hours": 460,
-    "average_business_value": 90,
-    "average_complexity": 79.3,
-    "completion_rate": "33.3%"
+    "total_active_epics": 4,
+    "total_estimated_hours": 1604,
+    "average_business_value": 90.5,
+    "average_complexity": 81.8,
+    "completion_rate": "25%"
   },
   "last_updated": "2025-08-03T12:00:00Z"
 }

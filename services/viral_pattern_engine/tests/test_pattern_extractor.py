@@ -72,10 +72,19 @@ class TestViralPatternExtractor:
         assert "emotion_patterns" in patterns
         assert len(patterns["emotion_patterns"]) > 0
 
+        # Check for new advanced emotion analysis format
         emotion = patterns["emotion_patterns"][0]
-        assert emotion["type"] in ["excitement", "amazement", "surprise"]
-        assert emotion["intensity"] > 0.7
-        assert emotion["confidence"] > 0.6
+        if "emotions" in emotion:
+            # New format: advanced multi-model analysis
+            assert (
+                emotion["emotions"]["joy"] > 0.7
+            )  # Should detect high joy for "AMAZING" content
+            assert emotion["confidence"] > 0.6
+        else:
+            # Legacy format: backward compatibility
+            assert emotion["type"] in ["excitement", "amazement", "surprise"]
+            assert emotion["intensity"] > 0.7
+            assert emotion["confidence"] > 0.6
 
     def test_extract_patterns_returns_dict_structure(
         self, extractor, viral_post_hook_pattern
@@ -112,3 +121,76 @@ class TestViralPatternExtractor:
         # Should still return structure but with empty or low-confidence patterns
         assert patterns is not None
         assert patterns["engagement_score"] < 0.5
+
+    def test_extract_patterns_uses_advanced_emotion_analysis(self, extractor):
+        """Test that pattern extractor uses advanced multi-model emotion analysis."""
+        post_with_complex_emotions = ViralPost(
+            content="I'm so excited about this project but also worried about the deadlines. It's amazing how challenging and rewarding this work can be!",
+            account_id="test_user",
+            post_url="https://threads.net/test/complex",
+            timestamp=datetime.now(),
+            likes=1000,
+            comments=200,
+            shares=100,
+            engagement_rate=0.75,
+            performance_percentile=85.0,
+        )
+
+        patterns = extractor.extract_patterns(post_with_complex_emotions)
+
+        # Should use advanced emotion analysis
+        assert "emotion_patterns" in patterns
+        emotion_patterns = patterns["emotion_patterns"]
+        assert len(emotion_patterns) > 0
+
+        # Should detect multiple emotions with confidence scores
+        emotion_pattern = emotion_patterns[0]
+        assert "emotions" in emotion_pattern
+        assert "confidence" in emotion_pattern
+        assert "model_info" in emotion_pattern
+
+        # Should detect at least joy and fear from the content
+        emotions = emotion_pattern["emotions"]
+        assert emotions["joy"] > 0.3  # excited, amazing
+        assert emotions["fear"] > 0.1  # worried
+
+    def test_extract_patterns_includes_emotion_trajectory_for_long_content(
+        self, extractor
+    ):
+        """Test that pattern extractor includes emotion trajectory for multi-segment content."""
+        # Long content that can be segmented (>50 words for trajectory analysis)
+        long_content = (
+            "Let me share my detailed experience with this revolutionary new development tool that has completely transformed my workflow. "
+            "At first, I was genuinely skeptical about its capabilities and wondered if it could truly deliver on all the promised features. "
+            "But then I tried it out for the first time and was completely amazed by how intuitive and powerful it actually turned out to be! "
+            "However, I did encounter some frustrating bugs and technical issues that initially made me question my decision to adopt this solution. "
+            "Thankfully, the support team was absolutely incredible and they fixed everything quickly while providing excellent customer service throughout the entire process."
+        )
+
+        post_with_trajectory = ViralPost(
+            content=long_content,
+            account_id="test_user",
+            post_url="https://threads.net/test/trajectory",
+            timestamp=datetime.now(),
+            likes=2000,
+            comments=400,
+            shares=250,
+            engagement_rate=0.88,
+            performance_percentile=95.0,
+        )
+
+        patterns = extractor.extract_patterns(post_with_trajectory)
+
+        # Should include emotion trajectory analysis
+        assert "emotion_trajectory" in patterns
+        trajectory = patterns["emotion_trajectory"]
+
+        assert "arc_type" in trajectory
+        assert trajectory["arc_type"] in [
+            "rising",
+            "falling",
+            "roller_coaster",
+            "steady",
+        ]
+        assert "emotion_progression" in trajectory
+        assert len(trajectory["emotion_progression"]) > 1  # Multiple segments

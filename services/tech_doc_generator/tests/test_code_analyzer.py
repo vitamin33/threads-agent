@@ -247,7 +247,7 @@ def simple_function():
                 (f for f in functions if f["name"] == "complex_function"), None
             )
             assert complex_func is not None
-            assert complex_func["is_async"] == True
+            assert complex_func["is_async"]
             assert (
                 complex_func["docstring"]
                 == "This is a complex function with documentation."

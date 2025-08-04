@@ -92,7 +92,7 @@ class CodeAnalyzer:
         if self.repo:
             try:
                 return self.repo.head.commit.hexsha[:12]
-            except:
+            except Exception:
                 pass
         return "no_git"
 
@@ -280,7 +280,7 @@ class CodeAnalyzer:
                     complexity += 0.3
 
             return complexity
-        except:
+        except Exception:
             return 1.0
 
     async def _calculate_directory_complexity(self, directory: Path) -> float:
@@ -315,7 +315,7 @@ class CodeAnalyzer:
                         for part in parts:
                             if part.endswith("%"):
                                 return float(part[:-1])
-        except:
+        except Exception:
             pass
 
         # Fallback: estimate based on test file presence
@@ -340,7 +340,7 @@ class CodeAnalyzer:
                         if line and not line.startswith("#"):
                             dep = line.split("==")[0].split(">=")[0].split("<=")[0]
                             dependencies.append(dep)
-            except:
+            except Exception:
                 continue
 
         # Check pyproject.toml
@@ -352,7 +352,7 @@ class CodeAnalyzer:
                     # Simple parsing - would use toml library in production
                     if "[tool.poetry.dependencies]" in content:
                         dependencies.append("poetry")
-            except:
+            except Exception:
                 pass
 
         return list(set(dependencies))
@@ -380,7 +380,7 @@ class CodeAnalyzer:
                     lines = len(f.readlines())
                     python_loc += lines
                     total_loc += lines
-            except:
+            except Exception:
                 continue
 
         metrics["lines_of_code"] = {"total": total_loc, "python": python_loc}
@@ -393,7 +393,7 @@ class CodeAnalyzer:
                     set(commit.author.email for commit in self.repo.iter_commits())
                 )
                 metrics["git"] = {"commits": commit_count, "contributors": contributors}
-            except:
+            except Exception:
                 pass
 
         return metrics
@@ -458,7 +458,7 @@ class CodeAnalyzer:
                             "is_async": isinstance(node, ast.AsyncFunctionDef),
                         }
                     )
-        except:
+        except Exception:
             pass
 
         return functions
@@ -484,7 +484,7 @@ class CodeAnalyzer:
                         "files_changed": len(list(commit.stats.files.keys())),
                     }
                 )
-        except:
+        except Exception:
             pass
 
         return changes
@@ -527,7 +527,7 @@ class CodeAnalyzer:
             if "pytest" in content or "unittest" in content:
                 patterns.append("testing")
 
-        except:
+        except Exception:
             pass
 
         return patterns
@@ -546,7 +546,7 @@ class CodeAnalyzer:
                         "lines_changed": stats["lines"],
                     }
                 )
-        except:
+        except Exception:
             pass
 
         return changes
@@ -582,7 +582,7 @@ class CodeAnalyzer:
             try:
                 file_functions = await self._extract_functions_from_file(py_file)
                 functions.extend(file_functions)
-            except:
+            except Exception:
                 continue
 
         return functions[:20]  # Limit results
@@ -600,7 +600,7 @@ class CodeAnalyzer:
                         if line and not line.startswith("#"):
                             dep = line.split("==")[0].split(">=")[0]
                             dependencies.append(dep)
-            except:
+            except Exception:
                 continue
 
         return list(set(dependencies))
