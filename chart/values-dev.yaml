@@ -28,6 +28,12 @@ personaRuntime:
   image:
     repository: persona-runtime
     tag: local
+
+ragPipeline:
+  enabled: true
+  image:
+    repository: rag-pipeline
+    tag: latest
   env:
     - name: HOOK_MODEL
       value: gpt-4o

@@ -48,6 +48,67 @@ fakeThreads:
     repository: ghcr.io/threads-agent-stack/fake-threads
     tag: "0.1.0"
   port: 9009
+
+# ───────── RAG Pipeline Service ─────────
+ragPipeline:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: ghcr.io/threads-agent-stack/rag-pipeline
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 3Gi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+    customMetrics:
+    - type: Pods
+      pods:
+        metric:
+          name: rag_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "20"
+  
+  config:
+    # RAG Configuration
+    topK: 20
+    rerankTopK: 10
+    minScore: 0.7
+    batchSize: 50
+    cacheTTL: 1800
+    
+    # Connection Pools
+    qdrantPoolSize: 20
+    redisPoolSize: 15
+    embeddingBatchSize: 100
+    maxConcurrentBatches: 3
+    
+    # FastAPI/Uvicorn
+    uvicornWorkers: 1
+    uvicornBacklog: 2048
+  
+  serviceMonitor:
+    enabled: true
+  
+  pdb:
+    enabled: true
+    minAvailable: 2
   pullSecret: ""                   # leave blank unless you push to a private registry
 
 threadsService:                    # orchestrator ↔︎ fake-threads alias
@@ -150,6 +211,60 @@ threadsAdaptor:
       memory: "512Mi"
       cpu: "500m"
   extraEnv: []
+
+# RAG Pipeline Configuration
+ragPipeline:
+  enabled: false                   # turn ON in dev/prod values
+  replicaCount: 3
+  image:
+    repository: ghcr.io/threads-agent-stack/rag-pipeline
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 3Gi
+  
+  config:
+    # Performance tuning
+    topK: 20
+    rerankTopK: 10
+    minScore: 0.7
+    batchSize: 50
+    cacheTTL: 1800
+    
+    # Connection pools
+    qdrantPoolSize: 20
+    redisPoolSize: 15
+    embeddingBatchSize: 100
+    maxConcurrentBatches: 3
+    
+    # FastAPI/Uvicorn optimization
+    uvicornWorkers: 1
+    uvicornBacklog: 2048
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    customMetrics: []
+  
+  serviceMonitor:
+    enabled: false                 # requires Prometheus CRDs
+  
+  pdb:
+    enabled: true
+    minAvailable: 2
 
 # MLflow Performance Optimization Configuration
 mlflow:

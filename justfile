@@ -102,13 +102,14 @@ images:
 	docker build -t viral-engine:local services/viral_engine &
 	docker build -t viral-pattern-engine:local services/viral_pattern_engine &
 	docker build -t achievement-collector:local -f services/achievement_collector/Dockerfile . &
+	docker build -t rag-pipeline:local services/rag_pipeline &
 	
 	# Wait for all builds to complete
 	wait
 	
 	# Import to k3d registry
 	echo "📦 Importing images to k3d..."
-	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local viral-pattern-engine:local achievement-collector:local -c threads-agent
+	k3d image import orchestrator:local celery-worker:local persona-runtime:local fake-threads:local viral-engine:local viral-pattern-engine:local achievement-collector:local rag-pipeline:local -c threads-agent
 	
 	echo "✅ All images built and imported"
 
@@ -196,6 +197,7 @@ e2e-prepare:
 	kubectl wait --for=condition=ready pod -l app=celery-worker --timeout=120s
 	kubectl wait --for=condition=ready pod -l app=persona-runtime --timeout=120s
 	kubectl wait --for=condition=ready pod -l app=fake-threads --timeout=120s
+	kubectl wait --for=condition=ready pod -l app=rag-pipeline --timeout=120s
 	
 	echo "✅ e2e environment ready"
 

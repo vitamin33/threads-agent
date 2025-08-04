@@ -1,0 +1,173 @@
+feature_id: feat-pr-metrics-001
+feature_name: "Enhanced JSON Structure & Formula Storage"
+epic_id: epic-284-pr-metrics-transparency
+description: |
+  Enhance the existing JSON fields (metrics_after, metadata) in Achievement and PRAchievement
+  tables to store calculation formulas, input parameters, calculation versions, and execution
+  metadata. This is a low-risk enhancement that provides immediate transparency improvements
+  without requiring new tables or complex migrations.
+
+priority: high
+status: ready
+estimated_effort: 8
+business_value: |
+  - Immediate transparency into how PR metrics are calculated
+  - Version tracking for calculation formula evolution
+  - Input parameter traceability for debugging and validation
+  - Foundation for advanced analytics and audit capabilities
+
+tasks:
+  - task_id: task_001
+    title: "Design Enhanced JSON Schema for Metrics Storage"
+    description: |
+      Design comprehensive JSON schema for storing calculation metadata within existing fields.
+      Schema should include formula definitions, input parameters, versions, and execution context.
+    acceptance_criteria:
+      - JSON schema supports formula storage with input/output mapping
+      - Version tracking included for formula evolution
+      - Execution metadata (timestamp, duration, environment) captured
+      - Schema validation rules defined and documented
+      - Backwards compatibility maintained with existing data
+    estimated_hours: 2
+    dependencies: []
+    tags: ["schema-design", "json", "backwards-compatibility"]
+
+  - task_id: task_002
+    title: "Implement Calculation Formula Registry"
+    description: |
+      Create a centralized registry for calculation formulas with versioning support.
+      Registry should support formula lookup, validation, and execution tracking.
+    acceptance_criteria:
+      - Formula registry supports version management
+      - Formula validation and syntax checking implemented
+      - Execution tracking with performance metrics
+      - Unit tests achieve 95% coverage
+      - Integration with existing PR analyzer flows
+    estimated_hours: 3
+    dependencies: ["task_001"]
+    tags: ["registry", "formula-management", "versioning"]
+
+  - task_id: task_003
+    title: "Update PR Value Analyzer Integration"
+    description: |
+      Modify PR value analyzer integration to store enhanced calculation metadata
+      using the new JSON schema structure.
+    acceptance_criteria:
+      - All calculations store formula definitions and input parameters
+      - Version information captured for each calculation
+      - Execution metadata (duration, timestamp) recorded
+      - Existing functionality preserved
+      - Performance impact <5% of baseline
+    estimated_hours: 2
+    dependencies: ["task_001", "task_002"]
+    tags: ["integration", "pr-analyzer", "metadata-storage"]
+
+  - task_id: task_004
+    title: "Add JSON Schema Validation Layer"
+    description: |
+      Implement validation layer to ensure JSON data conforms to enhanced schema
+      and prevent data corruption from malformed calculation metadata.
+    acceptance_criteria:  
+      - Schema validation for all JSON writes
+      - Graceful handling of validation failures
+      - Detailed error messages for debugging
+      - Performance validation with large JSON documents
+      - Monitoring metrics for validation failures
+    estimated_hours: 1.5
+    dependencies: ["task_001"]
+    tags: ["validation", "error-handling", "monitoring"]
+
+  - task_id: task_005
+    title: "Create Calculation Transparency API Endpoints"
+    description: |
+      Add API endpoints to expose calculation formulas, input parameters, and execution
+      metadata for any PR achievement metric.
+    acceptance_criteria:
+      - GET /achievements/{id}/calculation-details endpoint
+      - GET /pr-achievements/{id}/formula-history endpoint  
+      - Response includes formula, inputs, execution metadata
+      - API documentation with examples
+      - Rate limiting and caching implemented
+    estimated_hours: 2
+    dependencies: ["task_002", "task_003"]
+    tags: ["api", "transparency", "documentation"]
+
+  - task_id: task_006
+    title: "Database Migration for Enhanced Schema"
+    description: |
+      Create migration script to update existing records with enhanced JSON structure
+      while preserving all existing data and maintaining backwards compatibility.
+    acceptance_criteria:
+      - Migration script handles all existing achievements
+      - Data integrity verification before and after migration
+      - Rollback capability in case of issues
+      - Performance optimized for large datasets
+      - Zero downtime migration strategy
+    estimated_hours: 2
+    dependencies: ["task_001", "task_004"]
+    tags: ["migration", "data-integrity", "performance"]
+
+  - task_id: task_007
+    title: "Unit & Integration Testing"
+    description: |
+      Comprehensive testing for enhanced JSON schema, validation, and API endpoints
+      to ensure reliability and performance.
+    acceptance_criteria:
+      - Unit tests for all formula registry functions
+      - Integration tests for enhanced PR analyzer flow
+      - API endpoint tests with various data scenarios
+      - Performance tests with large JSON documents
+      - Test coverage >95% for new code
+    estimated_hours: 2.5
+    dependencies: ["task_002", "task_003", "task_005"]
+    tags: ["testing", "quality-assurance", "performance"]
+
+  - task_id: task_008
+    title: "Documentation & Monitoring Setup"
+    description: |
+      Create comprehensive documentation and monitoring for the enhanced calculation
+      transparency system.
+    acceptance_criteria:
+      - Technical documentation for JSON schema and formulas
+      - API documentation with calculation examples
+      - Monitoring dashboards for calculation performance
+      - Alerting for validation failures and performance issues
+      - Developer guide for adding new calculation formulas
+    estimated_hours: 1
+    dependencies: ["task_005", "task_006"]
+    tags: ["documentation", "monitoring", "observability"]
+
+technical_specifications:
+  json_schema_enhancements:
+    metrics_after:
+      calculation_metadata:
+        formula_version: "1.2.0"
+        formula_definition: "roi = (value_after - value_before - implementation_cost) / implementation_cost * 100"
+        input_parameters:
+          value_before: 50000
+          value_after: 125000
+          implementation_cost: 15000
+        execution_context:
+          timestamp: "2025-08-04T10:30:00Z"
+          duration_ms: 45
+          calculator_version: "2.1.0"
+          environment: "production"
+      
+  formula_registry_structure:
+    formulas:
+      roi_calculation:
+        version: "1.2.0"
+        formula: "(value_after - value_before - cost) / cost * 100"
+        inputs: ["value_before", "value_after", "implementation_cost"]
+        output_unit: "percentage"
+        confidence_factors: ["data_quality", "estimation_accuracy"]
+        
+  api_endpoints:
+    - "GET /achievements/{id}/calculation-details"
+    - "GET /pr-achievements/{id}/formula-history" 
+    - "GET /formulas/{formula_id}/versions"
+    
+  performance_targets:
+    - "JSON validation <10ms p95"
+    - "Formula registry lookup <5ms p95"
+    - "API response times <100ms p95"
