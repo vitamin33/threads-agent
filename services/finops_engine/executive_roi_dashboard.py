@@ -9,10 +9,10 @@ import logging
 from decimal import Decimal
 from typing import List, Dict, Any
 from datetime import datetime, timezone
-from finops_engine.models import PostCostAnalysis
-from finops_engine.cost_event_storage import CostEventStorage
-from finops_engine.post_cost_attributor import PostCostAttributor
-from finops_engine.openai_cost_tracker import OpenAICostTracker
+from services.finops_engine.models import PostCostAnalysis
+from services.finops_engine.cost_event_storage import CostEventStorage
+from services.finops_engine.post_cost_attributor import PostCostAttributor
+from services.finops_engine.openai_cost_tracker import OpenAICostTracker
 
 # Configure logging
 logger = logging.getLogger(__name__)

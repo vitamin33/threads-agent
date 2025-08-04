@@ -117,38 +117,6 @@ class PlatformPublisher:
         )
 
         return draft_result
-
-        # Format content for LinkedIn (shorter post format)
-        post_text = custom_content or self._format_for_linkedin(content)
-
-        # Get user profile ID first (this is simplified - would need proper OAuth flow)
-
-        {
-            "content": {
-                "contentEntities": [],
-                "title": post_text[:150] + "..." if len(post_text) > 150 else post_text,
-            },
-            "distribution": {
-                "feedDistribution": "MAIN_FEED",
-                "targetEntities": [],
-                "thirdPartyDistributionChannels": [],
-            },
-            "owner": "urn:li:person:{person_id}",  # Would need to get this dynamically
-            "subject": content.title,
-            "text": {"text": post_text},
-        }
-
-        try:
-            # Note: This is a simplified implementation
-            # Real implementation would need proper LinkedIn API integration
-            return {
-                "success": True,
-                "message": "LinkedIn publishing configured but requires OAuth setup",
-            }
-        except Exception as e:
-            logger.error("LinkedIn publishing error", error=str(e))
-            return {"success": False, "error": str(e)}
-
     async def _publish_to_twitter(
         self, content: ArticleContent, custom_content: Optional[str] = None
     ) -> Dict[str, Any]:
