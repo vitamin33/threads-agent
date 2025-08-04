@@ -14,6 +14,7 @@ from services.achievement_collector.api.routes import (
     export,
     portfolio,
     webhooks,
+    pr_analysis,
 )
 from services.achievement_collector.services.threads_integration import (
     ThreadsIntegration,
@@ -69,6 +70,7 @@ app.include_router(analytics.router)
 app.include_router(export.router)
 app.include_router(portfolio.router, prefix="/portfolio", tags=["portfolio"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
+app.include_router(pr_analysis.router, prefix="/pr-analysis", tags=["pr-analysis"])
 
 # Mount Prometheus metrics
 metrics_app = make_asgi_app()
