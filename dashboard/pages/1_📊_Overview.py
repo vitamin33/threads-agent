@@ -206,6 +206,7 @@ with tab1:
 
 with tab2:
     # Real throughput from achievement creation times
+    achievements = api_client.get_achievements(days=1)
     if achievements:
         df = pd.DataFrame(achievements)
         if 'created_at' in df.columns:
