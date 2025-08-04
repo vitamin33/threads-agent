@@ -1,0 +1,80 @@
+# .github/workflows/setup-self-hosted.yml
+# Workflow to help setup self-hosted runners
+name: setup-self-hosted
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_type:
+        description: 'Runner type to setup'
+        required: true
+        default: 'heavy'
+        type: choice
+        options:
+          - 'heavy'
+          - 'light'
+
+jobs:
+  setup-guide:
+    name: Self-Hosted Runner Setup Guide
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate setup commands
+        run: |
+          echo "## Self-Hosted Runner Setup Commands"
+          echo ""
+          
+          if [ "${{ github.event.inputs.runner_type }}" = "heavy" ]; then
+            echo "### Heavy Runner (Docker + k3d + E2E)"
+            echo ""
+            echo "```bash"
+            echo "# Install Docker"
+            echo "curl -fsSL https://get.docker.com | sh"
+            echo "sudo usermod -aG docker \$USER"
+            echo ""
+            echo "# Install k3d"
+            echo "curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash"
+            echo ""
+            echo "# Install GitHub Actions Runner"
+            echo "mkdir actions-runner && cd actions-runner"
+            echo "curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz"
+            echo "tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz"
+            echo ""
+            echo "# Configure runner"
+            echo "./config.sh --url ${{ github.server_url }}/${{ github.repository }} --token YOUR_TOKEN --labels self-hosted,heavy,docker,k3d"
+            echo ""
+            echo "# Install as service"
+            echo "sudo ./svc.sh install"
+            echo "sudo ./svc.sh start"
+            echo "```"
+          else
+            echo "### Light Runner (Unit Tests + Linting)"
+            echo ""
+            echo "```bash"
+            echo "# Install GitHub Actions Runner"
+            echo "mkdir actions-runner && cd actions-runner"
+            echo "curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz"
+            echo "tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz"
+            echo ""
+            echo "# Configure runner"
+            echo "./config.sh --url ${{ github.server_url }}/${{ github.repository }} --token YOUR_TOKEN --labels self-hosted,light,unit-tests"
+            echo ""
+            echo "# Install as service"
+            echo "sudo ./svc.sh install"
+            echo "sudo ./svc.sh start"
+            echo "```"
+          fi
+          
+          echo ""
+          echo "### Security Hardening"
+          echo "```bash"
+          echo "# Create dedicated user"
+          echo "sudo useradd -m -s /bin/bash github-runner"
+          echo "sudo usermod -aG docker github-runner"
+          echo ""
+          echo "# Setup firewall"
+          echo "sudo ufw enable"
+          echo "sudo ufw allow ssh"
+          echo "sudo ufw allow out 443"
+          echo "sudo ufw allow out 80"
+          echo "```"

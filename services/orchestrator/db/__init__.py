@@ -28,6 +28,16 @@ def get_session() -> Any:
     return sessionmaker(get_engine(), expire_on_commit=False)
 
 
+def get_db_session():
+    """FastAPI dependency to get database session."""
+    SessionLocal = get_session()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 # For backward compatibility, create these when accessed
 engine = None
 Session = None
@@ -35,4 +45,4 @@ Session = None
 # Note: engine and Session will be None until explicitly created
 # This prevents database connection attempts during import
 
-__all__ = ["Base", "get_engine", "get_session"]
+__all__ = ["Base", "get_engine", "get_session", "get_db_session"]

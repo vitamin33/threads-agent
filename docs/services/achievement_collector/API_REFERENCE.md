@@ -16,6 +16,7 @@ Authorization: Bearer <your-api-token>
 - [Story Generation API](#story-generation-api)
 - [Export API](#export-api)
 - [Analytics API](#analytics-api)
+- [Tech Doc Integration API](#tech-doc-integration-api)
 - [Webhooks](#webhooks)
 - [Error Responses](#error-responses)
 
@@ -540,6 +541,198 @@ GET /analytics/career-progress
   ]
 }
 ```
+
+## Tech Doc Integration API
+
+Optimized endpoints for tech_doc_generator service integration (AI Job Week 1 Epic).
+
+### Batch Get Achievements
+
+Fetch multiple achievements in a single request (90% API call reduction).
+
+```http
+POST /tech-doc-integration/batch-get
+Content-Type: application/json
+
+{
+  "achievement_ids": [25, 26, 27]
+}
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 25,
+    "title": "Implemented Kubernetes Auto-scaling",
+    "category": "infrastructure",
+    "impact_score": 95.0,
+    "business_value": "$50K annual savings",
+    "tags": ["kubernetes", "cost-optimization"],
+    "portfolio_ready": true
+  }
+]
+```
+
+### Get Content-Ready Achievements
+
+Get achievements ready for content generation.
+
+```http
+GET /tech-doc-integration/content-ready?limit=20
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 26,
+    "title": "AI Content Generation Pipeline",
+    "category": "ai_ml",
+    "impact_score": 92.0,
+    "content_potential": "high",
+    "suggested_formats": ["case_study", "technical_blog"]
+  }
+]
+```
+
+### Get Recent Highlights
+
+Get recent high-impact achievements.
+
+```http
+POST /tech-doc-integration/recent-highlights?days=30&min_impact_score=85&limit=10
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 27,
+    "title": "Built Real-time Analytics Dashboard",
+    "completed_at": "2025-01-28T15:30:00Z",
+    "impact_score": 88.0,
+    "highlight_reason": "recent_high_impact"
+  }
+]
+```
+
+### Get Company-Targeted Achievements
+
+Get achievements relevant to specific companies.
+
+```http
+POST /tech-doc-integration/company-targeted?company_name=anthropic&limit=20
+```
+
+**Request Body (optional):**
+```json
+{
+  "categories": ["ai_ml", "llm", "automation"]
+}
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 28,
+    "title": "LLM Safety Framework Implementation",
+    "category": "ai_ml",
+    "relevance_score": 0.95,
+    "matching_keywords": ["ai_safety", "llm", "responsible_ai"]
+  }
+]
+```
+
+### Content Opportunities Statistics
+
+Get analytics on content generation opportunities.
+
+```http
+GET /tech-doc-integration/stats/content-opportunities
+```
+
+**Response:**
+```json
+{
+  "total_content_ready": 15,
+  "high_impact_opportunities": 12,
+  "recent_achievements": 8,
+  "by_category": {
+    "feature": 6,
+    "optimization": 3,
+    "ai_ml": 4,
+    "infrastructure": 2
+  },
+  "content_potential": {
+    "total_articles": 45,
+    "case_studies": 15,
+    "technical_blogs": 20,
+    "linkedin_posts": 10
+  }
+}
+```
+
+### Update Sync Status
+
+Update content generation status for an achievement.
+
+```http
+POST /tech-doc-integration/sync-status?achievement_id=25&content_generated=true
+```
+
+**Query Parameters:**
+- `platforms` (array): Platforms where content was published
+
+**Response:**
+```json
+{
+  "status": "updated",
+  "achievement_id": 25,
+  "content_generated": true,
+  "platforms": ["linkedin", "medium"],
+  "last_sync": "2025-02-04T10:00:00Z"
+}
+```
+
+### Get Achievements by Category
+
+Get achievements for a specific category.
+
+```http
+GET /tech-doc-integration/categories/ai_ml?limit=10
+```
+
+**Response:**
+```json
+[
+  {
+    "id": 29,
+    "title": "Automated ML Model Deployment Pipeline",
+    "category": "ai_ml",
+    "impact_score": 87.0,
+    "skills_demonstrated": ["MLOps", "Python", "Kubernetes"]
+  }
+]
+```
+
+### Company Keywords Reference
+
+Supported companies and their matching keywords:
+
+| Company | Keywords |
+|---------|----------|
+| notion | collaboration, productivity, workspace, real-time |
+| anthropic | ai_safety, llm, responsible_ai, claude |
+| jasper | content_generation, marketing_ai, copywriting |
+| stripe | payments, fintech, api, developer_experience |
+| databricks | data_engineering, spark, ml_platform |
+| weights_biases | mlops, experiment_tracking, model_monitoring |
+| cohere | nlp, embeddings, enterprise_ai |
+| runway | creative_ai, video_generation, visual_ai |
+| stability | stable_diffusion, open_source_ai, image_generation |
+| hugging_face | transformers, model_hub, ml_community |
 
 ## Webhooks
 

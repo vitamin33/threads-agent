@@ -36,3 +36,4 @@ pytest-mock==3.12.0
 # Performance optimization dependencies
 psutil==5.9.6
 radon==6.0.1
+tenacity==8.2.3

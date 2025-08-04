@@ -34,6 +34,11 @@ Located in `./mlops-infrastructure/`:
 - [E4.5_MLOPS_FOUNDATION_EPIC.md](./mlops-infrastructure/E4.5_MLOPS_FOUNDATION_EPIC.md) - MLOps epic overview and progress
 - [MLFLOW_EXPERIMENT_TRACKING.md](./mlops-infrastructure/MLFLOW_EXPERIMENT_TRACKING.md) - Detailed MLflow implementation guide
 
+### AI Job Integration Documentation
+Located in `./services/tech_doc_generator/`:
+- [AI_JOB_INTEGRATION.md](./services/tech_doc_generator/AI_JOB_INTEGRATION.md) - Complete AI Job Week 1 Epic implementation
+- [API_REFERENCE.md](./services/tech_doc_generator/API_REFERENCE.md) - Tech Doc Generator API endpoints
+
 ## 🔗 Quick Links
 
 - **Main README**: [/README.md](../README.md)
@@ -45,6 +50,7 @@ Located in `./mlops-infrastructure/`:
 
 Each service has its own documentation in its directory:
 - Achievement Collector: `/services/achievement_collector/docs/`
+- Tech Doc Generator: `/docs/services/tech_doc_generator/` - AI Job content generation
 - Orchestrator: `/services/orchestrator/`
 - Persona Runtime: `/services/persona_runtime/`
 - Revenue Service: `/services/revenue/`
