@@ -1,4 +1,5 @@
 # chart/templates/tech-doc-generator.yaml
+{{- if .Values.techDocGenerator.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -298,4 +299,5 @@ spec:
         value: 2
         periodSeconds: 60
       selectPolicy: Max
+{{- end }}
 {{- end }}

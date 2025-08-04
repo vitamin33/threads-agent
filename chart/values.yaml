@@ -71,6 +71,28 @@ viralPatternEngine:
   image:
     repository: ghcr.io/threads-agent-stack/viral-pattern-engine
     tag: "0.1.0"
+  models:
+    bert:
+      enabled: true
+      model: "j-hartmann/emotion-english-distilroberta-base"
+      batchSize: 8
+    vader:
+      enabled: true
+  cache:
+    size: 1000
+  database:
+    poolSize: 10
+    maxOverflow: 20
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilization: 70
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  networkPolicy:
+    enabled: false
   resources:
     requests:
       memory: "512Mi"
