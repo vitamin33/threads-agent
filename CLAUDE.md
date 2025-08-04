@@ -204,6 +204,11 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
 - Type checking: mypy strict
 - Formatting: ruff + black + isort
 - Pre-commit: via `just ship`
+- **Testing Requirements**:
+  - Every new feature MUST be tested on local k3d cluster
+  - Helm charts MUST be updated for new services/features
+  - Run `just check` before creating PR
+  - Verify health endpoints are accessible
 
 ## Troubleshooting
 
