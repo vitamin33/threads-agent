@@ -119,8 +119,10 @@ app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(manual_publish.router, prefix="/api", tags=["manual-publishing"])
 
 # Achievement integration router
-from .routers import achievement_articles
+from .routers import achievement_articles, content_scheduler, ai_roi_calculator
 app.include_router(achievement_articles.router, prefix="/api", tags=["achievement-integration"])
+app.include_router(content_scheduler.router, prefix="/api/content-scheduler", tags=["content-automation"])
+app.include_router(ai_roi_calculator.router, prefix="/api/ai-roi-calculator", tags=["ai-roi-calculator"])
 
 
 @app.get("/")

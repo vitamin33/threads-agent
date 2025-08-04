@@ -138,6 +138,82 @@ finopsEngine:
     telegramChatId: ""            # Telegram chat ID
     customWebhook: ""             # Custom webhook URL
 
+techDocGenerator:
+  enabled: false                   # turn ON to enable AI Job automation features
+  replicaCount: 1
+  image:
+    repository: ghcr.io/threads-agent-stack/tech-doc-generator
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  logLevel: "INFO"
+  
+  # AI ROI Calculator - Public facing tool for lead generation
+  roiCalculator:
+    enabled: true
+    ingress:
+      enabled: false               # turn ON for public access
+      host: "ai-roi-calculator.yourdomain.com"
+      className: "nginx"
+      tlsIssuer: "letsencrypt-prod"
+  
+  # Lead capture and consultation booking
+  leadCapture:
+    enabled: true
+    email: "vitaliiserbyn@gmail.com"
+    linkedin: "https://linkedin.com/in/vitaliiserbyn"
+    responseTime: "within 24 hours"
+  
+  # Content Scheduler - Automated weekly content generation
+  contentScheduler:
+    enabled: true
+    defaultCompanies: "anthropic,notion,stripe,openai,meta"
+    platforms: "linkedin,medium,devto"
+    autoGenerate: true
+    qualityThreshold: 0.7
+  
+  # Professional Content Engine
+  professionalContentEngine:
+    enabled: true
+    viralEngineIntegration: true
+    companyTargeting: true
+    qualityGate: true
+  
+  # Achievement Integration
+  achievementIntegration:
+    enabled: true
+    realDataOnly: true
+    portfolioReady: true
+  
+  # Network policies for security
+  networkPolicy:
+    enabled: false                 # turn ON for production security
+  
+  # Pod disruption budget for availability
+  podDisruptionBudget:
+    enabled: false                 # turn ON for production
+    minAvailable: 1
+  
+  # Horizontal Pod Autoscaler
+  hpa:
+    enabled: false                 # turn ON for production scaling
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilization: 70
+    targetMemoryUtilization: 80
+
 threadsAdaptor:
   credentials:
     accessToken: ""                # Threads Access Token
