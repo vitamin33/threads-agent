@@ -40,6 +40,53 @@ GitHub PR → PR Value Analyzer → Achievement Collector → Enriched Achieveme
   - 6-7: ✅ Good Impact
   - <6: 📈 Moderate Impact (not tracked)
 
+## Metrics Calculation Methodology
+
+### ROI (Return on Investment)
+```
+ROI = (Annual Savings / Development Cost) × 100
+```
+- Development cost estimated from PR complexity and time
+- Annual savings include infrastructure, time, and efficiency gains
+
+### Infrastructure Savings
+```
+Savings = $120,000 × (Performance Factor - 1) / Performance Factor
+```
+- Base infrastructure cost: $120,000/year
+- Performance factor = New RPS / Baseline RPS (100)
+
+### User Experience Score (1-10)
+- Latency < 100ms: 10 points
+- Latency < 200ms: 9 points
+- Latency < 500ms: 8 points
+- Latency > 500ms: 7 points
+
+### Innovation Score (1-10)
+- Base score: 5.0
+- +0.5 for each innovation keyword
+- +1.0 for >20 files changed
+- +1.0 for >1000 lines added
+
+### Overall Score
+```
+Overall = (Performance Score + Quality Score + Innovation Score) / 3
+```
+- Performance Score: RPS / 100
+- Quality Score: Test Coverage / 10
+- Innovation Score: As calculated above
+
+### Time Savings
+```
+Annual Savings = Hours Saved/Week × 50 weeks × $100/hour
+```
+
+### 3-Year Revenue Impact
+```
+Revenue Impact = User Experience Score × $500,000 × 0.1
+```
+- Conservative 10% attribution to UX improvements
+
 ## Integration Points
 
 ### 1. GitHub Webhooks

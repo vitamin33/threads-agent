@@ -316,6 +316,13 @@ class PRValueAnalyzer:
         print("\n🔮 Future Impact:")
         for key, value in self.metrics["future_impact"].items():
             print(f"  • {key}: {value}")
+            
+        # Add calculation explanations
+        print("\n📐 How Metrics Are Calculated:")
+        print("  • ROI = (Annual Savings / Dev Cost) × 100")
+        print("  • Infrastructure Savings = $120k × (Perf Factor - 1) / Perf Factor")
+        print("  • Overall Score = (Performance + Quality + Innovation) / 3")
+        print("  • Time Savings = Hours/Week × 50 weeks × $100/hour")
 
 
 def main():
