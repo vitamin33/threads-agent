@@ -147,6 +147,69 @@ def emotion_test_db():
         Column("updated_at", DateTime, nullable=True),
     )
 
+    # EmotionSegment table
+    Table(
+        "emotion_segments",
+        metadata,
+        Column("id", Integer, primary_key=True),
+        Column("trajectory_id", Integer, nullable=False),
+        Column("segment_index", Integer, nullable=False),
+        Column("content_text", Text, nullable=False),
+        Column("word_count", Integer, nullable=False),
+        Column("sentence_count", Integer, nullable=False),
+        Column("joy_score", Float, nullable=False),
+        Column("anger_score", Float, nullable=False),
+        Column("fear_score", Float, nullable=False),
+        Column("sadness_score", Float, nullable=False),
+        Column("surprise_score", Float, nullable=False),
+        Column("disgust_score", Float, nullable=False),
+        Column("trust_score", Float, nullable=False),
+        Column("anticipation_score", Float, nullable=False),
+        Column("sentiment_compound", Float, nullable=True),
+        Column("sentiment_positive", Float, nullable=True),
+        Column("sentiment_neutral", Float, nullable=True),
+        Column("sentiment_negative", Float, nullable=True),
+        Column("dominant_emotion", String(20), nullable=False),
+        Column("confidence_score", Float, nullable=False),
+        Column("is_peak", Boolean, nullable=False),
+        Column("is_valley", Boolean, nullable=False),
+        Column("created_at", DateTime, nullable=True),
+    )
+
+    # EmotionTransition table
+    Table(
+        "emotion_transitions",
+        metadata,
+        Column("id", Integer, primary_key=True),
+        Column("trajectory_id", Integer, nullable=False),
+        Column("from_segment_index", Integer, nullable=False),
+        Column("to_segment_index", Integer, nullable=False),
+        Column("from_emotion", String(20), nullable=False),
+        Column("to_emotion", String(20), nullable=False),
+        Column("intensity_change", Float, nullable=False),
+        Column("strength_score", Float, nullable=False),
+        Column("created_at", DateTime, nullable=True),
+    )
+
+    # EmotionPerformance table
+    Table(
+        "emotion_performance",
+        metadata,
+        Column("id", Integer, primary_key=True),
+        Column("trajectory_id", Integer, nullable=False),
+        Column("post_id", String(100), nullable=False),
+        Column("persona_id", String(50), nullable=False),
+        Column("engagement_rate", Float, nullable=False),
+        Column("view_count", Integer, nullable=False),
+        Column("like_count", Integer, nullable=False),
+        Column("comment_count", Integer, nullable=False),
+        Column("share_count", Integer, nullable=False),
+        Column("completion_rate", Float, nullable=True),
+        Column("emotion_correlation_score", Float, nullable=True),
+        Column("performance_timestamp", DateTime, nullable=False),
+        Column("created_at", DateTime, nullable=True),
+    )
+
     # EmotionTemplate table (simplified for SQLite)
     Table(
         "emotion_templates",
@@ -165,6 +228,7 @@ def emotion_test_db():
         Column("average_engagement", Float, nullable=False),
         Column("effectiveness_score", Float, nullable=False),
         Column("engagement_correlation", Float, nullable=False),
+        Column("version", Integer, nullable=False),
         Column("is_active", Boolean, nullable=False),
         Column("created_at", DateTime, nullable=True),
         Column("updated_at", DateTime, nullable=True),

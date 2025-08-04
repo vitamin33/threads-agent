@@ -170,6 +170,7 @@ class TestEmotionDatabaseIntegration:
             transition_count=2,
             joy_avg=0.5,
             sadness_avg=0.3,
+            processing_time_ms=150,
         )
 
         db_session.add(trajectory)
@@ -276,6 +277,7 @@ class TestEmotionDatabaseIntegration:
             trajectory_type="steady",
             joy_avg=0.6,
             trust_avg=0.7,
+            processing_time_ms=120,
         )
 
         db_session.add(trajectory)
@@ -321,6 +323,7 @@ class TestEmotionDatabaseIntegration:
             segment_count=2,
             total_duration_words=50,
             trajectory_type="steady",
+            processing_time_ms=100,
         )
 
         db_session.add(trajectory)
@@ -398,6 +401,7 @@ class TestEmotionDatabaseIntegration:
                 total_duration_words=100 + i * 10,
                 trajectory_type="rising" if i % 2 == 0 else "falling",
                 joy_avg=0.5 + i * 0.1,
+                processing_time_ms=50 + i * 10,
                 created_at=datetime.utcnow() - timedelta(days=i),
             )
             trajectories.append(trajectory)
@@ -489,6 +493,7 @@ class TestEmotionDatabaseIntegration:
             trajectory_type="roller_coaster",
             peak_count=2,
             valley_count=1,
+            processing_time_ms=80,
         )
 
         db_session.add(trajectory)
