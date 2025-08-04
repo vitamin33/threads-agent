@@ -139,6 +139,33 @@ def create_styled_gauge(value, title, max_value=100):
 # CSS for dark theme compatibility
 DARK_THEME_CSS = """
 <style>
+    /* Dark theme detection and fixes */
+    @media (prefers-color-scheme: dark) {
+        /* Fix metric containers for dark theme */
+        [data-testid="metric-container"] {
+            background-color: rgba(49, 51, 63, 0.8) !important;
+            border: 1px solid rgba(250, 250, 250, 0.2) !important;
+        }
+        
+        /* Ensure dark background for metric containers */
+        div[data-testid="metric-container"] > div {
+            background-color: transparent !important;
+        }
+    }
+    
+    /* Fix for Streamlit's default dark theme */
+    .stApp[data-theme="dark"] [data-testid="metric-container"],
+    [data-testid="stAppViewContainer"][data-theme="dark"] [data-testid="metric-container"] {
+        background-color: rgba(49, 51, 63, 0.8) !important;
+        border: 1px solid rgba(250, 250, 250, 0.2) !important;
+    }
+    
+    /* Force dark background on metric containers when in dark mode */
+    html[data-theme="dark"] [data-testid="metric-container"],
+    body[data-theme="dark"] [data-testid="metric-container"] {
+        background-color: rgba(49, 51, 63, 0.8) !important;
+    }
+    
     /* Fix Plotly toolbar visibility in dark mode */
     .modebar {
         background-color: rgba(0, 0, 0, 0.5) !important;
@@ -148,50 +175,17 @@ DARK_THEME_CSS = """
         color: #FAFAFA !important;
     }
     
-    /* Fix metric containers */
-    [data-testid="metric-container"] {
-        background-color: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 0.5rem;
-        padding: 1rem;
-    }
-    
-    /* Fix metric value text color - IMPORTANT */
-    [data-testid="metric-container"] [data-testid="stMetricValue"] {
+    /* Fix dataframe styling for dark theme */
+    [data-theme="dark"] .dataframe {
         color: #FAFAFA !important;
     }
     
-    /* Fix metric label text color */
-    [data-testid="metric-container"] [data-testid="stMetricLabel"] {
-        color: #B0B0B0 !important;
-    }
-    
-    /* Fix metric delta text color */
-    [data-testid="metric-container"] [data-testid="stMetricDelta"] {
-        opacity: 1 !important;
-    }
-    
-    /* Fix all text in metric containers */
-    [data-testid="metric-container"] * {
-        color: inherit !important;
-    }
-    
-    /* Force metric value visibility */
-    div[data-testid="metric-container"] > div:first-child > div {
-        color: #FAFAFA !important;
-    }
-    
-    /* Fix dataframe styling */
-    .dataframe {
-        color: #FAFAFA !important;
-    }
-    
-    /* Improve visibility of various elements */
-    .stTabs [data-baseweb="tab-list"] {
+    /* Improve visibility of various elements in dark theme */
+    [data-theme="dark"] .stTabs [data-baseweb="tab-list"] {
         background-color: rgba(255, 255, 255, 0.05);
     }
     
-    .stTabs [data-baseweb="tab"] {
+    [data-theme="dark"] .stTabs [data-baseweb="tab"] {
         color: #FAFAFA;
     }
     
@@ -200,14 +194,16 @@ DARK_THEME_CSS = """
         background-color: #2E86AB;
     }
     
-    /* Additional fix for metric text */
-    .css-1xarl3l, .css-1wivap2, div[data-testid="stMetricValue"] > div {
-        color: #FAFAFA !important;
+    /* Override Streamlit's light background on metrics in dark mode */
+    .css-1n76uvr, .css-1n76uvr e1tzin5v0,
+    div[class*="css-"][class*="e1tzin5v"],
+    div[data-testid="metric-container"] > div[class*="css-"] {
+        background-color: inherit !important;
     }
     
-    /* Target metric values more specifically */
-    [data-testid="metric-container"] > label > div > div > div > div:first-child {
-        color: #FAFAFA !important;
+    /* Ensure metric containers use proper theme colors */
+    [data-testid="metric-container"] {
+        background-color: var(--background-color, rgba(49, 51, 63, 0.8)) !important;
     }
 </style>
 """
