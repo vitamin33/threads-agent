@@ -12,6 +12,9 @@ from services.achievement_collector.core.config import settings
 from services.achievement_collector.core.logging import setup_logging
 from services.achievement_collector.db.config import get_db
 from services.achievement_collector.services.github_processor import GitHubProcessor
+from services.achievement_collector.services.pr_value_analyzer_integration import (
+    pr_value_integration,
+)
 
 logger = setup_logging(__name__)
 router = APIRouter()
@@ -89,6 +92,20 @@ async def github_webhook(
                 if result:
                     achievement_created = True
                     achievement_id = result.id
+
+                    # Run value analysis for merged PRs
+                    if data.get("pull_request", {}).get("merged"):
+                        pr_number = data["pull_request"]["number"]
+                        try:
+                            enriched = await pr_value_integration.analyze_and_create_achievement(
+                                str(pr_number)
+                            )
+                            if enriched:
+                                logger.info(
+                                    f"Enriched PR #{pr_number} with value analysis"
+                                )
+                        except Exception as e:
+                            logger.error(f"Failed to enrich PR #{pr_number}: {e}")
 
         elif x_github_event == "workflow_run":
             # Handle CI/CD events
