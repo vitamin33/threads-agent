@@ -158,7 +158,7 @@ async def analyze_emotion(request: EmotionAnalysisRequest) -> Dict[str, Any]:
         Dictionary containing emotion analysis results
     """
     try:
-        result = emotion_analyzer.analyze_emotion(request.text)
+        result = emotion_analyzer.analyze_emotions(request.text)
         return result
     except Exception as e:
         raise HTTPException(
@@ -183,7 +183,7 @@ async def analyze_emotion_trajectory(request: EmotionTrajectoryRequest) -> Dict[
         for segment in request.segments:
             if "emotions" not in segment:
                 text = segment.get("text", "")
-                emotion_result = emotion_analyzer.analyze_emotion(text)
+                emotion_result = emotion_analyzer.analyze_emotions(text)
                 segment["emotions"] = emotion_result["emotions"]
             analyzed_segments.append(segment)
         
@@ -221,11 +221,11 @@ async def analyze_emotion_transitions(request: EmotionTrajectoryRequest) -> Dict
             
             # Ensure emotions are analyzed
             if "emotions" not in current:
-                current["emotions"] = emotion_analyzer.analyze_emotion(
+                current["emotions"] = emotion_analyzer.analyze_emotions(
                     current.get("text", "")
                 )["emotions"]
             if "emotions" not in next_seg:
-                next_seg["emotions"] = emotion_analyzer.analyze_emotion(
+                next_seg["emotions"] = emotion_analyzer.analyze_emotions(
                     next_seg.get("text", "")
                 )["emotions"]
             
@@ -391,7 +391,7 @@ async def batch_emotion_analysis(texts: List[str]) -> Dict[str, Any]:
         for text in texts:
             import time
             start = time.time()
-            result = emotion_analyzer.analyze_emotion(text)
+            result = emotion_analyzer.analyze_emotions(text)
             elapsed = (time.time() - start) * 1000  # ms
             
             results.append({
@@ -441,24 +441,25 @@ async def update_template_performance(
 
 
 @app.post("/analyze/content-emotion-workflow")
-async def analyze_content_emotion_workflow(content: str) -> Dict[str, Any]:
+async def analyze_content_emotion_workflow(request: Dict[str, str]) -> Dict[str, Any]:
     """
     Complete emotion workflow analysis for content.
     
     Args:
-        content: Content to analyze
+        request: Dictionary containing content to analyze
         
     Returns:
         Complete workflow results
     """
     try:
+        content = request.get("content", "")
         # Split content into segments (simple split by sentences)
         segments = [{"text": s.strip()} for s in content.split(".") if s.strip()]
         
         # Analyze each segment
         analyzed_segments = []
         for segment in segments:
-            emotion_result = emotion_analyzer.analyze_emotion(segment["text"])
+            emotion_result = emotion_analyzer.analyze_emotions(segment["text"])
             segment["emotions"] = emotion_result["emotions"]
             analyzed_segments.append(segment)
         

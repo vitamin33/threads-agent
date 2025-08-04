@@ -180,10 +180,12 @@ class TestEmotionAPIIntegration:
     def test_analyze_content_emotion_workflow_endpoint(self, viral_client):
         """Test POST /analyze/content-emotion-workflow endpoint."""
         # Arrange
-        content = "I started with doubt. Then I discovered something amazing. Now I'm incredibly happy!"
+        request_data = {
+            "content": "I started with doubt. Then I discovered something amazing. Now I'm incredibly happy!"
+        }
 
         # Act
-        response = viral_client.post("/analyze/content-emotion-workflow", json=content)
+        response = viral_client.post("/analyze/content-emotion-workflow", json=request_data)
 
         # Assert
         assert response.status_code == 200
