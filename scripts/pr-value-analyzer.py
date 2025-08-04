@@ -90,13 +90,14 @@ class PRValueAnalyzer:
             else:
                 value["user_experience_score"] = 7
 
-        # ROI calculation
+        # ROI calculation with more realistic assumptions
         if "infrastructure_savings_estimate" in value:
-            # Assume 150K development cost
-            dev_cost = 150000
+            # More realistic development cost based on feature complexity
+            dev_cost = 25000  # Realistic for RAG pipeline development (2-3 weeks)
             annual_savings = value["infrastructure_savings_estimate"]
-            value["roi_year_one_percent"] = round((annual_savings / dev_cost) * 100, 0)
-            value["payback_period_months"] = round(12 * dev_cost / annual_savings, 1)
+            if annual_savings > 0:
+                value["roi_year_one_percent"] = round((annual_savings / dev_cost) * 100, 0)
+                value["payback_period_months"] = round(12 * dev_cost / annual_savings, 1)
 
         return value
 
@@ -345,8 +346,10 @@ class PRValueAnalyzer:
             self.metrics["kpis"] = {
                 "performance_score": performance.get("peak_rps", 0) / 10,
                 "quality_score": performance.get("test_coverage", 0) / 10,
-                "business_value_score": business_value.get("roi_year_one_percent", 0)
-                / 30,
+                "business_value_score": min(10, max(0, 
+                    (business_value.get("roi_year_one_percent", 0) / 100) * 
+                    (10 if business_value.get("infrastructure_savings_estimate", 0) > 10000 else 5)
+                )),
                 "innovation_score": innovation,
                 "overall_score": round(
                     (
