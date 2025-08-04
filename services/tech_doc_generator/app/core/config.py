@@ -62,7 +62,7 @@ class Settings(BaseSettings):
         os.getenv("DEFAULT_PUBLISH_DELAY_HOURS", "2")
     )
     max_daily_articles: int = int(os.getenv("MAX_DAILY_ARTICLES", "3"))
-    
+
     # Achievement Collector Integration
     achievement_collector_url: str = os.getenv(
         "ACHIEVEMENT_COLLECTOR_URL", "http://achievement-collector:8000"

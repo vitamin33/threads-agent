@@ -734,17 +734,20 @@ async def analyze_content_emotion_workflow(request: Dict[str, str]) -> Dict[str,
             "hook_patterns": [],
             "emotion_patterns": [],
             "structure_patterns": [],
-            "pattern_strength": 0.0
+            "pattern_strength": 0.0,
         }
-        
+
         # Analyze emotions in content for patterns
         if analyzed_segments:
             # Check for emotion patterns
-            dominant_emotions = [seg["emotions"].get(max(seg["emotions"], key=seg["emotions"].get), 0) for seg in analyzed_segments]
+            dominant_emotions = [
+                seg["emotions"].get(max(seg["emotions"], key=seg["emotions"].get), 0)
+                for seg in analyzed_segments
+            ]
             if any(e > 0.6 for e in dominant_emotions):
                 patterns["emotion_patterns"].append("strong_emotion")
                 patterns["pattern_strength"] += 0.3
-                
+
             # Check trajectory type
             if trajectory.get("arc_type") == "rising":
                 patterns["structure_patterns"].append("rising_tension")
