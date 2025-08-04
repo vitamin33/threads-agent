@@ -157,6 +157,14 @@ class PRValueAnalyzer:
                         capture_output=True,
                         text=True,
                     )
+                    
+                    # Additional fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
             else:
                 # Fallback to main branch
                 result = subprocess.run(
@@ -165,13 +173,21 @@ class PRValueAnalyzer:
                     text=True,
                 )
                 
-                # If origin/main doesn't exist, try main
+                # If origin/main doesn't exist, try main, then HEAD~1 as fallback
                 if result.returncode != 0:
                     result = subprocess.run(
                         ["git", "diff", "--stat", "main"],
                         capture_output=True,
                         text=True,
                     )
+                    
+                    # Final fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
 
             if result.returncode == 0:
                 stats_text = result.stdout
@@ -195,7 +211,7 @@ class PRValueAnalyzer:
                     + (int(deletions_match.group(1)) if deletions_match else 0),
                 }
             else:
-                print(f"Failed to get PR diff: {result.stderr}")
+                # Git diff failed, continue without code metrics (not critical)
                 return {}
         except Exception as e:
             print(f"Error analyzing code changes: {e}")
