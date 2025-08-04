@@ -1,5 +1,6 @@
 # Achievement CRUD Routes
 
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -25,6 +26,7 @@ from services.achievement_collector.services.db_operations import (
     update_achievement_with_stories,
     get_achievement_by_pr,
 )
+from services.achievement_collector.utils.calculation_metadata import CalculationMetadata
 
 logger = setup_logging(__name__)
 router = APIRouter()
@@ -39,16 +41,45 @@ def create_achievement_sync(
         achievement.completed_at - achievement.started_at
     ).total_seconds() / 3600
 
-    # Create achievement
+    # Enhance metrics with calculation metadata if present
+    enhanced_metrics = {}
+    if achievement.metrics_after:
+        # Enhance business metrics with calculation transparency
+        business_enhanced = CalculationMetadata.enhance_business_metrics(achievement.metrics_after)
+        performance_enhanced = CalculationMetadata.enhance_performance_metrics(achievement.metrics_after)
+        
+        # Combine enhanced metrics with original data
+        enhanced_metrics = {
+            **achievement.metrics_after,
+            "enhanced_calculations": {
+                **business_enhanced,
+                **performance_enhanced
+            },
+            "calculation_summary": CalculationMetadata.create_calculation_summary({
+                **business_enhanced,
+                **performance_enhanced
+            })
+        }
+
+    # Enhance metadata with calculation version
+    enhanced_metadata = achievement.metadata or {}
+    enhanced_metadata["calculation_version"] = CalculationMetadata.CALCULATION_VERSION
+    enhanced_metadata["enhanced_at"] = datetime.now().isoformat()
+
+    # Create achievement with enhanced data
+    achievement_data = achievement.model_dump()
+    achievement_data["metrics_after"] = enhanced_metrics or achievement.metrics_after
+    achievement_data["metadata"] = enhanced_metadata
+    
     db_achievement = AchievementModel(
-        **achievement.model_dump(),
+        **achievement_data,
         duration_hours=duration,
     )
     db.add(db_achievement)
     db.commit()
     db.refresh(db_achievement)
 
-    logger.info(f"Created achievement: {db_achievement.id} - {db_achievement.title}")
+    logger.info(f"Created achievement with enhanced metrics: {db_achievement.id} - {db_achievement.title}")
     return db_achievement
 
 
@@ -57,27 +88,9 @@ async def create_achievement(
     achievement: AchievementCreate,
     db: Session = Depends(get_db),
 ):
-    """Create a new achievement"""
-
-    # Calculate duration
-    duration = (
-        achievement.completed_at - achievement.started_at
-    ).total_seconds() / 3600
-
-    # Create achievement
-    achievement_data = achievement.model_dump(exclude={"duration_hours"})
-    db_achievement = AchievementModel(
-        **achievement_data,
-        duration_hours=duration,
-    )
-
-    db.add(db_achievement)
-    db.commit()
-    db.refresh(db_achievement)
-
-    logger.info(f"Created achievement: {db_achievement.id} - {db_achievement.title}")
-
-    return db_achievement
+    """Create a new achievement with calculation transparency"""
+    # Use the enhanced sync function for consistency
+    return create_achievement_sync(db, achievement)
 
 
 @router.get("/", response_model=AchievementList)
@@ -239,6 +252,37 @@ async def get_achievement_stats(
         "average_impact_score": float(stats.avg_impact_score or 0),
         "average_complexity_score": float(stats.avg_complexity_score or 0),
         "by_category": {cat: count for cat, count in category_stats},
+    }
+
+
+@router.get("/{achievement_id}/calculation-transparency")
+async def get_calculation_transparency(
+    achievement_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get calculation transparency details for an achievement."""
+    achievement = (
+        db.query(AchievementModel).filter(AchievementModel.id == achievement_id).first()
+    )
+    
+    if not achievement:
+        raise HTTPException(status_code=404, detail="Achievement not found")
+    
+    # Extract calculation metadata
+    metrics_after = achievement.metrics_after or {}
+    enhanced_calculations = metrics_after.get("enhanced_calculations", {})
+    calculation_summary = metrics_after.get("calculation_summary", {})
+    metadata = achievement.metadata or {}
+    
+    return {
+        "achievement_id": achievement_id,
+        "calculation_version": metadata.get("calculation_version", "unknown"),
+        "enhanced_at": metadata.get("enhanced_at"),
+        "enhanced_calculations": enhanced_calculations,
+        "calculation_summary": calculation_summary,
+        "formulas_used": calculation_summary.get("formulas_used", []),
+        "confidence_scores": calculation_summary.get("confidence_scores", {}),
+        "methodology_notes": calculation_summary.get("methodology_notes", [])
     }
 
 
