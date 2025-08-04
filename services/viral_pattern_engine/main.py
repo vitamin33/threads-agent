@@ -6,9 +6,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 
-from services.viral_scraper.models import ViralPost
 from services.viral_pattern_engine.pattern_extractor import ViralPatternExtractor
 from services.viral_pattern_engine.emotion_analyzer import EmotionAnalyzer
 from services.viral_pattern_engine.trajectory_mapper import TrajectoryMapper
@@ -36,7 +35,7 @@ trajectory_mapper = TrajectoryMapper()
 class BatchAnalysisRequest(BaseModel):
     """Request model for batch analysis."""
 
-    posts: List[ViralPost]
+    posts: List[Dict[str, Any]]
 
 
 class BatchAnalysisResponse(BaseModel):
@@ -78,12 +77,12 @@ async def health_check():
 
 
 @app.post("/extract-patterns")
-async def extract_patterns(post: ViralPost) -> Dict[str, Any]:
+async def extract_patterns(post: Dict[str, Any]) -> Dict[str, Any]:
     """
     Extract viral patterns from a single post.
 
     Args:
-        post: ViralPost to analyze
+        post: Post data to analyze
 
     Returns:
         Dictionary containing extracted patterns
@@ -679,7 +678,7 @@ async def update_template_performance(
         template.usage_count = new_usage_count
         template.average_engagement = new_avg_engagement
         template.effectiveness_score = effectiveness_score
-        template.updated_at = datetime.utcnow()
+        template.updated_at = datetime.now(timezone.utc)
 
         db.commit()
         db.refresh(template)
@@ -730,26 +729,34 @@ async def analyze_content_emotion_workflow(request: Dict[str, str]) -> Dict[str,
         # Map trajectory
         trajectory = trajectory_mapper.map_emotion_trajectory(analyzed_segments)
 
-        # Detect patterns
-        viral_post = ViralPost(
-            id="temp",
-            author_username="analysis",
-            text=content,
-            view_count=0,
-            share_count=0,
-            reply_count=0,
-            like_count=0,
-            created_at="2024-01-01T00:00:00Z",
-        )
-        patterns = pattern_extractor.extract_patterns(viral_post)
+        # Create simple pattern analysis without ViralPost
+        patterns = {
+            "hook_patterns": [],
+            "emotion_patterns": [],
+            "structure_patterns": [],
+            "pattern_strength": 0.0
+        }
+        
+        # Analyze emotions in content for patterns
+        if analyzed_segments:
+            # Check for emotion patterns
+            dominant_emotions = [seg["emotions"].get(max(seg["emotions"], key=seg["emotions"].get), 0) for seg in analyzed_segments]
+            if any(e > 0.6 for e in dominant_emotions):
+                patterns["emotion_patterns"].append("strong_emotion")
+                patterns["pattern_strength"] += 0.3
+                
+            # Check trajectory type
+            if trajectory.get("arc_type") == "rising":
+                patterns["structure_patterns"].append("rising_tension")
+                patterns["pattern_strength"] += 0.2
 
         return {
             "segments": analyzed_segments,
             "trajectory": trajectory,
             "patterns": patterns,
             "recommendations": {
-                "should_publish": trajectory.get("metrics", {}).get("consistency", 0)
-                > 0.6,
+                "should_publish": trajectory.get("emotional_variance", 0) > 0.3
+                and len(analyzed_segments) >= 2,
                 "optimal_time": "peak_hours",
                 "suggested_improvements": [],
             },
