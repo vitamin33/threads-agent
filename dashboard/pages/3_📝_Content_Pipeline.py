@@ -32,18 +32,39 @@ st.markdown("### 🔄 Pipeline Status")
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    st.metric("📋 Drafts", f"{pipeline_data['drafts']}", f"+{min(2, pipeline_data['drafts'])} today")
+    drafts_count = pipeline_data.get('drafts', 0)
+    # Ensure drafts_count is an integer
+    if isinstance(drafts_count, list):
+        drafts_count = len(drafts_count)
+    drafts_delta = min(2, max(0, int(drafts_count)))
+    st.metric("📋 Drafts", f"{drafts_count}", f"+{drafts_delta} today")
+    
 with col2:
-    next_scheduled = "Next in 2h" if pipeline_data['scheduled'] > 0 else "None scheduled"
-    st.metric("⏰ Scheduled", f"{pipeline_data['scheduled']}", next_scheduled)
+    scheduled_count = pipeline_data.get('scheduled', 0)
+    if isinstance(scheduled_count, list):
+        scheduled_count = len(scheduled_count)
+    next_scheduled = "Next in 2h" if scheduled_count > 0 else "None scheduled"
+    st.metric("⏰ Scheduled", f"{scheduled_count}", next_scheduled)
+    
 with col3:
-    weekly_published = min(pipeline_data['published'], 3)
-    st.metric("✅ Published", f"{pipeline_data['published']}", f"+{weekly_published} this week")
+    published_count = pipeline_data.get('published', 0)
+    if isinstance(published_count, list):
+        published_count = len(published_count)
+    weekly_published = min(int(published_count), 3)
+    st.metric("✅ Published", f"{published_count}", f"+{weekly_published} this week")
+    
 with col4:
-    st.metric("🔄 In Progress", f"{pipeline_data['in_progress']}", delta_color="off")
+    in_progress_count = pipeline_data.get('in_progress', 0)
+    if isinstance(in_progress_count, list):
+        in_progress_count = len(in_progress_count)
+    st.metric("🔄 In Progress", f"{in_progress_count}", delta_color="off")
+    
 with col5:
-    engagement_delta = "+0.5%" if pipeline_data['engagement_avg'] > 7.0 else "-0.2%"
-    st.metric("📊 Engagement Avg", f"{pipeline_data['engagement_avg']:.1f}%", engagement_delta)
+    engagement_avg = pipeline_data.get('engagement_avg', 0.0)
+    if isinstance(engagement_avg, list):
+        engagement_avg = sum(engagement_avg) / len(engagement_avg) if engagement_avg else 0.0
+    engagement_delta = "+0.5%" if float(engagement_avg) > 7.0 else "-0.2%"
+    st.metric("📊 Engagement Avg", f"{float(engagement_avg):.1f}%", engagement_delta)
 
 st.divider()
 

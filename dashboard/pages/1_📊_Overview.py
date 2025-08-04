@@ -26,6 +26,7 @@ st.markdown("Real-time view of your content automation system performance")
 # Import API client and K8s monitor
 from services.api_client import get_api_client
 from services.k8s_monitor import get_k8s_monitor
+from services.realtime_client import create_realtime_dashboard_section
 
 api_client = get_api_client()
 k8s_monitor = get_k8s_monitor()
@@ -519,7 +520,18 @@ for activity in activity_data:
     else:
         st.info(f"{activity['time']}: {activity['event']}")
 
-# Auto-refresh every 30 seconds
+# Real-time updates section
+st.divider()
+st.markdown("### 🔄 Real-Time Updates")
+
+# Add real-time dashboard section
+try:
+    updater = create_realtime_dashboard_section()
+except Exception as e:
+    st.info("Real-time updates not available - services may be starting up")
+    st.caption(f"Error: {str(e)}")
+
+# Auto-refresh every 30 seconds (fallback for when SSE not available)
 st.markdown(
     """
     <script>
