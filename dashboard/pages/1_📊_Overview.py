@@ -11,6 +11,7 @@ import httpx
 import asyncio
 import json
 import time
+import re
 from typing import Dict, Any, List
 
 st.set_page_config(
@@ -325,7 +326,29 @@ col1, col2, col3 = st.columns(3)
 if achievements:
     today_achievements = len([a for a in achievements if 'created_at' in a and a['created_at'].startswith(datetime.now().strftime('%Y-%m-%d'))])
     week_achievements = len([a for a in achievements if 'created_at' in a and pd.to_datetime(a['created_at']) > datetime.now() - timedelta(days=7)])
-    total_value = sum(float(a.get('business_value', 0)) for a in achievements if a.get('business_value'))
+    
+    # Parse business value - handle both numeric and JSON formats
+    total_value = 0
+    for a in achievements:
+        bv = a.get('business_value')
+        if bv:
+            try:
+                # Try to parse as float first
+                if isinstance(bv, (int, float)):
+                    total_value += float(bv)
+                elif isinstance(bv, str):
+                    # Check if it's a JSON string
+                    if bv.strip().startswith('{'):
+                        bv_data = json.loads(bv)
+                        total_value += bv_data.get('total_value', 0)
+                    else:
+                        # Try to extract number from string
+                        match = re.search(r'\$?([0-9,]+(?:\.[0-9]+)?)', bv)
+                        if match:
+                            value = float(match.group(1).replace(',', ''))
+                            total_value += value
+            except:
+                pass  # Skip unparseable values
     
     # Calculate engagement rate improvement
     recent_engagement = [a.get('performance_improvement_pct', 0) for a in achievements[-10:]]

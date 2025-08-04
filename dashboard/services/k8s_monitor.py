@@ -132,18 +132,38 @@ class K8sServiceMonitor:
             if result.returncode == 0:
                 lines = result.stdout.strip().split('\n')
                 if lines and lines[0]:
-                    # Parse first node (for local k3d)
-                    parts = lines[0].split()
-                    if len(parts) >= 5:
-                        cpu_percent = int(parts[2].rstrip('%'))
-                        memory_percent = int(parts[4].rstrip('%'))
-                        
-                        return {
-                            'cpu_usage': cpu_percent,
-                            'memory_usage': memory_percent,
-                            'node_count': len(lines),
-                            'status': 'healthy'
-                        }
+                    # Parse metrics from all nodes
+                    total_cpu_millicores = 0
+                    total_memory_mb = 0
+                    memory_percent_sum = 0
+                    
+                    for line in lines:
+                        parts = line.split()
+                        if len(parts) >= 5:
+                            # Parse CPU millicores (e.g., "87m" -> 87)
+                            cpu_str = parts[1]
+                            if cpu_str.endswith('m'):
+                                cpu_millicores = int(cpu_str[:-1])
+                                total_cpu_millicores += cpu_millicores
+                            
+                            # Parse memory percentage
+                            mem_percent_str = parts[4].rstrip('%')
+                            if mem_percent_str.isdigit():
+                                memory_percent_sum += int(mem_percent_str)
+                    
+                    # Calculate CPU usage percentage
+                    # Assume 2000m (2 cores) total for k3d cluster
+                    cpu_percent = min(int((total_cpu_millicores / 2000) * 100), 100)
+                    
+                    # Average memory percentage
+                    avg_memory_percent = memory_percent_sum // len(lines) if lines else 50
+                    
+                    return {
+                        'cpu_usage': cpu_percent if cpu_percent > 0 else 10,  # Minimum 10% for display
+                        'memory_usage': avg_memory_percent,
+                        'node_count': len(lines),
+                        'status': 'healthy'
+                    }
             
             # Fallback to estimates based on pod count
             cmd = "kubectl get pods -n default --no-headers | wc -l"
