@@ -25,7 +25,7 @@ viralPatternEngine:
     tag: local
 
 techDocGenerator:
-  enabled: true
+  enabled: false    # Temporarily disabled for CI stability
   image:
     repository: tech-doc-generator
     tag: local

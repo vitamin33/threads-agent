@@ -50,7 +50,7 @@ jobs:
         python scripts/pr-value-analyzer.py ${{ steps.pr_number.outputs.pr_number }}
     
     - name: Upload Analysis Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pr-value-analysis
         path: |
