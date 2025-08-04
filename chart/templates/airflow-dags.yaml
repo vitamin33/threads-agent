@@ -1,6 +1,6 @@
 # Airflow DAGs ConfigMap (CRA-284)
 # E7 - Viral Learning Flywheel - DAG definitions for viral content orchestration
-{{- if .Values.airflow.enabled }}
+{{- if and .Values.airflow .Values.airflow.enabled }}
 ---
 apiVersion: v1
 kind: ConfigMap

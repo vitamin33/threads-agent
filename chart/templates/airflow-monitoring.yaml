@@ -1,6 +1,6 @@
 # Airflow Monitoring Configuration (CRA-284)
 # AlertManager Rules and Grafana Dashboards for Airflow orchestration
-{{- if and .Values.airflow.enabled .Values.monitoring.prometheus.enabled }}
+{{- if and .Values.airflow .Values.airflow.enabled .Values.monitoring.prometheus.enabled }}
 ---
 # PrometheusRule for Airflow Alerts
 apiVersion: monitoring.coreos.com/v1

@@ -1,6 +1,6 @@
 # Airflow Orchestration System (CRA-284)
 # E7 - Viral Learning Flywheel - Apache Airflow deployment for viral content orchestration
-{{- if .Values.airflow.enabled }}
+{{- if and .Values.airflow .Values.airflow.enabled }}
 ---
 apiVersion: v1
 kind: Secret
