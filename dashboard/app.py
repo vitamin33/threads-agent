@@ -89,11 +89,11 @@ with st.sidebar:
 st.title("Threads Agent Dashboard")
 st.markdown("**Real-time monitoring and control center for your AI-powered content automation system**")
 
-# Import API client - we'll create this next
+# Import API client
 achievements = []  # Initialize as empty list
 try:
-    from services.api_client import ThreadsAgentAPI
-    api = ThreadsAgentAPI()
+    from services.api_client import get_api_client
+    api = get_api_client()
     
     # Fetch real data
     try:
@@ -111,18 +111,27 @@ try:
             bv = a.get('business_value', '')
             if bv is None:
                 continue
-            elif isinstance(bv, str) and bv.startswith('{'):
-                try:
-                    bv_data = json.loads(bv)
-                    total_value += bv_data.get('total_value', 0)
-                except:
-                    pass
-            elif isinstance(bv, str) and '$' in bv:
-                # Handle formats like "$162,500 annual value" or "$12,526 USD/one-time"
-                match = re.search(r'\$([0-9,]+)', bv)
-                if match:
-                    value = int(match.group(1).replace(',', ''))
-                    total_value += value
+            elif isinstance(bv, str):
+                # Handle JSON format first
+                if bv.strip().startswith('{'):
+                    try:
+                        bv_data = json.loads(bv)
+                        total_value += bv_data.get('total_value', 0)
+                    except:
+                        pass
+                # Handle dollar sign formats
+                elif '$' in bv:
+                    match = re.search(r'\$([0-9,]+)', bv)
+                    if match:
+                        value = int(match.group(1).replace(',', ''))
+                        total_value += value
+                # Handle plain string numbers (like "75000")
+                else:
+                    try:
+                        value = float(bv.replace(',', ''))
+                        total_value += value
+                    except:
+                        pass
             elif isinstance(bv, (int, float)):
                 total_value += bv
         
