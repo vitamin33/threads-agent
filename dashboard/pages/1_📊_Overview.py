@@ -27,6 +27,13 @@ st.markdown("Real-time view of your content automation system performance")
 from services.api_client import get_api_client
 from services.k8s_monitor import get_k8s_monitor
 from services.realtime_client import create_realtime_dashboard_section
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.theme_config import apply_plotly_theme, inject_dark_theme_css, create_styled_gauge
+
+# Inject dark theme CSS
+inject_dark_theme_css()
 
 api_client = get_api_client()
 k8s_monitor = get_k8s_monitor()
@@ -203,6 +210,8 @@ with tab1:
         title="Average API Response Time (24h)"
     )
     fig.update_traces(line_color='#2E86AB')
+    # Apply dark theme
+    fig = apply_plotly_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
@@ -239,6 +248,7 @@ with tab2:
         title="API Requests per Hour"
     )
     fig.update_traces(marker_color='#A23B72')
+    fig = apply_plotly_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with tab3:
@@ -274,6 +284,7 @@ with tab3:
         color='Error Rate',
         color_continuous_scale='Reds'
     )
+    fig = apply_plotly_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
@@ -290,54 +301,12 @@ memory_usage = cluster_metrics['memory_usage']
 
 with col1:
     # CPU usage gauge
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number+delta",
-        value = cpu_usage,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "CPU Usage (%)"},
-        delta = {'reference': 50},
-        gauge = {
-            'axis': {'range': [None, 100]},
-            'bar': {'color': "darkblue"},
-            'steps': [
-                {'range': [0, 50], 'color': "lightgray"},
-                {'range': [50, 80], 'color': "yellow"},
-                {'range': [80, 100], 'color': "red"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': 90
-            }
-        }
-    ))
-    fig.update_layout(height=300)
+    fig = create_styled_gauge(cpu_usage, "CPU Usage (%)", 100)
     st.plotly_chart(fig, use_container_width=True)
 
 with col2:
     # Memory usage gauge
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number+delta",
-        value = memory_usage,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Memory Usage (%)"},
-        delta = {'reference': 60},
-        gauge = {
-            'axis': {'range': [None, 100]},
-            'bar': {'color': "darkgreen"},
-            'steps': [
-                {'range': [0, 50], 'color': "lightgray"},
-                {'range': [50, 80], 'color': "yellow"},
-                {'range': [80, 100], 'color': "red"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': 90
-            }
-        }
-    ))
-    fig.update_layout(height=300)
+    fig = create_styled_gauge(memory_usage, "Memory Usage (%)", 100)
     st.plotly_chart(fig, use_container_width=True)
 
 # Quick Stats - with real data

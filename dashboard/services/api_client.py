@@ -325,7 +325,10 @@ class ThreadsAgentAPI:
                 }
 
 # Singleton instance
+# Version bump to clear cache when API changes
+API_VERSION = "1.2"  # Increment this when API methods change
+
 @st.cache_resource
-def get_api_client() -> ThreadsAgentAPI:
+def get_api_client(version: str = API_VERSION) -> ThreadsAgentAPI:
     """Get or create API client instance"""
     return ThreadsAgentAPI()
