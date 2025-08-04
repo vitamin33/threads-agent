@@ -149,6 +149,14 @@ class PRValueAnalyzer:
                     capture_output=True,
                     text=True,
                 )
+                
+                # If origin branch doesn't exist, try without origin prefix
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", base_branch],
+                        capture_output=True,
+                        text=True,
+                    )
             else:
                 # Fallback to main branch
                 result = subprocess.run(
@@ -156,6 +164,14 @@ class PRValueAnalyzer:
                     capture_output=True,
                     text=True,
                 )
+                
+                # If origin/main doesn't exist, try main
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", "main"],
+                        capture_output=True,
+                        text=True,
+                    )
 
             if result.returncode == 0:
                 stats_text = result.stdout
