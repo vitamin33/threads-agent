@@ -81,9 +81,9 @@ class TestEmotionAPIIntegration:
             # Configure mocks
             def mock_refresh(obj):
                 # Set ID on any object being refreshed (like EmotionTrajectory)
-                if not hasattr(obj, 'id') or obj.id is None:
+                if not hasattr(obj, "id") or obj.id is None:
                     setattr(obj, "id", 1)
-                    
+
             mock_session.refresh.side_effect = mock_refresh
 
             # Make get work dynamically based on model type
@@ -119,6 +119,7 @@ class TestEmotionAPIIntegration:
                     if "persona_id" in query_str:
                         # Look for patterns like persona_id = 'viral_creator'
                         import re
+
                         # Try different patterns for SQLAlchemy query
                         patterns = [
                             r"persona_id\s*=\s*['\"]([^'\"]+)['\"]",
@@ -151,6 +152,7 @@ class TestEmotionAPIIntegration:
                     # If we captured a persona_id from the query, create a new trajectory with that persona
                     if queried_persona_id:
                         from unittest.mock import MagicMock
+
                         persona_trajectory = MagicMock()
                         persona_trajectory.id = 1
                         persona_trajectory.post_id = "test_post"
