@@ -65,24 +65,53 @@ jobs:
         script: |
           const fs = require('fs');
           const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json`;
+          const achievementFile = `.achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json`;
           
           try {
             const data = JSON.parse(fs.readFileSync(analysisFile, 'utf8'));
+            let achievementData = null;
+            
+            // Try to load achievement file for metric explanations
+            try {
+              achievementData = JSON.parse(fs.readFileSync(achievementFile, 'utf8'));
+            } catch (e) {
+              console.log('Achievement file not found, using basic explanations');
+            }
             
             // Build comment
             let comment = '## 📊 Automated PR Value Analysis\n\n';
             
-            // Business Metrics with explanations
+            // Business Metrics with comprehensive explanations
             if (data.business_metrics && Object.keys(data.business_metrics).length > 0) {
               comment += '### 💰 Business Value\n';
               
-              // Add calculation transparency
+              // Add comprehensive calculation transparency
               comment += '<details><summary>📐 How these metrics are calculated</summary>\n\n';
-              comment += '- **Throughput Improvement**: `((current_rps / baseline_rps) - 1) × 100%`\n';
-              comment += '- **Infrastructure Savings**: Based on RPS improvement reducing server needs\n';
-              comment += '- **ROI**: `(annual_savings / development_cost) × 100%`\n';
-              comment += '- **User Experience**: Score based on latency (<100ms = 10, <200ms = 9)\n';
-              comment += '\n⚠️ **Note**: Baseline RPS assumed at 100. Actual baseline may vary.\n';
+              
+              if (achievementData?.metric_explanations?.business_metrics) {
+                const explanations = achievementData.metric_explanations.business_metrics;
+                
+                comment += '| Metric | Formula | Meaning |\n';
+                comment += '|--------|---------|---------|\n';
+                
+                for (const [metric, info] of Object.entries(explanations)) {
+                  const displayName = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `| **${displayName}** | \`${info.formula}\` | ${info.meaning} |\n`;
+                }
+                
+                comment += '\n**Baseline Assumptions:**\n';
+                comment += '- RPS Baseline: 500 (typical microservice)\n';
+                comment += '- Developer Rate: $150/hour\n';
+                comment += '- Server Cost: $12k/year\n';
+                comment += '- Bug Fix Cost: $5k average in production\n';
+              } else {
+                // Fallback to simple explanations
+                comment += '- **Throughput Improvement**: `((current_rps / baseline_rps) - 1) × 100%`\n';
+                comment += '- **Infrastructure Savings**: Based on RPS improvement reducing server needs\n';
+                comment += '- **ROI**: `(annual_savings / development_cost) × 100%`\n';
+                comment += '- **User Experience**: Score based on latency (<100ms = 10, <200ms = 9)\n';
+                comment += '\n⚠️ **Note**: Baseline RPS assumed at 500. Actual baseline may vary.\n';
+              }
               comment += '</details>\n\n';
               
               for (const [key, value] of Object.entries(data.business_metrics)) {
@@ -105,16 +134,49 @@ jobs:
               comment += '\n';
             }
             
-            // Technical Metrics
+            // Technical Metrics with explanations
             if (data.technical_metrics?.performance) {
               comment += '### 🚀 Performance Metrics\n';
+              
+              // Add performance explanations if available
+              if (achievementData?.metric_explanations?.performance_metrics) {
+                comment += '<details><summary>📊 What these metrics mean</summary>\n\n';
+                const perfExplanations = achievementData.metric_explanations.performance_metrics;
+                
+                for (const [metric, info] of Object.entries(perfExplanations)) {
+                  const displayName = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `**${displayName}**: ${info.meaning}\n`;
+                  
+                  if (info.industry_standards) {
+                    comment += '- Industry Standards:\n';
+                    for (const [level, desc] of Object.entries(info.industry_standards)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  if (info.user_perception) {
+                    comment += '- User Perception:\n';
+                    for (const [level, desc] of Object.entries(info.user_perception)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  if (info.quality_standards) {
+                    comment += '- Quality Standards:\n';
+                    for (const [level, desc] of Object.entries(info.quality_standards)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  comment += '\n';
+                }
+                comment += '</details>\n\n';
+              }
+              
               for (const [key, value] of Object.entries(data.technical_metrics.performance)) {
                 comment += `- **${key.replace(/_/g, ' ')}**: ${value}\n`;
               }
               comment += '\n';
             }
             
-            // KPIs
+            // KPIs with detailed explanations
             if (data.kpis) {
               comment += '### 📈 Key Performance Indicators\n';
               const overall = data.kpis.overall_score || 0;
@@ -126,6 +188,40 @@ jobs:
                 comment += '✅ Good\n';
               } else {
                 comment += '⚠️ Needs Improvement\n';
+              }
+              
+              // Add KPI explanations if available
+              if (achievementData?.metric_explanations?.kpi_scores) {
+                comment += '\n<details><summary>🎯 How scores are calculated</summary>\n\n';
+                const kpiExplanations = achievementData.metric_explanations.kpi_scores;
+                
+                for (const [kpi, info] of Object.entries(kpiExplanations)) {
+                  const displayName = kpi.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `**${displayName}**:\n`;
+                  comment += `- Formula: ${info.formula}\n`;
+                  if (info.meaning) comment += `- Meaning: ${info.meaning}\n`;
+                  
+                  if (info.scale) {
+                    comment += '- Scale:\n';
+                    for (const [score, desc] of Object.entries(info.scale)) {
+                      comment += `  - ${score}: ${desc}\n`;
+                    }
+                  }
+                  if (info.weights) {
+                    comment += '- Weights:\n';
+                    for (const [component, weight] of Object.entries(info.weights)) {
+                      comment += `  - ${component}: ${weight}\n`;
+                    }
+                  }
+                  if (info.criteria) {
+                    comment += '- Criteria:\n';
+                    for (const criterion of info.criteria) {
+                      comment += `  - ${criterion}\n`;
+                    }
+                  }
+                  comment += '\n';
+                }
+                comment += '</details>\n\n';
               }
               
               for (const [key, value] of Object.entries(data.kpis)) {
