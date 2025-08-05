@@ -1,0 +1,143 @@
+{{- if .Values.conversationEngine.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conversation-engine
+  labels:
+    app: conversation-engine
+    {{- include "threads-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.conversationEngine.replicas }}
+  selector:
+    matchLabels:
+      app: conversation-engine
+  template:
+    metadata:
+      labels:
+        app: conversation-engine
+        {{- include "threads-agent.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: conversation-engine
+        image: "{{ .Values.conversationEngine.image.repository }}:{{ .Values.conversationEngine.image.tag }}"
+        imagePullPolicy: {{ .Values.conversationEngine.image.pullPolicy }}
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ .Values.postgresql.host }}:{{ .Values.postgresql.port }}/{{ .Values.postgresql.auth.database }}"
+        - name: REDIS_HOST
+          value: {{ .Values.redis.host | quote }}
+        - name: REDIS_PORT
+          value: {{ .Values.redis.port | quote }}
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: api-key
+        - name: CONVERSATION_MODEL
+          value: {{ .Values.conversationEngine.model | default "gpt-4o" | quote }}
+        - name: CONVERSATION_TEMPERATURE
+          value: {{ .Values.conversationEngine.temperature | default "0.7" | quote }}
+        - name: CONVERSATION_CACHE_TTL
+          value: {{ .Values.conversationEngine.cacheTTL | default "3600" | quote }}
+        {{- if .Values.conversationEngine.extraEnv }}
+        {{- toYaml .Values.conversationEngine.extraEnv | nindent 8 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.conversationEngine.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conversation-engine
+  labels:
+    app: conversation-engine
+    {{- include "threads-agent.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: conversation-engine
+---
+{{- if .Values.conversationEngine.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: conversation-engine-hpa
+  labels:
+    app: conversation-engine
+    {{- include "threads-agent.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: conversation-engine
+  minReplicas: {{ .Values.conversationEngine.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.conversationEngine.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.conversationEngine.autoscaling.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.conversationEngine.autoscaling.targetMemoryUtilizationPercentage }}
+{{- end }}
+---
+{{- if .Values.conversationEngine.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: conversation-engine-pdb
+  labels:
+    app: conversation-engine
+    {{- include "threads-agent.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.conversationEngine.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      app: conversation-engine
+{{- end }}
+---
+{{- if .Values.conversationEngine.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: conversation-engine
+  labels:
+    app: conversation-engine
+    {{- include "threads-agent.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: conversation-engine
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+{{- end }}
+{{- end }}

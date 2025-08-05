@@ -1,0 +1,218 @@
+# chart/templates/comment-monitoring.yaml
+{{- if .Values.orchestrator.commentMonitoring.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comment-monitoring-config
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+data:
+  batch-size: {{ .Values.orchestrator.commentMonitoring.batchSize | default "10" | quote }}
+  dedup-cache-ttl: {{ .Values.orchestrator.commentMonitoring.dedupCacheTTL | default "3600" | quote }}
+  processing-timeout: {{ .Values.orchestrator.commentMonitoring.processingTimeout | default "30" | quote }}
+  max-retries: {{ .Values.orchestrator.commentMonitoring.maxRetries | default "3" | quote }}
+  backoff-multiplier: {{ .Values.orchestrator.commentMonitoring.backoffMultiplier | default "2" | quote }}
+  rate-limit-per-minute: {{ .Values.orchestrator.commentMonitoring.rateLimitPerMinute | default "100" | quote }}
+
+---
+{{- if and .Values.monitoring.prometheus.enabled .Values.orchestrator.commentMonitoring.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: comment-monitoring-alerts
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: comment-monitoring.rules
+    interval: 30s
+    rules:
+    # Comment Processing Performance Metrics
+    - alert: CommentProcessingHighLatency
+      expr: histogram_quantile(0.95, rate(comment_processing_duration_seconds_bucket[5m])) > 10
+      for: 5m
+      labels:
+        severity: warning
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "Comment processing latency is high"
+        description: "95th percentile comment processing latency is above 10s threshold"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Comment-Monitoring-Runbook"
+
+    - alert: CommentProcessingErrors
+      expr: rate(comment_processing_errors_total[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: critical
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "High error rate in comment processing"
+        description: "Comment processing error rate is high over the last 5 minutes"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/Comment-Monitoring-Runbook"
+
+    - alert: CommentQueueBacklog
+      expr: comment_processing_queue_length > {{ .Values.orchestrator.commentMonitoring.alerts.queueBacklogThreshold | default 500 }}
+      for: 5m
+      labels:
+        severity: warning
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "Comment processing queue has high backlog"
+        description: "Comment processing queue length exceeds threshold of {{ .Values.orchestrator.commentMonitoring.alerts.queueBacklogThreshold | default 500 }}"
+
+    # Database Performance Metrics
+    - alert: CommentDatabaseSlowQueries
+      expr: histogram_quantile(0.95, rate(comment_db_query_duration_seconds_bucket[5m])) > 2
+      for: 3m
+      labels:
+        severity: warning
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "Comment database queries are slow"
+        description: "95th percentile database query time for comments is above 2s threshold"
+
+    - alert: CommentDuplicateRate
+      expr: rate(comment_duplicates_detected_total[10m]) / rate(comment_processing_attempts_total[10m]) > 0.3
+      for: 5m
+      labels:
+        severity: info
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "High duplicate comment detection rate"
+        description: "High percentage of comments are duplicates, consider adjusting deduplication cache TTL"
+
+    # Resource Utilization Alerts
+    - alert: CommentMonitoringMemoryHigh
+      expr: container_memory_working_set_bytes{pod=~"orchestrator.*", container="orchestrator"} / 1024 / 1024 / 1024 > {{ .Values.orchestrator.commentMonitoring.alerts.memoryThresholdGb | default 0.8 }}
+      for: 5m
+      labels:
+        severity: warning
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "Orchestrator memory usage is high during comment processing"
+        description: "Memory usage is approaching limit"
+
+    - alert: CommentMonitoringCPUHigh
+      expr: rate(container_cpu_usage_seconds_total{pod=~"orchestrator.*", container="orchestrator"}[5m]) > {{ .Values.orchestrator.commentMonitoring.alerts.cpuThreshold | default 0.8 }}
+      for: 5m
+      labels:
+        severity: warning
+        service: orchestrator
+        component: comment-monitoring
+      annotations:
+        summary: "Orchestrator CPU usage is high during comment processing"
+        description: "CPU usage is high, consider scaling up"
+{{- end }}
+
+---
+{{- if .Values.orchestrator.commentMonitoring.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: comment-monitoring-network-policy
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: orchestrator
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: fake-threads
+    - podSelector:
+        matchLabels:
+          app: celery-worker
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres  
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app: rabbitmq
+    ports:
+    - protocol: TCP
+      port: 5672
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+{{- end }}
+
+---
+{{- if .Values.orchestrator.commentMonitoring.rbac.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: comment-monitoring-sa
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: comment-monitoring-role
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: comment-monitoring-rolebinding
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: comment-monitoring-sa
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: comment-monitoring-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}

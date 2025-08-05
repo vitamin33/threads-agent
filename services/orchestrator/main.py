@@ -27,6 +27,7 @@ from services.common.metrics import (
 )
 from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
+from services.orchestrator.comment_monitor import CommentMonitor
 
 # ── constants & wiring ────────────────────────────────────────────────────────
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
@@ -176,6 +177,68 @@ async def health() -> Status:
     finally:
         duration = time.time() - start_time
         record_http_request("GET", "/health", status, duration)
+
+
+# ── Comment Monitoring Endpoints ──────────────────────────────────────────────
+class CommentMonitoringRequest(BaseModel):
+    post_id: str
+
+
+class CommentMonitoringResponse(BaseModel):
+    task_id: str
+    status: str
+
+
+@app.post("/comment-monitoring/start")
+async def start_comment_monitoring(request: CommentMonitoringRequest) -> CommentMonitoringResponse:
+    """Start monitoring comments for a specific post."""
+    start_time = time.time()
+    try:
+        # Initialize comment monitor with dependencies
+        monitor = CommentMonitor(
+            fake_threads_client=httpx.Client(base_url=os.getenv("FAKE_THREADS_URL", "http://fake-threads:9009")),
+            celery_client=celery_app,
+            db_session=None  # TODO: Add proper DB session from db module
+        )
+        
+        # Start monitoring
+        task_id = monitor.start_monitoring(request.post_id)
+        
+        status = 200
+        return CommentMonitoringResponse(task_id=task_id, status="monitoring_started")
+    except Exception as e:
+        status = 500
+        logger.error(f"Failed to start comment monitoring: {e}")
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("POST", "/comment-monitoring/start", status, duration)
+
+
+@app.post("/comment-monitoring/process/{post_id}")
+async def process_comments(post_id: str, background_tasks: BackgroundTasks):
+    """Process all comments for a post (fetch, deduplicate, queue, store)."""
+    start_time = time.time()
+    try:
+        # Initialize comment monitor
+        monitor = CommentMonitor(
+            fake_threads_client=httpx.Client(base_url=os.getenv("FAKE_THREADS_URL", "http://fake-threads:9009")),
+            celery_client=celery_app,
+            db_session=None  # TODO: Add proper DB session
+        )
+        
+        # Process comments in background
+        background_tasks.add_task(monitor.process_comments_for_post, post_id)
+        
+        status = 202  # Accepted
+        return {"status": "processing_started", "post_id": post_id}
+    except Exception as e:
+        status = 500
+        logger.error(f"Failed to process comments: {e}")
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("POST", f"/comment-monitoring/process/{post_id}", status, duration)
 
 
 @app.get("/metrics/summary")

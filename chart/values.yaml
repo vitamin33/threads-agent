@@ -436,6 +436,71 @@ orchestrator:
       value: "true"
     - name: MLFLOW_PERFORMANCE_MONITORING_ENABLED
       value: "true"
+  
+  # Comment Monitoring Pipeline Configuration (CRA-235)
+  commentMonitoring:
+    enabled: false                    # turn ON in dev/prod values
+    
+    # Performance Configuration
+    batchSize: 10                     # Comments processed per batch
+    dedupCacheTTL: 3600              # Deduplication cache TTL in seconds
+    processingTimeout: 30             # Processing timeout in seconds
+    maxRetries: 3                     # Maximum retry attempts
+    backoffMultiplier: 2              # Exponential backoff multiplier
+    rateLimitPerMinute: 100          # Rate limit for comment processing
+    
+    # Monitoring and Metrics
+    metrics:
+      enabled: true                   # Enable comment monitoring metrics
+      customMetrics: ["comment_processing_queue_length", "comment_processing_duration_seconds", "comment_duplicates_detected_total"]
+    
+    # Alert Thresholds
+    alerts:
+      queueBacklogThreshold: 500      # Alert when queue length exceeds this
+      memoryThresholdGb: 0.8         # Memory usage alert threshold in GB
+      cpuThreshold: 0.8              # CPU usage alert threshold (0-1)
+      
+    # Network Security
+    networkPolicy:
+      enabled: false                  # turn ON for production security
+      
+    # RBAC Configuration
+    rbac:
+      enabled: false                  # turn ON for production
+  
+  # Service Monitor for Prometheus
+  serviceMonitor:
+    enabled: false                    # turn ON when Prometheus is enabled
+    interval: "30s"
+    scrapeTimeout: "10s"
+  
+  # Horizontal Pod Autoscaler
+  autoscaling:
+    enabled: false                    # turn ON for production scaling
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilization: 70
+    targetMemoryUtilization: 80
+    
+    # Custom Metrics Scaling
+    customMetrics:
+      enabled: false                  # turn ON for comment queue-based scaling
+      targetQueueLength: 50           # Target comment processing queue length
+      
+    # Scaling Behavior
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      percentPolicy: 100
+      periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      percentPolicy: 50
+      periodSeconds: 60
+  
+  # Pod Disruption Budget
+  pdb:
+    enabled: false                    # turn ON for production
+    minAvailable: 1
 
 # ───────── generic chart knobs ─────────
 replicaCount: 1
@@ -893,3 +958,43 @@ airflow:
     grafana:
       enabled: true
       dashboardsEnabled: true
+
+# ===== Conversation Engine Service =====
+conversationEngine:
+  enabled: true
+  image:
+    repository: conversation-engine
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  replicas: 2
+  
+  # GPT-4o Configuration
+  model: "gpt-4o"
+  temperature: "0.7"
+  cacheTTL: "3600"  # 1 hour
+  
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  pdb:
+    enabled: true
+    minAvailable: 1
+  
+  serviceMonitor:
+    enabled: true
+  
+  # Extra environment variables
+  extraEnv: []
