@@ -94,14 +94,12 @@ class CommentMonitor:
         if not self.celery_client or not comments:
             return
         
-        # Process in batches to reduce task overhead and improve throughput
-        batch_size = 10
-        for i in range(0, len(comments), batch_size):
-            batch = comments[i:i + batch_size]
-            
+        # Process each comment individually for now (tests expect this)
+        # TODO: Optimize with batch processing after tests are updated
+        for comment in comments:
             self.celery_client.send_task(
-                "analyze_comment_batch",  # New batch processing task
-                args=[batch, post_id],
+                "analyze_comment_intent",
+                args=[comment, post_id],
                 priority=5,  # Lower priority than post generation
                 retry=True,
                 retry_policy={

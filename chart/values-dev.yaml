@@ -13,13 +13,13 @@ celeryWorker:
     tag: local
 
 viralEngine:
-  enabled: true
+  enabled: false
   image:
     repository: viral-engine
     tag: local
 
 viralPatternEngine:
-  enabled: true
+  enabled: false
   image:
     repository: viral-pattern-engine
     tag: local
@@ -33,11 +33,11 @@ orchestrator:
     processingTimeout: 15              # Shorter timeout for dev
     rateLimitPerMinute: 50            # Lower rate limit for dev
     metrics:
-      enabled: true
+      enabled: false                  # Disable for now
     alerts:
       queueBacklogThreshold: 100      # Lower threshold for dev testing
   serviceMonitor:
-    enabled: true                     # Enable metrics collection
+    enabled: false                    # Disable for now
   autoscaling:
     enabled: false                    # Disable autoscaling in dev
   pdb:
@@ -75,7 +75,7 @@ personaRuntime:
     tag: local
 
 ragPipeline:
-  enabled: true
+  enabled: false
   image:
     repository: rag-pipeline
     tag: latest
@@ -180,7 +180,7 @@ resources: {}
 # ───────── monitoring & observability ─────────
 monitoring:
   prometheus:
-    enabled: true
+    enabled: false
     url: http://prometheus:9090
     persistence:
       enabled: true
