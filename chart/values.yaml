@@ -737,3 +737,159 @@ qdrant:
     requests:
       cpu: 200m
       memory: 512Mi
+
+# ───────── Apache Airflow Orchestration (CRA-284) ─────────
+airflow:
+  enabled: false                   # turn ON for E7 - Viral Learning Flywheel orchestration
+  image:
+    repository: apache/airflow
+    tag: "2.8.0-python3.12"
+    pullPolicy: IfNotPresent
+  
+  # Authentication and Security (REQUIRED in production)
+  adminUsername: "admin"           # Admin user name
+  adminEmail: "admin@threads-agent.com"  # Admin email
+  adminPassword: ""                # REQUIRED - set in production values
+  fernetKey: ""                    # REQUIRED - 32 bytes base64 encoded key
+  webserverSecretKey: ""           # REQUIRED - unique secret key per deployment
+  
+  # Core Configuration
+  maxActiveRuns: 3                 # Maximum concurrent DAG runs
+  parallelism: 32                  # Total task slots across all workers
+  maxActiveTasks: 16              # Maximum tasks per DAG run
+  schedulerThreads: 2             # Scheduler thread pool size
+  defaultTaskRetries: 2           # Default retry count for failed tasks
+  sqlAlchemyPoolSize: 10          # Database connection pool size
+  sqlAlchemyMaxOverflow: 20       # Max overflow connections
+  
+  # Webserver Configuration
+  webserver:
+    replicas: 1
+    baseUrl: "http://localhost:8080"  # External base URL
+    exposeConfig: "False"           # Don't expose config in production
+    authenticate: "True"            # Enable authentication
+    authBackend: "airflow.api.auth.backend.basic_auth"  # Auth method
+    sessionTimeout: 30              # Session timeout in minutes
+    workerTimeout: 120              # Worker timeout in seconds
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "200m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    # Pod Disruption Budget
+    pdb:
+      minAvailable: 1
+    # Autoscaling
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilization: 70
+      targetMemoryUtilization: 80
+  
+  # Scheduler Configuration
+  scheduler:
+    replicas: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "200m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    # Pod Disruption Budget
+    pdb:
+      minAvailable: 1
+  
+  # Service Configuration
+  service:
+    type: ClusterIP
+    port: 8080
+    
+  # Network Policy
+  networkPolicy:
+    enabled: true                   # Enable network isolation
+    
+  # Metrics Configuration
+  metrics:
+    statsd:
+      enabled: true
+      host: "prometheus-statsd-exporter"
+      port: 9125
+      prefix: "airflow"
+    allowList: "airflow.dag_processing.last_runtime.*,airflow.dag_processing.import_errors,airflow.dag.*.*.duration,airflow.dag.*.*.success,airflow.dag.*.*.failure"
+    scrapeInterval: "30s"
+    scrapeTimeout: "10s"
+  
+  # DAG Configuration
+  dags:
+    # Viral Learning Flywheel DAG settings
+    viralLearningFlywheel:
+      enabled: true
+      schedule: "0 */6 * * *"      # Run every 6 hours
+      maxActiveRuns: 1
+      catchup: false
+      
+      # Scraping Configuration
+      scraping:
+        accounts: ["viral_account_1", "viral_account_2", "viral_account_3"]
+        maxPostsPerAccount: 50
+        daysBack: 7
+        minPerformancePercentile: 95.0
+        
+      # Pattern Extraction Configuration  
+      patternExtraction:
+        batchSize: 25
+        maxParallelTasks: 5
+        
+      # Content Generation Configuration
+      contentGeneration:
+        variants: 3
+        personas: ["professional", "casual", "technical"]
+        
+      # Performance Monitoring
+      monitoring:
+        engagementThreshold: 0.06    # 6% target engagement rate
+        costPerFollowThreshold: 0.01 # $0.01 target cost per follow
+        
+    # Cleanup and Maintenance DAGs
+    maintenance:
+      enabled: true
+      schedule: "0 2 * * *"        # Daily at 2 AM
+      retentionDays: 30            # Keep task logs for 30 days
+      
+  # Integration URLs (auto-configured from service names)
+  services:
+    orchestrator: "http://orchestrator:8080"
+    viralScraper: "http://viral-scraper:8080"
+    viralEngine: "http://viral-engine:8080"
+    viralPatternEngine: "http://viral-pattern-engine:8080"
+    personaRuntime: "http://persona-runtime:8080"
+    prometheus: "http://prometheus:9090"
+    
+  # Backup Strategy
+  backup:
+    enabled: false                  # Enable database backups
+    schedule: "0 3 * * *"           # Daily at 3 AM
+    retention: "7d"                 # Keep backups for 7 days
+    storage:
+      type: "s3"                   # s3, gcs, or local
+      bucket: "airflow-backups"
+      region: "us-west-2"
+      
+  # External Secrets (for production)
+  externalSecrets:
+    enabled: false                  # Use external secret management
+    secretStore: "vault"            # vault, aws-secrets-manager, etc.
+    
+  # Monitoring and Observability
+  monitoring:
+    enabled: true
+    prometheus:
+      enabled: true
+      scrapeInterval: "30s"
+    grafana:
+      enabled: true
+      dashboardsEnabled: true

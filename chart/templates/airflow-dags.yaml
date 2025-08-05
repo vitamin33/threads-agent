@@ -1,0 +1,526 @@
+# Airflow DAGs ConfigMap (CRA-284)
+# E7 - Viral Learning Flywheel - DAG definitions for viral content orchestration
+{{- if and .Values.airflow .Values.airflow.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-dags
+  labels:
+{{- include "threads.labels" . | nindent 4 }}
+    component: airflow-dags
+data:
+  # Main Viral Learning Flywheel DAG
+  viral_learning_flywheel.py: |
+    """
+    Viral Learning Flywheel DAG (CRA-284)
+    
+    This DAG orchestrates the complete viral content learning workflow:
+    1. Content Discovery (Viral Scraper)
+    2. Pattern Extraction (Viral Engine) 
+    3. Content Generation (Persona Runtime)
+    4. Performance Monitoring & Optimization
+    
+    Epic: E7 - Viral Learning Flywheel
+    Schedule: Every 6 hours
+    Target KPIs: 6%+ engagement, $0.01/follow, $20k MRR
+    """
+    from datetime import datetime, timedelta
+    from typing import List, Dict, Any
+    import os
+    import logging
+    
+    from airflow import DAG
+    from airflow.providers.http.operators.http import SimpleHttpOperator
+    from airflow.providers.postgres.operators.postgres import PostgresOperator
+    from airflow.operators.python import PythonOperator
+    from airflow.operators.bash import BashOperator
+    from airflow.models import Variable
+    from airflow.utils.dates import days_ago
+    
+    # Configuration from Helm values
+    ORCHESTRATOR_URL = os.getenv('ORCHESTRATOR_URL', 'http://orchestrator:8080')
+    VIRAL_SCRAPER_URL = os.getenv('VIRAL_SCRAPER_URL', 'http://viral-scraper:8080')
+    VIRAL_ENGINE_URL = os.getenv('VIRAL_ENGINE_URL', 'http://viral-engine:8080')
+    VIRAL_PATTERN_ENGINE_URL = os.getenv('VIRAL_PATTERN_ENGINE_URL', 'http://viral-pattern-engine:8080')
+    PERSONA_RUNTIME_URL = os.getenv('PERSONA_RUNTIME_URL', 'http://persona-runtime:8080')
+    
+    # DAG configuration
+    default_args = {
+        'owner': 'viral-learning-team',
+        'depends_on_past': False,
+        'start_date': datetime(2025, 8, 4),
+        'email_on_failure': True,
+        'email_on_retry': False,
+        'retries': 3,
+        'retry_delay': timedelta(minutes=5),
+        'execution_timeout': timedelta(hours=2),
+    }
+    
+    dag = DAG(
+        'viral_learning_flywheel',
+        default_args=default_args,
+        description='Automated viral content learning and optimization workflow',
+        schedule_interval='{{ .Values.airflow.dags.viralLearningFlywheel.schedule }}',
+        catchup={{ .Values.airflow.dags.viralLearningFlywheel.catchup | default false }},
+        max_active_runs={{ .Values.airflow.dags.viralLearningFlywheel.maxActiveRuns | default 1 }},
+        tags=['viral-learning', 'e7-epic', 'production'],
+        doc_md=__doc__
+    )
+    
+    # Task 1: Trigger Content Discovery
+    {{- range .Values.airflow.dags.viralLearningFlywheel.scraping.accounts }}
+    trigger_scraping_{{ . | replace "_" "-" }} = SimpleHttpOperator(
+        task_id='trigger_scraping_{{ . | replace "_" "-" }}',
+        http_conn_id='viral_scraper_conn',
+        endpoint='/scrape/account/{{ . }}',
+        method='POST',
+        data={
+            'max_posts': {{ $.Values.airflow.dags.viralLearningFlywheel.scraping.maxPostsPerAccount }},
+            'days_back': {{ $.Values.airflow.dags.viralLearningFlywheel.scraping.daysBack }},
+            'min_performance_percentile': {{ $.Values.airflow.dags.viralLearningFlywheel.scraping.minPerformancePercentile }}
+        },
+        headers={'Content-Type': 'application/json'},
+        timeout=300,
+        retries=3,
+        retry_delay=timedelta(minutes=2),
+        dag=dag
+    )
+    {{- end }}
+    
+    # Task 2: Wait for Scraping Completion
+    def check_scraping_completion(**context):
+        """Check if all scraping tasks have completed successfully"""
+        import requests
+        import time
+        
+        accounts = {{ .Values.airflow.dags.viralLearningFlywheel.scraping.accounts | toJson }}
+        max_wait_time = 1800  # 30 minutes
+        check_interval = 30   # 30 seconds
+        
+        start_time = time.time()
+        while time.time() - start_time < max_wait_time:
+            all_complete = True
+            for account in accounts:
+                try:
+                    response = requests.get(f"{VIRAL_SCRAPER_URL}/rate-limit/status/{account}")
+                    if response.status_code != 200:
+                        all_complete = False
+                        break
+                except Exception as e:
+                    logging.warning(f"Failed to check status for {account}: {e}")
+                    all_complete = False
+                    break
+            
+            if all_complete:
+                logging.info("All scraping tasks completed successfully")
+                return True
+                
+            time.sleep(check_interval)
+        
+        raise Exception("Scraping tasks did not complete within timeout period")
+    
+    wait_for_scraping = PythonOperator(
+        task_id='wait_for_scraping_completion',
+        python_callable=check_scraping_completion,
+        timeout=2000,
+        dag=dag
+    )
+    
+    # Task 3: Extract Viral Patterns
+    extract_viral_patterns = SimpleHttpOperator(
+        task_id='extract_viral_patterns',
+        http_conn_id='viral_engine_conn',
+        endpoint='/patterns/extract',
+        method='POST',
+        data={
+            'batch_size': {{ .Values.airflow.dags.viralLearningFlywheel.patternExtraction.batchSize }},
+            'max_parallel_tasks': {{ .Values.airflow.dags.viralLearningFlywheel.patternExtraction.maxParallelTasks }},
+            'source': 'viral_scraper_batch'
+        },
+        headers={'Content-Type': 'application/json'},
+        timeout=600,
+        dag=dag
+    )
+    
+    # Task 4: Optimize Thompson Sampling Parameters
+    def optimize_thompson_sampling(**context):
+        """Update Thompson sampling parameters based on latest performance data"""
+        import requests
+        import json
+        
+        try:
+            # Get recent performance metrics
+            metrics_response = requests.get(f"{ORCHESTRATOR_URL}/metrics/recent")
+            metrics_response.raise_for_status()
+            metrics = metrics_response.json()
+            
+            # Calculate optimization parameters
+            current_engagement = metrics.get('engagement_rate', 0.0)
+            target_engagement = {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.engagementThreshold }}
+            
+            # Adjust Thompson sampling based on performance
+            optimization_params = {
+                'learning_rate': 0.1 if current_engagement < target_engagement else 0.05,
+                'exploration_factor': 0.3 if current_engagement < target_engagement else 0.1,
+                'performance_threshold': target_engagement,
+                'cost_threshold': {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.costPerFollowThreshold }}
+            }
+            
+            # Update orchestrator parameters
+            update_response = requests.post(
+                f"{ORCHESTRATOR_URL}/thompson-sampling/update",
+                json=optimization_params,
+                headers={'Content-Type': 'application/json'}
+            )
+            update_response.raise_for_status()
+            
+            logging.info(f"Thompson sampling parameters updated: {optimization_params}")
+            return optimization_params
+            
+        except Exception as e:
+            logging.error(f"Failed to optimize Thompson sampling: {e}")
+            raise
+    
+    optimize_parameters = PythonOperator(
+        task_id='optimize_thompson_sampling',
+        python_callable=optimize_thompson_sampling,
+        dag=dag
+    )
+    
+    # Task 5: Generate Content Variants
+    {{- range .Values.airflow.dags.viralLearningFlywheel.contentGeneration.personas }}
+    generate_content_{{ . }} = SimpleHttpOperator(
+        task_id='generate_content_{{ . }}',
+        http_conn_id='orchestrator_conn',
+        endpoint='/task',
+        method='POST',
+        data={
+            'persona_id': '{{ . }}',
+            'use_viral_patterns': True,
+            'variants': {{ $.Values.airflow.dags.viralLearningFlywheel.contentGeneration.variants }},
+            'optimization_mode': 'viral_learning'
+        },
+        headers={'Content-Type': 'application/json'},
+        timeout=300,
+        dag=dag
+    )
+    {{- end }}
+    
+    # Task 6: Monitor Performance Metrics
+    def collect_performance_metrics(**context):
+        """Collect and analyze performance metrics from the viral learning workflow"""
+        import requests
+        import json
+        from datetime import datetime
+        
+        try:
+            # Collect metrics from various services
+            metrics = {}
+            
+            # Orchestrator metrics
+            orch_response = requests.get(f"{ORCHESTRATOR_URL}/metrics")
+            if orch_response.status_code == 200:
+                metrics['orchestrator'] = orch_response.json()
+            
+            # Viral scraper metrics  
+            scraper_response = requests.get(f"{VIRAL_SCRAPER_URL}/metrics")
+            if scraper_response.status_code == 200:
+                metrics['viral_scraper'] = scraper_response.json()
+                
+            # Viral engine metrics
+            engine_response = requests.get(f"{VIRAL_ENGINE_URL}/metrics")
+            if engine_response.status_code == 200:
+                metrics['viral_engine'] = engine_response.json()
+            
+            # Calculate key performance indicators
+            engagement_rate = metrics.get('orchestrator', {}).get('engagement_rate', 0.0)
+            cost_per_follow = metrics.get('orchestrator', {}).get('cost_per_follow', 0.0)
+            
+            # Store metrics for analysis
+            workflow_metrics = {
+                'timestamp': datetime.now().isoformat(),
+                'engagement_rate': engagement_rate,
+                'cost_per_follow': cost_per_follow,
+                'target_engagement': {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.engagementThreshold }},
+                'target_cost': {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.costPerFollowThreshold }},
+                'performance_delta': engagement_rate - {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.engagementThreshold }},
+                'workflow_success': engagement_rate >= {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.engagementThreshold }} and cost_per_follow <= {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.costPerFollowThreshold }},
+                'detailed_metrics': metrics
+            }
+            
+            logging.info(f"Performance metrics collected: {workflow_metrics}")
+            
+            # Send metrics to monitoring system
+            monitoring_response = requests.post(
+                f"{ORCHESTRATOR_URL}/metrics/workflow",
+                json=workflow_metrics,
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            return workflow_metrics
+            
+        except Exception as e:
+            logging.error(f"Failed to collect performance metrics: {e}")
+            raise
+    
+    collect_metrics = PythonOperator(
+        task_id='collect_performance_metrics',
+        python_callable=collect_performance_metrics,
+        dag=dag
+    )
+    
+    # Task 7: Generate Workflow Report
+    def generate_workflow_report(**context):
+        """Generate comprehensive report of viral learning workflow execution"""
+        import requests
+        import json
+        
+        # Get all task results from XCom
+        ti = context['ti']
+        
+        try:
+            metrics = ti.xcom_pull(task_ids='collect_performance_metrics')
+            optimization_params = ti.xcom_pull(task_ids='optimize_thompson_sampling')
+            
+            report = {
+                'workflow_id': context['run_id'],
+                'execution_date': context['execution_date'].isoformat(),
+                'duration_minutes': (datetime.now() - context['execution_date']).total_seconds() / 60,
+                'performance_metrics': metrics,
+                'optimization_parameters': optimization_params,
+                'success': metrics.get('workflow_success', False) if metrics else False,
+                'recommendations': []
+            }
+            
+            # Add recommendations based on performance
+            if metrics:
+                if metrics['engagement_rate'] < {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.engagementThreshold }}:
+                    report['recommendations'].append('Increase content variety and viral pattern analysis')
+                
+                if metrics['cost_per_follow'] > {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.costPerFollowThreshold }}:
+                    report['recommendations'].append('Optimize targeting and reduce acquisition costs')
+                    
+                if metrics['engagement_rate'] >= {{ .Values.airflow.dags.viralLearningFlywheel.monitoring.engagementThreshold }}:
+                    report['recommendations'].append('Scale successful patterns and increase posting frequency')
+            
+            logging.info(f"Workflow report generated: {report}")
+            
+            # Store report in database or send to monitoring system
+            report_response = requests.post(
+                f"{ORCHESTRATOR_URL}/reports/workflow",
+                json=report,
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            return report
+            
+        except Exception as e:
+            logging.error(f"Failed to generate workflow report: {e}")
+            raise
+    
+    generate_report = PythonOperator(
+        task_id='generate_workflow_report',
+        python_callable=generate_workflow_report,
+        dag=dag
+    )
+    
+    # Define task dependencies for viral learning workflow
+    
+    # Phase 1: Content Discovery (parallel scraping)
+    scraping_tasks = []
+    {{- range .Values.airflow.dags.viralLearningFlywheel.scraping.accounts }}
+    scraping_tasks.append(trigger_scraping_{{ . | replace "_" "-" }})
+    {{- end }}
+    
+    # Phase 2: Pattern Extraction (after scraping completion)
+    scraping_tasks >> wait_for_scraping >> extract_viral_patterns
+    
+    # Phase 3: Optimization and Content Generation (parallel)
+    content_generation_tasks = []
+    {{- range .Values.airflow.dags.viralLearningFlywheel.contentGeneration.personas }}
+    content_generation_tasks.append(generate_content_{{ . }})
+    {{- end }}
+    
+    extract_viral_patterns >> optimize_parameters
+    optimize_parameters >> content_generation_tasks
+    
+    # Phase 4: Monitoring and Reporting (sequential)
+    content_generation_tasks >> collect_metrics >> generate_report
+
+  # Maintenance and Cleanup DAG
+  viral_learning_maintenance.py: |
+    """
+    Viral Learning Maintenance DAG
+    
+    Performs daily maintenance tasks:
+    - Clean up old task logs and temporary files
+    - Archive performance metrics older than retention period  
+    - Update viral pattern cache
+    - Perform database maintenance
+    
+    Schedule: Daily at 2 AM
+    """
+    from datetime import datetime, timedelta
+    import os
+    
+    from airflow import DAG
+    from airflow.providers.postgres.operators.postgres import PostgresOperator
+    from airflow.operators.python import PythonOperator
+    from airflow.operators.bash import BashOperator
+    from airflow.providers.http.operators.http import SimpleHttpOperator
+    
+    # Configuration
+    RETENTION_DAYS = {{ .Values.airflow.dags.maintenance.retentionDays | default 30 }}
+    
+    default_args = {
+        'owner': 'viral-learning-team',
+        'depends_on_past': False,
+        'start_date': datetime(2025, 8, 4),
+        'email_on_failure': True,
+        'email_on_retry': False,
+        'retries': 2,
+        'retry_delay': timedelta(minutes=5),
+    }
+    
+    dag = DAG(
+        'viral_learning_maintenance',
+        default_args=default_args,
+        description='Daily maintenance tasks for viral learning infrastructure',
+        schedule_interval='{{ .Values.airflow.dags.maintenance.schedule }}',
+        catchup=False,
+        tags=['maintenance', 'cleanup', 'viral-learning']
+    )
+    
+    # Clean up old Airflow task logs
+    cleanup_logs = BashOperator(
+        task_id='cleanup_airflow_logs',
+        bash_command=f'''
+        find /opt/airflow/logs -type f -mtime +{RETENTION_DAYS} -delete
+        find /opt/airflow/logs -type d -empty -delete
+        echo "Cleaned up Airflow logs older than {RETENTION_DAYS} days"
+        ''',
+        dag=dag
+    )
+    
+    # Archive old performance metrics
+    archive_metrics = PostgresOperator(
+        task_id='archive_performance_metrics',
+        postgres_conn_id='postgres_default',
+        sql=f'''
+        -- Archive metrics older than {RETENTION_DAYS} days
+        INSERT INTO viral_metrics_archive 
+        SELECT * FROM viral_metrics 
+        WHERE created_at < NOW() - INTERVAL '{RETENTION_DAYS} days';
+        
+        -- Delete archived records from main table
+        DELETE FROM viral_metrics 
+        WHERE created_at < NOW() - INTERVAL '{RETENTION_DAYS} days';
+        
+        -- Update statistics
+        ANALYZE viral_metrics;
+        ANALYZE viral_metrics_archive;
+        ''',
+        dag=dag
+    )
+    
+    # Update viral pattern cache
+    def refresh_pattern_cache(**context):
+        """Refresh the viral pattern cache with latest data"""
+        import requests
+        
+        try:
+            # Trigger cache refresh on viral engine
+            response = requests.post(f"{os.getenv('VIRAL_ENGINE_URL', 'http://viral-engine:8080')}/cache/refresh")
+            response.raise_for_status()
+            
+            # Trigger cache refresh on viral pattern engine
+            response = requests.post(f"{os.getenv('VIRAL_PATTERN_ENGINE_URL', 'http://viral-pattern-engine:8080')}/cache/refresh")
+            response.raise_for_status()
+            
+            return "Pattern cache refreshed successfully"
+            
+        except Exception as e:
+            raise Exception(f"Failed to refresh pattern cache: {e}")
+    
+    refresh_cache = PythonOperator(
+        task_id='refresh_viral_pattern_cache',
+        python_callable=refresh_pattern_cache,
+        dag=dag
+    )
+    
+    # Database vacuum and analyze
+    db_maintenance = PostgresOperator(
+        task_id='database_maintenance',
+        postgres_conn_id='postgres_default',
+        sql='''
+        -- Vacuum and analyze main tables
+        VACUUM ANALYZE posts;
+        VACUUM ANALYZE tasks;
+        VACUUM ANALYZE viral_metrics;
+        VACUUM ANALYZE viral_patterns;
+        
+        -- Update table statistics
+        ANALYZE posts;
+        ANALYZE tasks;
+        ANALYZE viral_metrics;
+        ANALYZE viral_patterns;
+        ''',
+        dag=dag
+    )
+    
+    # Health check all services
+    def perform_health_checks(**context):
+        """Perform health checks on all viral learning services"""
+        import requests
+        
+        services = {
+            'orchestrator': os.getenv('ORCHESTRATOR_URL', 'http://orchestrator:8080'),
+            'viral_scraper': os.getenv('VIRAL_SCRAPER_URL', 'http://viral-scraper:8080'),
+            'viral_engine': os.getenv('VIRAL_ENGINE_URL', 'http://viral-engine:8080'),
+            'viral_pattern_engine': os.getenv('VIRAL_PATTERN_ENGINE_URL', 'http://viral-pattern-engine:8080'),
+            'persona_runtime': os.getenv('PERSONA_RUNTIME_URL', 'http://persona-runtime:8080')
+        }
+        
+        health_status = {}
+        
+        for service_name, service_url in services.items():
+            try:
+                response = requests.get(f"{service_url}/health", timeout=10)
+                health_status[service_name] = {
+                    'status': 'healthy' if response.status_code == 200 else 'unhealthy',
+                    'response_time_ms': response.elapsed.total_seconds() * 1000,
+                    'status_code': response.status_code
+                }
+            except Exception as e:
+                health_status[service_name] = {
+                    'status': 'unhealthy',
+                    'error': str(e)
+                }
+        
+        # Log health status
+        for service, status in health_status.items():
+            if status['status'] == 'healthy':
+                print(f"✓ {service}: {status['status']} ({status.get('response_time_ms', 0):.0f}ms)")
+            else:
+                print(f"✗ {service}: {status['status']} - {status.get('error', 'Unknown error')}")
+        
+        # Fail if any critical service is unhealthy
+        critical_services = ['orchestrator', 'viral_scraper', 'viral_engine']
+        unhealthy_critical = [s for s in critical_services if health_status.get(s, {}).get('status') != 'healthy']
+        
+        if unhealthy_critical:
+            raise Exception(f"Critical services unhealthy: {unhealthy_critical}")
+        
+        return health_status
+    
+    health_checks = PythonOperator(
+        task_id='perform_health_checks',
+        python_callable=perform_health_checks,
+        dag=dag
+    )
+    
+    # Define maintenance task dependencies
+    health_checks >> [cleanup_logs, archive_metrics, refresh_cache] >> db_maintenance
+
+{{- end }}
