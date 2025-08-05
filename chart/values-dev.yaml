@@ -37,6 +37,24 @@ orchestrator:
     alerts:
       queueBacklogThreshold: 100      # Lower threshold for dev testing
   serviceMonitor:
+    enabled: false
+
+conversationEngine:
+  enabled: true
+  image:
+    repository: conversation-engine
+    tag: local
+  replicas: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  serviceMonitor:
     enabled: false                    # Disable for now
   autoscaling:
     enabled: false                    # Disable autoscaling in dev

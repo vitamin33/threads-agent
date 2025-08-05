@@ -90,6 +90,55 @@
       "name": "DM Trigger & Message Template System",
       "status": "planned",
       "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-001",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Conversation State Machine Core Engine",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-002",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "GPT-4o Integration & Response Generation",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-003",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Redis State Caching & Performance Layer",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-004",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "PostgreSQL Conversation Persistence",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-005",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Context Management & Memory System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-006",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Human Handoff & Escalation System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-007",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Analytics & Optimization Dashboard",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
     }
   ]
 }

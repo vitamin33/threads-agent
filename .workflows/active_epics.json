@@ -23,6 +23,12 @@
       "name": "[CRA-235] Comment Intent Analysis & DM Trigger System",
       "status": "planned",
       "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "epic-236-conversation-state-machine",
+      "name": "[CRA-236] Intelligent Conversation State Machine & DM Automation",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
     }
   ]
 }
