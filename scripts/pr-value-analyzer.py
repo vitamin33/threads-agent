@@ -65,18 +65,24 @@ class PRValueAnalyzer:
         # Calculate cost savings based on performance improvements
         if "peak_rps" in performance_metrics:
             rps = performance_metrics["peak_rps"]
-            # Estimate cost savings based on throughput improvement
-            baseline_rps = 100  # Assumed baseline
+            # More realistic baseline based on typical web services
+            baseline_rps = 500  # More realistic baseline for existing services
             improvement_factor = rps / baseline_rps
             value["throughput_improvement_percent"] = round(
                 (improvement_factor - 1) * 100, 1
             )
 
             # Infrastructure cost savings
-            # Higher RPS means fewer servers needed
-            value["infrastructure_savings_estimate"] = round(
-                120000 * (improvement_factor - 1) / improvement_factor, 0
-            )
+            # More conservative estimate based on real server costs
+            # Only count savings if we have meaningful improvement (>20%)
+            if improvement_factor > 1.2:
+                # $5k per server/year, estimate servers saved
+                servers_saved = max(0, (improvement_factor - 1) * 2)
+                value["infrastructure_savings_estimate"] = round(
+                    servers_saved * 5000, 0
+                )
+            else:
+                value["infrastructure_savings_estimate"] = 0
 
         if "latency_ms" in performance_metrics:
             latency = performance_metrics["latency_ms"]
@@ -341,6 +347,17 @@ class PRValueAnalyzer:
             # Generate future impact
             impact = self.generate_future_impact(business_value, performance)
             self.metrics["future_impact"] = impact
+            
+            # Add warnings for unrealistic metrics
+            warnings = []
+            if business_value.get("throughput_improvement_percent", 0) > 200:
+                warnings.append("Throughput improvement >200% may be unrealistic")
+            if business_value.get("infrastructure_savings_estimate", 0) > 50000:
+                warnings.append("Infrastructure savings >$50k/year needs validation")
+            if business_value.get("roi_year_one_percent", 0) > 300:
+                warnings.append("ROI >300% is exceptional - verify calculations")
+            
+            self.metrics["warnings"] = warnings
 
             # Generate KPIs
             self.metrics["kpis"] = {
