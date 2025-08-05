@@ -24,6 +24,32 @@ viralPatternEngine:
     repository: viral-pattern-engine
     tag: local
 
+techDocGenerator:
+  enabled: false    # Temporarily disabled for CI stability
+  image:
+    repository: tech-doc-generator
+    tag: local
+  
+  # Enable AI ROI Calculator for local testing
+  roiCalculator:
+    enabled: true
+    ingress:
+      enabled: false               # disable for local testing
+  
+  # Content scheduler enabled for local development
+  contentScheduler:
+    enabled: true
+    defaultCompanies: "anthropic,notion,stripe"
+    autoGenerate: false           # manual trigger for development
+  
+  # All features enabled for development testing
+  professionalContentEngine:
+    enabled: true
+    viralEngineIntegration: true
+  
+  achievementIntegration:
+    enabled: true
+
 personaRuntime:
   image:
     repository: persona-runtime
