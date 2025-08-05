@@ -4,7 +4,7 @@ from prometheus_client import Counter, Histogram, generate_latest
 from starlette.responses import Response
 import structlog
 
-from .routers import articles, manual_publish
+from .routers import articles, manual_publish, achievement_articles
 from .core.config import get_settings
 from .core.database import init_database, close_database
 from .core.cache import get_cache_manager

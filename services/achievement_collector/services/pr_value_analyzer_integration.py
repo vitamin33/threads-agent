@@ -177,6 +177,9 @@ class PRValueAnalyzerIntegration:
                 "pr_number": pr_number,
                 "value_analysis": analysis,
                 "future_impact": analysis.get("future_impact", {}),
+                "ai_insights": self._extract_ai_insights_from_achievement_file(
+                    pr_number
+                ),
             },
         )
 
@@ -217,6 +220,9 @@ class PRValueAnalyzerIntegration:
         metadata = achievement.metadata or {}
         metadata["value_analysis"] = analysis
         metadata["future_impact"] = analysis.get("future_impact", {})
+        metadata["ai_insights"] = self._extract_ai_insights_from_achievement_file(
+            achievement.source_id.replace("PR-", "")
+        )
         achievement.metadata = metadata
 
         # Update portfolio readiness based on score
@@ -352,6 +358,21 @@ class PRValueAnalyzerIntegration:
             )
 
         return ". ".join(parts) + "."
+
+    def _extract_ai_insights_from_achievement_file(
+        self, pr_number: str
+    ) -> Optional[Dict[str, Any]]:
+        """Extract AI insights from the achievement file if it exists."""
+        try:
+            achievement_file = Path(f".achievements/pr_{pr_number}_achievement.json")
+            if achievement_file.exists():
+                with open(achievement_file, "r") as f:
+                    data = json.load(f)
+                    return data.get("ai_insights", {})
+            return {}
+        except Exception as e:
+            logger.warning(f"Could not extract AI insights for PR #{pr_number}: {e}")
+            return {}
 
 
 # Export for use in webhooks and other integrations

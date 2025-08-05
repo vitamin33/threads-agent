@@ -9,7 +9,7 @@ from .achievement_models import (
     AchievementSummary,
     AchievementFilter,
     AchievementCategory,
-    AchievementMetrics
+    AchievementMetrics,
 )
 
 from .article_models import (
@@ -19,7 +19,7 @@ from .article_models import (
     ArticleMetadata,
     InsightScore,
     ContentRequest,
-    ContentResponse
+    ContentResponse,
 )
 
 __all__ = [
@@ -31,7 +31,6 @@ __all__ = [
     "AchievementFilter",
     "AchievementCategory",
     "AchievementMetrics",
-    
     # Article models
     "ArticleType",
     "Platform",
@@ -39,5 +38,5 @@ __all__ = [
     "ArticleMetadata",
     "InsightScore",
     "ContentRequest",
-    "ContentResponse"
+    "ContentResponse",
 ]

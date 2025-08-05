@@ -5,18 +5,19 @@ Test the achievement client against live service
 
 import asyncio
 import sys
-sys.path.append('.')
+
+sys.path.append(".")
 
 from services.tech_doc_generator.app.clients.achievement_client import AchievementClient
 
 
 async def test_live_client():
     """Test client against live achievement collector"""
-    
+
     print("🧪 Testing Achievement Client with Live Service\n")
-    
+
     client = AchievementClient(base_url="http://localhost:8090")
-    
+
     async with client:
         # Test 1: Get single achievement
         print("1️⃣ Fetching achievement ID 27...")
@@ -31,7 +32,7 @@ async def test_live_client():
                 print("❌ Achievement not found")
         except Exception as e:
             print(f"❌ Error: {e}")
-            
+
         # Test 2: Batch get
         print("\n2️⃣ Testing batch get...")
         try:
@@ -41,7 +42,7 @@ async def test_live_client():
                 print(f"   - {a.title[:50]}... (Score: {a.impact_score})")
         except Exception as e:
             print(f"❌ Error: {e}")
-            
+
         # Test 3: Get company targeted (using fallback)
         print("\n3️⃣ Testing company targeting...")
         try:
@@ -52,11 +53,11 @@ async def test_live_client():
                 print(f"   - {a.title[:50]}...")
         except Exception as e:
             print(f"❌ Error: {e}")
-            
+
     print("\n✅ Client test complete!")
     print("\n💡 Key Findings:")
     print("   - Single achievement fetch: ✅")
-    print("   - Batch operations: ✅") 
+    print("   - Batch operations: ✅")
     print("   - Category filtering: ✅")
     print("   - Integration is functional!")
 

@@ -251,6 +251,7 @@ def db_session(emotion_test_db):
 
     # Clean up any existing data before each test
     from sqlalchemy import MetaData
+
     metadata = MetaData()
     metadata.reflect(bind=emotion_test_db)
     for table in reversed(metadata.sorted_tables):
