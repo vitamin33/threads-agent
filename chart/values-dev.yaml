@@ -24,6 +24,25 @@ viralPatternEngine:
     repository: viral-pattern-engine
     tag: local
 
+# Enable comment monitoring for development testing
+orchestrator:
+  commentMonitoring:
+    enabled: true
+    batchSize: 5                       # Smaller batches for dev
+    dedupCacheTTL: 1800               # Shorter TTL for dev testing
+    processingTimeout: 15              # Shorter timeout for dev
+    rateLimitPerMinute: 50            # Lower rate limit for dev
+    metrics:
+      enabled: true
+    alerts:
+      queueBacklogThreshold: 100      # Lower threshold for dev testing
+  serviceMonitor:
+    enabled: true                     # Enable metrics collection
+  autoscaling:
+    enabled: false                    # Disable autoscaling in dev
+  pdb:
+    enabled: false                    # Disable PDB in dev
+
 techDocGenerator:
   enabled: false    # Temporarily disabled for CI stability
   image:

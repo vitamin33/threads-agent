@@ -1,0 +1,311 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Comment Monitoring Pipeline (CRA-235)",
+    "tags": ["comment-monitoring", "threads-agent", "orchestrator"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Comment Processing Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(comment_processing_attempts_total[5m])",
+            "legendFormat": "Processing Rate (req/sec)"
+          },
+          {
+            "expr": "rate(comment_processing_errors_total[5m])",
+            "legendFormat": "Error Rate (errors/sec)"
+          },
+          {
+            "expr": "comment_processing_queue_length",
+            "legendFormat": "Queue Length"
+          },
+          {
+            "expr": "rate(comment_duplicates_detected_total[5m])",
+            "legendFormat": "Duplicates/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "displayMode": "list",
+              "orientation": "horizontal"
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Comment Processing Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(comment_processing_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(comment_processing_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(comment_processing_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 3,
+        "title": "Comment Processing Throughput",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(comment_processing_attempts_total[5m])",
+            "legendFormat": "Total Attempts/sec"
+          },
+          {
+            "expr": "rate(comment_processing_success_total[5m])",
+            "legendFormat": "Successful/sec"
+          },
+          {
+            "expr": "rate(comment_processing_errors_total[5m])",
+            "legendFormat": "Errors/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Database Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(comment_db_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile query time"
+          },
+          {
+            "expr": "rate(comment_db_operations_total[5m])",
+            "legendFormat": "DB operations/sec"
+          },
+          {
+            "expr": "rate(comment_db_errors_total[5m])",
+            "legendFormat": "DB errors/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Seconds / Operations per sec",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 5,
+        "title": "Resource Utilization",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{pod=~\"orchestrator.*\", container=\"orchestrator\"}[5m])",
+            "legendFormat": "CPU Usage"
+          },
+          {
+            "expr": "container_memory_working_set_bytes{pod=~\"orchestrator.*\", container=\"orchestrator\"} / 1024 / 1024 / 1024",
+            "legendFormat": "Memory Usage (GB)"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU Cores / GB Memory",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Celery Queue Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "celery_queue_length{queue=\"analyze_comment_batch\"}",
+            "legendFormat": "Comment Analysis Queue"
+          },
+          {
+            "expr": "rate(celery_task_sent_total{queue=\"analyze_comment_batch\"}[5m])",
+            "legendFormat": "Tasks Sent/sec"
+          },
+          {
+            "expr": "rate(celery_task_succeeded_total{queue=\"analyze_comment_batch\"}[5m])",
+            "legendFormat": "Tasks Succeeded/sec"
+          },
+          {
+            "expr": "rate(celery_task_failed_total{queue=\"analyze_comment_batch\"}[5m])",
+            "legendFormat": "Tasks Failed/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Tasks",
+            "min": 0
+          },
+          {
+            "show": false
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 7,
+        "title": "Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(comment_cache_hits_total[5m])",
+            "legendFormat": "Cache Hits/sec"
+          },
+          {
+            "expr": "rate(comment_cache_misses_total[5m])",
+            "legendFormat": "Cache Misses/sec"
+          },
+          {
+            "expr": "rate(comment_cache_hits_total[5m]) / (rate(comment_cache_hits_total[5m]) + rate(comment_cache_misses_total[5m]))",
+            "legendFormat": "Cache Hit Ratio"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Hits/sec, Ratio",
+            "min": 0,
+            "max": 1
+          },
+          {
+            "show": false
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        }
+      },
+      {
+        "id": 8,
+        "title": "Error Breakdown",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (error_type) (rate(comment_processing_errors_total[5m]))",
+            "legendFormat": "{{error_type}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 9,
+        "title": "Top Posts by Comment Volume",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (post_id) (rate(comment_processing_attempts_total[10m])))",
+            "legendFormat": "{{post_id}}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 32
+        }
+      },
+      {
+        "id": 10,
+        "title": "Alert Status",
+        "type": "alertlist",
+        "targets": [],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 32
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s",
+    "version": 1
+  }
+}

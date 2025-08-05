@@ -62,6 +62,34 @@
       "name": "A/B Testing Framework",
       "status": "planned",
       "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-235-001",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "Real-time Comment Monitoring & Ingestion Pipeline",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-235-002",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "ML-Powered Intent Analysis Engine",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-235-003",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "Intent Scoring & Classification System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-235-004",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "DM Trigger & Message Template System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
     }
   ]
 }

@@ -17,6 +17,12 @@
       "name": "[AI Job] Week 3: Optimization - AI Enhancement & Multi-Platform",
       "status": "planned",
       "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "epic-235-comment-intent-dm-trigger",
+      "name": "[CRA-235] Comment Intent Analysis & DM Trigger System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
     }
   ]
 }

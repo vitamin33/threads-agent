@@ -1,0 +1,279 @@
+# Feature: DM Trigger & Message Template System
+name: "DM Trigger & Message Template System"  
+epic: "epic-235-comment-intent-dm-trigger"
+type: "feature"
+priority: "high"
+estimated_effort: "medium"
+lifecycle_stage: "planning"
+
+# Detailed Description
+description: "Implement automated DM triggering system that sends personalized messages based on intent scores and user profiles. Includes template management, conversation sequencing, rate limiting, and integration with revenue attribution tracking for complete comment-to-purchase conversion measurement."
+
+# Acceptance Criteria
+acceptance_criteria: |
+  - Trigger DMs within 500ms of high-intent classification
+  - Support personalized message templates based on intent type and user profile
+  - Implement intelligent rate limiting (max 3 DMs/user/week, 24h cooldown)
+  - Provide conversation sequencing for multi-message nurture campaigns
+  - Integrate with revenue service for complete attribution tracking
+  - Support user opt-out and preference management
+  - Handle DM delivery failures with retry logic and fallbacks
+  - Provide analytics dashboard for DM performance and conversion tracking
+
+# Technical Implementation Details
+implementation:
+  files_to_modify:
+    - "services/dm_trigger/__init__.py"
+    - "services/dm_trigger/main.py"
+    - "services/dm_trigger/trigger_engine.py"
+    - "services/dm_trigger/message_templates.py"
+    - "services/dm_trigger/conversation_sequencer.py"
+    - "services/dm_trigger/rate_limiter.py"
+    - "services/dm_trigger/personalization_engine.py"
+    - "services/fake_threads/main.py"
+    - "services/revenue/lead_capture.py"
+    - "services/orchestrator/db/alembic/versions/add_dm_trigger_tables.py"
+    - "chart/templates/dm-trigger.yaml"
+  
+  dependencies:
+    - "FastAPI for REST API and webhook endpoints"
+    - "Celery for background DM processing and scheduling"
+    - "Jinja2 for message template rendering and personalization"
+    - "Redis for rate limiting and conversation state management"
+    - "PostgreSQL for DM history and performance tracking"
+    - "OpenAI API for dynamic message generation and personalization"
+
+# Implementation Tasks
+tasks:
+  - name: "DM Trigger Architecture Design"
+    type: "planning"
+    estimated_hours: 16
+    checklist:
+      - "Design DM trigger architecture with real-time and scheduled processing"
+      - "Plan message template system with personalization capabilities"
+      - "Design conversation sequencing for multi-touch nurture campaigns"
+      - "Plan rate limiting strategy with user preferences and business rules"
+      - "Design integration architecture with intent scoring and revenue services"
+      - "Plan DM delivery tracking and failure handling system"
+      - "Design analytics and attribution tracking for conversion measurement"
+      - "Plan A/B testing framework for message template optimization"
+    
+  - name: "Core DM Trigger Service"
+    type: "development"
+    estimated_hours: 22
+    checklist:
+      - "Create dm_trigger microservice with FastAPI architecture"
+      - "Implement real-time trigger engine for immediate DM sending"
+      - "Create scheduled trigger system for nurture sequence campaigns"
+      - "Implement DM queue management with priority and retry logic"
+      - "Add trigger condition evaluation with complex business rules"
+      - "Create DM delivery status tracking and failure handling"
+      - "Implement webhook integration for intent scoring notifications"
+      - "Add health checks and trigger performance monitoring"
+    
+  - name: "Message Template Management System"
+    type: "development"
+    estimated_hours: 20
+    checklist:
+      - "Implement message template storage and versioning system"
+      - "Create template categorization by intent type and user segment"
+      - "Add Jinja2-based template rendering with variable substitution"
+      - "Implement template A/B testing framework with performance tracking"
+      - "Create template validation system for content and format checking"
+      - "Add template performance analytics and optimization recommendations"
+      - "Implement template approval workflow for content quality control"
+      - "Create template library with best-practice examples and guidelines"
+    
+  - name: "Conversation Sequencing Engine"
+    type: "development"
+    estimated_hours: 24
+    checklist:
+      - "Implement conversation flow management for multi-message sequences"
+      - "Create conversation state tracking with user response analysis"
+      - "Add conversation branching based on user engagement and responses"
+      - "Implement conversation timing optimization (send intervals, best times)"
+      - "Create conversation completion criteria and success metrics"
+      - "Add conversation abandonment detection and re-engagement triggers"
+      - "Implement conversation analytics for flow optimization"
+      - "Create conversation personalization based on user behavior patterns"
+    
+  - name: "Rate Limiting and User Preference System"
+    type: "development"
+    estimated_hours: 18
+    checklist:
+      - "Implement Redis-based rate limiting with sliding window algorithm"
+      - "Create user preference management for DM frequency and timing"
+      - "Add global and per-user rate limiting with business rule enforcement"
+      - "Implement user opt-out system with permanent and temporary options"
+      - "Create rate limiting analytics and monitoring dashboards"
+      - "Add rate limiting override system for high-value prospects"
+      - "Implement intelligent rate limiting based on user engagement patterns"
+      - "Create rate limiting configuration API for business users"
+    
+  - name: "Personalization Engine"
+    type: "development"
+    estimated_hours: 20
+    checklist:
+      - "Implement user profile analysis for message personalization"
+      - "Create dynamic message generation using OpenAI API integration"
+      - "Add user behavior-based personalization (comment history, interests)"
+      - "Implement context-aware personalization using post and comment content"
+      - "Create personalization A/B testing for optimization"
+      - "Add personalization performance tracking and analytics"
+      - "Implement personalization fallback for missing user data"
+      - "Create personalization quality scoring and validation"
+    
+  - name: "fake_threads DM Integration"
+    type: "development"
+    estimated_hours: 14
+    checklist:
+      - "Extend fake_threads with DM sending simulation endpoints"
+      - "Add DM delivery status simulation with realistic timing and failures"
+      - "Create DM conversation thread tracking in fake_threads"
+      - "Implement user response simulation for conversation testing"
+      - "Add DM analytics endpoints for testing and validation"
+      - "Create comprehensive DM testing scenarios with edge cases"
+      - "Implement DM rate limiting testing with burst scenarios"
+      - "Add integration testing support for end-to-end DM flow validation"
+    
+  - name: "Revenue Service Integration"
+    type: "development"
+    estimated_hours: 16
+    checklist:
+      - "Integrate DM trigger events with revenue service lead capture"
+      - "Create comprehensive attribution tracking from comment to DM to conversion"
+      - "Add conversion funnel analytics for DM performance measurement"
+      - "Implement revenue attribution for DM-driven conversions"
+      - "Create lead scoring integration for DM prioritization"
+      - "Add conversion tracking webhooks for closed-loop attribution"
+      - "Implement revenue dashboard integration for DM ROI analysis"
+      - "Create automated revenue reporting for DM campaign performance"
+    
+  - name: "Database Schema and Analytics"
+    type: "development"
+    estimated_hours: 12
+    checklist:
+      - "Create dm_triggers table with comprehensive trigger tracking"
+      - "Design dm_conversations table for conversation flow management"
+      - "Implement message_templates table with versioning and A/B testing"
+      - "Add user_dm_preferences table for opt-out and frequency management"
+      - "Create efficient indexes for high-volume DM operation queries"
+      - "Implement DM analytics views for performance reporting"
+      - "Add data retention policies for DM history and conversation data"
+      - "Create DM audit trail for compliance and debugging"
+    
+  - name: "Comprehensive Testing Suite"
+    type: "testing"
+    estimated_hours: 20
+    checklist:
+      - "Unit tests for DM trigger logic and message template rendering"
+      - "Integration tests with intent scoring and revenue services"
+      - "Performance tests for DM trigger latency and throughput"
+      - "Rate limiting tests with various user behavior scenarios"
+      - "Conversation sequencing tests with complex user interaction flows"
+      - "End-to-end tests for complete comment-to-DM-to-conversion flow"
+      - "A/B testing framework validation with statistical significance"
+      - "Load tests for high-volume DM triggering scenarios"
+    
+  - name: "Analytics Dashboard and API"
+    type: "development"
+    estimated_hours: 18
+    checklist:
+      - "Create DM performance analytics dashboard with key metrics"
+      - "Implement conversion funnel visualization from comment to purchase"
+      - "Add real-time DM trigger monitoring and status tracking"
+      - "Create message template performance comparison analytics"
+      - "Implement conversation flow analytics with drop-off analysis"
+      - "Add user engagement analytics for DM optimization"
+      - "Create automated reporting for DM campaign performance"
+      - "Implement DM ROI analysis with revenue attribution integration"
+    
+  - name: "Monitoring and Performance Optimization"
+    type: "optimization"
+    estimated_hours: 14
+    checklist:
+      - "Set up Prometheus metrics for DM trigger performance and conversion"
+      - "Create Grafana dashboards for DM system health and business metrics"
+      - "Implement alerting for DM delivery failures and rate limit violations"
+      - "Add DM conversion rate monitoring with threshold-based alerts"
+      - "Optimize DM trigger latency and message delivery performance"
+      - "Implement caching strategy for frequently used templates and user data"
+      - "Add distributed processing for high-volume DM operations"
+      - "Create automated performance regression detection for DM system"
+
+# Message Template Categories
+template_categories:
+  high_intent_immediate:
+    - "Product demo offer based on specific interest signals"
+    - "Limited-time pricing inquiry response"
+    - "Competitor comparison assistance offer"
+  
+  medium_intent_nurture:
+    - "Educational content related to user's interest area"
+    - "Case study sharing for similar use cases"
+    - "Free consultation or assessment offer"
+  
+  re_engagement:
+    - "Follow-up on previous conversation"
+    - "New feature announcement relevant to user interest"
+    - "Industry trend analysis with actionable insights"
+
+# Rate Limiting Configuration
+rate_limiting:
+  global_limits:
+    max_dms_per_user_per_week: 3
+    min_cooldown_between_dms: "24h"
+    max_dms_per_hour_system_wide: 100
+  
+  user_preferences:
+    opt_out_options: ["permanent", "30_days", "7_days"]
+    frequency_preferences: ["immediate", "daily", "weekly", "monthly"]
+    time_preferences: ["business_hours", "evening", "weekend", "anytime"]
+
+# Performance Requirements
+performance:
+  dm_trigger_latency: "<500ms from intent classification"
+  message_personalization: "<300ms for template rendering"
+  rate_limiting_check: "<50ms per user lookup"
+  conversation_state_update: "<100ms per interaction"
+  template_rendering: "<200ms for personalized messages"
+  concurrent_dm_processing: "50+ parallel DM operations"
+
+# Automation Configuration
+automation:
+  branch_naming: "feat/cra-235-dm-trigger-system"
+  pr_template: "feature"
+  quality_gates: ["lint", "test", "security", "performance"]
+  deployment: "staging"
+
+# Feature Metadata
+metadata:
+  id: "feat-235-004-dm-trigger-message-system"
+  created: "2025-08-05T00:00:00+00:00"
+  assigned_to: "unassigned"
+  estimated_hours: 214
+  complexity_score: 4
+
+# Local Task Tracking  
+local_tracking:
+  status: "pending"
+  labels: ["feature", "high", "medium", "dm-automation", "messaging"]
+  created: "2025-08-05T00:00:00+00:00"
+  project_sync: true
+
+# Integration Requirements
+integration_requirements:
+  intent_scoring_integration:
+    - "Real-time DM triggers based on intent classification results"
+    - "Intent score and reasoning integration for message personalization"
+    - "User behavior history access for conversation optimization"
+  
+  revenue_service_integration:
+    - "Lead capture integration for DM-initiated conversations"
+    - "Conversion attribution tracking from DM to purchase"
+    - "Revenue analytics integration for ROI calculation"
+  
+  fake_threads_integration:
+    - "DM delivery simulation for testing and development"
+    - "Conversation thread simulation for flow testing"
+    - "User response simulation for conversation sequence validation"

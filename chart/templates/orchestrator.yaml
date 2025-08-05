@@ -31,6 +31,20 @@ spec:
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
             - name: POSTGRES_DSN
               value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_URL
+              value: "redis://redis:{{ .Values.redis.port | default 6379 }}"
+            {{- end }}
+            {{- if .Values.orchestrator.commentMonitoring.enabled }}
+            - name: COMMENT_MONITORING_ENABLED
+              value: "true"
+            - name: COMMENT_BATCH_SIZE
+              value: {{ .Values.orchestrator.commentMonitoring.batchSize | default "10" | quote }}
+            - name: COMMENT_DEDUP_CACHE_TTL
+              value: {{ .Values.orchestrator.commentMonitoring.dedupCacheTTL | default "3600" | quote }}
+            - name: COMMENT_PROCESSING_TIMEOUT
+              value: {{ .Values.orchestrator.commentMonitoring.processingTimeout | default "30" | quote }}
+            {{- end }}
           envFrom:
             - secretRef:
                 name: openai-secret
@@ -45,7 +59,15 @@ spec:
               port: 8080
             initialDelaySeconds: 2
             periodSeconds: 5
-{{- with .Values.resources }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+{{- with .Values.orchestrator.resources | default .Values.resources }}
           resources:
 {{ toYaml . | nindent 12 }}
 {{- end }}
@@ -63,3 +85,93 @@ spec:
     - name: http
       port: {{ .Values.service.port | default 8080 }}
       targetPort: 8080
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+
+{{- if and .Values.monitoring.prometheus.enabled .Values.orchestrator.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: orchestrator
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: orchestrator
+  endpoints:
+  - port: metrics
+    interval: {{ .Values.orchestrator.serviceMonitor.interval | default "30s" }}
+    scrapeTimeout: {{ .Values.orchestrator.serviceMonitor.scrapeTimeout | default "10s" }}
+    path: /metrics
+    honorLabels: true
+{{- end }}
+
+{{- if .Values.orchestrator.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orchestrator
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orchestrator
+  minReplicas: {{ .Values.orchestrator.autoscaling.minReplicas | default 1 }}
+  maxReplicas: {{ .Values.orchestrator.autoscaling.maxReplicas | default 5 }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.orchestrator.autoscaling.targetCPUUtilization | default 70 }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.orchestrator.autoscaling.targetMemoryUtilization | default 80 }}
+  {{- if .Values.orchestrator.autoscaling.customMetrics.enabled }}
+  - type: Pods
+    pods:
+      metric:
+        name: comment_processing_queue_length
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.orchestrator.autoscaling.customMetrics.targetQueueLength | default "50" | quote }}
+  {{- end }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.orchestrator.autoscaling.scaleUp.stabilizationWindowSeconds | default 60 }}
+      policies:
+      - type: Percent
+        value: {{ .Values.orchestrator.autoscaling.scaleUp.percentPolicy | default 100 }}
+        periodSeconds: {{ .Values.orchestrator.autoscaling.scaleUp.periodSeconds | default 15 }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.orchestrator.autoscaling.scaleDown.stabilizationWindowSeconds | default 300 }}
+      policies:
+      - type: Percent
+        value: {{ .Values.orchestrator.autoscaling.scaleDown.percentPolicy | default 50 }}
+        periodSeconds: {{ .Values.orchestrator.autoscaling.scaleDown.periodSeconds | default 60 }}
+{{- end }}
+
+{{- if .Values.orchestrator.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: orchestrator
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: orchestrator
+  minAvailable: {{ .Values.orchestrator.pdb.minAvailable | default 1 }}
+{{- end }}
