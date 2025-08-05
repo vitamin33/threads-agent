@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 
-def run_test_suite(test_file, description):
+def run_test_suite(test_file: str, description: str) -> dict[str, int]:
     """Run a test suite and return results."""
     print(f"\n{'=' * 60}")
     print(f"Running: {description}")
@@ -40,7 +40,7 @@ def run_test_suite(test_file, description):
     return {"passed": passed, "failed": failed, "total": total}
 
 
-def main():
+def main() -> None:
     """Run all test suites and generate summary."""
     print("CRA-234: Real-Time Variant Performance Dashboard - Test Summary")
     print("=" * 60)

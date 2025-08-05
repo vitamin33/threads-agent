@@ -41,4 +41,4 @@ class ScrollStopRateCalculator:
         scroll_stop_rate = (engaged_views / total_impressions) * 100
 
         # Cap at 100% (in case of data inconsistencies)
-        return min(scroll_stop_rate, 100.0)
+        return float(min(scroll_stop_rate, 100.0))

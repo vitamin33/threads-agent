@@ -50,7 +50,7 @@ class ReplyDepthCalculator:
         # Calculate average depth
         return total_depth / max(thread_count, 1)
 
-    async def get_comment_threads(self, post_id: str) -> List[Dict]:
+    async def get_comment_threads(self, post_id: str) -> List[Dict[str, Any]]:
         """
         Fetch comment thread structure from fake-threads API.
 
@@ -64,7 +64,7 @@ class ReplyDepthCalculator:
                 )
 
                 if response.status_code == 200:
-                    return response.json().get("threads", [])
+                    return list(response.json().get("threads", []))
 
                 logger.warning(
                     f"Failed to get thread data for post {post_id}: {response.status_code}"
@@ -75,7 +75,7 @@ class ReplyDepthCalculator:
             logger.error(f"Error fetching thread data for post {post_id}: {e}")
             return []
 
-    def calculate_thread_depth(self, thread: Dict) -> int:
+    def calculate_thread_depth(self, thread: Dict[str, Any]) -> int:
         """
         Recursively calculate maximum depth of a comment thread.
 

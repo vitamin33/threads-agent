@@ -1,0 +1,59 @@
+[
+  {
+    "config": {
+      "requests": 10,
+      "workers": 2,
+      "name": "Light Load"
+    },
+    "metrics": {
+      "total_requests": 10,
+      "successful_requests": 10,
+      "failed_requests": 0,
+      "success_rate": 1.0,
+      "total_time": 0.049078941345214844,
+      "rps": 203.75337621203582,
+      "latency_avg": 0.009735822677612305,
+      "latency_p50": 0.009716033935546875,
+      "latency_p95": 0.012100934982299805,
+      "latency_p99": 0.012100934982299805
+    }
+  },
+  {
+    "config": {
+      "requests": 50,
+      "workers": 5,
+      "name": "Medium Load"
+    },
+    "metrics": {
+      "total_requests": 50,
+      "successful_requests": 50,
+      "failed_requests": 0,
+      "success_rate": 1.0,
+      "total_time": 0.09938907623291016,
+      "rps": 503.07339493556714,
+      "latency_avg": 0.009606447219848633,
+      "latency_p50": 0.009432554244995117,
+      "latency_p95": 0.011810946464538574,
+      "latency_p99": 0.012443780899047852
+    }
+  },
+  {
+    "config": {
+      "requests": 100,
+      "workers": 10,
+      "name": "Heavy Load"
+    },
+    "metrics": {
+      "total_requests": 100,
+      "successful_requests": 100,
+      "failed_requests": 0,
+      "success_rate": 1.0,
+      "total_time": 0.1483912467956543,
+      "rps": 673.8941963181115,
+      "latency_avg": 0.01410710096359253,
+      "latency_p50": 0.012653589248657227,
+      "latency_p95": 0.025901591777801512,
+      "latency_p99": 0.03271889686584473
+    }
+  }
+]

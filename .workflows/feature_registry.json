@@ -1,0 +1,67 @@
+{
+  "features": [
+    {
+      "id": "feat-ai-job-001",
+      "epic_id": "ai-job-week1",
+      "name": "Achievement-to-Article Integration Layer",
+      "status": "ready",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-002",
+      "epic_id": "ai-job-week1",
+      "name": "Automated Content Generation Pipeline",
+      "status": "ready",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-003",
+      "epic_id": "ai-job-week1",
+      "name": "Company-Specific Portfolio API",
+      "status": "ready",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-004",
+      "epic_id": "ai-job-week2",
+      "name": "Weekly Content Generation Scheduler",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-005",
+      "epic_id": "ai-job-week2",
+      "name": "AI ROI Calculator Public Tool",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-006",
+      "epic_id": "ai-job-week2",
+      "name": "Content Performance Analytics",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-007",
+      "epic_id": "ai-job-week3",
+      "name": "AI-Powered Content Optimization",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-008",
+      "epic_id": "ai-job-week3",
+      "name": "Multi-Platform Publishing Expansion",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-ai-job-009",
+      "epic_id": "ai-job-week3",
+      "name": "A/B Testing Framework",
+      "status": "planned",
+      "created": "2025-08-04T00:00:00Z"
+    }
+  ]
+}

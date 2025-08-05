@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any
 import logging
 
-from services.historical_pr_analyzer import HistoricalPRAnalyzer
-from services.portfolio_validator import PortfolioValidator
-from mlops.mlflow_registry import MLflowRegistry
-from ai_pipeline.intelligent_llm_router import IntelligentLLMRouter
+from ..services.historical_pr_analyzer import HistoricalPRAnalyzer
+from ..services.portfolio_validator import PortfolioValidator
+from ..mlops.mlflow_registry import MLflowRegistry
+from ..ai_pipeline.intelligent_llm_router import IntelligentLLMRouter
 
 logger = logging.getLogger(__name__)
 

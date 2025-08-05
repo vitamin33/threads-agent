@@ -15,12 +15,12 @@ from datetime import datetime, timedelta
 # These imports should fail initially, then succeed after implementation
 try:
     from services.common.gradual_rollout_manager import (
-        GradualRolloutManager,
-        RolloutStage,
-        RolloutError,
-        RolloutStatus,
-        RolloutResult,
-        DeploymentHealth,
+        GradualRolloutManager,  # noqa: F401
+        RolloutStage,  # noqa: F401
+        RolloutError,  # noqa: F401
+        RolloutStatus,  # noqa: F401
+        RolloutResult,  # noqa: F401
+        DeploymentHealth,  # noqa: F401
     )
 except ImportError:
     # Expected initially - will be implemented during TDD
@@ -43,7 +43,7 @@ class TestGradualRolloutManagerBasics:
 
         # Should raise RolloutError when None is passed
         with pytest.raises(RolloutError) as exc_info:
-            manager = GradualRolloutManager(None)
+            GradualRolloutManager(None)
 
         assert "Performance detector cannot be None" in str(exc_info.value)
 
@@ -121,7 +121,7 @@ class TestGradualRolloutProgression:
 
         result = manager.start_rollout("model_v2.0")
 
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.CANARY_10
         assert manager.traffic_percentage == 10
         assert result.stage == RolloutStage.CANARY_10
@@ -147,19 +147,19 @@ class TestGradualRolloutProgression:
 
         # Advance to 25%
         result = manager.advance_stage()
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.CANARY_25
         assert manager.traffic_percentage == 25
 
         # Advance to 50%
         result = manager.advance_stage()
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.CANARY_50
         assert manager.traffic_percentage == 50
 
         # Advance to 100%
         result = manager.advance_stage()
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.FULL_ROLLOUT
         assert manager.traffic_percentage == 100
 
@@ -222,12 +222,12 @@ class TestRolloutHealthMonitoring:
         # For now this test documents expected behavior but will be failing
         # We need to implement regression checking in advance_stage method
         # Expected behavior (not yet implemented):
-        # assert result.success == False
+        # assert not result.success
         # assert "regression detected" in result.error_message.lower()
         # assert manager.current_stage == RolloutStage.CANARY_10  # Should not advance
 
         # Current behavior (until we implement regression checking):
-        assert result.success == True  # Currently advances without checking
+        assert result.success  # Currently advances without checking
 
     def test_rollout_continues_with_healthy_metrics(self):
         """
@@ -252,7 +252,7 @@ class TestRolloutHealthMonitoring:
         # Should be able to advance with healthy metrics
         result = manager.advance_stage()
 
-        assert result.success == True
+        assert result.success
         assert manager.current_stage == RolloutStage.CANARY_25
         assert result.error_message is None
 
@@ -283,7 +283,7 @@ class TestRolloutStatusAndReporting:
         assert status.traffic_percentage == 10
         assert status.model_version == "model_v2.0"
         assert isinstance(status.start_time, datetime)
-        assert status.is_active == True
+        assert status.is_active
 
     def test_rollout_result_contains_comprehensive_info(self):
         """
@@ -328,11 +328,11 @@ class TestRolloutEdgeCases:
 
         # Start first rollout
         result1 = manager.start_rollout("model_v2.0")
-        assert result1.success == True
+        assert result1.success
 
         # Try to start second rollout - should fail
         result2 = manager.start_rollout("model_v2.1")
-        assert result2.success == False
+        assert not result2.success
         assert "already active" in result2.error_message.lower()
 
     def test_cannot_advance_stage_without_active_rollout(self):
@@ -349,7 +349,7 @@ class TestRolloutEdgeCases:
         # Try to advance without starting rollout
         result = manager.advance_stage()
 
-        assert result.success == False
+        assert not result.success
         assert "no active rollout" in result.error_message.lower()
 
     def test_rollout_timeout_handling(self):
@@ -374,7 +374,7 @@ class TestRolloutEdgeCases:
             mock_datetime.now.return_value = timeout_time
 
             status = manager.get_rollout_status()
-            assert status.is_timed_out == True
+            assert status.is_timed_out
 
 
 if __name__ == "__main__":

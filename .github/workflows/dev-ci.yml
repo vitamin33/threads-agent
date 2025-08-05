@@ -35,8 +35,8 @@ concurrency:
 jobs:
   test:
     name: py${{ matrix.python }} • k3d
-    runs-on: ubuntu-22.04
-    timeout-minutes: 15 # fail-fast guard
+    runs-on: ubuntu-latest # Faster startup than ubuntu-22.04
+    timeout-minutes: 12 # Reduced from 15 minutes
     strategy:
       fail-fast: false # let both versions run
       matrix:
@@ -44,12 +44,12 @@ jobs:
 
     steps:
       # ————————————————————————————————
-      # 0.  Checkout code
+      # 0.  Checkout code (optimized)
       # ————————————————————————————————
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # for proper cache keys
+          fetch-depth: 1 # Shallow clone for speed (changed from 0)
 
       # ————————————————————————————————
       # 0.25  Detect changed files
@@ -92,9 +92,9 @@ jobs:
               - 'scripts/**'
 
       # ————————————————————————————————
-      # 0.5  Cache test results
+      # 0.5  Enhanced caching (optimized)
       # ————————————————————————————————
-      - name: Cache test results
+      - name: Cache test results and dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -102,10 +102,13 @@ jobs:
             .mypy_cache
             htmlcov
             .coverage
-          key: test-results-${{ runner.os }}-py${{ matrix.python }}-${{ hashFiles('**/*.py', '**/requirements*.txt', 'mypy.ini', 'pytest.ini', 'pyproject.toml') }}
+            ~/.cache/pip
+            .venv
+            __pycache__
+          key: dev-ci-cache-${{ runner.os }}-py${{ matrix.python }}-${{ hashFiles('**/*.py', '**/requirements*.txt', 'mypy.ini', 'pytest.ini', 'pyproject.toml') }}
           restore-keys: |
-            test-results-${{ runner.os }}-py${{ matrix.python }}-
-            test-results-${{ runner.os }}-
+            dev-ci-cache-${{ runner.os }}-py${{ matrix.python }}-
+            dev-ci-cache-${{ runner.os }}-
 
       # ————————————————————————————————
       # 1.  Login to GitHub Container Registry
@@ -264,68 +267,41 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Generate requirements hash
-        id: requirements-hash
-        run: |
-          # Combine all requirements for a stable cache key
-          cat services/*/requirements.txt tests/requirements.txt | sort | uniq > .all-requirements.txt
-          echo "hash=${{ hashFiles('.all-requirements.txt') }}" >> $GITHUB_OUTPUT
-
-      - name: Cache pip and venv
-        uses: actions/cache@v4
-        id: python-cache
-        with:
-          path: |
-            ~/.cache/pip
-            .venv
-          key: ${{ runner.os }}-python-${{ matrix.python }}-${{ hashFiles('**/requirements*.txt', 'pyproject.toml', 'setup.py', 'setup.cfg') }}
-          restore-keys: |
-            ${{ runner.os }}-python-${{ matrix.python }}-
-            ${{ runner.os }}-python-
+      # OPTIMIZATION: Skip separate pip cache since it's included in main cache above
 
       - name: Setup virtual environment
         run: |
           python -m venv .venv
           echo "$PWD/.venv/bin" >> $GITHUB_PATH
 
-      - name: Install deps (with cache awareness)
+      - name: Install deps (optimized with better caching)
         run: |
           # Upgrade pip first
-          python -m pip install -U pip wheel setuptools
+          python -m pip install -U pip wheel setuptools --prefer-binary
 
-          # Check if we have a cache hit
-          if [ "${{ steps.python-cache.outputs.cache-hit }}" != "true" ]; then
-            echo "📦 No cache hit, installing all dependencies..."
-            pip install -r services/orchestrator/requirements.txt
-            pip install -r services/celery_worker/requirements.txt
-            pip install -r services/persona_runtime/requirements.txt
-            pip install -r services/fake_threads/requirements.txt
-            pip install -r services/viral_engine/requirements.txt
-            pip install -r services/revenue/requirements.txt
-            pip install -r tests/requirements.txt
+          # Install only if venv doesn't exist or is incomplete
+          if [ ! -f ".venv/pyvenv.cfg" ] || ! python -c "import fastapi, celery, pytest" 2>/dev/null; then
+            echo "📦 Installing dependencies..."
+            # Install with prefer-binary for speed
+            pip install -r services/orchestrator/requirements.txt --prefer-binary
+            pip install -r services/celery_worker/requirements.txt --prefer-binary
+            pip install -r services/persona_runtime/requirements.txt --prefer-binary
+            pip install -r services/fake_threads/requirements.txt --prefer-binary
+            pip install -r services/viral_engine/requirements.txt --prefer-binary
+            pip install -r services/revenue/requirements.txt --prefer-binary
+            pip install -r tests/requirements.txt --prefer-binary
           else
-            echo "✅ Cache hit! Checking for any missing packages..."
-            # Quick install to catch any missing dependencies
-            pip install --no-deps -r services/orchestrator/requirements.txt
-            pip install --no-deps -r services/celery_worker/requirements.txt
-            pip install --no-deps -r services/persona_runtime/requirements.txt
-            pip install --no-deps -r services/fake_threads/requirements.txt
-            pip install --no-deps -r services/viral_engine/requirements.txt
-            pip install --no-deps -r services/revenue/requirements.txt
-            pip install --no-deps -r tests/requirements.txt
+            echo "✅ Dependencies already installed in venv!"
           fi
 
           # Remove langsmith completely to avoid Python 3.12 compatibility issues in CI
           echo "🔧 Removing langsmith to prevent pydantic v1 conflicts in CI..."
           pip uninstall -y langsmith || true
 
-          # Show what's installed
-          pip list
-
       # ————————————————————————————————
       # 5.  Run unit + e2e suites (smart selection)
       # ————————————————————————————————
-      - name: pytest (unit + e2e) - parallel with smart selection
+      - name: pytest (e2e only) - optimized parallel execution
         id: tests
         env:
           # Disable all langchain tracing to avoid langsmith issues
@@ -336,8 +312,8 @@ jobs:
           LANGSMITH_API_KEY: ""
           LANGCHAIN_API_KEY: ""
         run: |
-          # Determine which tests to run based on changes
-          PYTEST_ARGS="-q -p no:langsmith -n auto --maxprocesses=4 --dist loadscope --timeout=60"
+          # OPTIMIZATION: More aggressive pytest settings for speed
+          PYTEST_ARGS="-q -p no:langsmith -n auto --maxprocesses=6 --dist loadscope --timeout=45 --tb=short"
 
           # If no Python files changed, skip tests entirely
           if [ "${{ steps.changes.outputs.python }}" != "true" ]; then
@@ -362,23 +338,23 @@ jobs:
 
           # Only start port-forwards if running e2e tests
           if [ "$RUN_E2E" = "true" ]; then
-            # ➊ start port-forwards in the background
+            # ➊ start port-forwards in the background (parallel startup)
             kubectl port-forward svc/orchestrator 8080:8080   & PF_ORCH=$!
             kubectl port-forward svc/fake-threads 9009:9009   & PF_THREADS=$!
             kubectl port-forward svc/qdrant 6333:6333         & PF_QDRANT=$!
             kubectl port-forward svc/postgres 15432:5432      & PF_POSTGRES=$!
-            # give the tunnel a moment
-            sleep 5
+            # Reduced wait time
+            sleep 3
           fi
 
-          # ➋ run the test suite with parallel execution
+          # ➋ run the test suite with optimized parallel execution
           export PYTHONPATH=$PWD:$PYTHONPATH
           # Disable langsmith to avoid pydantic v1 compatibility issues
           export LANGCHAIN_TRACING_V2=false
           export LANGSMITH_TRACING=false
 
           echo "🧪 Running tests for: $TEST_PATHS"
-          pytest $PYTEST_ARGS $TEST_PATHS -x  # -x stops on first failure
+          pytest $PYTEST_ARGS $TEST_PATHS --maxfail=3  # Stop after 3 failures instead of 1
 
           # ➌ tidy up port-forwards if started
           if [ "$RUN_E2E" = "true" ]; then

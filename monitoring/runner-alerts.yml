@@ -1,0 +1,93 @@
+# monitoring/runner-alerts.yml
+# Alert rules for self-hosted GitHub Actions runners
+
+groups:
+  - name: runner-health
+    interval: 30s
+    rules:
+      - alert: RunnerDown
+        expr: up{job="github-runner"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "GitHub Actions runner is down"
+          description: "Runner {{ $labels.instance }} has been down for more than 2 minutes"
+
+      - alert: RunnerHighCPU
+        expr: (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Runner CPU usage is high"
+          description: "CPU usage on {{ $labels.instance }} is {{ $value }}% for 5+ minutes"
+
+      - alert: RunnerHighMemory
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Runner memory usage is high"
+          description: "Memory usage on {{ $labels.instance }} is {{ $value }}%"
+
+      - alert: RunnerDiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes * 100) < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Runner disk space is low"
+          description: "Disk space on {{ $labels.instance }} is only {{ $value }}% available"
+
+  - name: ci-performance
+    interval: 30s
+    rules:
+      - alert: CIBuildTimeHigh
+        expr: github_actions_workflow_duration_seconds > 1800  # 30 minutes
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CI build time is unusually high"
+          description: "Workflow {{ $labels.workflow }} took {{ $value }} seconds"
+
+      - alert: CIFailureRateHigh
+        expr: rate(github_actions_workflow_failures_total[10m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CI failure rate is high"
+          description: "CI failure rate is {{ $value }} failures per minute"
+
+      - alert: DockerBuildFailed
+        expr: increase(docker_build_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Docker build failed"
+          description: "Docker build failed {{ $value }} times in the last 5 minutes"
+
+  - name: cost-optimization
+    interval: 60s
+    rules:
+      - alert: RunnerIdleTime
+        expr: github_runner_idle_seconds > 3600  # 1 hour
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Runner has been idle"
+          description: "Runner {{ $labels.instance }} has been idle for {{ $value }} seconds"
+
+      - alert: UnusedDockerImages
+        expr: docker_images_total - docker_images_used_total > 10
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "Many unused Docker images"
+          description: "{{ $value }} unused Docker images on {{ $labels.instance }}"

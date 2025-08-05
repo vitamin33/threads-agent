@@ -18,8 +18,10 @@ sys.path.insert(0, str(project_root))
 from services.achievement_collector.services.comprehensive_pr_analyzer import (  # noqa: E402
     ComprehensivePRAnalyzer,
 )
+import pytest  # noqa: E402
 
 
+@pytest.mark.asyncio
 async def test_comprehensive_analyzer():
     """Test comprehensive PR analysis."""
 

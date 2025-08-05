@@ -1,0 +1,664 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Revenue Attribution - FinOps Dashboard",
+    "tags": ["revenue", "finops", "attribution", "performance"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5m",
+    "schemaVersion": 39,
+    "version": 1,
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "persona",
+          "type": "query",
+          "query": "label_values(finops_revenue_by_persona, persona_id)",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "includeAll": true,
+          "multi": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "content_pattern",
+          "type": "query",
+          "query": "label_values(finops_revenue_by_pattern, pattern_type)",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "includeAll": true,
+          "multi": true,
+          "allValue": ".*"
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Revenue by Content Pattern",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (pattern_type) (finops_revenue_by_pattern{pattern_type=~\"$content_pattern\"})",
+            "refId": "A",
+            "legendFormat": "{{pattern_type}}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "custom": {
+              "displayMode": "table",
+              "showLegend": true,
+              "showTooltip": true,
+              "showTooltipPercent": true
+            },
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "displayLabels": ["name", "percent"],
+          "legend": {
+            "displayMode": "visible",
+            "placement": "right",
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Revenue by Persona",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (persona_id) (finops_revenue_by_persona{persona_id=~\"$persona\"})",
+            "refId": "A",
+            "legendFormat": "{{persona_id}}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "custom": {
+              "displayMode": "table",
+              "showLegend": true,
+              "showTooltip": true,
+              "showTooltipPercent": true
+            },
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "donut",
+          "displayLabels": ["name", "percent"],
+          "legend": {
+            "displayMode": "visible",
+            "placement": "right",
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Revenue by Posting Time",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "sum by (posting_hour) (finops_revenue_by_posting_time)",
+            "refId": "A",
+            "legendFormat": "{{posting_hour}}:00",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "min": 0,
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "displayMode": "basic",
+              "orientation": "horizontal"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "vertical",
+          "displayMode": "basic",
+          "showValue": "auto",
+          "barWidth": 0.97,
+          "groupWidth": 0.7
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Conversion Funnel Analysis",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "finops_conversion_funnel_impressions",
+            "refId": "A",
+            "legendFormat": "Impressions",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_conversion_funnel_clicks",
+            "refId": "B",
+            "legendFormat": "Clicks",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_conversion_funnel_engagements",
+            "refId": "C",
+            "legendFormat": "Engagements",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_conversion_funnel_conversions",
+            "refId": "D",
+            "legendFormat": "Conversions",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "displayMode": "auto",
+              "inspect": false,
+              "filterable": false
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Value"
+            }
+          ]
+        },
+        "transformations": [
+          {
+            "id": "seriesToRows",
+            "options": {}
+          },
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "Metric": "Funnel Stage",
+                "Value": "Count"
+              }
+            }
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 5,
+        "title": "Conversion Rates by Stage",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "finops_conversion_funnel_clicks / finops_conversion_funnel_impressions * 100",
+            "refId": "A",
+            "legendFormat": "Click Rate",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_conversion_funnel_engagements / finops_conversion_funnel_clicks * 100",
+            "refId": "B",
+            "legendFormat": "Engagement Rate",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_conversion_funnel_conversions / finops_conversion_funnel_engagements * 100",
+            "refId": "C",
+            "legendFormat": "Conversion Rate",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 10
+                },
+                {
+                  "color": "green",
+                  "value": 20
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background",
+          "graphMode": "area"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Top Performing Content Analysis",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, finops_content_performance_score)",
+            "refId": "A",
+            "legendFormat": "{{post_id}}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "auto",
+              "inspect": false,
+              "filterable": true
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Performance Score"
+                },
+                "properties": [
+                  {
+                    "id": "custom.displayMode",
+                    "value": "color-background"
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "thresholds"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "yellow",
+                          "value": 0.7
+                        },
+                        {
+                          "color": "green",
+                          "value": 0.9
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Performance Score"
+            }
+          ]
+        },
+        "transformations": [
+          {
+            "id": "labelsToFields",
+            "options": {}
+          },
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "__name__": true,
+                "instance": true,
+                "job": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "post_id": "Post ID",
+                "persona_id": "Persona",
+                "pattern_type": "Content Pattern",
+                "Value": "Performance Score"
+              }
+            }
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 7,
+        "title": "Revenue Trends by Pattern",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (pattern_type) (rate(finops_revenue_by_pattern[1h])) * 3600",
+            "refId": "A",
+            "legendFormat": "{{pattern_type}}",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "min": 0,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "opacity",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "normal",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "Revenue/Hour",
+              "axisColorMode": "text",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "axisCenteredZero": false,
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "visible",
+            "placement": "bottom",
+            "calcs": ["lastNotNull", "max", "mean"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 8,
+        "title": "Attribution Accuracy Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "finops_attribution_accuracy",
+            "refId": "A",
+            "legendFormat": "Attribution Accuracy",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_data_completeness",
+            "refId": "B",
+            "legendFormat": "Data Completeness",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          },
+          {
+            "expr": "finops_tracking_confidence",
+            "refId": "C",
+            "legendFormat": "Tracking Confidence",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.8
+                },
+                {
+                  "color": "green",
+                  "value": 0.95
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background",
+          "graphMode": "area"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 32
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "High Performance Content",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "enable": true,
+          "expr": "finops_content_performance_score > 0.9",
+          "iconColor": "rgba(0, 255, 0, 1)",
+          "name": "High Performance",
+          "titleFormat": "High Performing Content: {{post_id}}",
+          "tagKeys": "persona_id,pattern_type"
+        }
+      ]
+    },
+    "links": [
+      {
+        "asDropdown": false,
+        "icon": "external link",
+        "includeVars": true,
+        "keepTime": true,
+        "tags": [],
+        "targetBlank": true,
+        "title": "Revenue Attribution API",
+        "tooltip": "Open Revenue Attribution API endpoint",
+        "type": "link",
+        "url": "http://localhost:8000/revenue-attribution"
+      }
+    ]
+  }
+}

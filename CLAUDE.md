@@ -241,6 +241,11 @@ Test Status: PASSED
 - Type checking: mypy strict
 - Formatting: ruff + black + isort
 - Pre-commit: via `just ship`
+- **Testing Requirements**:
+  - Every new feature MUST be tested on local k3d cluster
+  - Helm charts MUST be updated for new services/features
+  - Run `just check` before creating PR
+  - Verify health endpoints are accessible
 
 ## Troubleshooting
 
@@ -292,8 +297,66 @@ just token-batch     # Batch processing (80% savings)
 
 ## AI Guidelines
 
+### Feature Development with Sub-Agents (MANDATORY)
+- **ALL feature development MUST use specialized sub-agents**
+- **NEVER implement features directly - always delegate to appropriate agents**
+- **Required workflow for ANY feature/task development:**
+  1. Analyze the task requirements
+  2. Identify which specialized agents are needed
+  3. Launch agents in parallel when possible for maximum efficiency
+  4. Coordinate results and ensure integration
+
+### Sub-Agent Usage Patterns
+
+#### Feature Development Workflow (MANDATORY ORDER):
+1. **`epic-planning-specialist`** - Break down requirements into actionable tasks
+2. **`tdd-master`** - Create failing tests BEFORE any implementation
+3. **Implementation** - Write code to make tests pass
+4. **`k8s-performance-optimizer`** - Optimize code for production
+5. **`test-generation-specialist`** - Add edge cases and integration tests
+6. **`devops-automation-expert`** - Create/update deployment configurations
+7. **`tech-documentation-generator`** - Generate comprehensive documentation
+
+#### Specialized Workflows:
+- **Bug Fixes**: `tdd-master` (reproduce bug) → Fix → `test-generation-specialist`
+- **Performance Issues**: `k8s-performance-optimizer` → `tdd-master` → Implementation
+- **Infrastructure**: `devops-automation-expert` → `k8s-performance-optimizer`
+- **Documentation Only**: `tech-documentation-generator`
+
+#### Parallel Agent Execution:
+When tasks are independent, launch agents in parallel:
+```bash
+# Example: After implementation
+- k8s-performance-optimizer (optimize code)
+- test-generation-specialist (create tests)  
+- devops-automation-expert (update configs)
+# All three can run simultaneously
+```
+
+### Benefits of Sub-Agent Development
+1. **Parallel execution** - Multiple agents work simultaneously
+2. **Specialized expertise** - Each agent excels in their domain
+3. **Higher quality** - Deep expertise in specific areas
+4. **Comprehensive coverage** - Nothing gets missed
+5. **Faster delivery** - Parallel work completes faster than sequential
+
+### Example Multi-Agent Workflow
+```bash
+# For a new microservice feature:
+1. epic-planning-specialist: Break down requirements
+2. tdd-master: Create test-first implementation
+3. k8s-performance-optimizer: Optimize the code
+4. test-generation-specialist: Ensure full test coverage
+5. devops-automation-expert: Create deployment configs
+6. tech-documentation-generator: Document everything
+```
+
 ### Collaboration Practices
-- Don't add Claude as co-author in git commits in PRs
+- **CRITICAL: NEVER add Claude as co-author in git commits**
+- **NEVER include "🤖 Generated with [Claude Code]" in commits**
+- **NEVER include "Co-Authored-By: Claude <noreply@anthropic.com>" in commits**
+- Git commits should ONLY have the actual developer as author
+- This is a strict requirement - no exceptions
 
 ### Development Environment
 - **ALWAYS use virtual environments** for Python services (venv contains all dependencies)

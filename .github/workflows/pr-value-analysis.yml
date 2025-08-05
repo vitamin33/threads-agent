@@ -1,0 +1,383 @@
+name: PR Value Analysis
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to analyze'
+        required: true
+        type: string
+
+jobs:
+  analyze-pr-value:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install GitHub CLI
+      run: |
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        sudo apt update
+        sudo apt install gh -y
+    
+    - name: Determine PR Number
+      id: pr_number
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "pr_number=${{ inputs.pr_number }}" >> $GITHUB_OUTPUT
+        else
+          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Run PR Value Analysis
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Use the ultimate analyzer with all metrics and unified scoring
+        python scripts/pr-value-analyzer-ultimate.py ${{ steps.pr_number.outputs.pr_number }}
+    
+    - name: Upload Analysis Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: pr-value-analysis
+        path: |
+          pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json
+          .achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json
+    
+    - name: Comment PR with Value Summary
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json`;
+          const achievementFile = `.achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json`;
+          
+          try {
+            const data = JSON.parse(fs.readFileSync(analysisFile, 'utf8'));
+            let achievementData = null;
+            
+            // Try to load achievement file for metric explanations
+            try {
+              achievementData = JSON.parse(fs.readFileSync(achievementFile, 'utf8'));
+            } catch (e) {
+              console.log('Achievement file not found, using basic explanations');
+            }
+            
+            // Build comment
+            let comment = '## 📊 Automated PR Value Analysis (Fair Scoring)\n\n';
+            
+            // PR Value Categories
+            if (data.value_categories) {
+              const activeCategories = Object.entries(data.value_categories)
+                .filter(([_, score]) => score > 0.3)
+                .sort(([_, a], [__, b]) => b - a);
+              
+              if (activeCategories.length > 0) {
+                comment += '**Value Categories Detected**:\n';
+                activeCategories.forEach(([cat, score]) => {
+                  comment += `- ${cat}: ${Math.round(score * 100)}% confidence\n`;
+                });
+                comment += '\n';
+              }
+            }
+            
+            // Business Metrics with comprehensive explanations
+            if (data.business_metrics && Object.keys(data.business_metrics).length > 0) {
+              comment += '### 💰 Business Value\n';
+              
+              // Add comprehensive calculation transparency
+              comment += '<details><summary>📐 How these metrics are calculated</summary>\n\n';
+              
+              if (achievementData?.metric_explanations?.business_metrics) {
+                const explanations = achievementData.metric_explanations.business_metrics;
+                
+                comment += '| Metric | Formula | Meaning |\n';
+                comment += '|--------|---------|---------|\n';
+                
+                for (const [metric, info] of Object.entries(explanations)) {
+                  const displayName = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `| **${displayName}** | \`${info.formula}\` | ${info.meaning} |\n`;
+                }
+                
+                comment += '\n**Baseline Assumptions:**\n';
+                comment += '- RPS Baseline: 500 (typical microservice)\n';
+                comment += '- Developer Rate: $150/hour\n';
+                comment += '- Server Cost: $12k/year\n';
+                comment += '- Bug Fix Cost: $5k average in production\n';
+              } else {
+                // Fallback to simple explanations
+                comment += '- **Throughput Improvement**: `((current_rps / baseline_rps) - 1) × 100%`\n';
+                comment += '- **Infrastructure Savings**: Based on RPS improvement reducing server needs\n';
+                comment += '- **ROI**: `(annual_savings / development_cost) × 100%`\n';
+                comment += '- **User Experience**: Score based on latency (<100ms = 10, <200ms = 9)\n';
+                comment += '\n⚠️ **Note**: Baseline RPS assumed at 500. Actual baseline may vary.\n';
+              }
+              comment += '</details>\n\n';
+              
+              // Define inline explanations for all metrics
+              const metricExplanations = {
+                'throughput_improvement_percent': '(How much faster vs baseline)',
+                'infrastructure_savings_estimate': '(Annual server cost reduction)',
+                'servers_reduced': '(Servers eliminated by performance gains)',
+                'developer_productivity_savings': '(Annual cost from efficiency gains)',
+                'productivity_hours_saved': '(Developer hours saved per year)',
+                'quality_improvement_savings': '(Cost avoided from prevented bugs)',
+                'bugs_prevented_annually': '(Bugs caught before production)',
+                'total_annual_savings': '(All savings combined)',
+                'risk_adjusted_savings': '(Conservative estimate with confidence factor)',
+                'total_investment': '(Cost to implement this PR)',
+                'roi_year_one_percent': '(Return on investment in first year)',
+                'payback_period_months': '(Time to recover investment)',
+                'roi_three_year_percent': '(ROI over 3 years)',
+                'user_experience_score': '(Based on latency: <200ms = 9/10)',
+                'confidence_level': '(Estimate reliability: low/medium/high)'
+              };
+              
+              for (const [key, value] of Object.entries(data.business_metrics)) {
+                let displayValue = value;
+                let explanation = metricExplanations[key] || '';
+                
+                // Format specific values
+                if (key.includes('percent')) {
+                  displayValue = `${value}%`;
+                }
+                if (key.includes('savings') || key.includes('investment') || key === 'revenue_impact_3yr') {
+                  displayValue = `$${value.toLocaleString()}`;
+                }
+                if (key.includes('months')) {
+                  displayValue = `${value} months`;
+                }
+                if (key.includes('hours')) {
+                  displayValue = `${value.toLocaleString()} hours`;
+                }
+                
+                // Add warnings for extreme values
+                if (key === 'throughput_improvement_percent' && value > 200) {
+                  explanation += ' ⚠️';
+                }
+                if (key === 'roi_year_one_percent' && value > 500) {
+                  explanation += ' 🚀';
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue} ${explanation}\n`;
+              }
+              comment += '\n';
+            }
+            
+            // Technical Metrics with explanations
+            if (data.technical_metrics?.performance) {
+              comment += '### 🚀 Performance Metrics\n';
+              
+              // Add performance explanations if available
+              if (achievementData?.metric_explanations?.performance_metrics) {
+                comment += '<details><summary>📊 What these metrics mean</summary>\n\n';
+                const perfExplanations = achievementData.metric_explanations.performance_metrics;
+                
+                for (const [metric, info] of Object.entries(perfExplanations)) {
+                  const displayName = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `**${displayName}**: ${info.meaning}\n`;
+                  
+                  if (info.industry_standards) {
+                    comment += '- Industry Standards:\n';
+                    for (const [level, desc] of Object.entries(info.industry_standards)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  if (info.user_perception) {
+                    comment += '- User Perception:\n';
+                    for (const [level, desc] of Object.entries(info.user_perception)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  if (info.quality_standards) {
+                    comment += '- Quality Standards:\n';
+                    for (const [level, desc] of Object.entries(info.quality_standards)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  comment += '\n';
+                }
+                comment += '</details>\n\n';
+              }
+              
+              // Performance metric explanations
+              const perfExplanations = {
+                'peak_rps': '(Max requests/second - >1000 is high traffic)',
+                'latency_ms': '(Response time - <200ms feels fast)',
+                'test_coverage': '(% of code tested - >80% is excellent)',
+                'success_rate': '(% of successful requests)',
+                'error_rate': '(% of failed requests)'
+              };
+              
+              for (const [key, value] of Object.entries(data.technical_metrics.performance)) {
+                let displayValue = value;
+                const explanation = perfExplanations[key] || '';
+                
+                if (key === 'test_coverage' || key === 'success_rate') {
+                  displayValue = `${value}%`;
+                }
+                if (key === 'latency_ms') {
+                  displayValue = `${value}ms`;
+                }
+                if (key === 'peak_rps') {
+                  displayValue = `${value.toLocaleString()} RPS`;
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue} ${explanation}\n`;
+              }
+              comment += '\n';
+            }
+            
+            // KPIs with detailed explanations
+            if (data.kpis) {
+              comment += '### 📈 Key Performance Indicators\n';
+              const overall = data.kpis.overall_score || 0;
+              comment += `- **Overall Score**: ${overall}/10 `;
+              
+              if (overall >= 7) {
+                comment += '🌟 Excellent!\n';
+              } else if (overall >= 5) {
+                comment += '✅ Good\n';
+              } else {
+                comment += '⚠️ Needs Improvement\n';
+              }
+              
+              // Show individual scores if available
+              if (data.kpis.individual_scores) {
+                comment += '\n**Score Breakdown**:\n';
+                for (const [key, value] of Object.entries(data.kpis.individual_scores)) {
+                  comment += `- ${key.replace(/_/g, ' ')}: ${value}/10\n`;
+                }
+              }
+              
+              // Add KPI explanations if available
+              if (achievementData?.metric_explanations?.kpi_scores) {
+                comment += '\n<details><summary>🎯 How scores are calculated</summary>\n\n';
+                const kpiExplanations = achievementData.metric_explanations.kpi_scores;
+                
+                for (const [kpi, info] of Object.entries(kpiExplanations)) {
+                  const displayName = kpi.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `**${displayName}**:\n`;
+                  comment += `- Formula: ${info.formula}\n`;
+                  if (info.meaning) comment += `- Meaning: ${info.meaning}\n`;
+                  
+                  if (info.scale) {
+                    comment += '- Scale:\n';
+                    for (const [score, desc] of Object.entries(info.scale)) {
+                      comment += `  - ${score}: ${desc}\n`;
+                    }
+                  }
+                  if (info.weights) {
+                    comment += '- Weights:\n';
+                    for (const [component, weight] of Object.entries(info.weights)) {
+                      comment += `  - ${component}: ${weight}\n`;
+                    }
+                  }
+                  if (info.criteria) {
+                    comment += '- Criteria:\n';
+                    for (const criterion of info.criteria) {
+                      comment += `  - ${criterion}\n`;
+                    }
+                  }
+                  comment += '\n';
+                }
+                comment += '</details>\n\n';
+              }
+              
+              // Show weights if available
+              if (data.scoring_weights) {
+                comment += '\n**Scoring Weights** (for ' + data.pr_type + ' PRs):\n';
+                for (const [key, value] of Object.entries(data.scoring_weights)) {
+                  comment += `- ${key.replace(/_/g, ' ')}: ${(value * 100).toFixed(0)}%\n`;
+                }
+              }
+              
+              comment += '\n';
+            }
+            
+            // Achievement Tags
+            if (data.achievement_tags && data.achievement_tags.length > 0) {
+              comment += '### 🏷️ Achievement Tags\n';
+              comment += data.achievement_tags.map(tag => `\`${tag}\``).join(' ');
+              comment += '\n\n';
+            }
+            
+            // Future Impact
+            if (data.future_impact && Object.keys(data.future_impact).length > 0) {
+              comment += '### 🔮 Projected Impact\n';
+              // Future impact explanations
+              const impactExplanations = {
+                'revenue_impact_3yr': '(Projected 3-year revenue increase)',
+                'competitive_advantage': '(Market position improvement)',
+                'market_differentiation': '(Unique value proposition)',
+                'technical_debt_reduction': '(Code quality improvement)',
+                'maintenance_cost_reduction_percent': '(Ongoing cost savings)'
+              };
+              
+              for (const [key, value] of Object.entries(data.future_impact)) {
+                let displayValue = value;
+                const explanation = impactExplanations[key] || '';
+                
+                if (key === 'revenue_impact_3yr') {
+                  displayValue = `$${value.toLocaleString()}`;
+                }
+                if (key.includes('percent')) {
+                  displayValue = `${value}%`;
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue} ${explanation}\n`;
+              }
+            }
+            
+            comment += '\n---\n';
+            comment += '*This analysis was automatically generated by the PR Value Analyzer*';
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.pr_number.outputs.pr_number }},
+              body: comment
+            });
+            
+          } catch (error) {
+            console.error('Error posting analysis comment:', error);
+          }
+    
+    - name: Store Achievement Data
+      if: success()
+      run: |
+        # This would typically push to a metrics database or achievement tracking system
+        echo "Achievement data stored in artifacts"
+    
+    - name: Push to Achievement Collector
+      if: success() && env.ACHIEVEMENT_COLLECTOR_URL != ''
+      env:
+        ACHIEVEMENT_COLLECTOR_URL: ${{ secrets.ACHIEVEMENT_COLLECTOR_URL }}
+        ACHIEVEMENT_API_KEY: ${{ secrets.ACHIEVEMENT_API_KEY }}
+      run: |
+        # Call achievement collector API to create enriched achievement
+        if [ -n "$ACHIEVEMENT_COLLECTOR_URL" ]; then
+          curl -X POST \
+            "${ACHIEVEMENT_COLLECTOR_URL}/pr-analysis/analyze/${{ steps.pr_number.outputs.pr_number }}" \
+            -H "Authorization: Bearer ${ACHIEVEMENT_API_KEY}" \
+            -H "Content-Type: application/json" \
+            --fail-with-body \
+            || echo "Failed to push to achievement collector (non-critical)"
+        fi

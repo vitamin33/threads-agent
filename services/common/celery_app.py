@@ -4,7 +4,7 @@ import os
 from celery import Celery
 
 
-def get_celery_app():
+def get_celery_app() -> Celery:
     """Get configured Celery app instance."""
     broker_url = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
 

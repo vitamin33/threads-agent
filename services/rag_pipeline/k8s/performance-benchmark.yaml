@@ -1,0 +1,290 @@
+# Performance Benchmark Job for RAG Pipeline
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rag-pipeline-benchmark
+  namespace: threads-agent
+  labels:
+    app: rag-pipeline
+    component: benchmark
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: rag-pipeline-benchmark
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: benchmark
+        image: python:3.12-slim
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        env:
+        - name: RAG_PIPELINE_URL
+          value: "http://rag-pipeline:8000"
+        - name: BENCHMARK_DURATION
+          value: "300"  # 5 minutes
+        - name: CONCURRENT_USERS
+          value: "10"
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          set -e
+          echo "Installing dependencies..."
+          pip install --no-cache-dir httpx asyncio aiohttp
+          
+          cat << 'EOF' > benchmark.py
+          import asyncio
+          import httpx
+          import time
+          import json
+          import os
+          from datetime import datetime
+          
+          RAG_URL = os.getenv("RAG_PIPELINE_URL", "http://rag-pipeline:8000")
+          DURATION = int(os.getenv("BENCHMARK_DURATION", "300"))
+          CONCURRENT_USERS = int(os.getenv("CONCURRENT_USERS", "10"))
+          
+          # Test queries of varying complexity
+          TEST_QUERIES = [
+              "What is artificial intelligence?",
+              "Explain machine learning algorithms and their applications in modern software development",
+              "How do neural networks process information and what are the key components?",
+              "Compare supervised and unsupervised learning methodologies",
+              "What are the benefits of using vector databases for semantic search?",
+              "Describe the architecture of transformer models in natural language processing",
+              "How does retrieval augmented generation improve AI responses?",
+              "What are the performance considerations for deploying AI models in production?",
+              "Explain the concept of embeddings in machine learning and their use cases",
+              "How do you optimize database queries for large-scale applications?"
+          ]
+          
+          # Test documents for ingestion
+          TEST_DOCUMENTS = [
+              {
+                  "id": f"doc_{i}",
+                  "content": f"This is test document {i} with content about AI, machine learning, and performance optimization. " * (50 + i * 10),
+                  "metadata": {"category": "test", "index": i}
+              }
+              for i in range(20)
+          ]
+          
+          class BenchmarkResults:
+              def __init__(self):
+                  self.search_latencies = []
+                  self.ingest_latencies = []
+                  self.errors = []
+                  self.total_requests = 0
+                  self.successful_requests = 0
+          
+          async def benchmark_search(client: httpx.AsyncClient, results: BenchmarkResults):
+              """Benchmark search operations."""
+              while True:
+                  try:
+                      query = TEST_QUERIES[len(results.search_latencies) % len(TEST_QUERIES)]
+                      start_time = time.time()
+                      
+                      response = await client.post(
+                          f"{RAG_URL}/api/v1/search",
+                          json={
+                              "query": query,
+                              "top_k": 5,
+                              "mode": "vector",
+                              "use_reranking": False
+                          },
+                          timeout=30.0
+                      )
+                      
+                      latency = time.time() - start_time
+                      results.total_requests += 1
+                      
+                      if response.status_code == 200:
+                          results.search_latencies.append(latency)
+                          results.successful_requests += 1
+                      else:
+                          results.errors.append(f"Search error: {response.status_code}")
+                          
+                  except Exception as e:
+                      results.errors.append(f"Search exception: {str(e)}")
+                      results.total_requests += 1
+                  
+                  await asyncio.sleep(0.1)  # Small delay between requests
+          
+          async def benchmark_ingest(client: httpx.AsyncClient, results: BenchmarkResults):
+              """Benchmark document ingestion."""
+              for batch_start in range(0, len(TEST_DOCUMENTS), 5):
+                  try:
+                      batch = TEST_DOCUMENTS[batch_start:batch_start + 5]
+                      start_time = time.time()
+                      
+                      response = await client.post(
+                          f"{RAG_URL}/api/v1/ingest",
+                          json={
+                              "documents": batch,
+                              "chunk_size": 500,
+                              "chunk_overlap": 50
+                          },
+                          timeout=60.0
+                      )
+                      
+                      latency = time.time() - start_time
+                      results.total_requests += 1
+                      
+                      if response.status_code == 200:
+                          results.ingest_latencies.append(latency)
+                          results.successful_requests += 1
+                      else:
+                          results.errors.append(f"Ingest error: {response.status_code}")
+                          
+                  except Exception as e:
+                      results.errors.append(f"Ingest exception: {str(e)}")
+                      results.total_requests += 1
+                  
+                  await asyncio.sleep(1.0)  # Longer delay for ingestion
+          
+          async def run_benchmark():
+              """Run the complete benchmark suite."""
+              print(f"Starting RAG Pipeline benchmark...")
+              print(f"Duration: {DURATION}s, Concurrent users: {CONCURRENT_USERS}")
+              print(f"Target URL: {RAG_URL}")
+              
+              results = BenchmarkResults()
+              
+              async with httpx.AsyncClient() as client:
+                  # Test health endpoint first
+                  try:
+                      health_response = await client.get(f"{RAG_URL}/health")
+                      if health_response.status_code != 200:
+                          print(f"Service not healthy: {health_response.status_code}")
+                          return
+                      print("Service health check passed")
+                  except Exception as e:
+                      print(f"Health check failed: {e}")
+                      return
+                  
+                  # Start concurrent benchmark tasks
+                  tasks = []
+                  
+                  # Add search tasks
+                  for _ in range(CONCURRENT_USERS):
+                      tasks.append(asyncio.create_task(benchmark_search(client, results)))
+                  
+                  # Add ingestion task (single instance)
+                  tasks.append(asyncio.create_task(benchmark_ingest(client, results)))
+                  
+                  # Run for specified duration
+                  start_time = time.time()
+                  try:
+                      await asyncio.wait_for(
+                          asyncio.gather(*tasks, return_exceptions=True),
+                          timeout=DURATION
+                      )
+                  except asyncio.TimeoutError:
+                      print("Benchmark completed (timeout)")
+                  
+                  # Cancel remaining tasks
+                  for task in tasks:
+                      task.cancel()
+                  
+                  # Calculate and display results
+                  duration = time.time() - start_time
+                  
+                  print(f"\n=== BENCHMARK RESULTS ===")
+                  print(f"Duration: {duration:.2f}s")
+                  print(f"Total requests: {results.total_requests}")
+                  print(f"Successful requests: {results.successful_requests}")
+                  print(f"Error rate: {(results.total_requests - results.successful_requests) / max(results.total_requests, 1) * 100:.2f}%")
+                  print(f"Requests per second: {results.total_requests / duration:.2f}")
+                  
+                  if results.search_latencies:
+                      search_latencies = sorted(results.search_latencies)
+                      print(f"\nSEARCH PERFORMANCE:")
+                      print(f"  Search operations: {len(search_latencies)}")
+                      print(f"  Average latency: {sum(search_latencies) / len(search_latencies):.3f}s")
+                      print(f"  Median latency: {search_latencies[len(search_latencies)//2]:.3f}s")
+                      print(f"  95th percentile: {search_latencies[int(len(search_latencies) * 0.95)]:.3f}s")
+                      print(f"  99th percentile: {search_latencies[int(len(search_latencies) * 0.99)]:.3f}s")
+                  
+                  if results.ingest_latencies:
+                      ingest_latencies = sorted(results.ingest_latencies)
+                      print(f"\nINGEST PERFORMANCE:")
+                      print(f"  Ingest operations: {len(ingest_latencies)}")
+                      print(f"  Average latency: {sum(ingest_latencies) / len(ingest_latencies):.3f}s")
+                      print(f"  Median latency: {ingest_latencies[len(ingest_latencies)//2]:.3f}s")
+                  
+                  if results.errors:
+                      print(f"\nERRORS ({len(results.errors)}):")
+                      for error in results.errors[:10]:  # Show first 10 errors
+                          print(f"  {error}")
+                      if len(results.errors) > 10:
+                          print(f"  ... and {len(results.errors) - 10} more errors")
+                  
+                  # Performance assessment
+                  avg_search_latency = sum(results.search_latencies) / len(results.search_latencies) if results.search_latencies else 0
+                  error_rate = (results.total_requests - results.successful_requests) / max(results.total_requests, 1)
+                  
+                  print(f"\n=== PERFORMANCE ASSESSMENT ===")
+                  if avg_search_latency < 1.0:
+                      print("✅ Search latency: EXCELLENT (< 1s)")
+                  elif avg_search_latency < 2.0:
+                      print("🟡 Search latency: GOOD (< 2s)")
+                  else:
+                      print("❌ Search latency: NEEDS IMPROVEMENT (≥ 2s)")
+                  
+                  if error_rate < 0.01:
+                      print("✅ Error rate: EXCELLENT (< 1%)")
+                  elif error_rate < 0.05:
+                      print("🟡 Error rate: ACCEPTABLE (< 5%)")
+                  else:
+                      print("❌ Error rate: NEEDS IMPROVEMENT (≥ 5%)")
+                  
+                  rps = results.total_requests / duration
+                  if rps > 50:
+                      print("✅ Throughput: EXCELLENT (> 50 RPS)")
+                  elif rps > 20:
+                      print("🟡 Throughput: GOOD (> 20 RPS)")
+                  else:
+                      print("❌ Throughput: NEEDS IMPROVEMENT (≤ 20 RPS)")
+          
+          if __name__ == "__main__":
+              asyncio.run(run_benchmark())
+          EOF
+          
+          echo "Running benchmark..."
+          python benchmark.py
+      
+      # Cleanup completed benchmark pods
+      ttlSecondsAfterFinished: 86400  # 24 hours
+
+---
+# ConfigMap with benchmark scenarios
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-benchmark-scenarios
+  namespace: threads-agent
+data:
+  load-test.yaml: |
+    # High load scenario
+    concurrent_users: 50
+    duration: 600  # 10 minutes
+    queries_per_second: 100
+    
+  stress-test.yaml: |
+    # Stress test scenario
+    concurrent_users: 100
+    duration: 300  # 5 minutes
+    queries_per_second: 200
+    
+  endurance-test.yaml: |
+    # Long running test
+    concurrent_users: 20
+    duration: 3600  # 1 hour
+    queries_per_second: 50

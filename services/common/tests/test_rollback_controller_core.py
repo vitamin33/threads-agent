@@ -30,7 +30,7 @@ class TestRollbackControllerCore:
 
         assert controller.performance_detector == detector
         assert controller.model_registry == registry
-        assert controller.is_monitoring == False
+        assert not controller.is_monitoring
         assert controller.rollback_threshold_seconds == 30.0
         assert isinstance(controller.rollback_history, list)
         assert len(controller.rollback_history) == 0
@@ -44,15 +44,15 @@ class TestRollbackControllerCore:
         # Start monitoring
         result = controller.start_monitoring("model_v2.0", "model_v1.9")
 
-        assert result.success == True
-        assert controller.is_monitoring == True
+        assert result.success
+        assert controller.is_monitoring
         assert controller.current_model == "model_v2.0"
         assert controller.fallback_model == "model_v1.9"
         assert controller.monitoring_start_time is not None
 
         # Stop monitoring
         controller.stop_monitoring()
-        assert controller.is_monitoring == False
+        assert not controller.is_monitoring
         assert controller.current_model is None
         assert controller.fallback_model is None
 
@@ -78,10 +78,10 @@ class TestRollbackControllerCore:
         health = controller.check_health(historical_data, current_data)
 
         assert isinstance(health, HealthCheck)
-        assert health.is_healthy == False
-        assert health.triggers_rollback == True
+        assert not health.is_healthy
+        assert health.triggers_rollback
         assert RollbackTrigger.PERFORMANCE_REGRESSION in health.detected_issues
-        assert health.has_sufficient_data == True
+        assert health.has_sufficient_data
         assert controller.last_health_check is not None
 
         # Verify detector was called
@@ -100,7 +100,7 @@ class TestRollbackControllerCore:
 
         result = controller.execute_manual_rollback("Performance issues reported")
 
-        assert result.success == True
+        assert result.success
         assert result.trigger == RollbackTrigger.MANUAL
         assert result.reason == "Performance issues reported"
         assert result.from_model == "model_v2.0"
@@ -113,7 +113,7 @@ class TestRollbackControllerCore:
         # Verify history was recorded
         history = controller.get_rollback_history()
         assert len(history) == 1
-        assert history[0].success == True
+        assert history[0].success
         assert history[0].trigger == RollbackTrigger.MANUAL
 
     def test_automatic_rollback_on_regression(self):
@@ -138,7 +138,7 @@ class TestRollbackControllerCore:
         )
 
         assert result is not None
-        assert result.success == True
+        assert result.success
         assert result.trigger == RollbackTrigger.PERFORMANCE_REGRESSION
         assert "Automatic rollback triggered" in result.reason
 
@@ -181,14 +181,14 @@ class TestRollbackControllerCore:
 
         result = controller.execute_manual_rollback("Test rollback")
 
-        assert result.success == False
+        assert not result.success
         assert "Registry connection failed" in result.error_message
         assert result.trigger == RollbackTrigger.MANUAL
 
         # Verify error was recorded in history
         history = controller.get_rollback_history()
         assert len(history) == 1
-        assert history[0].success == False
+        assert not history[0].success
         assert "Registry connection failed" in history[0].error_message
 
     def test_status_reporting(self):
@@ -199,7 +199,7 @@ class TestRollbackControllerCore:
 
         # Test status before monitoring
         status = controller.get_rollback_status()
-        assert status.is_monitoring == False
+        assert not status.is_monitoring
         assert status.current_model is None
         assert status.rollback_count == 0
 
@@ -207,7 +207,7 @@ class TestRollbackControllerCore:
         controller.start_monitoring("model_v2.0", "model_v1.9")
         status = controller.get_rollback_status()
 
-        assert status.is_monitoring == True
+        assert status.is_monitoring
         assert status.current_model == "model_v2.0"
         assert status.fallback_model == "model_v1.9"
         assert status.monitoring_start_time is not None
@@ -222,7 +222,7 @@ class TestRollbackControllerCore:
         # Try manual rollback without monitoring
         result = controller.execute_manual_rollback("Test rollback")
 
-        assert result.success == False
+        assert not result.success
         assert "not monitoring" in result.error_message.lower()
 
         # Try automatic rollback without monitoring
@@ -239,11 +239,11 @@ class TestRollbackControllerCore:
         # Test with empty data
         health = controller.check_health([], [])
 
-        assert health.is_healthy == False
+        assert not health.is_healthy
         assert (
-            health.triggers_rollback == False
+            not health.triggers_rollback
         )  # Conservative - don't auto-rollback on data issues
-        assert health.has_sufficient_data == False
+        assert not health.has_sufficient_data
         assert RollbackTrigger.HEALTH_CHECK_FAILURE in health.detected_issues
 
         # Verify detector was not called with insufficient data

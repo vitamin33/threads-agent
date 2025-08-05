@@ -154,11 +154,11 @@ class RollbackController:
 
     def __init__(
         self,
-        performance_detector,
-        model_registry,
+        performance_detector: Any,
+        model_registry: Any,
         rollback_threshold_seconds: float = 30.0,
         health_check_interval_seconds: int = 60,
-    ):
+    ) -> None:
         """
         Initialize RollbackController.
 
@@ -354,6 +354,10 @@ class RollbackController:
         Returns:
             RollbackResult with execution details
         """
+        # These should never be None when executing rollback
+        assert self.current_model is not None, "Current model must be set"
+        assert self.fallback_model is not None, "Fallback model must be set"
+
         start_time = time.time()
 
         try:

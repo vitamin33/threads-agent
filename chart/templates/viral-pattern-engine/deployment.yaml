@@ -1,0 +1,65 @@
+# File: chart/templates/viral-pattern-engine/deployment.yaml
+{{- if .Values.viralPatternEngine.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viral-pattern-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: viral-pattern-engine
+  template:
+    metadata:
+      labels:
+        app: viral-pattern-engine
+    spec:
+      containers:
+        - name: viral-pattern-engine
+          image: "{{ tpl .Values.viralPatternEngine.image.repository $ }}:{{ tpl .Values.viralPatternEngine.image.tag $ }}"
+          imagePullPolicy: {{ .Values.viralPatternEngine.image.pullPolicy | default "IfNotPresent" }}
+
+          # ───── ports ─────
+          ports:
+            - containerPort: 8095
+
+          # ───── health checks ─────
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8095
+            initialDelaySeconds: 10
+            periodSeconds: 30
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8095
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          # ───── resources ─────
+          resources:
+            requests:
+              memory: {{ .Values.viralPatternEngine.resources.requests.memory | quote }}
+              cpu: {{ .Values.viralPatternEngine.resources.requests.cpu | quote }}
+            limits:
+              memory: {{ .Values.viralPatternEngine.resources.limits.memory | quote }}
+              cpu: {{ .Values.viralPatternEngine.resources.limits.cpu | quote }}
+
+          # ───── environment ─────
+          env:
+            - name: VIRAL_SCRAPER_URL
+              value: "http://viral-content-scraper:8094"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: common-env
+                  key: DATABASE_URL
+            - name: LOG_LEVEL
+              value: "INFO"
+            {{- if .Values.mlflow.enabled }}
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow:5000"
+            {{- end }}
+{{- end }}

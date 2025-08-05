@@ -1,0 +1,55 @@
+# monitoring/runner-monitoring.yml
+# Prometheus monitoring configuration for self-hosted runners
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "runner-alerts.yml"
+
+scrape_configs:
+  # Node exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: 
+        - 'runner-heavy:9100'
+        - 'runner-light:9100'
+    scrape_interval: 10s
+
+  # Docker metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets:
+        - 'runner-heavy:9323'
+    scrape_interval: 15s
+
+  # GitHub Actions runner metrics (custom exporter)
+  - job_name: 'github-runner'
+    static_configs:
+      - targets:
+        - 'runner-heavy:8080'
+        - 'runner-light:8080'
+    scrape_interval: 30s
+
+  # Application performance during CI
+  - job_name: 'ci-performance'
+    static_configs:
+      - targets:
+        - 'k3d-cluster:8080'  # orchestrator during tests
+    scrape_interval: 5s
+    scrape_timeout: 3s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - 'alertmanager:9093'
+
+# Custom metrics for GitHub Actions
+# These would be exposed by a custom runner metrics exporter
+remote_write:
+  - url: "http://prometheus:9090/api/v1/write"
+    queue_config:
+      max_samples_per_send: 1000
+      batch_send_deadline: 5s

@@ -38,6 +38,6 @@ EVALUATION_LATENCY = Histogram(
 )
 
 
-def get_metrics():
+def get_metrics() -> bytes:
     """Generate Prometheus metrics."""
     return generate_latest()

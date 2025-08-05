@@ -1,5 +1,6 @@
 # /services/orchestrator/db/__init__.py
 import os
+from typing import Any
 
 from dotenv import load_dotenv  # optional; dev-only
 from sqlalchemy import create_engine
@@ -13,7 +14,7 @@ class Base(DeclarativeBase):
 
 
 # Only create engine and session when needed, not on import
-def get_engine():
+def get_engine() -> Any:
     """Get database engine, creating it lazily."""
     pg_dsn = os.getenv(
         "POSTGRES_DSN",
@@ -22,9 +23,19 @@ def get_engine():
     return create_engine(pg_dsn, pool_pre_ping=True, pool_size=5)
 
 
-def get_session():
+def get_session() -> Any:
     """Get database session class, creating it lazily."""
     return sessionmaker(get_engine(), expire_on_commit=False)
+
+
+def get_db_session():
+    """FastAPI dependency to get database session."""
+    SessionLocal = get_session()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 # For backward compatibility, create these when accessed
@@ -34,4 +45,4 @@ Session = None
 # Note: engine and Session will be None until explicitly created
 # This prevents database connection attempts during import
 
-__all__ = ["Base", "get_engine", "get_session"]
+__all__ = ["Base", "get_engine", "get_session", "get_db_session"]

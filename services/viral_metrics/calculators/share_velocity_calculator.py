@@ -35,7 +35,7 @@ class ShareVelocityCalculator:
             # Fallback: calculate simple shares per timeframe
             shares = engagement_data.get("shares", 0)
             hours = self.parse_timeframe_hours(timeframe)
-            return shares / max(hours, 1)
+            return float(shares / max(hours, 1))
 
         # Find peak sharing hour
         max_shares_per_hour = 0

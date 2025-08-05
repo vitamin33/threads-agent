@@ -48,6 +48,67 @@ fakeThreads:
     repository: ghcr.io/threads-agent-stack/fake-threads
     tag: "0.1.0"
   port: 9009
+
+# ───────── RAG Pipeline Service ─────────
+ragPipeline:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: ghcr.io/threads-agent-stack/rag-pipeline
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 3Gi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+    customMetrics:
+    - type: Pods
+      pods:
+        metric:
+          name: rag_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "20"
+  
+  config:
+    # RAG Configuration
+    topK: 20
+    rerankTopK: 10
+    minScore: 0.7
+    batchSize: 50
+    cacheTTL: 1800
+    
+    # Connection Pools
+    qdrantPoolSize: 20
+    redisPoolSize: 15
+    embeddingBatchSize: 100
+    maxConcurrentBatches: 3
+    
+    # FastAPI/Uvicorn
+    uvicornWorkers: 1
+    uvicornBacklog: 2048
+  
+  serviceMonitor:
+    enabled: true
+  
+  pdb:
+    enabled: true
+    minAvailable: 2
   pullSecret: ""                   # leave blank unless you push to a private registry
 
 threadsService:                    # orchestrator ↔︎ fake-threads alias
@@ -65,6 +126,41 @@ viralEngine:
   image:
     repository: ghcr.io/threads-agent-stack/viral-engine
     tag: "0.1.0"
+
+viralPatternEngine:
+  enabled: false                   # turn ON in dev/ci values
+  image:
+    repository: ghcr.io/threads-agent-stack/viral-pattern-engine
+    tag: "0.1.0"
+  models:
+    bert:
+      enabled: true
+      model: "j-hartmann/emotion-english-distilroberta-base"
+      batchSize: 8
+    vader:
+      enabled: true
+  cache:
+    size: 1000
+  database:
+    poolSize: 10
+    maxOverflow: 20
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilization: 70
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  networkPolicy:
+    enabled: false
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
 
 threadsAdaptor:
   enabled: false                   # turn ON when using real Threads API
@@ -100,6 +196,107 @@ revenue:
       memory: "512Mi"
       cpu: "500m"
 
+finopsEngine:
+  enabled: false                   # turn ON to enable FinOps monitoring
+  image:
+    repository: finops-engine
+    tag: "local"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 8095
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  # Alert webhook configuration
+  alertWebhooks:
+    slack: ""                      # Slack webhook URL
+    discord: ""                    # Discord webhook URL
+    telegramBotToken: ""          # Telegram bot token
+    telegramChatId: ""            # Telegram chat ID
+    customWebhook: ""             # Custom webhook URL
+
+techDocGenerator:
+  enabled: false                   # turn ON to enable AI Job automation features
+  replicaCount: 1
+  image:
+    repository: ghcr.io/threads-agent-stack/tech-doc-generator
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  logLevel: "INFO"
+  
+  # AI ROI Calculator - Public facing tool for lead generation
+  roiCalculator:
+    enabled: true
+    ingress:
+      enabled: false               # turn ON for public access
+      host: "ai-roi-calculator.yourdomain.com"
+      className: "nginx"
+      tlsIssuer: "letsencrypt-prod"
+  
+  # Lead capture and consultation booking
+  leadCapture:
+    enabled: true
+    email: "vitaliiserbyn@gmail.com"
+    linkedin: "https://linkedin.com/in/vitaliiserbyn"
+    responseTime: "within 24 hours"
+  
+  # Content Scheduler - Automated weekly content generation
+  contentScheduler:
+    enabled: true
+    defaultCompanies: "anthropic,notion,stripe,openai,meta"
+    platforms: "linkedin,medium,devto"
+    autoGenerate: true
+    qualityThreshold: 0.7
+  
+  # Professional Content Engine
+  professionalContentEngine:
+    enabled: true
+    viralEngineIntegration: true
+    companyTargeting: true
+    qualityGate: true
+  
+  # Achievement Integration
+  achievementIntegration:
+    enabled: true
+    realDataOnly: true
+    portfolioReady: true
+  
+  # Network policies for security
+  networkPolicy:
+    enabled: false                 # turn ON for production security
+  
+  # Pod disruption budget for availability
+  podDisruptionBudget:
+    enabled: false                 # turn ON for production
+    minAvailable: 1
+  
+  # Horizontal Pod Autoscaler
+  hpa:
+    enabled: false                 # turn ON for production scaling
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilization: 70
+    targetMemoryUtilization: 80
+
 threadsAdaptor:
   credentials:
     accessToken: ""                # Threads Access Token
@@ -112,6 +309,60 @@ threadsAdaptor:
       memory: "512Mi"
       cpu: "500m"
   extraEnv: []
+
+# RAG Pipeline Configuration
+ragPipeline:
+  enabled: false                   # turn ON in dev/prod values
+  replicaCount: 3
+  image:
+    repository: ghcr.io/threads-agent-stack/rag-pipeline
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8000
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 3Gi
+  
+  config:
+    # Performance tuning
+    topK: 20
+    rerankTopK: 10
+    minScore: 0.7
+    batchSize: 50
+    cacheTTL: 1800
+    
+    # Connection pools
+    qdrantPoolSize: 20
+    redisPoolSize: 15
+    embeddingBatchSize: 100
+    maxConcurrentBatches: 3
+    
+    # FastAPI/Uvicorn optimization
+    uvicornWorkers: 1
+    uvicornBacklog: 2048
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    customMetrics: []
+  
+  serviceMonitor:
+    enabled: false                 # requires Prometheus CRDs
+  
+  pdb:
+    enabled: true
+    minAvailable: 2
 
 # MLflow Performance Optimization Configuration
 mlflow:
@@ -486,3 +737,159 @@ qdrant:
     requests:
       cpu: 200m
       memory: 512Mi
+
+# ───────── Apache Airflow Orchestration (CRA-284) ─────────
+airflow:
+  enabled: false                   # turn ON for E7 - Viral Learning Flywheel orchestration
+  image:
+    repository: apache/airflow
+    tag: "2.8.0-python3.12"
+    pullPolicy: IfNotPresent
+  
+  # Authentication and Security (REQUIRED in production)
+  adminUsername: "admin"           # Admin user name
+  adminEmail: "admin@threads-agent.com"  # Admin email
+  adminPassword: ""                # REQUIRED - set in production values
+  fernetKey: ""                    # REQUIRED - 32 bytes base64 encoded key
+  webserverSecretKey: ""           # REQUIRED - unique secret key per deployment
+  
+  # Core Configuration
+  maxActiveRuns: 3                 # Maximum concurrent DAG runs
+  parallelism: 32                  # Total task slots across all workers
+  maxActiveTasks: 16              # Maximum tasks per DAG run
+  schedulerThreads: 2             # Scheduler thread pool size
+  defaultTaskRetries: 2           # Default retry count for failed tasks
+  sqlAlchemyPoolSize: 10          # Database connection pool size
+  sqlAlchemyMaxOverflow: 20       # Max overflow connections
+  
+  # Webserver Configuration
+  webserver:
+    replicas: 1
+    baseUrl: "http://localhost:8080"  # External base URL
+    exposeConfig: "False"           # Don't expose config in production
+    authenticate: "True"            # Enable authentication
+    authBackend: "airflow.api.auth.backend.basic_auth"  # Auth method
+    sessionTimeout: 30              # Session timeout in minutes
+    workerTimeout: 120              # Worker timeout in seconds
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "200m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    # Pod Disruption Budget
+    pdb:
+      minAvailable: 1
+    # Autoscaling
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilization: 70
+      targetMemoryUtilization: 80
+  
+  # Scheduler Configuration
+  scheduler:
+    replicas: 1
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "200m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    # Pod Disruption Budget
+    pdb:
+      minAvailable: 1
+  
+  # Service Configuration
+  service:
+    type: ClusterIP
+    port: 8080
+    
+  # Network Policy
+  networkPolicy:
+    enabled: true                   # Enable network isolation
+    
+  # Metrics Configuration
+  metrics:
+    statsd:
+      enabled: true
+      host: "prometheus-statsd-exporter"
+      port: 9125
+      prefix: "airflow"
+    allowList: "airflow.dag_processing.last_runtime.*,airflow.dag_processing.import_errors,airflow.dag.*.*.duration,airflow.dag.*.*.success,airflow.dag.*.*.failure"
+    scrapeInterval: "30s"
+    scrapeTimeout: "10s"
+  
+  # DAG Configuration
+  dags:
+    # Viral Learning Flywheel DAG settings
+    viralLearningFlywheel:
+      enabled: true
+      schedule: "0 */6 * * *"      # Run every 6 hours
+      maxActiveRuns: 1
+      catchup: false
+      
+      # Scraping Configuration
+      scraping:
+        accounts: ["viral_account_1", "viral_account_2", "viral_account_3"]
+        maxPostsPerAccount: 50
+        daysBack: 7
+        minPerformancePercentile: 95.0
+        
+      # Pattern Extraction Configuration  
+      patternExtraction:
+        batchSize: 25
+        maxParallelTasks: 5
+        
+      # Content Generation Configuration
+      contentGeneration:
+        variants: 3
+        personas: ["professional", "casual", "technical"]
+        
+      # Performance Monitoring
+      monitoring:
+        engagementThreshold: 0.06    # 6% target engagement rate
+        costPerFollowThreshold: 0.01 # $0.01 target cost per follow
+        
+    # Cleanup and Maintenance DAGs
+    maintenance:
+      enabled: true
+      schedule: "0 2 * * *"        # Daily at 2 AM
+      retentionDays: 30            # Keep task logs for 30 days
+      
+  # Integration URLs (auto-configured from service names)
+  services:
+    orchestrator: "http://orchestrator:8080"
+    viralScraper: "http://viral-scraper:8080"
+    viralEngine: "http://viral-engine:8080"
+    viralPatternEngine: "http://viral-pattern-engine:8080"
+    personaRuntime: "http://persona-runtime:8080"
+    prometheus: "http://prometheus:9090"
+    
+  # Backup Strategy
+  backup:
+    enabled: false                  # Enable database backups
+    schedule: "0 3 * * *"           # Daily at 3 AM
+    retention: "7d"                 # Keep backups for 7 days
+    storage:
+      type: "s3"                   # s3, gcs, or local
+      bucket: "airflow-backups"
+      region: "us-west-2"
+      
+  # External Secrets (for production)
+  externalSecrets:
+    enabled: false                  # Use external secret management
+    secretStore: "vault"            # vault, aws-secrets-manager, etc.
+    
+  # Monitoring and Observability
+  monitoring:
+    enabled: true
+    prometheus:
+      enabled: true
+      scrapeInterval: "30s"
+    grafana:
+      enabled: true
+      dashboardsEnabled: true

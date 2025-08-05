@@ -1,0 +1,111 @@
+epic_id: epic-284-pr-metrics-transparency
+epic_name: "PR Value Metrics Calculation Transparency & Database Enhancement"
+description: |
+  Enhance the Achievement Collector database to provide comprehensive transparency for PR value 
+  metrics calculations, including formula storage, baseline tracking, calculation provenance,
+  and confidence scoring. This epic builds upon the existing PR Value Analyzer integration
+  to create a robust, auditable system for tracking how business/technical metrics are calculated.
+
+  The current system stores 40+ metrics (ROI, infrastructure savings, UX scores) in JSON fields
+  but lacks transparency into how these values are calculated, their input parameters, and
+  baseline comparisons. This epic adds the missing calculation metadata and audit trail.
+
+status: planned
+priority: high
+business_value: |
+  - Provides transparency and auditability for PR value calculations (critical for executive reporting)
+  - Enables historical tracking of calculation formula evolution and accuracy improvements
+  - Supports confidence scoring for metric reliability in portfolio presentations
+  - Reduces technical debt by properly structuring complex metrics data
+  - Enables advanced analytics and metric validation across achievement history
+  - Supports data-driven improvements to calculation algorithms
+
+target_completion: 2025-08-18
+estimated_effort: 32
+
+features:
+  - feature_id: feat-pr-metrics-001
+    name: "Enhanced JSON Structure & Formula Storage"
+    description: "Enhance existing JSON fields to store calculation formulas, input parameters, and versions"
+    priority: high
+    estimated_effort: 8
+    
+  - feature_id: feat-pr-metrics-002  
+    name: "Calculation Metadata & Audit Trail"
+    description: "Add calculation metadata table with formula tracking, input parameters, and execution history"
+    priority: high
+    estimated_effort: 10
+    
+  - feature_id: feat-pr-metrics-003
+    name: "Baseline Tracking & Comparison Engine"
+    description: "Implement baseline metric storage and comparison system for before/after analysis"
+    priority: medium
+    estimated_effort: 8
+    
+  - feature_id: feat-pr-metrics-004
+    name: "Confidence Scoring & Validation Framework"
+    description: "Add confidence scoring system with metric validation and reliability tracking"
+    priority: medium
+    estimated_effort: 6
+
+success_metrics:
+  - "All PR metrics include calculation formulas and input parameters"
+  - "100% of calculations are traceable with version history"
+  - "Baseline comparisons available for all quantitative metrics"
+  - "Confidence scores assigned to all calculated metrics"
+  - "Database migration completes without data loss"
+  - "Performance impact <5% for existing queries"
+  - "API response times remain <200ms for metric endpoints"
+
+dependencies:
+  - "Existing PR Value Analyzer integration"
+  - "Achievement Collector database with PRAchievement tables"
+  - "PostgreSQL migration system in orchestrator service"
+  - "Existing metrics_after and metadata JSON fields"
+
+risks:
+  - "Large data migration may require downtime"
+  - "Complex JSON schema changes could break existing integrations"
+  - "Performance impact from additional metadata storage"
+  - "Backwards compatibility with existing metric consumers"
+
+mitigation_strategies:
+  - "Implement database migrations in phases with rollback capability"
+  - "Add comprehensive schema validation for JSON structure changes"
+  - "Performance testing with production-scale data volumes"
+  - "Maintain backwards compatibility through versioned APIs"
+
+tags:
+  - database-enhancement
+  - pr-value-metrics
+  - calculation-transparency
+  - audit-trail
+  - data-quality
+
+technical_requirements:
+  database_changes:
+    - "New calculation_metadata table with formula storage"
+    - "Enhanced JSON schema for metrics_after field"
+    - "New baseline_metrics table for historical comparisons"
+    - "Indexes for calculation version and timestamp queries"
+  
+  performance_targets:
+    - "Metric calculation queries <100ms p95"
+    - "Formula retrieval <50ms p95"
+    - "Baseline comparison queries <200ms p95"
+    - "Migration scripts complete in <30 minutes"
+  
+  compatibility:
+    - "Maintain existing API response formats"
+    - "Support both old and new JSON schemas during transition"
+    - "Backwards compatible database queries"
+
+notes: |
+  This epic is structured in 3 phases to minimize risk and enable incremental delivery:
+  
+  Phase 1 (Quick Wins): Enhance existing JSON structure with minimal database changes
+  Phase 2 (Core Enhancement): Add dedicated calculation metadata table with full audit trail  
+  Phase 3 (Advanced Features): Implement confidence scoring and advanced analytics
+  
+  The approach leverages existing PR Value Analyzer integration while adding transparency
+  and auditability that executives and technical stakeholders require for trust in metrics.
