@@ -610,12 +610,8 @@ class PRValueAnalyzer:
         for key, value in self.metrics["future_impact"].items():
             print(f"  • {key}: {value}")
 
-        # Add calculation explanations
-        print("\n📐 How Metrics Are Calculated:")
-        print("  • ROI = (Annual Savings / Dev Cost) × 100")
-        print("  • Infrastructure Savings = $120k × (Perf Factor - 1) / Perf Factor")
-        print("  • Overall Score = (Performance + Quality + Innovation) / 3")
-        print("  • Time Savings = Hours/Week × 50 weeks × $100/hour")
+        # Add comprehensive metric explanations
+        self._print_metric_explanations()
 
         # Scoring thresholds
         print("\n🎯 Scoring Thresholds:")
@@ -840,6 +836,311 @@ class PRValueAnalyzer:
 
         return suggestions
 
+    def _print_metric_explanations(self):
+        """Print comprehensive explanations for all metrics."""
+        print("\n📐 DETAILED METRIC EXPLANATIONS:")
+        print("=" * 60)
+        
+        # Business Metrics Explanations
+        print("\n💰 BUSINESS METRICS:")
+        print("-" * 40)
+        
+        business_metrics = self.metrics.get("business_metrics", {})
+        
+        print("\n1️⃣ Throughput Improvement Percent:")
+        print(f"   Value: {business_metrics.get('throughput_improvement_percent', 0)}%")
+        print("   Formula: ((current_rps / baseline_rps) - 1) × 100%")
+        print(f"   Calculation: (({self.metrics['technical_metrics']['performance'].get('peak_rps', 0)} / 500) - 1) × 100%")
+        print("   Meaning: How much faster the system processes requests vs baseline")
+        print("   Baseline: 500 RPS (typical microservice performance)")
+        
+        print("\n2️⃣ Infrastructure Savings Estimate:")
+        print(f"   Value: ${business_metrics.get('infrastructure_savings_estimate', 0):,}")
+        print("   Formula: servers_reduced × $12k/year + bandwidth_savings")
+        print("   Calculation: Based on reduced server needs from performance gains")
+        print("   Meaning: Annual cost reduction from needing fewer servers")
+        
+        print("\n3️⃣ Servers Reduced:")
+        print(f"   Value: {business_metrics.get('servers_reduced', 0)}")
+        print("   Formula: floor((current_rps - baseline_rps) / baseline_rps)")
+        print("   Meaning: Number of servers eliminated due to performance gains")
+        
+        print("\n4️⃣ Developer Productivity Savings:")
+        print(f"   Value: ${business_metrics.get('developer_productivity_savings', 0):,}")
+        print("   Formula: hours_saved × team_size × $150/hour")
+        print(f"   Hours Saved: {business_metrics.get('productivity_hours_saved', 0)} hours/year")
+        print("   Meaning: Cost savings from developers working more efficiently")
+        
+        print("\n5️⃣ Quality Improvement Savings:")
+        print(f"   Value: ${business_metrics.get('quality_improvement_savings', 0):,}")
+        print("   Formula: bugs_prevented × $5k/bug (avg cost to fix in production)")
+        print(f"   Bugs Prevented: {business_metrics.get('bugs_prevented_annually', 0)}")
+        print("   Meaning: Cost avoided by catching bugs before production")
+        
+        print("\n6️⃣ Total Annual Savings:")
+        print(f"   Value: ${business_metrics.get('total_annual_savings', 0):,}")
+        print("   Formula: infrastructure + productivity + quality savings")
+        print("   Meaning: Total projected annual cost reduction")
+        
+        print("\n7️⃣ Risk Adjusted Savings:")
+        print(f"   Value: ${business_metrics.get('risk_adjusted_savings', 0):,}")
+        print("   Formula: total_savings × confidence_factor")
+        print(f"   Confidence: {business_metrics.get('confidence_level', 'medium')}")
+        print("   Meaning: Conservative estimate accounting for uncertainty")
+        
+        print("\n8️⃣ Total Investment:")
+        print(f"   Value: ${business_metrics.get('total_investment', 0):,}")
+        print("   Formula: dev_hours × $150/hour + infrastructure_cost")
+        print("   Meaning: Total cost to implement this PR")
+        
+        print("\n9️⃣ ROI Year One Percent:")
+        print(f"   Value: {business_metrics.get('roi_year_one_percent', 0)}%")
+        print("   Formula: ((annual_savings - investment) / investment) × 100%")
+        print("   Meaning: Return on investment in the first year")
+        print("   Note: >100% means positive ROI within first year")
+        
+        print("\n🔟 Payback Period:")
+        print(f"   Value: {business_metrics.get('payback_period_months', 0)} months")
+        print("   Formula: investment / (annual_savings / 12)")
+        print("   Meaning: Time to recover the initial investment")
+        
+        print("\n✋ User Experience Score:")
+        print(f"   Value: {business_metrics.get('user_experience_score', 0)}/10")
+        print("   Formula: Based on response latency")
+        print("   - <100ms = 10 (Exceptional)")
+        print("   - <200ms = 9 (Excellent)")
+        print("   - <500ms = 7 (Good)")
+        print("   - >500ms = 5 (Needs improvement)")
+        
+        # Performance Metrics Explanations
+        print("\n🚀 PERFORMANCE METRICS:")
+        print("-" * 40)
+        
+        perf = self.metrics["technical_metrics"].get("performance", {})
+        
+        print("\n1️⃣ Peak RPS (Requests Per Second):")
+        print(f"   Value: {perf.get('peak_rps', 0)}")
+        print("   Meaning: Maximum requests the system can handle per second")
+        print("   Industry Standards:")
+        print("   - <100 RPS: Low traffic")
+        print("   - 100-500 RPS: Medium traffic")
+        print("   - 500-1000 RPS: High traffic")
+        print("   - >1000 RPS: Very high traffic")
+        
+        print("\n2️⃣ Latency (Response Time):")
+        print(f"   Value: {perf.get('latency_ms', 0)}ms")
+        print("   Meaning: Average time to process a request")
+        print("   User Perception:")
+        print("   - <100ms: Feels instant")
+        print("   - 100-300ms: Fast")
+        print("   - 300-1000ms: Acceptable")
+        print("   - >1000ms: Slow")
+        
+        print("\n3️⃣ Test Coverage:")
+        print(f"   Value: {perf.get('test_coverage', 0)}%")
+        print("   Meaning: Percentage of code covered by tests")
+        print("   Quality Standards:")
+        print("   - >80%: Excellent")
+        print("   - 60-80%: Good")
+        print("   - 40-60%: Fair")
+        print("   - <40%: Needs improvement")
+        
+        # KPI Score Explanations
+        print("\n🎯 KEY PERFORMANCE INDICATORS:")
+        print("-" * 40)
+        
+        kpis = self.metrics.get("kpis", {})
+        
+        print("\n1️⃣ Performance Score:")
+        print(f"   Value: {kpis.get('performance_score', 0)}/10")
+        print("   Formula: Logarithmic scale based on RPS")
+        print("   - 10/10: >10,000 RPS (Enterprise scale)")
+        print("   - 9/10: >5,000 RPS (Large scale)")
+        print("   - 8/10: >2,000 RPS (High performance)")
+        print("   - 7/10: >1,000 RPS (Good performance)")
+        print("   - 6/10: >500 RPS (Acceptable)")
+        print("   - 5/10: >200 RPS (Basic)")
+        
+        print("\n2️⃣ Quality Score:")
+        print(f"   Value: {kpis.get('quality_score', 0)}/10")
+        print("   Formula: test_coverage / 10")
+        print("   Meaning: Code quality based on test coverage")
+        
+        print("\n3️⃣ Business Value Score:")
+        print(f"   Value: {kpis.get('business_value_score', 0)}/10")
+        print("   Formula: min(10, roi_percent / 30)")
+        print("   Meaning: Financial impact relative to investment")
+        print("   - 10/10: ROI >300%")
+        print("   - 8/10: ROI >240%")
+        print("   - 6/10: ROI >180%")
+        
+        print("\n4️⃣ Innovation Score:")
+        print(f"   Value: {kpis.get('innovation_score', 0)}/10")
+        print("   Based on:")
+        print("   - New patterns/architectures introduced")
+        print("   - AI/ML features implemented")
+        print("   - Novel solutions to complex problems")
+        print("   - Industry best practices adopted")
+        
+        print("\n5️⃣ Overall Score:")
+        print(f"   Value: {kpis.get('overall_score', 0)}/10")
+        print("   Formula: weighted average of all scores")
+        print("   - Performance: 30% weight")
+        print("   - Quality: 25% weight")
+        print("   - Business Value: 25% weight")
+        print("   - Innovation: 20% weight")
+        
+        # Confidence Level Explanation
+        print("\n🎯 CONFIDENCE LEVELS:")
+        print("-" * 40)
+        confidence = business_metrics.get('confidence_level', 'medium')
+        print(f"\nCurrent Confidence: {confidence}")
+        print("\nConfidence Factors:")
+        print("- High (0.9x): Clear metrics, proven patterns")
+        print("- Medium (0.8x): Reasonable estimates, some assumptions")
+        print("- Low (0.7x): Many assumptions, unproven benefits")
+        
+        print("\n" + "=" * 60)
+
+    def _generate_metric_explanations_dict(self) -> Dict[str, Dict[str, Any]]:
+        """Generate metric explanations as a dictionary for storage."""
+        explanations = {
+            "business_metrics": {
+                "throughput_improvement_percent": {
+                    "formula": "((current_rps / baseline_rps) - 1) × 100%",
+                    "meaning": "How much faster the system processes requests vs baseline",
+                    "baseline": "500 RPS (typical microservice performance)"
+                },
+                "infrastructure_savings_estimate": {
+                    "formula": "servers_reduced × $12k/year + bandwidth_savings",
+                    "meaning": "Annual cost reduction from needing fewer servers",
+                    "calculation": "Based on reduced server needs from performance gains"
+                },
+                "servers_reduced": {
+                    "formula": "floor((current_rps - baseline_rps) / baseline_rps)",
+                    "meaning": "Number of servers eliminated due to performance gains"
+                },
+                "developer_productivity_savings": {
+                    "formula": "hours_saved × team_size × $150/hour",
+                    "meaning": "Cost savings from developers working more efficiently",
+                    "hourly_rate": "$150/hour (industry standard)"
+                },
+                "quality_improvement_savings": {
+                    "formula": "bugs_prevented × $5k/bug",
+                    "meaning": "Cost avoided by catching bugs before production",
+                    "bug_cost": "$5k average cost to fix bug in production"
+                },
+                "total_annual_savings": {
+                    "formula": "infrastructure + productivity + quality savings",
+                    "meaning": "Total projected annual cost reduction"
+                },
+                "risk_adjusted_savings": {
+                    "formula": "total_savings × confidence_factor",
+                    "meaning": "Conservative estimate accounting for uncertainty",
+                    "confidence_factors": {
+                        "high": 0.9,
+                        "medium": 0.8,
+                        "low": 0.7
+                    }
+                },
+                "total_investment": {
+                    "formula": "dev_hours × $150/hour + infrastructure_cost",
+                    "meaning": "Total cost to implement this PR"
+                },
+                "roi_year_one_percent": {
+                    "formula": "((annual_savings - investment) / investment) × 100%",
+                    "meaning": "Return on investment in the first year",
+                    "interpretation": ">100% means positive ROI within first year"
+                },
+                "payback_period_months": {
+                    "formula": "investment / (annual_savings / 12)",
+                    "meaning": "Time to recover the initial investment"
+                },
+                "user_experience_score": {
+                    "formula": "Based on response latency",
+                    "scale": {
+                        "10": "<100ms (Exceptional)",
+                        "9": "<200ms (Excellent)",
+                        "7": "<500ms (Good)",
+                        "5": ">500ms (Needs improvement)"
+                    }
+                }
+            },
+            "performance_metrics": {
+                "peak_rps": {
+                    "meaning": "Maximum requests the system can handle per second",
+                    "industry_standards": {
+                        "low": "<100 RPS",
+                        "medium": "100-500 RPS",
+                        "high": "500-1000 RPS",
+                        "very_high": ">1000 RPS"
+                    }
+                },
+                "latency_ms": {
+                    "meaning": "Average time to process a request",
+                    "user_perception": {
+                        "instant": "<100ms",
+                        "fast": "100-300ms",
+                        "acceptable": "300-1000ms",
+                        "slow": ">1000ms"
+                    }
+                },
+                "test_coverage": {
+                    "meaning": "Percentage of code covered by tests",
+                    "quality_standards": {
+                        "excellent": ">80%",
+                        "good": "60-80%",
+                        "fair": "40-60%",
+                        "poor": "<40%"
+                    }
+                }
+            },
+            "kpi_scores": {
+                "performance_score": {
+                    "formula": "Logarithmic scale based on RPS",
+                    "scale": {
+                        "10": ">10,000 RPS (Enterprise scale)",
+                        "9": ">5,000 RPS (Large scale)",
+                        "8": ">2,000 RPS (High performance)",
+                        "7": ">1,000 RPS (Good performance)",
+                        "6": ">500 RPS (Acceptable)",
+                        "5": ">200 RPS (Basic)"
+                    }
+                },
+                "quality_score": {
+                    "formula": "test_coverage / 10",
+                    "meaning": "Code quality based on test coverage"
+                },
+                "business_value_score": {
+                    "formula": "min(10, roi_percent / 30)",
+                    "meaning": "Financial impact relative to investment",
+                    "scale": {
+                        "10": "ROI >300%",
+                        "8": "ROI >240%",
+                        "6": "ROI >180%"
+                    }
+                },
+                "innovation_score": {
+                    "criteria": [
+                        "New patterns/architectures introduced",
+                        "AI/ML features implemented",
+                        "Novel solutions to complex problems",
+                        "Industry best practices adopted"
+                    ]
+                },
+                "overall_score": {
+                    "formula": "Weighted average of all scores",
+                    "weights": {
+                        "performance": "30%",
+                        "quality": "25%",
+                        "business_value": "25%",
+                        "innovation": "20%"
+                    }
+                }
+            }
+        }
+        return explanations
+
     def _generate_portfolio_summary(self, results: Dict) -> str:
         """Generate a portfolio-ready project summary."""
         perf = results["technical_metrics"]["performance"]
@@ -930,10 +1231,11 @@ def main():
                     "baseline_latency": 800,
                 },
             },
+            "metric_explanations": analyzer._generate_metric_explanations_dict(),
             "future_impact": results.get("future_impact", {}),
             "warnings": results.get("warnings", []),
             "integration_ready": True,
-            "schema_version": "3.0",  # Updated version for AI insights
+            "schema_version": "3.1",  # Updated version for metric explanations
         }
 
         achievement_file = f".achievements/pr_{pr_number}_achievement.json"
