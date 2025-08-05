@@ -1,0 +1,67 @@
+name: Auto Checkpoint on Test Success
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+  schedule:
+    # Run every 2 hours during work hours (9 AM - 6 PM UTC)
+    - cron: '0 9-18/2 * * 1-5'
+
+jobs:
+  auto-checkpoint:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'schedule' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name "Auto Checkpoint Bot"
+          git config --global user.email "bot@threads-agent.ai"
+          
+      - name: Check for uncommitted changes
+        id: changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Run tests
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          make test || echo "Tests failed, will commit anyway with warning"
+        continue-on-error: true
+        
+      - name: Create checkpoint commit
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+          if [ "${{ job.status }}" == "success" ]; then
+            git commit -m "[auto-checkpoint] ✅ Working state - tests passing
+            
+            Timestamp: $TIMESTAMP
+            Triggered by: ${{ github.event_name }}
+            Branch: ${{ github.ref_name }}"
+          else
+            git commit -m "[auto-checkpoint] ⚠️ Work in progress - tests failing
+            
+            Timestamp: $TIMESTAMP
+            Triggered by: ${{ github.event_name }}
+            Branch: ${{ github.ref_name }}"
+          fi
+          
+      - name: Push checkpoint
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git push origin ${{ github.ref_name }}

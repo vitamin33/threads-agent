@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: threads-agent-dashboard
+  namespace: default
+  labels:
+    app: threads-agent-dashboard
+    component: ui
+    framework: streamlit
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: threads-agent-dashboard
+  template:
+    metadata:
+      labels:
+        app: threads-agent-dashboard
+        component: ui
+        framework: streamlit
+    spec:
+      containers:
+      - name: streamlit
+        image: threads-agent/dashboard:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8501
+          name: http
+          protocol: TCP
+        env:
+        - name: ACHIEVEMENT_API_URL
+          value: "http://achievement-collector:8000"
+        - name: TECH_DOC_API_URL
+          value: "http://tech-doc-generator:8001"
+        - name: ORCHESTRATOR_URL
+          value: "http://orchestrator:8080"
+        - name: VIRAL_ENGINE_URL
+          value: "http://viral-engine:8003"
+        - name: STREAMLIT_SERVER_HEADLESS
+          value: "true"
+        - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+          value: "false"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: streamlit-config
+          mountPath: /app/.streamlit
+          readOnly: true
+      volumes:
+      - name: streamlit-config
+        configMap:
+          name: streamlit-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: threads-agent-dashboard
+  namespace: default
+  labels:
+    app: threads-agent-dashboard
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8501
+    protocol: TCP
+    name: http
+  selector:
+    app: threads-agent-dashboard
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: streamlit-config
+  namespace: default
+data:
+  config.toml: |
+    [server]
+    headless = true
+    port = 8501
+    enableCORS = false
+    enableXsrfProtection = true
+    
+    [browser]
+    gatherUsageStats = false
+    
+    [theme]
+    primaryColor = "#2E86AB"
+    backgroundColor = "#FFFFFF"
+    secondaryBackgroundColor = "#F0F2F6"
+    textColor = "#262730"
+    font = "sans serif"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: threads-agent-dashboard
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: dashboard.threads-agent.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: threads-agent-dashboard
+            port:
+              number: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: threads-agent-dashboard-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: threads-agent-dashboard
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

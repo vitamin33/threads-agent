@@ -117,13 +117,6 @@ app.add_middleware(
 # Include routers
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(manual_publish.router, prefix="/api", tags=["manual-publishing"])
-
-<<<<<<< HEAD
-# Achievement integration router
-from .routers import achievement_articles
-
-=======
->>>>>>> origin/main
 app.include_router(
     achievement_articles.router, prefix="/api", tags=["achievement-integration"]
 )

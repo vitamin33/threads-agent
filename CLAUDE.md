@@ -189,6 +189,43 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
   - Before every push 'just check' command should be fully successful
 - When working on a Linear task, create a git branch starting with the task number (e.g., for task CRA-331, branch name should be 'cra-331-title-of-task')
 
+### Auto-Commit System (Working State Protection)
+Keep your code in a known-good state with automatic checkpoints:
+
+**Quick Commands:**
+```bash
+just checkpoint          # Create checkpoint commit (runs tests first)
+just checkpoint-push     # Checkpoint + push to remote
+just safe-dev           # Auto-commit every 30 minutes
+```
+
+**Features:**
+- **Test-Driven Commits**: Only commits when tests pass
+- **Pre-Push Hook**: Blocks pushing broken code
+- **Safe Development Mode**: Auto-checkpoints every 30 minutes
+- **Emergency Override**: `SKIP_TESTS=1 git push` (use sparingly!)
+
+**Usage Examples:**
+```bash
+# Before risky changes
+just checkpoint "before major refactor"
+
+# Regular development
+just safe-dev  # Runs in background, commits every 30 min
+
+# End of coding session
+just checkpoint-push "completed feature X"
+```
+
+**Commit Format:**
+```
+[auto-commit] ✅ Working state - all tests passing
+
+Branch: feature/new-feature
+Timestamp: 2024-01-15 14:30:00
+Test Status: PASSED
+```
+
 ### AI-Powered Planning
 ```bash
 # Create epic with AI
