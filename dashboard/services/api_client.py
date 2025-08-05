@@ -282,6 +282,83 @@ class ThreadsAgentAPI:
             st.error(f"PR analysis failed: {str(e)}")
             return []
     
+    @st.cache_data(ttl=300)  # Cache for 5 minutes
+    def get_achievement_stats(_self) -> Dict[str, Any]:
+        """Get achievement statistics summary"""
+        try:
+            # Workaround: Calculate stats from achievements list due to SQL error in stats endpoint
+            achievements = _self.get_achievements(days=365)  # Get all achievements
+            
+            if not achievements:
+                raise Exception("No achievements found")
+            
+            # Calculate stats manually
+            import re
+            total_value = 0.0
+            total_time_saved = 0.0
+            impact_scores = []
+            complexity_scores = []
+            category_counts = {}
+            
+            for a in achievements:
+                # Extract business value
+                if a.get('business_value'):
+                    try:
+                        value_str = str(a['business_value'])
+                        cleaned = re.sub(r'[^\d.-]', '', value_str)
+                        if cleaned:
+                            total_value += float(cleaned)
+                    except:
+                        pass
+                
+                # Other metrics
+                if a.get('time_saved_hours'):
+                    total_time_saved += float(a['time_saved_hours'])
+                
+                if a.get('impact_score'):
+                    impact_scores.append(float(a['impact_score']))
+                    
+                if a.get('complexity_score'):
+                    complexity_scores.append(float(a['complexity_score']))
+                
+                # Categories
+                category = a.get('category', 'unknown')
+                category_counts[category] = category_counts.get(category, 0) + 1
+            
+            # Calculate averages
+            avg_impact = sum(impact_scores) / len(impact_scores) if impact_scores else 0
+            avg_complexity = sum(complexity_scores) / len(complexity_scores) if complexity_scores else 0
+            
+            return {
+                "total_achievements": len(achievements),
+                "total_value_generated": total_value,
+                "total_time_saved_hours": total_time_saved,
+                "average_impact_score": avg_impact,
+                "average_complexity_score": avg_complexity,
+                "by_category": category_counts
+            }
+        except Exception:
+            return {
+                "total_achievements": 0,
+                "total_value_generated": 0,
+                "total_time_saved_hours": 0,
+                "average_impact_score": 0,
+                "average_complexity_score": 0,
+                "by_category": {}
+            }
+    
+    def get_calculation_transparency(self, achievement_id: int) -> Dict[str, Any]:
+        """Get calculation transparency for an achievement"""
+        try:
+            with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
+                response = client.get(
+                    f"{self.achievement_url}/achievements/{achievement_id}/calculation-transparency"
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            return {"error": str(e), "success": False}
+    
     def get_viral_predictions(self, content: str) -> Dict[str, Any]:
         """Get viral potential predictions for content"""
         try:

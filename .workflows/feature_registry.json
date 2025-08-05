@@ -1,67 +1,152 @@
 {
   "features": [
     {
-      "id": "feat-ai-job-001",
-      "epic_id": "ai-job-week1",
-      "name": "Achievement-to-Article Integration Layer",
-      "status": "ready",
-      "created": "2025-08-04T00:00:00Z"
-    },
-    {
-      "id": "feat-ai-job-002",
-      "epic_id": "ai-job-week1",
-      "name": "Automated Content Generation Pipeline",
-      "status": "ready",
-      "created": "2025-08-04T00:00:00Z"
-    },
-    {
-      "id": "feat-ai-job-003",
-      "epic_id": "ai-job-week1",
-      "name": "Company-Specific Portfolio API",
-      "status": "ready",
-      "created": "2025-08-04T00:00:00Z"
-    },
-    {
-      "id": "feat-ai-job-004",
-      "epic_id": "ai-job-week2",
-      "name": "Weekly Content Generation Scheduler",
+      "id": "feature-14-1-content-scheduler-database",
+      "title": "Content Scheduler Database Schema & Models",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "high",
       "status": "planned",
-      "created": "2025-08-04T00:00:00Z"
+      "estimated_hours": 48,
+      "estimated_story_points": 12,
+      "task_count": 10,
+      "dependencies": [
+        "PostgreSQL database (existing)",
+        "Alembic migration system (existing)",
+        "SQLAlchemy ORM (existing)"
+      ]
     },
     {
-      "id": "feat-ai-job-005",
-      "epic_id": "ai-job-week2",
-      "name": "AI ROI Calculator Public Tool",
+      "id": "feature-14-2-scheduling-management-api",
+      "title": "Scheduling Management REST API",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "high",
       "status": "planned",
-      "created": "2025-08-04T00:00:00Z"
+      "estimated_hours": 56,
+      "estimated_story_points": 14,
+      "task_count": 13,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "FastAPI framework (existing)",
+        "PostgreSQL database (existing)",
+        "Authentication system",
+        "Redis for caching"
+      ]
     },
     {
-      "id": "feat-ai-job-006",
-      "epic_id": "ai-job-week2",
-      "name": "Content Performance Analytics",
+      "id": "feature-14-3-multi-platform-publishing",
+      "title": "Multi-Platform Publishing Engine",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "high",
       "status": "planned",
-      "created": "2025-08-04T00:00:00Z"
+      "estimated_hours": 72,
+      "estimated_story_points": 18,
+      "task_count": 14,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "feature-14-2-scheduling-management-api",
+        "External platform APIs (Dev.to, LinkedIn, etc.)",
+        "Redis for rate limiting and caching",
+        "Celery for async publishing tasks"
+      ]
     },
     {
-      "id": "feat-ai-job-007",
-      "epic_id": "ai-job-week3",
-      "name": "AI-Powered Content Optimization",
+      "id": "feature-14-4-content-workflow-engine",
+      "title": "Content Workflow Engine & Approval System",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "high",
       "status": "planned",
-      "created": "2025-08-04T00:00:00Z"
+      "estimated_hours": 64,
+      "estimated_story_points": 16,
+      "task_count": 14,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "feature-14-2-scheduling-management-api",
+        "viral_engine (quality scoring)",
+        "Notification services (email, Slack, etc.)",
+        "Redis for workflow state caching"
+      ]
     },
     {
-      "id": "feat-ai-job-008",
-      "epic_id": "ai-job-week3",
-      "name": "Multi-Platform Publishing Expansion",
+      "id": "feature-14-5-analytics-dashboard",
+      "title": "Content Analytics & Performance Dashboard",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "high",
       "status": "planned",
-      "created": "2025-08-04T00:00:00Z"
+      "estimated_hours": 48,
+      "estimated_story_points": 12,
+      "task_count": 13,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "feature-14-2-scheduling-management-api",
+        "feature-14-3-multi-platform-publishing",
+        "Redis for caching",
+        "Machine learning libraries",
+        "Visualization libraries (Chart.js, D3.js)"
+      ]
     },
     {
-      "id": "feat-ai-job-009",
-      "epic_id": "ai-job-week3",
-      "name": "A/B Testing Framework",
+      "id": "feature-14-6-calendar-scheduling-ui",
+      "title": "Calendar-Based Scheduling Interface",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "high",
       "status": "planned",
-      "created": "2025-08-04T00:00:00Z"
+      "estimated_hours": 44,
+      "estimated_story_points": 11,
+      "task_count": 13,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "feature-14-2-scheduling-management-api",
+        "React/Vue.js frontend framework",
+        "Calendar UI library (FullCalendar, React Big Calendar)",
+        "Drag-and-drop library",
+        "WebSocket support for real-time updates"
+      ]
+    },
+    {
+      "id": "feature-14-7-template-management",
+      "title": "Content Template Management System",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "medium",
+      "status": "planned",
+      "estimated_hours": 40,
+      "estimated_story_points": 10,
+      "task_count": 11,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "feature-14-2-scheduling-management-api",
+        "AI/ML services for template generation",
+        "Template rendering engine (Handlebars, Mustache)"
+      ]
+    },
+    {
+      "id": "feature-14-8-real-time-notifications",
+      "title": "Real-Time Notifications & Status Updates",
+      "epic_id": "epic-14-content-scheduler-pipeline",
+      "priority": "medium",
+      "status": "planned",
+      "estimated_hours": 36,
+      "estimated_story_points": 9,
+      "task_count": 12,
+      "dependencies": [
+        "feature-14-1-content-scheduler-database",
+        "feature-14-2-scheduling-management-api",
+        "Redis for real-time message queuing",
+        "WebSocket infrastructure",
+        "Email service provider (SendGrid, SES)",
+        "Push notification services (FCM, APNS)"
+      ]
     }
-  ]
+  ],
+  "metadata": {
+    "last_updated": "2025-01-05",
+    "total_features": 8,
+    "total_tasks": 100,
+    "estimated_total_hours": 408,
+    "estimated_total_story_points": 102,
+    "feature_breakdown": {
+      "high_priority": 6,
+      "medium_priority": 2,
+      "low_priority": 0
+    }
+  }
 }
