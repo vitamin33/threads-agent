@@ -65,18 +65,24 @@ class PRValueAnalyzer:
         # Calculate cost savings based on performance improvements
         if "peak_rps" in performance_metrics:
             rps = performance_metrics["peak_rps"]
-            # Estimate cost savings based on throughput improvement
-            baseline_rps = 100  # Assumed baseline
+            # More realistic baseline based on typical web services
+            baseline_rps = 500  # More realistic baseline for existing services
             improvement_factor = rps / baseline_rps
             value["throughput_improvement_percent"] = round(
                 (improvement_factor - 1) * 100, 1
             )
 
             # Infrastructure cost savings
-            # Higher RPS means fewer servers needed
-            value["infrastructure_savings_estimate"] = round(
-                120000 * (improvement_factor - 1) / improvement_factor, 0
-            )
+            # More conservative estimate based on real server costs
+            # Only count savings if we have meaningful improvement (>20%)
+            if improvement_factor > 1.2:
+                # $5k per server/year, estimate servers saved
+                servers_saved = max(0, (improvement_factor - 1) * 2)
+                value["infrastructure_savings_estimate"] = round(
+                    servers_saved * 5000, 0
+                )
+            else:
+                value["infrastructure_savings_estimate"] = 0
 
         if "latency_ms" in performance_metrics:
             latency = performance_metrics["latency_ms"]
@@ -90,13 +96,14 @@ class PRValueAnalyzer:
             else:
                 value["user_experience_score"] = 7
 
-        # ROI calculation
+        # ROI calculation with more realistic assumptions
         if "infrastructure_savings_estimate" in value:
-            # Assume 150K development cost
-            dev_cost = 150000
+            # More realistic development cost based on feature complexity
+            dev_cost = 25000  # Realistic for RAG pipeline development (2-3 weeks)
             annual_savings = value["infrastructure_savings_estimate"]
-            value["roi_year_one_percent"] = round((annual_savings / dev_cost) * 100, 0)
-            value["payback_period_months"] = round(12 * dev_cost / annual_savings, 1)
+            if annual_savings > 0:
+                value["roi_year_one_percent"] = round((annual_savings / dev_cost) * 100, 0)
+                value["payback_period_months"] = round(12 * dev_cost / annual_savings, 1)
 
         return value
 
@@ -131,37 +138,63 @@ class PRValueAnalyzer:
     def analyze_code_changes(self) -> Dict[str, Any]:
         """Analyze code changes in the PR."""
         try:
-            # Get PR diff statistics - use git directly since gh pr diff doesn't support --stat
-            result = subprocess.run(
-                ["gh", "pr", "view", self.pr_number, "--json", "commits"],
+            # Get PR diff statistics using git since gh doesn't support --stat
+            # First get the base branch
+            base_result = subprocess.run(
+                ["gh", "pr", "view", self.pr_number, "--json", "baseRefName"],
                 capture_output=True,
                 text=True,
             )
             
-            if result.returncode == 0:
-                pr_data = json.loads(result.stdout)
-                commits = pr_data.get("commits", [])
-                if commits:
-                    # Get diff stats from the PR (approximate based on typical PR size)
-                    # This is a fallback since gh pr diff --stat doesn't exist
-                    commit_count = len(commits)
-                    # Rough estimation based on commit count
-                    estimated_files = min(commit_count * 3, 50)
-                    estimated_lines = min(commit_count * 100, 2000)
+            if base_result.returncode == 0:
+                base_data = json.loads(base_result.stdout)
+                base_branch = base_data.get("baseRefName", "main")
+                
+                # Use git diff --stat with the base branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", f"origin/{base_branch}"],
+                    capture_output=True,
+                    text=True,
+                )
+                
+                # If origin branch doesn't exist, try without origin prefix
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", base_branch],
+                        capture_output=True,
+                        text=True,
+                    )
                     
-                    return {
-                        "files_changed": estimated_files,
-                        "lines_added": estimated_lines,
-                        "lines_deleted": estimated_lines // 4,
-                        "code_churn": estimated_lines + (estimated_lines // 4),
-                    }
-            
-            # If that fails, try git log approach
-            result = subprocess.run(
-                ["git", "log", "--oneline", f"origin/main..HEAD"],
-                capture_output=True,
-                text=True,
-            )
+                    # Additional fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
+            else:
+                # Fallback to main branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", "origin/main"],
+                    capture_output=True,
+                    text=True,
+                )
+                
+                # If origin/main doesn't exist, try main, then HEAD~1 as fallback
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", "main"],
+                        capture_output=True,
+                        text=True,
+                    )
+                    
+                    # Final fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
 
             if result.returncode == 0:
                 stats_text = result.stdout
@@ -185,6 +218,7 @@ class PRValueAnalyzer:
                     + (int(deletions_match.group(1)) if deletions_match else 0),
                 }
             else:
+                # Git diff failed, continue without code metrics (not critical)
                 print(f"Warning: Failed to get PR diff stats: {result.stderr}")
                 return {
                     "files_changed": 0,
@@ -262,14 +296,44 @@ class PRValueAnalyzer:
                 ["gh", "pr", "view", self.pr_number, "--json", "body,title,author"],
                 capture_output=True,
                 text=True,
+                timeout=30,  # Add timeout to prevent hanging
             )
 
             if result.returncode != 0:
                 print(f"❌ Failed to fetch PR details: {result.stderr}")
                 return None
 
-            pr_data = json.loads(result.stdout)
+            if not result.stdout.strip():
+                print(f"❌ Empty response from GitHub CLI")
+                return None
+
+            try:
+                pr_data = json.loads(result.stdout)
+            except json.JSONDecodeError as e:
+                print(f"❌ Failed to parse JSON response: {e}")
+                print(f"Response: {result.stdout[:500]}...")
+                return None
+
+            if pr_data is None:
+                print(f"❌ GitHub returned null data")
+                return None
+
             pr_body = pr_data.get("body", "")
+            
+            # Fallback: if PR body is empty, try alternative fetch
+            if not pr_body:
+                print("ℹ️ PR body empty, trying alternative fetch...")
+                fallback_result = subprocess.run(
+                    ["gh", "pr", "view", self.pr_number],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                if fallback_result.returncode == 0:
+                    pr_body = fallback_result.stdout
+                    print(f"✅ Retrieved PR content via fallback method")
+                else:
+                    print("⚠️ No PR body available, continuing with limited analysis")
 
             # Extract performance metrics
             performance = self.analyze_performance_metrics(pr_body)
@@ -294,13 +358,26 @@ class PRValueAnalyzer:
             # Generate future impact
             impact = self.generate_future_impact(business_value, performance)
             self.metrics["future_impact"] = impact
+            
+            # Add warnings for unrealistic metrics
+            warnings = []
+            if business_value.get("throughput_improvement_percent", 0) > 200:
+                warnings.append("Throughput improvement >200% may be unrealistic")
+            if business_value.get("infrastructure_savings_estimate", 0) > 50000:
+                warnings.append("Infrastructure savings >$50k/year needs validation")
+            if business_value.get("roi_year_one_percent", 0) > 300:
+                warnings.append("ROI >300% is exceptional - verify calculations")
+            
+            self.metrics["warnings"] = warnings
 
             # Generate KPIs
             self.metrics["kpis"] = {
                 "performance_score": performance.get("peak_rps", 0) / 10,
                 "quality_score": performance.get("test_coverage", 0) / 10,
-                "business_value_score": business_value.get("roi_year_one_percent", 0)
-                / 30,
+                "business_value_score": min(10, max(0, 
+                    (business_value.get("roi_year_one_percent", 0) / 100) * 
+                    (10 if business_value.get("infrastructure_savings_estimate", 0) > 10000 else 5)
+                )),
                 "innovation_score": innovation,
                 "overall_score": round(
                     (
@@ -330,9 +407,32 @@ class PRValueAnalyzer:
         print(f"✅ Results saved to {output_file}")
 
     def print_summary(self):
-        """Print analysis summary."""
+        """Print analysis summary with detailed explanations."""
         print("\n📊 PR Value Analysis Summary")
         print("=" * 50)
+        
+        # Detailed score breakdown
+        overall_score = self.metrics["kpis"]["overall_score"]
+        performance_score = self.metrics["kpis"]["performance_score"]
+        quality_score = self.metrics["kpis"]["quality_score"]
+        business_value_score = self.metrics["kpis"]["business_value_score"]
+        innovation_score = self.metrics["kpis"]["innovation_score"]
+        
+        print(f"\n🎯 Overall Score: {overall_score}/10 ({self._get_score_status(overall_score)})")
+        print("=" * 30)
+        
+        # Detailed breakdown with explanations
+        print(f"{'✅' if innovation_score >= 6 else '❌'} Innovation: {innovation_score}/10 ({self._get_innovation_explanation(innovation_score)})")
+        print(f"{'✅' if performance_score >= 6 else '❌'} Performance: {performance_score}/10 ({self._get_performance_explanation(performance_score)})")
+        print(f"{'✅' if quality_score >= 6 else '❌'} Quality: {quality_score}/10 ({self._get_quality_explanation(quality_score)})")
+        print(f"{'✅' if business_value_score >= 6 else '❌'} Business Value: {business_value_score}/10 ({self._get_business_explanation(business_value_score)})")
+
+        # Improvement suggestions
+        suggestions = self._generate_improvement_suggestions()
+        if suggestions:
+            print("\n💡 How to Improve Your PR Score:")
+            for suggestion in suggestions:
+                print(f"  • {suggestion}")
 
         print("\n💰 Business Metrics:")
         for key, value in self.metrics["business_metrics"].items():
@@ -347,7 +447,7 @@ class PRValueAnalyzer:
         for tag in self.metrics["achievement_tags"]:
             print(f"  • {tag}")
 
-        print("\n📈 KPIs:")
+        print("\n📈 Detailed KPIs:")
         for key, value in self.metrics["kpis"].items():
             print(f"  • {key}: {value}")
 
@@ -361,6 +461,110 @@ class PRValueAnalyzer:
         print("  • Infrastructure Savings = $120k × (Perf Factor - 1) / Perf Factor")
         print("  • Overall Score = (Performance + Quality + Innovation) / 3")
         print("  • Time Savings = Hours/Week × 50 weeks × $100/hour")
+        
+        # Scoring thresholds
+        print("\n🎯 Scoring Thresholds:")
+        print("  • 8.0-10.0: Excellent (Automatic merge approval)")
+        print("  • 6.0-7.9: Good (Review recommended)")
+        print("  • 0.0-5.9: Needs improvement (Enhancement required)")
+    
+    def _get_score_status(self, score: float) -> str:
+        """Get score status description."""
+        if score >= 8.0:
+            return "Excellent ⭐"
+        elif score >= 6.0:
+            return "Good ✅"
+        else:
+            return "Needs Improvement ⚠️"
+    
+    def _get_innovation_explanation(self, score: float) -> str:
+        """Explain innovation score."""
+        if score >= 8.0:
+            return "exceptional technical complexity and novel approach"
+        elif score >= 6.0:
+            return "good technical innovation with advanced concepts"
+        elif score >= 4.0:
+            return "moderate complexity, some innovative elements"
+        else:
+            return "basic implementation, limited technical innovation"
+    
+    def _get_performance_explanation(self, score: float) -> str:
+        """Explain performance score."""
+        perf_metrics = self.metrics["technical_metrics"].get("performance", {})
+        
+        if not perf_metrics or not any(perf_metrics.values()):
+            return "no measurable performance metrics detected"
+        elif score >= 8.0:
+            return "excellent performance metrics documented"
+        elif score >= 6.0:
+            return "good performance metrics provided"
+        else:
+            return "performance metrics present but could be improved"
+    
+    def _get_quality_explanation(self, score: float) -> str:
+        """Explain quality score."""
+        perf_metrics = self.metrics["technical_metrics"].get("performance", {})
+        test_coverage = perf_metrics.get("test_coverage", 0)
+        
+        if test_coverage == 0:
+            return "no test coverage metrics detected"
+        elif score >= 8.0:
+            return f"excellent test coverage ({test_coverage}%)"
+        elif score >= 6.0:
+            return f"good test coverage ({test_coverage}%)"
+        else:
+            return f"test coverage needs improvement ({test_coverage}%)"
+    
+    def _get_business_explanation(self, score: float) -> str:
+        """Explain business value score."""
+        business_metrics = self.metrics["business_metrics"]
+        
+        if not business_metrics or not any(business_metrics.values()):
+            return "no ROI/cost savings metrics detected"
+        elif score >= 8.0:
+            return "strong business value with clear ROI"
+        elif score >= 6.0:
+            return "good business value demonstrated"
+        else:
+            return "business value present but could be quantified better"
+    
+    def _generate_improvement_suggestions(self) -> list:
+        """Generate specific improvement suggestions."""
+        suggestions = []
+        kpis = self.metrics["kpis"]
+        perf_metrics = self.metrics["technical_metrics"].get("performance", {})
+        business_metrics = self.metrics["business_metrics"]
+        
+        # Performance suggestions
+        if kpis["performance_score"] < 6.0:
+            if not perf_metrics.get("peak_rps"):
+                suggestions.append("Add RPS metrics: 'Handles 500+ RPS' or 'Peak performance: 1000 RPS'")
+            if not perf_metrics.get("latency_ms"):
+                suggestions.append("Include latency metrics: 'Response time <100ms' or 'p95 latency: 150ms'")
+            if not perf_metrics.get("success_rate"):
+                suggestions.append("Document success rates: '99.9% success rate' or '100% uptime'")
+        
+        # Quality suggestions
+        if kpis["quality_score"] < 6.0:
+            if not perf_metrics.get("test_coverage"):
+                suggestions.append("Add test coverage: 'Test coverage: 85%' or '90% code coverage achieved'")
+                suggestions.append("Include testing details: 'Added 50 unit tests' or 'E2E test suite expanded'")
+        
+        # Business value suggestions
+        if kpis["business_value_score"] < 6.0:
+            if not business_metrics.get("infrastructure_savings_estimate"):
+                suggestions.append("Quantify cost savings: 'Reduces infrastructure costs by $15k/year'")
+            if not business_metrics.get("roi_year_one_percent"):
+                suggestions.append("Calculate ROI: 'Expected ROI: 300% in first year'")
+            suggestions.append("Add business impact: 'Improves user experience by 25%'")
+            suggestions.append("Include time savings: 'Saves developers 10 hours/week'")
+        
+        # Innovation suggestions
+        if kpis["innovation_score"] < 8.0:
+            suggestions.append("Highlight technical innovation: Use words like 'novel', 'optimization', 'breakthrough'")
+            suggestions.append("Explain architectural improvements: 'Advanced caching strategy' or 'Scalable microservices'")
+        
+        return suggestions
 
 
 def main():

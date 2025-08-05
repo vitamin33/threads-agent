@@ -1,0 +1,350 @@
+# Custom Prometheus Rules for RAG Pipeline Performance Monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rag-pipeline-performance-rules
+  namespace: threads-agent
+  labels:
+    app: rag-pipeline
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: rag-pipeline.performance
+    interval: 30s
+    rules:
+    # LATENCY METRICS
+    - record: rag:request_latency_p95
+      expr: histogram_quantile(0.95, sum(rate(rag_latency_seconds_bucket[5m])) by (le, operation))
+    
+    - record: rag:request_latency_p99
+      expr: histogram_quantile(0.99, sum(rate(rag_latency_seconds_bucket[5m])) by (le, operation))
+    
+    - record: rag:embedding_latency_avg
+      expr: sum(rate(rag_latency_seconds_sum{operation="embed_batch"}[5m])) / sum(rate(rag_latency_seconds_count{operation="embed_batch"}[5m]))
+    
+    # THROUGHPUT METRICS
+    - record: rag:requests_per_second
+      expr: sum(rate(rag_requests_total[1m])) by (operation)
+    
+    - record: rag:successful_requests_per_second
+      expr: sum(rate(rag_requests_total{status="success"}[1m])) by (operation)
+    
+    - record: rag:error_rate
+      expr: sum(rate(rag_requests_total{status="error"}[5m])) / sum(rate(rag_requests_total[5m]))
+    
+    # CACHE PERFORMANCE
+    - record: rag:cache_hit_rate
+      expr: sum(rate(embedding_cache_hits_total[5m])) / (sum(rate(embedding_cache_hits_total[5m])) + sum(rate(embedding_cache_misses_total[5m])))
+    
+    - record: rag:cache_efficiency
+      expr: sum(rate(embedding_cache_hits_total[5m])) by (instance)
+    
+    # RESOURCE UTILIZATION
+    - record: rag:cpu_utilization
+      expr: rate(container_cpu_usage_seconds_total{pod=~"rag-pipeline-.*"}[5m])
+    
+    - record: rag:memory_utilization
+      expr: container_memory_working_set_bytes{pod=~"rag-pipeline-.*"} / container_spec_memory_limit_bytes{pod=~"rag-pipeline-.*"}
+    
+    # EMBEDDING PROCESSING METRICS
+    - record: rag:embeddings_per_second
+      expr: sum(rate(embeddings_generated_total[1m]))
+    
+    - record: rag:embedding_batch_size_avg
+      expr: sum(rate(embedding_batch_size_sum[5m])) / sum(rate(embedding_batch_size_count[5m]))
+    
+    # VECTOR STORAGE PERFORMANCE
+    - record: rag:vector_search_latency_p95
+      expr: histogram_quantile(0.95, sum(rate(vector_search_duration_seconds_bucket[5m])) by (le))
+    
+    - record: rag:vector_storage_operations_per_second
+      expr: sum(rate(vector_operations_total[1m])) by (operation)
+
+  - name: rag-pipeline.alerts
+    rules:
+    # PERFORMANCE ALERTS
+    - alert: RAGHighLatency
+      expr: rag:request_latency_p95 > 5
+      for: 2m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "RAG Pipeline high latency detected"
+        description: "95th percentile latency is {{ $value }}s, exceeding 5s threshold"
+    
+    - alert: RAGExtremeLatency
+      expr: rag:request_latency_p99 > 10
+      for: 1m
+      labels:
+        severity: critical
+        component: rag-pipeline
+      annotations:
+        summary: "RAG Pipeline extreme latency detected"
+        description: "99th percentile latency is {{ $value }}s, exceeding 10s threshold"
+    
+    - alert: RAGHighErrorRate
+      expr: rag:error_rate > 0.05
+      for: 3m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "RAG Pipeline high error rate"
+        description: "Error rate is {{ $value | humanizePercentage }}, exceeding 5% threshold"
+    
+    - alert: RAGCacheLowHitRate
+      expr: rag:cache_hit_rate < 0.3
+      for: 5m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "RAG embedding cache low hit rate"
+        description: "Cache hit rate is {{ $value | humanizePercentage }}, below 30% threshold"
+    
+    # RESOURCE ALERTS
+    - alert: RAGHighCPUUsage
+      expr: rag:cpu_utilization > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "RAG Pipeline high CPU usage"
+        description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.pod }}"
+    
+    - alert: RAGHighMemoryUsage
+      expr: rag:memory_utilization > 0.85
+      for: 3m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "RAG Pipeline high memory usage"
+        description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.pod }}"
+    
+    - alert: RAGMemoryLeak
+      expr: increase(container_memory_working_set_bytes{pod=~"rag-pipeline-.*"}[1h]) > 500000000
+      for: 10m
+      labels:
+        severity: critical
+        component: rag-pipeline
+      annotations:
+        summary: "Potential memory leak in RAG Pipeline"
+        description: "Memory usage increased by {{ $value | humanizeBytes }} in the last hour on {{ $labels.pod }}"
+    
+    # EXTERNAL DEPENDENCY ALERTS
+    - alert: RAGOpenAIAPIErrors
+      expr: sum(rate(openai_api_errors_total[5m])) > 2
+      for: 2m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "High OpenAI API error rate"
+        description: "{{ $value }} OpenAI API errors per second"
+    
+    - alert: RAGQdrantConnectionErrors
+      expr: sum(rate(qdrant_connection_errors_total[5m])) > 1
+      for: 2m
+      labels:
+        severity: warning
+        component: rag-pipeline
+      annotations:
+        summary: "Qdrant connection errors detected"
+        description: "{{ $value }} Qdrant connection errors per second"
+
+---
+# GRAFANA DASHBOARD ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-pipeline-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  rag-pipeline-performance.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "RAG Pipeline Performance Dashboard",
+        "tags": ["rag", "ai", "performance"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rag:request_latency_p95",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "rag:request_latency_p99",
+                "legendFormat": "99th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Seconds",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Requests per Second",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rag:requests_per_second",
+                "legendFormat": "{{ operation }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "RPS",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Cache Performance",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rag:cache_hit_rate",
+                "legendFormat": "Hit Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "min": 0,
+                "max": 1,
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 0.3},
+                    {"color": "green", "value": 0.7}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Error Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rag:error_rate",
+                "legendFormat": "Error Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "min": 0,
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 0.01},
+                    {"color": "red", "value": 0.05}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Resource Utilization",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rag:cpu_utilization",
+                "legendFormat": "CPU - {{ pod }}"
+              },
+              {
+                "expr": "rag:memory_utilization",
+                "legendFormat": "Memory - {{ pod }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Percentage",
+                "min": 0,
+                "max": 1,
+                "unit": "percentunit"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 6,
+            "title": "Embedding Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rag:embeddings_per_second",
+                "legendFormat": "Embeddings/sec"
+              },
+              {
+                "expr": "rag:embedding_batch_size_avg",
+                "legendFormat": "Avg Batch Size"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
+---
+# PROMETHEUS SERVICEMONITOR with custom metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rag-pipeline-detailed-metrics
+  namespace: threads-agent
+  labels:
+    app: rag-pipeline
+    monitoring: detailed
+spec:
+  selector:
+    matchLabels:
+      app: rag-pipeline
+  endpoints:
+  - port: http
+    interval: 15s  # More frequent for AI workloads
+    path: /metrics
+    scrapeTimeout: 10s
+    honorLabels: true
+    metricRelabelings:
+    # Keep only relevant metrics to reduce storage
+    - sourceLabels: [__name__]
+      regex: '^(rag_.*|embedding_.*|vector_.*|fastapi_.*|process_.*|python_.*)$'
+      action: keep
+    # Add instance labels for better filtering
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: node
+  namespaceSelector:
+    matchNames:
+    - threads-agent

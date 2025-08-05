@@ -1,0 +1,463 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-pipeline
+  namespace: threads-agent
+  labels:
+    app: rag-pipeline
+    component: ai-retrieval
+    version: optimized
+spec:
+  replicas: 3  # High availability with load distribution
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2  # Allow faster rollouts
+  selector:
+    matchLabels:
+      app: rag-pipeline
+  template:
+    metadata:
+      labels:
+        app: rag-pipeline
+        component: ai-retrieval
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+        # Memory usage patterns for prediction
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      # PERFORMANCE OPTIMIZATIONS
+      affinity:
+        # Spread pods across nodes for better performance and fault tolerance
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - rag-pipeline
+              topologyKey: kubernetes.io/hostname
+        # Prefer compute-optimized nodes with fast storage
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - compute-optimized
+          - weight: 60
+            preference:
+              matchExpressions:
+              - key: storage-type
+                operator: In
+                values:
+                - ssd
+      
+      # High priority for AI workloads
+      priorityClassName: high-priority
+      
+      containers:
+      - name: rag-pipeline
+        image: rag-pipeline:optimized
+        imagePullPolicy: IfNotPresent
+        
+        # OPTIMIZED RESOURCE ALLOCATION
+        resources:
+          requests:
+            # Conservative requests for efficient scheduling
+            cpu: 500m          # 0.5 CPU cores for baseline
+            memory: 1Gi        # 1GB base memory for embeddings cache
+            ephemeral-storage: 200Mi
+          limits:
+            # Allow bursting for peak AI workloads
+            cpu: 2000m         # 2 CPU cores max for concurrent processing
+            memory: 3Gi        # 3GB max for large embedding batches
+            ephemeral-storage: 1Gi
+        
+        # ENVIRONMENT OPTIMIZATION
+        env:
+        # Database connections
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: rag-database
+              key: url
+        - name: QDRANT_URL
+          value: "http://qdrant-cluster:6333"
+        - name: REDIS_URL
+          value: "redis://redis-cluster:6379/1"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-api
+              key: api-key
+        
+        # Performance tuning for RAG workloads
+        - name: RAG_TOP_K
+          value: "20"
+        - name: RAG_RERANK_TOP_K
+          value: "10"
+        - name: RAG_MIN_SCORE
+          value: "0.7"
+        - name: RAG_BATCH_SIZE
+          value: "50"          # Optimal batch size for embeddings
+        - name: RAG_MAX_MEMORY_MB
+          value: "2048"        # Leave 1GB headroom
+        - name: RAG_CACHE_TTL_SECONDS
+          value: "1800"        # 30 minutes cache
+        
+        # Connection pool optimization
+        - name: QDRANT_POOL_SIZE
+          value: "20"
+        - name: REDIS_POOL_SIZE
+          value: "15"
+        - name: EMBEDDING_BATCH_SIZE
+          value: "100"
+        - name: MAX_CONCURRENT_BATCHES
+          value: "3"
+        
+        # Python/FastAPI optimization
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONASYNCIODEBUG
+          value: "0"
+        - name: PYTHONHASHSEED
+          value: "0"
+        - name: UVICORN_WORKERS
+          value: "1"           # Single worker, async handles concurrency
+        - name: UVICORN_BACKLOG
+          value: "2048"
+        
+        # HEALTH CHECKS OPTIMIZED FOR AI WORKLOADS
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 45  # Longer for AI model loading
+          periodSeconds: 30
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 2
+        
+        # STARTUP PROBE for model initialization
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 12  # Allow 60 seconds for embedding model loading
+        
+        # PORTS
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        
+        # VOLUME MOUNTS for caching and temporary processing
+        volumeMounts:
+        - name: embedding-cache
+          mountPath: /app/cache/embeddings
+        - name: model-cache
+          mountPath: /app/cache/models
+        - name: tmp-storage
+          mountPath: /tmp
+      
+      # INIT CONTAINERS for service dependencies
+      initContainers:
+      - name: wait-for-qdrant
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Qdrant to be ready..."
+          until wget -q --spider http://qdrant-cluster:6333/health; do
+            echo "Qdrant not ready, waiting..."
+            sleep 2
+          done
+          echo "Qdrant is ready!"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi
+      
+      - name: wait-for-redis
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "Waiting for Redis to be ready..."
+          until nc -z redis-cluster 6379; do
+            echo "Redis not ready, waiting..."
+            sleep 2
+          done
+          echo "Redis is ready!"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi
+      
+      # VOLUMES optimized for AI workloads
+      volumes:
+      - name: embedding-cache
+        emptyDir:
+          sizeLimit: 500Mi
+          medium: Memory    # In-memory cache for hot embeddings
+      - name: model-cache
+        emptyDir:
+          sizeLimit: 200Mi  # Cache for model artifacts
+      - name: tmp-storage
+        emptyDir:
+          sizeLimit: 300Mi
+      
+      # SECURITY CONTEXT
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      
+      # DNS CONFIGURATION for faster service discovery
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: edns0
+        - name: timeout
+          value: "1"
+        - name: attempts
+          value: "2"
+      
+      # TERMINATION GRACE PERIOD for graceful shutdown
+      terminationGracePeriodSeconds: 45  # Allow time for in-flight embeddings
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-pipeline
+  namespace: threads-agent
+  labels:
+    app: rag-pipeline
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  sessionAffinity: None  # Let load balancer distribute evenly
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app: rag-pipeline
+
+---
+# HORIZONTAL POD AUTOSCALER optimized for AI workloads
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rag-pipeline-hpa
+  namespace: threads-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rag-pipeline
+  minReplicas: 2
+  maxReplicas: 8  # Higher for AI workload bursts
+  metrics:
+  # Scale based on CPU utilization (embeddings are CPU intensive)
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  # Scale based on memory utilization (embedding cache)
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics for RAG-specific scaling
+  - type: Pods
+    pods:
+      metric:
+        name: rag_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "20"
+  - type: Pods
+    pods:
+      metric:
+        name: rag_embedding_queue_size
+      target:
+        type: AverageValue
+        averageValue: "50"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120  # Slower scaling for AI workloads
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 120
+
+---
+# POD DISRUPTION BUDGET for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rag-pipeline-pdb
+  namespace: threads-agent
+spec:
+  minAvailable: 2  # Always keep 2 pods running
+  selector:
+    matchLabels:
+      app: rag-pipeline
+
+---
+# NETWORK POLICY for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rag-pipeline-netpol
+  namespace: threads-agent
+spec:
+  podSelector:
+    matchLabels:
+      app: rag-pipeline
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from orchestrator and other services
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: threads-agent
+    ports:
+    - protocol: TCP
+      port: 8000
+  # Allow metrics scraping from Prometheus
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  # Allow Qdrant connections
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: qdrant
+    ports:
+    - protocol: TCP
+      port: 6333
+  # Allow Redis connections
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow OpenAI API calls
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# SERVICE MONITOR for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rag-pipeline-metrics
+  namespace: threads-agent
+  labels:
+    app: rag-pipeline
+spec:
+  selector:
+    matchLabels:
+      app: rag-pipeline
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - threads-agent
+
+---
+# VERTICAL POD AUTOSCALER (optional, for right-sizing)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: rag-pipeline-vpa
+  namespace: threads-agent
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rag-pipeline
+  updatePolicy:
+    updateMode: "Auto"  # Automatically apply recommendations
+  resourcePolicy:
+    containerPolicies:
+    - containerName: rag-pipeline
+      minAllowed:
+        cpu: 200m
+        memory: 512Mi
+      maxAllowed:
+        cpu: 4000m
+        memory: 6Gi
+      controlledResources: ["cpu", "memory"]

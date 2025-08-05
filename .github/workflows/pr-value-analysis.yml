@@ -72,11 +72,35 @@ jobs:
             // Build comment
             let comment = '## 📊 Automated PR Value Analysis\n\n';
             
-            // Business Metrics
+            // Business Metrics with explanations
             if (data.business_metrics && Object.keys(data.business_metrics).length > 0) {
               comment += '### 💰 Business Value\n';
+              
+              // Add calculation transparency
+              comment += '<details><summary>📐 How these metrics are calculated</summary>\n\n';
+              comment += '- **Throughput Improvement**: `((current_rps / baseline_rps) - 1) × 100%`\n';
+              comment += '- **Infrastructure Savings**: Based on RPS improvement reducing server needs\n';
+              comment += '- **ROI**: `(annual_savings / development_cost) × 100%`\n';
+              comment += '- **User Experience**: Score based on latency (<100ms = 10, <200ms = 9)\n';
+              comment += '\n⚠️ **Note**: Baseline RPS assumed at 100. Actual baseline may vary.\n';
+              comment += '</details>\n\n';
+              
               for (const [key, value] of Object.entries(data.business_metrics)) {
-                comment += `- **${key.replace(/_/g, ' ')}**: ${value}\n`;
+                let displayValue = value;
+                let explanation = '';
+                
+                // Add context for large percentages
+                if (key === 'throughput_improvement_percent' && value > 200) {
+                  explanation = ' ⚠️ *(May be inflated - verify baseline)*';
+                }
+                if (key === 'infrastructure_savings_estimate' && value > 50000) {
+                  explanation = ' *(Based on estimated server reduction)*';
+                }
+                if (key === 'roi_year_one_percent') {
+                  displayValue = `${value}%`;
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue}${explanation}\n`;
               }
               comment += '\n';
             }
