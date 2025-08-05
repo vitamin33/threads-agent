@@ -254,7 +254,7 @@ class TestCompanyTargetedContent:
     def test_filter_achievements_for_anthropic(self, ml_achievements):
         """Test filtering achievements for Anthropic (AI safety focus)"""
         # Create filter for Anthropic-relevant achievements
-        filter_obj = AchievementFilter(
+        AchievementFilter(
             categories=[AchievementCategory.AI_ML],
             tags=["ai", "llm", "safety", "monitoring"],
             company_keywords=["safety", "responsible", "ethical", "alignment"],
@@ -329,7 +329,7 @@ class TestContentQualityAssessment:
 
     def test_insight_score_for_article(self):
         """Test creating insight scores for generated articles"""
-        article = ArticleContent(
+        ArticleContent(
             article_type=ArticleType.CASE_STUDY,
             platform=Platform.LINKEDIN,
             title="Scaling to 1M Users: Our Journey",

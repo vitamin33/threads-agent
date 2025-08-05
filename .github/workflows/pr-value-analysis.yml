@@ -66,9 +66,18 @@ jobs:
         script: |
           const fs = require('fs');
           const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis_v2.json`;
+          const achievementFile = `.achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json`;
           
           try {
             const data = JSON.parse(fs.readFileSync(analysisFile, 'utf8'));
+            let achievementData = null;
+            
+            // Try to load achievement file for metric explanations
+            try {
+              achievementData = JSON.parse(fs.readFileSync(achievementFile, 'utf8'));
+            } catch (e) {
+              console.log('Achievement file not found, using basic explanations');
+            }
             
             // Build comment
             let comment = '## 📊 Automated PR Value Analysis (Fair Scoring)\n\n';
@@ -78,25 +87,154 @@ jobs:
               comment += `**PR Type Detected**: \`${data.pr_type}\`\n\n`;
             }
             
-            // Business Metrics
+            // Business Metrics with comprehensive explanations
             if (data.business_metrics && Object.keys(data.business_metrics).length > 0) {
               comment += '### 💰 Business Value\n';
+              
+              // Add comprehensive calculation transparency
+              comment += '<details><summary>📐 How these metrics are calculated</summary>\n\n';
+              
+              if (achievementData?.metric_explanations?.business_metrics) {
+                const explanations = achievementData.metric_explanations.business_metrics;
+                
+                comment += '| Metric | Formula | Meaning |\n';
+                comment += '|--------|---------|---------|\n';
+                
+                for (const [metric, info] of Object.entries(explanations)) {
+                  const displayName = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `| **${displayName}** | \`${info.formula}\` | ${info.meaning} |\n`;
+                }
+                
+                comment += '\n**Baseline Assumptions:**\n';
+                comment += '- RPS Baseline: 500 (typical microservice)\n';
+                comment += '- Developer Rate: $150/hour\n';
+                comment += '- Server Cost: $12k/year\n';
+                comment += '- Bug Fix Cost: $5k average in production\n';
+              } else {
+                // Fallback to simple explanations
+                comment += '- **Throughput Improvement**: `((current_rps / baseline_rps) - 1) × 100%`\n';
+                comment += '- **Infrastructure Savings**: Based on RPS improvement reducing server needs\n';
+                comment += '- **ROI**: `(annual_savings / development_cost) × 100%`\n';
+                comment += '- **User Experience**: Score based on latency (<100ms = 10, <200ms = 9)\n';
+                comment += '\n⚠️ **Note**: Baseline RPS assumed at 500. Actual baseline may vary.\n';
+              }
+              comment += '</details>\n\n';
+              
+              // Define inline explanations for all metrics
+              const metricExplanations = {
+                'throughput_improvement_percent': '(How much faster vs baseline)',
+                'infrastructure_savings_estimate': '(Annual server cost reduction)',
+                'servers_reduced': '(Servers eliminated by performance gains)',
+                'developer_productivity_savings': '(Annual cost from efficiency gains)',
+                'productivity_hours_saved': '(Developer hours saved per year)',
+                'quality_improvement_savings': '(Cost avoided from prevented bugs)',
+                'bugs_prevented_annually': '(Bugs caught before production)',
+                'total_annual_savings': '(All savings combined)',
+                'risk_adjusted_savings': '(Conservative estimate with confidence factor)',
+                'total_investment': '(Cost to implement this PR)',
+                'roi_year_one_percent': '(Return on investment in first year)',
+                'payback_period_months': '(Time to recover investment)',
+                'roi_three_year_percent': '(ROI over 3 years)',
+                'user_experience_score': '(Based on latency: <200ms = 9/10)',
+                'confidence_level': '(Estimate reliability: low/medium/high)'
+              };
+              
               for (const [key, value] of Object.entries(data.business_metrics)) {
-                comment += `- **${key.replace(/_/g, ' ')}**: ${value}\n`;
+                let displayValue = value;
+                let explanation = metricExplanations[key] || '';
+                
+                // Format specific values
+                if (key.includes('percent')) {
+                  displayValue = `${value}%`;
+                }
+                if (key.includes('savings') || key.includes('investment') || key === 'revenue_impact_3yr') {
+                  displayValue = `$${value.toLocaleString()}`;
+                }
+                if (key.includes('months')) {
+                  displayValue = `${value} months`;
+                }
+                if (key.includes('hours')) {
+                  displayValue = `${value.toLocaleString()} hours`;
+                }
+                
+                // Add warnings for extreme values
+                if (key === 'throughput_improvement_percent' && value > 200) {
+                  explanation += ' ⚠️';
+                }
+                if (key === 'roi_year_one_percent' && value > 500) {
+                  explanation += ' 🚀';
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue} ${explanation}\n`;
               }
               comment += '\n';
             }
             
-            // Technical Metrics
+            // Technical Metrics with explanations
             if (data.technical_metrics?.performance) {
               comment += '### 🚀 Performance Metrics\n';
+              
+              // Add performance explanations if available
+              if (achievementData?.metric_explanations?.performance_metrics) {
+                comment += '<details><summary>📊 What these metrics mean</summary>\n\n';
+                const perfExplanations = achievementData.metric_explanations.performance_metrics;
+                
+                for (const [metric, info] of Object.entries(perfExplanations)) {
+                  const displayName = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `**${displayName}**: ${info.meaning}\n`;
+                  
+                  if (info.industry_standards) {
+                    comment += '- Industry Standards:\n';
+                    for (const [level, desc] of Object.entries(info.industry_standards)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  if (info.user_perception) {
+                    comment += '- User Perception:\n';
+                    for (const [level, desc] of Object.entries(info.user_perception)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  if (info.quality_standards) {
+                    comment += '- Quality Standards:\n';
+                    for (const [level, desc] of Object.entries(info.quality_standards)) {
+                      comment += `  - ${level}: ${desc}\n`;
+                    }
+                  }
+                  comment += '\n';
+                }
+                comment += '</details>\n\n';
+              }
+              
+              // Performance metric explanations
+              const perfExplanations = {
+                'peak_rps': '(Max requests/second - >1000 is high traffic)',
+                'latency_ms': '(Response time - <200ms feels fast)',
+                'test_coverage': '(% of code tested - >80% is excellent)',
+                'success_rate': '(% of successful requests)',
+                'error_rate': '(% of failed requests)'
+              };
+              
               for (const [key, value] of Object.entries(data.technical_metrics.performance)) {
-                comment += `- **${key.replace(/_/g, ' ')}**: ${value}\n`;
+                let displayValue = value;
+                const explanation = perfExplanations[key] || '';
+                
+                if (key === 'test_coverage' || key === 'success_rate') {
+                  displayValue = `${value}%`;
+                }
+                if (key === 'latency_ms') {
+                  displayValue = `${value}ms`;
+                }
+                if (key === 'peak_rps') {
+                  displayValue = `${value.toLocaleString()} RPS`;
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue} ${explanation}\n`;
               }
               comment += '\n';
             }
             
-            // KPIs
+            // KPIs with detailed explanations
             if (data.kpis) {
               comment += '### 📈 Key Performance Indicators\n';
               const overall = data.kpis.overall_score || 0;
@@ -116,6 +254,40 @@ jobs:
                 for (const [key, value] of Object.entries(data.kpis.individual_scores)) {
                   comment += `- ${key.replace(/_/g, ' ')}: ${value}/10\n`;
                 }
+              }
+              
+              // Add KPI explanations if available
+              if (achievementData?.metric_explanations?.kpi_scores) {
+                comment += '\n<details><summary>🎯 How scores are calculated</summary>\n\n';
+                const kpiExplanations = achievementData.metric_explanations.kpi_scores;
+                
+                for (const [kpi, info] of Object.entries(kpiExplanations)) {
+                  const displayName = kpi.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  comment += `**${displayName}**:\n`;
+                  comment += `- Formula: ${info.formula}\n`;
+                  if (info.meaning) comment += `- Meaning: ${info.meaning}\n`;
+                  
+                  if (info.scale) {
+                    comment += '- Scale:\n';
+                    for (const [score, desc] of Object.entries(info.scale)) {
+                      comment += `  - ${score}: ${desc}\n`;
+                    }
+                  }
+                  if (info.weights) {
+                    comment += '- Weights:\n';
+                    for (const [component, weight] of Object.entries(info.weights)) {
+                      comment += `  - ${component}: ${weight}\n`;
+                    }
+                  }
+                  if (info.criteria) {
+                    comment += '- Criteria:\n';
+                    for (const criterion of info.criteria) {
+                      comment += `  - ${criterion}\n`;
+                    }
+                  }
+                  comment += '\n';
+                }
+                comment += '</details>\n\n';
               }
               
               // Show weights if available
@@ -139,8 +311,27 @@ jobs:
             // Future Impact
             if (data.future_impact && Object.keys(data.future_impact).length > 0) {
               comment += '### 🔮 Projected Impact\n';
+              // Future impact explanations
+              const impactExplanations = {
+                'revenue_impact_3yr': '(Projected 3-year revenue increase)',
+                'competitive_advantage': '(Market position improvement)',
+                'market_differentiation': '(Unique value proposition)',
+                'technical_debt_reduction': '(Code quality improvement)',
+                'maintenance_cost_reduction_percent': '(Ongoing cost savings)'
+              };
+              
               for (const [key, value] of Object.entries(data.future_impact)) {
-                comment += `- **${key.replace(/_/g, ' ')}**: ${value}\n`;
+                let displayValue = value;
+                const explanation = impactExplanations[key] || '';
+                
+                if (key === 'revenue_impact_3yr') {
+                  displayValue = `$${value.toLocaleString()}`;
+                }
+                if (key.includes('percent')) {
+                  displayValue = `${value}%`;
+                }
+                
+                comment += `- **${key.replace(/_/g, ' ')}**: ${displayValue} ${explanation}\n`;
               }
             }
             
