@@ -46,11 +46,12 @@ dev-start-multi: bootstrap-multi deploy-dev mcp-setup dev-dashboard
 alias persona-hot-reload := hot-reload-persona
 alias ai-test-gen := ai-generate-tests
 alias smart-deploy := deploy-strategy
-dev-dashboard: prometheus-dashboard grafana business-dashboard
+dev-dashboard: prometheus-dashboard grafana business-dashboard ui-dashboard
 cache-set key value:
-	just redis-cache-set {{key}} {{value}}
+	@redis-cli -h localhost -p 6379 SET "{{key}}" "{{value}}"
+	@echo "✅ Cached {{key}}"
 cache-get key:
-	just redis-cache-get {{key}}
+	@redis-cli -h localhost -p 6379 GET "{{key}}"
 trend-check topic:
 	just trend-detection {{topic}}
 
@@ -244,6 +245,51 @@ ship message:
 	git push
 	
 	echo "✅ Changes shipped successfully"
+
+# Auto-commit system for working states
+checkpoint message="checkpoint":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "💾 Creating checkpoint commit..."
+	./scripts/auto-commit.sh
+
+# Auto-commit with push
+checkpoint-push message="checkpoint":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "💾 Creating checkpoint commit with push..."
+	./scripts/auto-commit.sh --push
+
+# Enable auto-commit on test success
+auto-commit-enable:
+	#!/usr/bin/env bash
+	echo "🔧 Enabling auto-commit system..."
+	# Create symlink for post-commit hook
+	ln -sf ../../scripts/auto-commit-hook.sh .git/hooks/post-test || true
+	echo "✅ Auto-commit enabled!"
+	echo "📝 Commits will be created automatically after successful tests"
+
+# Disable auto-commit
+auto-commit-disable:
+	#!/usr/bin/env bash
+	echo "🔧 Disabling auto-commit system..."
+	rm -f .git/hooks/post-test
+	echo "✅ Auto-commit disabled"
+
+# Safe development workflow with auto-commits
+safe-dev:
+	#!/usr/bin/env bash
+	echo "🛡️ Starting safe development mode..."
+	echo "📝 Auto-commits will be created every 30 minutes if tests pass"
+	while true; do
+		sleep 1800  # 30 minutes
+		if git diff --quiet && git diff --cached --quiet; then
+			echo "No changes to commit"
+		else
+			echo "⏰ Auto-checkpoint time!"
+			just checkpoint "Auto-checkpoint: $(date '+%Y-%m-%d %H:%M')"
+		fi
+	done
 
 # Service scaffolding
 scaffold service:
@@ -656,3 +702,36 @@ k3d-nuke-all:
 	else
 		echo "Operation cancelled"
 	fi
+
+# UI Dashboard Commands
+ui-dashboard:
+	@echo "🎨 Starting Streamlit Dashboard..."
+	@cd dashboard && ./start-dev.sh
+
+ui-setup:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🚀 Setting up Streamlit UI Dashboard..."
+	./scripts/setup_ui_dashboard.sh
+	echo "✅ Dashboard setup complete"
+
+ui-docker:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "🐳 Building and running Dashboard in Docker..."
+	cd dashboard && docker-compose up --build
+
+ui-deploy:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	echo "☸️ Deploying Dashboard to Kubernetes..."
+	kubectl apply -f dashboard/k8s/deployment.yaml
+	echo "✅ Dashboard deployed"
+	echo "🔗 Access with: kubectl port-forward -n threads-agent svc/threads-agent-dashboard 8501:80"
+
+ui-logs:
+	@kubectl logs -n threads-agent -l app=threads-agent-dashboard --tail=100 -f
+
+ui-port-forward:
+	@echo "🔗 Creating port-forward for Dashboard..."
+	@kubectl port-forward -n threads-agent svc/threads-agent-dashboard 8501:80

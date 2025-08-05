@@ -255,10 +255,22 @@ achievementCollector:
   sqlite:
     enabled: false  # use PostgreSQL in cluster
 
-# Performance Monitor for early variant kill
+# Performance Monitor for early variant kill (disabled for dev - no image built)
 performanceMonitor:
-  enabled: true
+  enabled: false  # Disable until image is built
   logLevel: "DEBUG"  # More verbose for dev
   killThreshold: 0.5
   minInteractions: 5  # Lower threshold for dev testing
   timeoutMinutes: 5   # Shorter timeout for dev
+
+# Viral Metrics Collection (disabled for dev - no image built)
+viralMetrics:
+  enabled: false  # Disable until image is built
+
+# MLflow Performance Optimization - disabled for dev
+mlflow:
+  performanceOptimization:
+    enabled: false  # Disable MLflow performance monitoring for dev
+    monitoring:
+      serviceMonitor:
+        enabled: false  # Disable ServiceMonitor (requires Prometheus Operator)
