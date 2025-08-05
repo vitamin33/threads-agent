@@ -109,6 +109,13 @@ with col1:
         generate_btn = st.form_submit_button("🚀 Generate Content", type="primary")
         
         if generate_btn:
+            # Import SSE tracking
+            try:
+                from services.content_sse_client import ContentGenerationTracker, create_mock_sse_demo
+                sse_available = True
+            except ImportError:
+                sse_available = False
+                
             with st.spinner("🧠 AI is creating your content..."):
                 # Use real content generation
                 min_bv = min_value if source == "Recent Achievements" else 0
@@ -129,8 +136,28 @@ with col1:
                     if result.get('source_achievement'):
                         st.caption(f"📊 Based on: {result['source_achievement']}")
                     
-                    if result.get('status') == 'queued':
-                        st.info("🔄 Content generation task queued in orchestrator")
+                    # Check if we have a task ID for real-time tracking
+                    task_id = result.get('task_id')
+                    if task_id and result.get('status') == 'queued':
+                        st.info(f"🔄 Content generation task queued in orchestrator (ID: {task_id})")
+                        
+                        # Show link to drafts management
+                        st.success("✅ Task queued successfully! Content will appear in drafts once generated.")
+                        if st.button("📄 View Content Drafts"):
+                            st.switch_page("pages/5_📄_Content_Drafts.py")
+                        
+                        if sse_available:
+                            # Create expander for real-time progress
+                            with st.expander("📊 Real-Time Generation Progress", expanded=True):
+                                tracker = ContentGenerationTracker()
+                                progress_container = st.container()
+                                tracker.track_generation(task_id, progress_container)
+                    
+                    # Show demo option
+                    if sse_available and st.checkbox("🎬 Show demo of real-time progress tracking"):
+                        with st.expander("📊 Demo: Real-Time Progress", expanded=True):
+                            demo_container = st.container()
+                            create_mock_sse_demo(demo_container)
                 else:
                     st.error(f"❌ Generation failed: {result.get('error', 'Unknown error')}")
                     st.info("**Fallback Generated:** How I Reduced API Latency by 78% Using Smart Caching")

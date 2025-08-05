@@ -141,13 +141,15 @@ class ThreadsAgentAPI:
                     )
                     
                     if response.status_code == 200:
+                        result = response.json()
                         return {
                             "success": True,
                             "message": f"Content generation queued for: {best_achievement.get('title', 'achievement')}",
                             "generated_title": f"How I {best_achievement.get('title', 'Achieved Success')}",
                             "platforms": platforms,
                             "source_achievement": best_achievement.get('title', ''),
-                            "status": "queued"
+                            "status": "queued",
+                            "task_id": result.get("task_id")  # Include task ID for tracking
                         }
                 
                 # Fallback: simulate content generation
@@ -161,6 +163,82 @@ class ThreadsAgentAPI:
                 
         except Exception as e:
             return {"error": str(e), "success": False}
+    
+    @st.cache_data(ttl=30)  # Cache for 30 seconds
+    def get_content_posts(_self, status: str = None, limit: int = 20) -> List[Dict]:
+        """Get generated content posts from orchestrator"""
+        try:
+            with httpx.Client(timeout=_self.timeout, limits=_self.limits) as client:
+                params = {"limit": limit}
+                if status:
+                    params["status"] = status
+                    
+                response = client.get(
+                    f"{_self.orchestrator_url}/content/posts",
+                    params=params
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            st.error(f"Failed to fetch content posts: {str(e)}")
+            return []
+    
+    def get_content_post(self, post_id: int) -> Dict[str, Any]:
+        """Get specific content post by ID"""
+        try:
+            with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
+                response = client.get(f"{self.orchestrator_url}/content/posts/{post_id}")
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            return {"error": str(e), "success": False}
+    
+    def update_content_post(self, post_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """Update content post (edit, change status, etc.)"""
+        try:
+            with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
+                response = client.put(
+                    f"{self.orchestrator_url}/content/posts/{post_id}",
+                    json=updates
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            return {"error": str(e), "success": False}
+    
+    def adapt_content_for_platforms(self, post_id: int, platforms: List[str]) -> List[Dict]:
+        """Get platform-specific adapted content"""
+        try:
+            with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
+                response = client.post(
+                    f"{self.orchestrator_url}/content/posts/{post_id}/adapt",
+                    json=platforms
+                )
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            st.error(f"Failed to adapt content: {str(e)}")
+            return []
+    
+    @st.cache_data(ttl=60)  # Cache for 1 minute  
+    def get_content_stats(_self) -> Dict[str, Any]:
+        """Get content generation statistics"""
+        try:
+            with httpx.Client(timeout=_self.timeout, limits=_self.limits) as client:
+                response = client.get(f"{_self.orchestrator_url}/content/stats")
+                response.raise_for_status()
+                return response.json()
+        except Exception:
+            return {
+                "total_posts": 0,
+                "posts_today": 0,
+                "posts_this_week": 0,
+                "avg_quality_score": 0.0,
+                "draft_count": 0,
+                "scheduled_count": 0,
+                "published_count": 0,
+                "ready_count": 0
+            }
     
     @st.cache_data(ttl=600)  # Cache for 10 minutes
     def get_platform_analytics(_self, platform: str = None) -> Dict[str, Any]:
