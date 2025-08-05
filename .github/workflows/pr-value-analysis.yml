@@ -47,14 +47,15 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        python scripts/pr-value-analyzer.py ${{ steps.pr_number.outputs.pr_number }}
+        # Use the new fair scoring system
+        python scripts/pr-value-analyzer-v2.py ${{ steps.pr_number.outputs.pr_number }}
     
     - name: Upload Analysis Results
       uses: actions/upload-artifact@v4
       with:
         name: pr-value-analysis
         path: |
-          pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json
+          pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis_v2.json
           .achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json
     
     - name: Comment PR with Value Summary
@@ -64,13 +65,18 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const fs = require('fs');
-          const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json`;
+          const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis_v2.json`;
           
           try {
             const data = JSON.parse(fs.readFileSync(analysisFile, 'utf8'));
             
             // Build comment
-            let comment = '## 📊 Automated PR Value Analysis\n\n';
+            let comment = '## 📊 Automated PR Value Analysis (Fair Scoring)\n\n';
+            
+            // PR Type
+            if (data.pr_type) {
+              comment += `**PR Type Detected**: \`${data.pr_type}\`\n\n`;
+            }
             
             // Business Metrics
             if (data.business_metrics && Object.keys(data.business_metrics).length > 0) {
@@ -96,19 +102,30 @@ jobs:
               const overall = data.kpis.overall_score || 0;
               comment += `- **Overall Score**: ${overall}/10 `;
               
-              if (overall >= 8) {
+              if (overall >= 7) {
                 comment += '🌟 Excellent!\n';
-              } else if (overall >= 6) {
+              } else if (overall >= 5) {
                 comment += '✅ Good\n';
               } else {
                 comment += '⚠️ Needs Improvement\n';
               }
               
-              for (const [key, value] of Object.entries(data.kpis)) {
-                if (key !== 'overall_score') {
-                  comment += `- **${key.replace(/_/g, ' ')}**: ${value}\n`;
+              // Show individual scores if available
+              if (data.kpis.individual_scores) {
+                comment += '\n**Score Breakdown**:\n';
+                for (const [key, value] of Object.entries(data.kpis.individual_scores)) {
+                  comment += `- ${key.replace(/_/g, ' ')}: ${value}/10\n`;
                 }
               }
+              
+              // Show weights if available
+              if (data.scoring_weights) {
+                comment += '\n**Scoring Weights** (for ' + data.pr_type + ' PRs):\n';
+                for (const [key, value] of Object.entries(data.scoring_weights)) {
+                  comment += `- ${key.replace(/_/g, ' ')}: ${(value * 100).toFixed(0)}%\n`;
+                }
+              }
+              
               comment += '\n';
             }
             
