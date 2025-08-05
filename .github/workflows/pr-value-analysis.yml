@@ -47,15 +47,15 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Use the new fair scoring system
-        python scripts/pr-value-analyzer-v2.py ${{ steps.pr_number.outputs.pr_number }}
+        # Use the ultimate analyzer with all metrics and unified scoring
+        python scripts/pr-value-analyzer-ultimate.py ${{ steps.pr_number.outputs.pr_number }}
     
     - name: Upload Analysis Results
       uses: actions/upload-artifact@v4
       with:
         name: pr-value-analysis
         path: |
-          pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis_v2.json
+          pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json
           .achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json
     
     - name: Comment PR with Value Summary
@@ -65,7 +65,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const fs = require('fs');
-          const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis_v2.json`;
+          const analysisFile = `pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json`;
           const achievementFile = `.achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json`;
           
           try {
@@ -82,9 +82,19 @@ jobs:
             // Build comment
             let comment = '## 📊 Automated PR Value Analysis (Fair Scoring)\n\n';
             
-            // PR Type
-            if (data.pr_type) {
-              comment += `**PR Type Detected**: \`${data.pr_type}\`\n\n`;
+            // PR Value Categories
+            if (data.value_categories) {
+              const activeCategories = Object.entries(data.value_categories)
+                .filter(([_, score]) => score > 0.3)
+                .sort(([_, a], [__, b]) => b - a);
+              
+              if (activeCategories.length > 0) {
+                comment += '**Value Categories Detected**:\n';
+                activeCategories.forEach(([cat, score]) => {
+                  comment += `- ${cat}: ${Math.round(score * 100)}% confidence\n`;
+                });
+                comment += '\n';
+              }
             }
             
             // Business Metrics with comprehensive explanations
