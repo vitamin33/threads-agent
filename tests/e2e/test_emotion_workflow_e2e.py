@@ -23,10 +23,12 @@ from sqlalchemy.ext.declarative import declarative_base
 
 TestBase = declarative_base()
 
+
 class EmotionTemplate(TestBase):
     """Test version of EmotionTemplate that works with SQLite."""
+
     __tablename__ = "emotion_templates"
-    
+
     id = Column(Integer, primary_key=True)
     template_name = Column(String(100), nullable=False)
     template_type = Column(String(30), nullable=False)
@@ -277,7 +279,11 @@ class TestEmotionWorkflowE2E:
         result = trajectory_mapper.map_emotion_trajectory(segments)
 
         # Should detect classic narrative patterns
-        assert result["arc_type"] in ["rising", "roller_coaster", "steady"]  # Classic arcs
+        assert result["arc_type"] in [
+            "rising",
+            "roller_coaster",
+            "steady",
+        ]  # Classic arcs
         # For keyword-based analysis in CI, emotional variance might be lower
         assert result["emotional_variance"] >= 0.0  # Should have some emotional variety
         # Peak detection might not work with keyword analysis
@@ -295,7 +301,9 @@ class TestEmotionWorkflowE2E:
         # Story should show progression (though this might not always be strictly true)
         # At minimum, verify we can detect different emotional states
         emotion_variety = len(set(max(seg, key=seg.get) for seg in progression))
-        assert emotion_variety >= 1  # At least 1 emotion detected (relaxed for keyword-based analysis)
+        assert (
+            emotion_variety >= 1
+        )  # At least 1 emotion detected (relaxed for keyword-based analysis)
 
     def test_template_matching_workflow(self, trajectory_mapper, db_session: Session):
         """Test template matching against analyzed content."""

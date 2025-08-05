@@ -19,10 +19,12 @@ from sqlalchemy.ext.declarative import declarative_base
 
 TestBase = declarative_base()
 
+
 class EmotionTemplate(TestBase):
     """Test version of EmotionTemplate that works with SQLite."""
+
     __tablename__ = "emotion_templates"
-    
+
     id = Column(Integer, primary_key=True)
     template_name = Column(String(100), nullable=False)
     template_type = Column(String(30), nullable=False)
@@ -279,6 +281,7 @@ class TestEmotionDatabaseIntegration:
         assert retrieved_template.template_name == "Classic Hook-Build-Payoff"
         # For SQLite, primary_emotions is stored as JSON string
         import json
+
         assert json.loads(retrieved_template.primary_emotions) == [
             "anticipation",
             "surprise",

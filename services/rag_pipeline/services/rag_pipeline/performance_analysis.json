@@ -1,0 +1,54 @@
+{
+  "generated": "2025-08-04T17:32:09.071399",
+  "theoretical_performance": {
+    "assumptions": {
+      "connection_pool_size": 20,
+      "async_workers": 8,
+      "embedding_cache_hit_rate": 0.78,
+      "vector_search_latency_ms": 50,
+      "openai_api_latency_ms": 800,
+      "reranking_latency_ms": 100,
+      "network_overhead_ms": 20,
+      "processing_overhead_ms": 30
+    },
+    "latency": {
+      "cache_hit_ms": 200,
+      "cache_miss_ms": 1000,
+      "average_ms": 376,
+      "p95_ms": 940,
+      "p99_ms": 1222
+    },
+    "throughput": {
+      "theoretical_rps": 21.3,
+      "connection_limited_rps": 53.2,
+      "actual_rps": 21.3,
+      "bottleneck": "compute"
+    }
+  },
+  "conservative_estimates": {
+    "rps_per_pod": 17.0,
+    "p95_latency_ms": 940,
+    "cache_hit_rate": 0.78
+  },
+  "scaling_projections": {
+    "1_pod": {
+      "rps": 17.0,
+      "per_minute": 1020,
+      "per_hour": 61200,
+      "per_day": 1468800
+    },
+    "4_pods": {
+      "rps": 68.0,
+      "per_minute": 4080,
+      "per_hour": 244800,
+      "per_day": 5875200
+    },
+    "8_pods": {
+      "rps": 136.0,
+      "per_minute": 8160,
+      "per_hour": 489600,
+      "per_day": 11750400
+    }
+  },
+  "bottleneck": "compute"
+}

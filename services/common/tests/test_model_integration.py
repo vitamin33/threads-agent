@@ -4,14 +4,12 @@ Integration tests for shared models working together
 
 import pytest
 from datetime import datetime, timedelta
-from typing import List
 
 from services.common.models.achievement_models import (
     Achievement,
-    AchievementCreate,
     AchievementCategory,
     AchievementMetrics,
-    AchievementFilter
+    AchievementFilter,
 )
 from services.common.models.article_models import (
     ArticleType,
@@ -20,13 +18,13 @@ from services.common.models.article_models import (
     ArticleMetadata,
     ContentRequest,
     ContentResponse,
-    InsightScore
+    InsightScore,
 )
 
 
 class TestAchievementToArticleFlow:
     """Test the complete flow from achievement to article generation"""
-    
+
     @pytest.fixture
     def sample_achievement(self):
         """Create a sample achievement"""
@@ -41,14 +39,14 @@ class TestAchievementToArticleFlow:
             technical_details={
                 "architecture": "Event-driven microservices",
                 "technologies": ["Kafka", "ClickHouse", "React", "WebSockets"],
-                "challenges": ["Scale", "Real-time processing", "Data consistency"]
+                "challenges": ["Scale", "Real-time processing", "Data consistency"],
             },
             technologies_used=["Python", "TypeScript", "Kafka", "ClickHouse"],
             metrics=AchievementMetrics(
                 time_saved_hours=40,
                 revenue_impact_dollars=2000000,
                 performance_improvement_percent=300,
-                users_impacted=10000
+                users_impacted=10000,
             ),
             tags=["real-time", "analytics", "dashboard", "scalability"],
             portfolio_ready=True,
@@ -56,9 +54,9 @@ class TestAchievementToArticleFlow:
             source_id="PR-456",
             started_at=datetime.now() - timedelta(days=30),
             completed_at=datetime.now() - timedelta(days=5),
-            created_at=datetime.now() - timedelta(days=5)
+            created_at=datetime.now() - timedelta(days=5),
         )
-    
+
     def test_achievement_to_content_request(self, sample_achievement):
         """Test converting achievement to content request"""
         # Create content request based on achievement
@@ -67,7 +65,7 @@ class TestAchievementToArticleFlow:
             article_types=[
                 ArticleType.CASE_STUDY,  # High impact → case study
                 ArticleType.TECHNICAL_DEEP_DIVE,  # Complex technical details
-                ArticleType.ARCHITECTURE_OVERVIEW  # Architecture mentioned
+                ArticleType.ARCHITECTURE_OVERVIEW,  # Architecture mentioned
             ],
             platforms=[Platform.LINKEDIN, Platform.DEVTO, Platform.MEDIUM],
             auto_publish=False,
@@ -77,19 +75,19 @@ class TestAchievementToArticleFlow:
                 "achievement_score": sample_achievement.impact_score,
                 "key_metrics": {
                     "revenue_impact": sample_achievement.metrics.revenue_impact_dollars,
-                    "users_impacted": sample_achievement.metrics.users_impacted
-                }
-            }
+                    "users_impacted": sample_achievement.metrics.users_impacted,
+                },
+            },
         )
-        
+
         assert len(request.achievement_ids) == 1
         assert len(request.article_types) == 3
         assert request.context["achievement_score"] == 92.0
-    
+
     def test_generate_articles_from_achievement(self, sample_achievement):
         """Test generating multiple articles from achievement"""
         articles = []
-        
+
         # Generate case study for LinkedIn
         case_study = ArticleContent(
             article_type=ArticleType.CASE_STUDY,
@@ -109,26 +107,27 @@ class TestAchievementToArticleFlow:
             {sample_achievement.business_value}
             
             **Technical Approach**
-            We leveraged {', '.join(sample_achievement.technologies_used)} to build
+            We leveraged {", ".join(sample_achievement.technologies_used)} to build
             an event-driven architecture that could scale horizontally...
-            """ + "x" * 500,  # Ensure minimum content length
+            """
+            + "x" * 500,  # Ensure minimum content length
             tags=sample_achievement.tags + ["case-study"],
             metadata=ArticleMetadata(
                 achievement_id=sample_achievement.id,
                 source_type="achievement",
                 word_count=850,
                 reading_time_minutes=4,
-                code_snippets_count=3
-            )
+                code_snippets_count=3,
+            ),
         )
         articles.append(case_study)
-        
+
         # Generate technical deep dive for Dev.to
         tech_dive = ArticleContent(
             article_type=ArticleType.TECHNICAL_DEEP_DIVE,
             platform=Platform.DEVTO,
             title="Building a Real-time Analytics System: Technical Deep Dive",
-            content=f"""
+            content="""
             ## Introduction
             
             In this technical deep dive, we'll explore the architecture and implementation
@@ -153,12 +152,13 @@ class TestAchievementToArticleFlow:
             - **React + WebSockets**: Live dashboard updates
             
             ## Implementation Details...
-            """ + "x" * 1000,
+            """
+            + "x" * 1000,
             code_snippets=[
                 {
                     "language": "python",
                     "code": "# Kafka consumer example\nconsumer = KafkaConsumer('events')",
-                    "description": "Event consumer setup"
+                    "description": "Event consumer setup",
                 }
             ],
             tags=["technical", "architecture", "real-time", "tutorial"],
@@ -166,16 +166,19 @@ class TestAchievementToArticleFlow:
                 achievement_id=sample_achievement.id,
                 word_count=1500,
                 reading_time_minutes=7,
-                code_snippets_count=8
-            )
+                code_snippets_count=8,
+            ),
         )
         articles.append(tech_dive)
-        
+
         assert len(articles) == 2
-        assert all(article.metadata.achievement_id == sample_achievement.id for article in articles)
+        assert all(
+            article.metadata.achievement_id == sample_achievement.id
+            for article in articles
+        )
         assert articles[0].platform == Platform.LINKEDIN
         assert articles[1].platform == Platform.DEVTO
-    
+
     def test_content_response_with_quality_scores(self, sample_achievement):
         """Test creating content response with quality assessments"""
         # Create articles (simplified)
@@ -184,10 +187,10 @@ class TestAchievementToArticleFlow:
                 article_type=ArticleType.CASE_STUDY,
                 platform=Platform.LINKEDIN,
                 title="Real-time Analytics Case Study",
-                content="Detailed case study content..." + "x" * 200
+                content="Detailed case study content..." + "x" * 200,
             )
         ]
-        
+
         # Create response with quality scores
         response = ContentResponse(
             request_id="req_achievement_1",
@@ -202,10 +205,10 @@ class TestAchievementToArticleFlow:
             recommendations=[
                 "Add more specific performance metrics",
                 "Include architecture diagrams",
-                "Expand on lessons learned section"
-            ]
+                "Expand on lessons learned section",
+            ],
         )
-        
+
         assert response.status == "success"
         assert response.average_quality_score == 8.5
         assert len(response.recommendations) == 3
@@ -213,7 +216,7 @@ class TestAchievementToArticleFlow:
 
 class TestCompanyTargetedContent:
     """Test generating company-specific content from achievements"""
-    
+
     @pytest.fixture
     def ml_achievements(self):
         """Create ML/AI focused achievements"""
@@ -230,7 +233,7 @@ class TestCompanyTargetedContent:
                 portfolio_ready=True,
                 started_at=datetime.now() - timedelta(days=60),
                 completed_at=datetime.now() - timedelta(days=30),
-                created_at=datetime.now()
+                created_at=datetime.now(),
             ),
             Achievement(
                 id=11,
@@ -244,30 +247,32 @@ class TestCompanyTargetedContent:
                 portfolio_ready=True,
                 started_at=datetime.now() - timedelta(days=45),
                 completed_at=datetime.now() - timedelta(days=20),
-                created_at=datetime.now()
-            )
+                created_at=datetime.now(),
+            ),
         ]
-    
+
     def test_filter_achievements_for_anthropic(self, ml_achievements):
         """Test filtering achievements for Anthropic (AI safety focus)"""
         # Create filter for Anthropic-relevant achievements
-        filter_obj = AchievementFilter(
+        AchievementFilter(
             categories=[AchievementCategory.AI_ML],
             tags=["ai", "llm", "safety", "monitoring"],
             company_keywords=["safety", "responsible", "ethical", "alignment"],
             min_impact_score=80.0,
-            portfolio_ready_only=True
+            portfolio_ready_only=True,
         )
-        
+
         # The RAG assistant would be relevant (responsible AI use)
-        relevant = [a for a in ml_achievements if any(tag in ["ai", "llm"] for tag in a.tags)]
+        relevant = [
+            a for a in ml_achievements if any(tag in ["ai", "llm"] for tag in a.tags)
+        ]
         assert len(relevant) == 1
         assert relevant[0].id == 11
-    
+
     def test_generate_anthropic_targeted_article(self, ml_achievements):
         """Test generating Anthropic-targeted content"""
         achievement = ml_achievements[1]  # RAG assistant
-        
+
         article = ArticleContent(
             article_type=ArticleType.BEST_PRACTICES,
             platform=Platform.MEDIUM,
@@ -302,17 +307,18 @@ class TestCompanyTargetedContent:
             ## Lessons Learned
             
             Building AI systems that are both powerful and responsible requires...
-            """ + "x" * 500,
+            """
+            + "x" * 500,
             tags=["ai-safety", "responsible-ai", "best-practices", "rag"],
             metadata=ArticleMetadata(
                 achievement_id=achievement.id,
                 custom={
                     "target_company": "anthropic",
-                    "focus_areas": ["safety", "reliability", "transparency"]
-                }
-            )
+                    "focus_areas": ["safety", "reliability", "transparency"],
+                },
+            ),
         )
-        
+
         assert article.article_type == ArticleType.BEST_PRACTICES
         assert "responsible" in article.title.lower()
         assert article.metadata.custom["target_company"] == "anthropic"
@@ -320,60 +326,63 @@ class TestCompanyTargetedContent:
 
 class TestContentQualityAssessment:
     """Test quality assessment integration"""
-    
+
     def test_insight_score_for_article(self):
         """Test creating insight scores for generated articles"""
-        article = ArticleContent(
+        ArticleContent(
             article_type=ArticleType.CASE_STUDY,
             platform=Platform.LINKEDIN,
             title="Scaling to 1M Users: Our Journey",
-            content="Comprehensive case study..." + "x" * 500
+            content="Comprehensive case study..." + "x" * 500,
         )
-        
+
         # Create quality assessment
         score = InsightScore(
             overall_score=8.5,
             technical_depth=9.0,  # Deep technical content
-            business_value=8.5,   # Clear business impact
-            clarity=8.0,          # Well structured
-            originality=7.5,      # Some unique insights
+            business_value=8.5,  # Clear business impact
+            clarity=8.0,  # Well structured
+            originality=7.5,  # Some unique insights
             platform_relevance=9.0,  # Perfect for LinkedIn
             engagement_potential=8.5,  # Should drive engagement
             strengths=[
                 "Excellent technical depth with concrete examples",
                 "Clear business value proposition",
-                "Well-suited for LinkedIn professional audience"
+                "Well-suited for LinkedIn professional audience",
             ],
             improvements=[
                 "Add more visual elements (charts/diagrams)",
-                "Include specific metrics on cost savings"
-            ]
+                "Include specific metrics on cost savings",
+            ],
         )
-        
+
         assert score.overall_score == 8.5
         assert score.platform_relevance == 9.0
         assert len(score.strengths) == 3
         assert len(score.improvements) == 2
-    
+
     def test_quality_threshold_filtering(self):
         """Test filtering articles by quality threshold"""
         articles_with_scores = [
-            (ArticleContent(
-                article_type=ArticleType.TUTORIAL,
-                platform=Platform.DEVTO,
-                title=f"Tutorial {i}",
-                content="Tutorial content..." + "x" * 100
-            ), 6.5 + i * 0.5)
+            (
+                ArticleContent(
+                    article_type=ArticleType.TUTORIAL,
+                    platform=Platform.DEVTO,
+                    title=f"Tutorial {i}",
+                    content="Tutorial content..." + "x" * 100,
+                ),
+                6.5 + i * 0.5,
+            )
             for i in range(5)
         ]
-        
+
         # Filter by quality threshold of 8.0
         quality_threshold = 8.0
         high_quality = [
-            (article, score) 
-            for article, score in articles_with_scores 
+            (article, score)
+            for article, score in articles_with_scores
             if score >= quality_threshold
         ]
-        
+
         assert len(high_quality) == 2  # Only the last 2 meet threshold
         assert all(score >= 8.0 for _, score in high_quality)
