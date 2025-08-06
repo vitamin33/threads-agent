@@ -119,3 +119,17 @@ global:
 service:
   type: ClusterIP
   port: 8080
+
+# Conversation Engine - disable monitoring features for CI
+conversationEngine:
+  enabled: true
+  image:
+    repository: conversation-engine
+    tag: "local"
+    pullPolicy: IfNotPresent
+  serviceMonitor:
+    enabled: false  # No Prometheus CRDs in CI
+  pdb:
+    enabled: false  # No PDB in CI
+  autoscaling:
+    enabled: false  # No HPA in CI

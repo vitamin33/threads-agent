@@ -990,11 +990,11 @@ conversationEngine:
     targetMemoryUtilizationPercentage: 80
   
   pdb:
-    enabled: true
+    enabled: false
     minAvailable: 1
   
   serviceMonitor:
-    enabled: true
+    enabled: false
   
   # Extra environment variables
   extraEnv: []
