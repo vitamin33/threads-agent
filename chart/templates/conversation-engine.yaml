@@ -6,7 +6,7 @@ metadata:
   name: conversation-engine
   labels:
     app: conversation-engine
-    {{- include "threads-agent.labels" . | nindent 4 }}
+    {{- include "threads.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.conversationEngine.replicas }}
   selector:
@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app: conversation-engine
-        {{- include "threads-agent.labels" . | nindent 8 }}
+        {{- include "threads.labels" . | nindent 8 }}
     spec:
       containers:
       - name: conversation-engine
@@ -27,16 +27,16 @@ spec:
           name: http
         env:
         - name: DATABASE_URL
-          value: "postgresql://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ .Values.postgresql.host }}:{{ .Values.postgresql.port }}/{{ .Values.postgresql.auth.database }}"
+          value: "postgresql://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/threads"
         - name: REDIS_HOST
-          value: {{ .Values.redis.host | quote }}
+          value: "redis"
         - name: REDIS_PORT
-          value: {{ .Values.redis.port | quote }}
+          value: "6379"
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
               name: openai-secret
-              key: api-key
+              key: OPENAI_API_KEY
         - name: CONVERSATION_MODEL
           value: {{ .Values.conversationEngine.model | default "gpt-4o" | quote }}
         - name: CONVERSATION_TEMPERATURE
@@ -67,7 +67,7 @@ metadata:
   name: conversation-engine
   labels:
     app: conversation-engine
-    {{- include "threads-agent.labels" . | nindent 4 }}
+    {{- include "threads.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
@@ -85,7 +85,7 @@ metadata:
   name: conversation-engine-hpa
   labels:
     app: conversation-engine
-    {{- include "threads-agent.labels" . | nindent 4 }}
+    {{- include "threads.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -115,7 +115,7 @@ metadata:
   name: conversation-engine-pdb
   labels:
     app: conversation-engine
-    {{- include "threads-agent.labels" . | nindent 4 }}
+    {{- include "threads.labels" . | nindent 4 }}
 spec:
   minAvailable: {{ .Values.conversationEngine.pdb.minAvailable }}
   selector:
@@ -130,7 +130,7 @@ metadata:
   name: conversation-engine
   labels:
     app: conversation-engine
-    {{- include "threads-agent.labels" . | nindent 4 }}
+    {{- include "threads.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
