@@ -20,7 +20,9 @@ class ThreadsAgentAPI:
         self.techdoc_url = os.getenv("TECH_DOC_API_URL", "http://localhost:8001")
         self.orchestrator_url = os.getenv("ORCHESTRATOR_URL", "http://localhost:8080")
         self.viral_engine_url = os.getenv("VIRAL_ENGINE_URL", "http://localhost:8003")
-        self.prompt_engineering_url = os.getenv("PROMPT_ENGINEERING_URL", "http://localhost:8080")
+        self.prompt_engineering_url = os.getenv(
+            "PROMPT_ENGINEERING_URL", "http://localhost:8080"
+        )
 
         # HTTP client configuration
         self.timeout = httpx.Timeout(30.0, connect=5.0)
@@ -436,7 +438,9 @@ class ThreadsAgentAPI:
         """Fetch all prompt templates from the marketplace"""
         try:
             with httpx.Client(timeout=_self.timeout, limits=_self.limits) as client:
-                response = client.get(f"{_self.prompt_engineering_url}/api/v1/templates")
+                response = client.get(
+                    f"{_self.prompt_engineering_url}/api/v1/templates"
+                )
                 response.raise_for_status()
                 data = response.json()
                 return data.get("templates", []) if isinstance(data, dict) else data
@@ -449,7 +453,9 @@ class ThreadsAgentAPI:
         """Fetch A/B testing experiments"""
         try:
             with httpx.Client(timeout=_self.timeout, limits=_self.limits) as client:
-                response = client.get(f"{_self.prompt_engineering_url}/api/v1/experiments")
+                response = client.get(
+                    f"{_self.prompt_engineering_url}/api/v1/experiments"
+                )
                 response.raise_for_status()
                 data = response.json()
                 return data.get("experiments", []) if isinstance(data, dict) else data
@@ -466,31 +472,54 @@ class ThreadsAgentAPI:
                 response.raise_for_status()
                 # Parse Prometheus metrics format
                 metrics_text = response.text
+                # Handle JSON-encoded string response
+                if metrics_text.startswith('"') and metrics_text.endswith('"'):
+                    # Remove quotes and unescape newlines
+                    metrics_text = metrics_text[1:-1].replace("\\n", "\n")
                 metrics = {}
-                
+
                 # Extract key metrics from Prometheus format
-                for line in metrics_text.split('\n'):
-                    if 'prompt_executions_total' in line and not line.startswith('#'):
-                        metrics['total_executions'] = int(float(line.split()[-1]))
-                    elif 'active_templates_count' in line and not line.startswith('#'):
-                        metrics['active_templates'] = int(float(line.split()[-1]))
-                
+                for line in metrics_text.split("\n"):
+                    line = line.strip()
+                    if (
+                        line
+                        and "prompt_executions_total" in line
+                        and not line.startswith("#")
+                    ):
+                        try:
+                            value = line.split()[-1].strip()
+                            metrics["total_executions"] = int(float(value))
+                        except ValueError:
+                            pass
+                    elif (
+                        line
+                        and "active_templates_count" in line
+                        and not line.startswith("#")
+                    ):
+                        try:
+                            value = line.split()[-1].strip()
+                            metrics["active_templates"] = int(float(value))
+                        except ValueError:
+                            pass
+
                 # Provide defaults if not found
-                metrics.setdefault('total_executions', 1520)
-                metrics.setdefault('active_templates', 25)
-                
+                metrics.setdefault("total_executions", 1520)
+                metrics.setdefault("active_templates", 25)
+
                 return metrics
         except Exception as e:
             st.error(f"Failed to fetch prompt metrics: {str(e)}")
             return {"total_executions": 1520, "active_templates": 25}
 
-    def execute_prompt_chain(self, chain_id: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_prompt_chain(
+        self, chain_id: str, inputs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a prompt chain"""
         try:
             with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
                 response = client.post(
                     f"{self.prompt_engineering_url}/api/v1/chains/{chain_id}/execute",
-                    json={"inputs": inputs}
+                    json={"inputs": inputs},
                 )
                 response.raise_for_status()
                 return response.json()
@@ -503,7 +532,7 @@ class ThreadsAgentAPI:
             with httpx.Client(timeout=self.timeout, limits=self.limits) as client:
                 response = client.post(
                     f"{self.prompt_engineering_url}/api/v1/experiments",
-                    json=experiment_data
+                    json=experiment_data,
                 )
                 response.raise_for_status()
                 return response.json()

@@ -167,23 +167,43 @@ async def list_achievements(
             "source_id": item.source_id,
             "source_url": item.source_url,
             "tags": item.tags if item.tags is not None else [],
-            "skills_demonstrated": item.skills_demonstrated if item.skills_demonstrated is not None else [],
+            "skills_demonstrated": item.skills_demonstrated
+            if item.skills_demonstrated is not None
+            else [],
             "impact_score": item.impact_score if item.impact_score is not None else 0.0,
-            "complexity_score": item.complexity_score if item.complexity_score is not None else 0.0,
+            "complexity_score": item.complexity_score
+            if item.complexity_score is not None
+            else 0.0,
             "business_value": item.business_value,
-            "time_saved_hours": item.time_saved_hours if item.time_saved_hours is not None else 0.0,
-            "performance_improvement_pct": item.performance_improvement_pct if item.performance_improvement_pct is not None else 0.0,
+            "time_saved_hours": item.time_saved_hours
+            if item.time_saved_hours is not None
+            else 0.0,
+            "performance_improvement_pct": item.performance_improvement_pct
+            if item.performance_improvement_pct is not None
+            else 0.0,
             "evidence": item.evidence if item.evidence is not None else {},
-            "metrics_before": item.metrics_before if item.metrics_before is not None else {},
-            "metrics_after": item.metrics_after if item.metrics_after is not None else {},
+            "metrics_before": item.metrics_before
+            if item.metrics_before is not None
+            else {},
+            "metrics_after": item.metrics_after
+            if item.metrics_after is not None
+            else {},
             "ai_summary": item.ai_summary,
             "ai_impact_analysis": item.ai_impact_analysis,
             "ai_technical_analysis": item.ai_technical_analysis,
-            "portfolio_ready": item.portfolio_ready if item.portfolio_ready is not None else False,
+            "portfolio_ready": item.portfolio_ready
+            if item.portfolio_ready is not None
+            else False,
             "portfolio_section": item.portfolio_section,
-            "display_priority": item.display_priority if item.display_priority is not None else 50,
-            "created_at": item.created_at if item.created_at is not None else datetime.now(),
-            "updated_at": item.updated_at if item.updated_at is not None else datetime.now(),
+            "display_priority": item.display_priority
+            if item.display_priority is not None
+            else 50,
+            "created_at": item.created_at
+            if item.created_at is not None
+            else datetime.now(),
+            "updated_at": item.updated_at
+            if item.updated_at is not None
+            else datetime.now(),
         }
         items_dict.append(item_dict)
 

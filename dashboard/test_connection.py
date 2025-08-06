@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Test dashboard connections"""
+
 import requests
 import json
 

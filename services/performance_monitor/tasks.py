@@ -11,9 +11,15 @@ from contextlib import contextmanager
 from services.performance_monitor.early_kill import EarlyKillMonitor, VariantPerformance
 from services.performance_monitor.models import VariantMonitoring
 from services.performance_monitor.cache import PerformanceCache
-from services.threads_adaptor.client_sync import ThreadsClientSync
 
 logger = logging.getLogger(__name__)
+
+# Try to import threads_adaptor, fall back to mock if not available
+try:
+    from services.threads_adaptor.client_sync import ThreadsClientSync
+except ImportError:
+    logger.warning("threads_adaptor not found, using mock client")
+    from services.performance_monitor.client_mock import ThreadsClientSync
 
 
 @contextmanager

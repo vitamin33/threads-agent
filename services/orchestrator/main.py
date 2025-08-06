@@ -44,6 +44,7 @@ app.include_router(search_router)
 # Include content management router
 try:
     from services.orchestrator.content_management import router as content_router
+
     app.include_router(content_router)
 except ImportError as e:
     logger.warning(f"Content management router not available: {e}")
@@ -183,7 +184,7 @@ async def metrics_summary():
     """Get system-wide metrics summary for dashboard"""
     start_time = time.time()
     status = 500
-    
+
     try:
         # Return mock data for now
         summary = {
@@ -192,20 +193,20 @@ async def metrics_summary():
                 "total": 5,
                 "details": {
                     "orchestrator": "healthy",
-                    "celery_worker": "healthy", 
+                    "celery_worker": "healthy",
                     "persona_runtime": "healthy",
                     "fake_threads": "healthy",
-                    "achievement_collector": "healthy"
-                }
+                    "achievement_collector": "healthy",
+                },
             },
             "api_latency_ms": 45,
             "success_rate": 99.9,
             "queue_size": 12,
             "active_tasks": 3,
             "completed_today": 89,
-            "avg_processing_time_s": 2.3
+            "avg_processing_time_s": 2.3,
         }
-        
+
         status = 200
         return summary
     except Exception:
