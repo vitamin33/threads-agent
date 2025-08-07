@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from typing import Optional
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func
@@ -65,14 +64,14 @@ def create_achievement_sync(
         }
 
     # Enhance metadata with calculation version
-    enhanced_metadata = achievement.metadata or {}
+    enhanced_metadata = getattr(achievement, 'metadata', {}) or {}
     enhanced_metadata["calculation_version"] = CalculationMetadata.CALCULATION_VERSION
     enhanced_metadata["enhanced_at"] = datetime.now().isoformat()
 
     # Create achievement with enhanced data
     achievement_data = achievement.model_dump()
     achievement_data["metrics_after"] = enhanced_metrics or achievement.metrics_after
-    achievement_data["metadata"] = enhanced_metadata
+    achievement_data["metadata_json"] = enhanced_metadata  # Use correct field name from model
 
     db_achievement = AchievementModel(
         **achievement_data,

@@ -13,7 +13,7 @@ import json
 import subprocess
 import re
 from datetime import datetime
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 import os
 import sys
 import math
@@ -666,7 +666,7 @@ class UltimatePRValueAnalyzer:
 
         # Individual scores
         kpis = self.metrics["kpis"]
-        print(f"\n📈 Score Components:")
+        print("\n📈 Score Components:")
         print(
             f"  {'✅' if kpis['innovation_score'] >= 6 else '❌'} Innovation: {kpis['innovation_score']}/10"
         )

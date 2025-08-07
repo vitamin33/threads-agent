@@ -5,9 +5,7 @@ This creates template usage, A/B test results, and metrics in the database
 """
 
 import httpx
-import json
 import random
-from datetime import datetime, timedelta
 
 # API endpoints
 PROMPT_API = "http://localhost:8085"

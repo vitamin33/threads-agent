@@ -8,8 +8,8 @@ import httpx
 import json
 import sys
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Tuple
+from datetime import datetime
+from typing import Any, Tuple
 
 
 class DashboardVerifier:

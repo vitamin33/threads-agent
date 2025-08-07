@@ -4,7 +4,6 @@ Verify Prompt Engineering Platform is working with real data
 """
 
 import httpx
-import json
 import sys
 
 
@@ -93,11 +92,11 @@ def verify_dashboard_data():
     try:
         response = httpx.get("http://localhost:8080/metrics")
         if response.status_code == 200:
-            print(f"✅ Metrics endpoint responding")
+            print("✅ Metrics endpoint responding")
             # Parse some metrics
             metrics_text = response.text
             if "prompt_executions_total" in metrics_text:
-                print(f"   Found prompt execution metrics")
+                print("   Found prompt execution metrics")
         else:
             print(f"❌ Metrics API error: {response.status_code}")
     except Exception as e:
