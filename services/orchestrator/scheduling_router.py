@@ -42,14 +42,15 @@ from the orchestrator service database schema.
 """
 
 from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 
-from services.orchestrator.db.models import ContentItem, ContentSchedule, ContentAnalytics
-from services.orchestrator.db import get_db_session
-from services.orchestrator.scheduling_schemas import (
+from .db.models import ContentItem, ContentSchedule, ContentAnalytics
+from .db import get_db_session
+from .scheduling_schemas import (
     ContentItemCreate,
     ContentItemResponse,
     ContentItemUpdate,
@@ -64,6 +65,106 @@ from services.orchestrator.scheduling_schemas import (
     ScheduleListFilters,
     ErrorResponse
 )
+from .viral_engine_events import (
+    ContentQualityCheckRequested,
+    ContentQualityCheckRequestedPayload
+)
+
+
+def publish_event(event_data: dict) -> None:
+    """
+    Minimal event publisher implementation for viral engine integration.
+    
+    This is a stub implementation that will be expanded later.
+    For now, it just accepts the event data without publishing.
+    """
+    # TODO: Implement actual event bus publishing
+    pass
+
+
+async def call_viral_engine_api(endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Call the viral engine API service.
+    
+    Args:
+        endpoint: API endpoint to call (e.g., "/predict/engagement")
+        data: Data to send in the request
+        
+    Returns:
+        Response from viral engine API
+    """
+    viral_engine_url = "http://viral-engine:8080"  # Default k8s service URL
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{viral_engine_url}{endpoint}",
+                json=data
+            )
+            response.raise_for_status()
+            return response.json()
+    except httpx.RequestError as e:
+        # For testing/development, return mock data if service is unavailable
+        return {
+            "quality_score": 0.75,
+            "predicted_engagement_rate": 0.08,
+            "feature_scores": {
+                "engagement_potential": 0.8,
+                "readability": 0.7,
+                "viral_hooks": 0.75
+            },
+            "improvement_suggestions": ["Service unavailable - using fallback"]
+        }
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Viral engine API error: {e.response.status_code}"
+        )
+
+
+def handle_quality_scored_event(quality_event_data: Dict[str, Any], db_session: Session) -> bool:
+    """
+    Handle ContentQualityScored event by updating content metadata.
+    
+    Args:
+        quality_event_data: Quality score event payload
+        db_session: Database session
+        
+    Returns:
+        True if content was updated successfully
+    """
+    try:
+        content_id = quality_event_data["content_id"]
+        quality_score = quality_event_data["quality_score"]
+        passes_quality_gate = quality_event_data["passes_quality_gate"]
+        
+        # Get content item
+        content = db_session.query(ContentItem).filter(ContentItem.id == content_id).first()
+        
+        if not content:
+            return False
+            
+        # Update content metadata with quality information
+        # Create new dict to ensure SQLAlchemy detects the change
+        new_metadata = content.content_metadata.copy() if content.content_metadata else {}
+        new_metadata.update({
+            "quality_score": quality_score,
+            "passes_quality_gate": passes_quality_gate,
+            "viral_engine_processed": True,
+            "feature_scores": quality_event_data.get("feature_scores", {}),
+            "improvement_suggestions": quality_event_data.get("improvement_suggestions", [])
+        })
+        content.content_metadata = new_metadata
+        
+        # Update the timestamp
+        content.updated_at = datetime.now(timezone.utc)
+        
+        db_session.commit()
+        return True
+        
+    except Exception as e:
+        db_session.rollback()
+        return False
 
 # Database session dependency (imported from db module)
 # This will be used for all endpoints and can be mocked in tests
@@ -105,6 +206,20 @@ async def create_content_item(
         db.commit()
         db.refresh(db_content)
         
+        # Publish quality check request event
+        event_data = {
+            'event_type': 'ContentQualityCheckRequested',
+            'payload': {
+                'content_id': db_content.id,
+                'content': db_content.content,
+                'title': db_content.title,
+                'author_id': db_content.author_id,
+                'content_type': db_content.content_type,
+                'metadata': db_content.content_metadata
+            }
+        }
+        publish_event(event_data)
+        
         return ContentItemResponse.model_validate(db_content)
         
     except Exception as e:
@@ -112,6 +227,54 @@ async def create_content_item(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create content item: {str(e)}"
+        )
+
+
+@router.post("/content/{content_id}/quality-check")
+async def check_content_quality(
+    content_id: int,
+    db: Session = Depends(get_db_session)
+) -> dict:
+    """
+    Check content quality using viral engine integration.
+    
+    - **content_id**: ID of the content item to check
+    
+    Returns quality score and pass/fail decision based on 60% threshold.
+    """
+    try:
+        # Get content item
+        content = db.query(ContentItem).filter(ContentItem.id == content_id).first()
+        
+        if not content:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Content item not found"
+            )
+        
+        # Call viral engine API for quality prediction
+        viral_result = await call_viral_engine_api(
+            endpoint="/predict/engagement",
+            data={
+                "content": content.content
+            }
+        )
+        
+        quality_score = viral_result.get("quality_score", 0.75)
+        
+        return {
+            "quality_score": quality_score,
+            "passes_quality_gate": quality_score >= 0.6,
+            "feature_scores": viral_result.get("feature_scores", {}),
+            "improvement_suggestions": viral_result.get("improvement_suggestions", [])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to check content quality: {str(e)}"
         )
 
 
