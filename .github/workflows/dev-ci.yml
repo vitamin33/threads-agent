@@ -10,6 +10,13 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - '.env.example'
+      - '.github/workflows/**'  # Skip heavy CI for workflow changes
+      - 'scripts/**'            # Skip heavy CI for script changes
+      - '**/*.json'             # Skip for JSON files
+      - '**/*.txt'              # Skip for text files
+      - '!**/requirements*.txt' # Except Python requirements
+      - '**/*.yaml'             # Skip for YAML files
+      - '!chart/**/*.yaml'      # Except Helm charts
   workflow_dispatch:
     inputs:
       force_build:

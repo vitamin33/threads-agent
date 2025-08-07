@@ -257,3 +257,10 @@ test.db
 test_achievements.db
 *.db
 node_modules/
+
+# ── PR Analysis Cache ─────────────────────────────────
+.pr_analysis_history.json
+pr_*_value_analysis.json
+quick_portfolio_analysis_*.json
+pr_analysis_test_*.json
+test_report_*.md
