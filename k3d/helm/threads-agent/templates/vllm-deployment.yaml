@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-service
+  labels:
+    app: vllm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-service
+  template:
+    metadata:
+      labels:
+        app: vllm-service
+    spec:
+      containers:
+      - name: vllm-service
+        image: vllm-service:local
+        ports:
+        - containerPort: 8090
+        env:
+        - name: VLLM_MODEL
+          value: "meta-llama/Llama-3-8b-chat-hf"
+        - name: FORCE_CPU
+          value: "true"  # For k3d demo
+        - name: PROMETHEUS_MULTIPROC_DIR
+          value: "/tmp/prometheus_metrics"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8090
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: prometheus-metrics
+          mountPath: /tmp/prometheus_metrics
+      volumes:
+      - name: prometheus-metrics
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-service
+  labels:
+    app: vllm-service
+spec:
+  selector:
+    app: vllm-service
+  ports:
+  - name: http
+    port: 8090
+    targetPort: 8090
+  - name: metrics
+    port: 9090
+    targetPort: 8090
+  type: ClusterIP
