@@ -1,7 +1,69 @@
 # /chart/values-prod.yaml
-replicaCount: 2
+replicaCount: 3
 service:
   type: LoadBalancer
+
+# Comment Monitoring - Production Optimized Configuration
+orchestrator:
+  resources:
+    requests:
+      memory: "768Mi"                  # Increased for comment processing
+      cpu: "300m"
+    limits:
+      memory: "2Gi"                    # Higher limit for high-volume processing
+      cpu: "1500m"
+  
+  commentMonitoring:
+    enabled: true
+    batchSize: 25                      # Larger batches for efficiency
+    dedupCacheTTL: 7200               # Longer TTL for production
+    processingTimeout: 45              # More time for complex processing
+    maxRetries: 5                      # More retries for production
+    rateLimitPerMinute: 200           # Higher rate limit for production
+    
+    metrics:
+      enabled: true
+      
+    alerts:
+      queueBacklogThreshold: 1000     # Higher threshold for production
+      memoryThresholdGb: 1.5          # Alert before hitting limit
+      cpuThreshold: 0.85              # Higher CPU threshold
+      
+    networkPolicy:
+      enabled: true                   # Enable network security
+      
+    rbac:
+      enabled: true                   # Enable RBAC
+  
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    scrapeTimeout: "10s"
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2                    # Minimum replicas for HA
+    maxReplicas: 10                   # Allow scaling for high load
+    targetCPUUtilization: 75
+    targetMemoryUtilization: 80
+    
+    customMetrics:
+      enabled: true                   # Enable queue-based scaling
+      targetQueueLength: 75           # Scale when queue gets large
+      
+    scaleUp:
+      stabilizationWindowSeconds: 45  # Faster scale-up for comment bursts
+      percentPolicy: 100
+      periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 600 # Slower scale-down for stability
+      percentPolicy: 25
+      periodSeconds: 60
+  
+  pdb:
+    enabled: true
+    minAvailable: 1                   # Ensure availability during updates
+
 resources:
   limits:
     cpu: 500m

@@ -1,0 +1,189 @@
+epic_id: epic-236-conversation-state-machine
+epic_name: "Intelligent Conversation State Machine & DM Automation"
+description: |
+  Build a new intelligent conversation automation microservice that manages 7-state conversation 
+  flows from initial contact to purchase completion. This system handles 80% of DM interactions 
+  autonomously using GPT-4o for personalized responses, maintains conversation context across 
+  sessions, and integrates with PostgreSQL for persistence and Redis for ultra-fast state caching.
+
+  The conversation state machine implements sophisticated workflow orchestration across these states:
+  1. INITIAL_CONTACT - First touchpoint and greeting
+  2. INTEREST_QUALIFICATION - Understanding user needs and pain points
+  3. VALUE_PROPOSITION - Presenting tailored solutions and benefits
+  4. OBJECTION_HANDLING - Addressing concerns and building trust
+  5. PRICE_NEGOTIATION - Discussing pricing and packages
+  6. CLOSING_ATTEMPT - Moving toward purchase decision
+  7. POST_PURCHASE - Follow-up and satisfaction confirmation
+
+  Technical architecture includes intelligent context management, GPT-4o integration for 
+  natural language generation, Redis-based state caching for <5 second response times, 
+  PostgreSQL for conversation persistence, and sophisticated transition logic with 
+  fallback to human agents for complex scenarios.
+
+status: planned  
+priority: critical
+business_value: |
+  - Enables 80% autonomous handling of DM conversations, dramatically reducing manual effort
+  - Directly drives revenue conversion from CRA-235 qualified leads to actual purchases
+  - Supports $0.01/follow cost efficiency through automated personalized engagement
+  - Accelerates path to $20k MRR by scaling conversation capacity 24/7
+  - Provides consistent, high-quality customer experience with GPT-4o personalization
+  - Creates comprehensive conversation analytics for optimization and A/B testing
+  - Establishes foundation for advanced AI-driven customer relationship management
+  - Reduces customer acquisition cost while increasing conversion rates
+
+target_completion: 2025-08-25
+estimated_effort: 84
+
+features:
+  - feature_id: feat-236-001
+    name: "Conversation State Machine Core Engine"
+    description: "Implement 7-state workflow engine with intelligent transition logic and context management"
+    priority: critical
+    estimated_effort: 16
+    
+  - feature_id: feat-236-002  
+    name: "GPT-4o Integration & Response Generation"
+    description: "Integrate GPT-4o for natural language understanding and personalized response generation"
+    priority: critical
+    estimated_effort: 14
+    
+  - feature_id: feat-236-003
+    name: "Redis State Caching & Performance Layer"
+    description: "Implement Redis-based state caching for <5 second response times and session management"
+    priority: high
+    estimated_effort: 10
+    
+  - feature_id: feat-236-004
+    name: "PostgreSQL Conversation Persistence"
+    description: "Design and implement comprehensive conversation storage with full audit trails"
+    priority: high
+    estimated_effort: 12
+
+  - feature_id: feat-236-005
+    name: "Context Management & Memory System"
+    description: "Build intelligent context retention across conversation sessions with user profiling"
+    priority: high
+    estimated_effort: 12
+
+  - feature_id: feat-236-006
+    name: "Human Handoff & Escalation System"
+    description: "Implement seamless handoff to human agents for complex scenarios with context transfer"
+    priority: medium
+    estimated_effort: 10
+
+  - feature_id: feat-236-007
+    name: "Analytics & Optimization Dashboard"
+    description: "Create comprehensive conversation analytics with A/B testing and performance metrics"
+    priority: medium
+    estimated_effort: 10
+
+success_metrics:
+  - "Handle 80% of conversations autonomously without human intervention"
+  - "Maintain <5 second response time for all conversation interactions"
+  - "Generate responses under 280 characters for DM platform compatibility"
+  - "Achieve >15% conversion rate from qualified leads to purchases"
+  - "Process 500+ concurrent conversations with 99.9% uptime"
+  - "Maintain conversation context accuracy >95% across session boundaries"
+  - "Handle state transitions with <2% error rate in flow logic"
+  - "Support 24/7 operation with automatic error recovery and failover"
+
+dependencies:
+  - "CRA-235 comment intent analysis system for qualified lead input"
+  - "Revenue service for purchase completion and transaction processing"
+  - "PostgreSQL database for conversation persistence and user profiling"
+  - "Redis cluster for high-performance state caching and session management"
+  - "OpenAI GPT-4o API for natural language processing and generation"
+  - "Celery worker for background conversation processing and cleanup"
+  - "Orchestrator service for workflow coordination and monitoring"
+
+risks:
+  - "GPT-4o API rate limits may impact response times during peak traffic"
+  - "Complex conversation context may exceed Redis memory limits"
+  - "State machine logic complexity could introduce transition bugs"
+  - "Integration with multiple services increases system dependencies"
+  - "Conversation quality may vary with different user personalities"
+  - "Data privacy concerns with storing personal conversation content"
+
+mitigation_strategies:
+  - "Implement intelligent GPT-4o request batching and caching for common responses"
+  - "Design Redis memory management with LRU eviction and context compression"
+  - "Create comprehensive state machine testing with edge case coverage"
+  - "Build circuit breakers and fallback mechanisms for service dependencies"
+  - "Develop conversation quality scoring and continuous improvement loops"
+  - "Implement data encryption and retention policies for GDPR compliance"
+
+tags:
+  - conversation-automation
+  - state-machine
+  - gpt4o-integration
+  - dm-automation
+  - revenue-conversion
+  - redis-caching
+  - context-management
+
+technical_requirements:
+  database_changes:
+    - "New conversations table with state tracking and context storage"
+    - "New conversation_messages table for complete message history"
+    - "New conversation_contexts table for user profiling and preferences"
+    - "New conversation_analytics table for performance tracking"
+    - "Enhanced user_profiles table with conversation preferences"
+  
+  performance_targets:
+    - "Response generation: <3 seconds p95"
+    - "State transitions: <500ms per transition"
+    - "Context retrieval: <200ms from Redis"
+    - "Message persistence: <100ms to PostgreSQL"
+    - "Concurrent conversations: 500+ simultaneous"
+    - "Memory usage: <2GB per worker instance"
+  
+  gpt4o_requirements:
+    - "Natural language understanding for user intent classification"
+    - "Personalized response generation based on user context"
+    - "Sentiment analysis for conversation tone adaptation"
+    - "Objection detection and appropriate response crafting"
+    - "Character limit optimization for 280-character responses"
+    
+  integration_points:
+    - "CRA-235 comment intent system for lead qualification input"
+    - "Revenue service for purchase completion workflows"
+    - "fake_threads for DM simulation and testing"
+    - "orchestrator for conversation workflow coordination"
+    - "celery_worker for background processing and cleanup"
+
+architecture_design:
+  microservice_structure:
+    - "conversation_engine/ - Core state machine and workflow logic"
+    - "services/conversation_engine/main.py - FastAPI REST endpoints"
+    - "services/conversation_engine/state_machine.py - 7-state workflow engine"
+    - "services/conversation_engine/gpt4o_client.py - OpenAI integration"
+    - "services/conversation_engine/context_manager.py - Context and memory"
+    - "services/conversation_engine/redis_cache.py - High-speed state caching"
+  
+  data_flow:
+    - "Lead from CRA-235 → Initial conversation creation"
+    - "User message → Context retrieval → GPT-4o → Response generation"
+    - "State transitions → Redis cache update → PostgreSQL persistence"
+    - "Human handoff → Context transfer → Agent notification"
+
+notes: |
+  This epic represents the core revenue-generating automation system that transforms qualified 
+  leads from CRA-235 into actual customers. The 7-state conversation flow is designed based 
+  on proven sales methodologies and optimized for DM-based interactions.
+  
+  Implementation phases:
+  Phase 1: Core state machine with basic GPT-4o integration
+  Phase 2: Advanced context management and personalization
+  Phase 3: Human handoff system and analytics dashboard
+  Phase 4: Performance optimization and scaling enhancements
+  
+  The system is architected for maximum reliability and performance, with Redis providing 
+  sub-second state access and PostgreSQL ensuring conversation persistence. GPT-4o integration 
+  enables natural, personalized interactions while maintaining the 280-character limit for 
+  DM platforms.
+  
+  Success metrics directly support business KPIs: 80% automation reduces operational costs, 
+  15% conversion rate drives revenue growth, and <5 second response times ensure excellent 
+  user experience. The system establishes the foundation for advanced AI-driven customer 
+  relationship management and automated revenue generation.

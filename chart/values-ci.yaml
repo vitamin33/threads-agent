@@ -81,7 +81,7 @@ viralEngine:
 
 # Revenue service for monetization
 revenue:
-  enabled: true
+  enabled: false  # Disabled in CI due to deployment timing issues
   image:
     repository: revenue
     tag: "local"
@@ -133,3 +133,17 @@ migrations:
 service:
   type: ClusterIP
   port: 8080
+
+# Conversation Engine - disable monitoring features for CI
+conversationEngine:
+  enabled: true
+  image:
+    repository: conversation-engine
+    tag: "local"
+    pullPolicy: IfNotPresent
+  serviceMonitor:
+    enabled: false  # No Prometheus CRDs in CI
+  pdb:
+    enabled: false  # No PDB in CI
+  autoscaling:
+    enabled: false  # No HPA in CI

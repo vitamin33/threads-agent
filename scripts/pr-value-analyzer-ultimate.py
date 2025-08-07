@@ -44,7 +44,7 @@ class UltimatePRValueAnalyzer:
         title = pr_data.get("title", "").lower()
         body = pr_data.get("body", "").lower()
         files = pr_data.get("files", [])
-        
+
         categories = {
             "performance": 0.0,
             "business": 0.0,
@@ -56,51 +56,105 @@ class UltimatePRValueAnalyzer:
             "technical_debt": 0.0,
             "innovation": 0.0,
         }
-        
+
         # Performance indicators
-        perf_keywords = ["performance", "optimization", "speed", "latency", "rps", "throughput", "cache", "async"]
+        perf_keywords = [
+            "performance",
+            "optimization",
+            "speed",
+            "latency",
+            "rps",
+            "throughput",
+            "cache",
+            "async",
+        ]
         perf_score = sum(1 for kw in perf_keywords if kw in title + body) * 0.2
         if re.search(r"\d+\s*rps|\d+ms\s*latency", body, re.IGNORECASE):
             perf_score += 0.5
         categories["performance"] = min(perf_score, 1.0)
-        
+
         # Business value indicators
-        business_keywords = ["roi", "revenue", "cost", "savings", "customer", "user growth", "conversion"]
+        business_keywords = [
+            "roi",
+            "revenue",
+            "cost",
+            "savings",
+            "customer",
+            "user growth",
+            "conversion",
+        ]
         business_score = sum(1 for kw in business_keywords if kw in title + body) * 0.2
         if re.search(r"\$\d+|%\s*improvement|%\s*increase", body):
             business_score += 0.4
         categories["business"] = min(business_score, 1.0)
-        
+
         # Quality indicators
-        quality_keywords = ["test", "coverage", "bug", "fix", "error", "crash", "stability"]
+        quality_keywords = [
+            "test",
+            "coverage",
+            "bug",
+            "fix",
+            "error",
+            "crash",
+            "stability",
+        ]
         quality_score = sum(1 for kw in quality_keywords if kw in title + body) * 0.15
         test_files = [f for f in files if "test" in f.get("path", "").lower()]
         if test_files:
             quality_score += 0.3 + (len(test_files) * 0.1)
         categories["quality"] = min(quality_score, 1.0)
-        
+
         # Documentation indicators
-        doc_keywords = ["documentation", "readme", "guide", "tutorial", "example", "api docs"]
+        doc_keywords = [
+            "documentation",
+            "readme",
+            "guide",
+            "tutorial",
+            "example",
+            "api docs",
+        ]
         doc_score = sum(1 for kw in doc_keywords if kw in title + body) * 0.2
         doc_files = [f for f in files if ".md" in f.get("path", "").lower()]
         if doc_files:
             doc_score += 0.4 + (len(doc_files) * 0.1)
         categories["documentation"] = min(doc_score, 1.0)
-        
+
         # Infrastructure indicators
-        infra_keywords = ["kubernetes", "k8s", "docker", "ci", "deployment", "helm", "airflow"]
+        infra_keywords = [
+            "kubernetes",
+            "k8s",
+            "docker",
+            "ci",
+            "deployment",
+            "helm",
+            "airflow",
+        ]
         infra_score = sum(1 for kw in infra_keywords if kw in title + body) * 0.2
-        if any(path in str(files) for path in [".github/", "dockerfile", ".yaml", ".yml"]):
+        if any(
+            path in str(files) for path in [".github/", "dockerfile", ".yaml", ".yml"]
+        ):
             infra_score += 0.4
         categories["infrastructure"] = min(infra_score, 1.0)
-        
+
         # Innovation indicators (AI/ML, novel approaches)
-        innovation_keywords = ["novel", "new", "innovative", "ai", "ml", "rag", "llm", "airflow", "orchestration"]
-        innovation_score = sum(1 for kw in innovation_keywords if kw in title + body) * 0.2
+        innovation_keywords = [
+            "novel",
+            "new",
+            "innovative",
+            "ai",
+            "ml",
+            "rag",
+            "llm",
+            "airflow",
+            "orchestration",
+        ]
+        innovation_score = (
+            sum(1 for kw in innovation_keywords if kw in title + body) * 0.2
+        )
         if pr_data.get("additions", 0) > 500:
             innovation_score += 0.2
         categories["innovation"] = min(innovation_score, 1.0)
-        
+
         return categories
 
     def analyze_performance_metrics(self, pr_body: str) -> Dict[str, Any]:
@@ -216,9 +270,7 @@ class UltimatePRValueAnalyzer:
         # Quality impact
         if test_coverage > 0:
             bug_reduction_percent = min(50, test_coverage * 0.5)
-            bugs_prevented_annually = round(
-                20 * 12 * bug_reduction_percent / 100, 0
-            )
+            bugs_prevented_annually = round(20 * 12 * bug_reduction_percent / 100, 0)
 
             value["quality_improvement_savings"] = bugs_prevented_annually * 5000
             value["bugs_prevented_annually"] = bugs_prevented_annually
@@ -265,15 +317,18 @@ class UltimatePRValueAnalyzer:
 
         return value
 
-    def calculate_unified_score(self, categories: Dict[str, float], 
-                              performance: Dict[str, Any],
-                              business_value: Dict[str, Any],
-                              code_metrics: Dict[str, Any]) -> Dict[str, Any]:
+    def calculate_unified_score(
+        self,
+        categories: Dict[str, float],
+        performance: Dict[str, Any],
+        business_value: Dict[str, Any],
+        code_metrics: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Calculate scores with unified approach - PRs succeed by excelling in ANY area.
         """
         scores = {}
-        
+
         # Performance score
         perf_score = 0
         if performance.get("peak_rps", 0) > 0:
@@ -290,7 +345,7 @@ class UltimatePRValueAnalyzer:
                 perf_score = 6
             else:
                 perf_score = max(1, rps / 100)
-        
+
         if performance.get("latency_ms", 0) > 0:
             latency = performance["latency_ms"]
             if latency <= 50:
@@ -304,28 +359,28 @@ class UltimatePRValueAnalyzer:
             else:
                 latency_score = 4
             perf_score = max(perf_score, latency_score)
-        
+
         scores["performance_score"] = perf_score
-        
+
         # Quality score
         quality_score = performance.get("test_coverage", 0) / 10
         scores["quality_score"] = quality_score
-        
+
         # Business value score
         roi = business_value.get("roi_year_one_percent", 0)
         business_score = min(10, roi / 30) if roi > 0 else 0
         scores["business_value_score"] = business_score
-        
+
         # Innovation score
         innovation_score = self.calculate_innovation_score(
             self.metrics.get("pr_body", ""), code_metrics
         )
         scores["innovation_score"] = innovation_score
-        
+
         # UNIFIED SCORING APPROACH
         # Take the best score from all categories
         category_scores = []
-        
+
         # Add category-specific bonus based on PR focus
         if categories.get("performance", 0) > 0.5:
             category_scores.append(perf_score)
@@ -335,17 +390,17 @@ class UltimatePRValueAnalyzer:
             category_scores.append(business_score)
         if categories.get("innovation", 0) > 0.5:
             category_scores.append(innovation_score)
-        
+
         # Documentation bonus
         if categories.get("documentation", 0) > 0.5:
             doc_score = 7 + (categories["documentation"] * 3)
             category_scores.append(doc_score)
-        
+
         # Infrastructure bonus
         if categories.get("infrastructure", 0) > 0.5:
             infra_score = 6 + (categories["infrastructure"] * 4)
             category_scores.append(infra_score)
-        
+
         # Calculate overall - best of approach with small multi-category bonus
         if category_scores:
             best_score = max(category_scores)
@@ -353,10 +408,12 @@ class UltimatePRValueAnalyzer:
             overall = min(10, best_score + multi_bonus)
         else:
             # Fallback to average
-            overall = (perf_score + quality_score + business_score + innovation_score) / 4
-        
+            overall = (
+                perf_score + quality_score + business_score + innovation_score
+            ) / 4
+
         scores["overall_score"] = round(overall, 1)
-        
+
         return scores
 
     def calculate_innovation_score(self, pr_body: str, code_metrics: Dict) -> float:
@@ -430,17 +487,17 @@ class UltimatePRValueAnalyzer:
                 capture_output=True,
                 text=True,
             )
-            
+
             if base_result.returncode == 0:
                 base_data = json.loads(base_result.stdout)
                 base_branch = base_data.get("baseRefName", "main")
-                
+
                 result = subprocess.run(
                     ["git", "diff", "--stat", f"origin/{base_branch}"],
                     capture_output=True,
                     text=True,
                 )
-                
+
                 if result.returncode != 0:
                     result = subprocess.run(
                         ["git", "diff", "--stat", "HEAD~1"],
@@ -503,7 +560,14 @@ class UltimatePRValueAnalyzer:
         try:
             # Get PR details
             result = subprocess.run(
-                ["gh", "pr", "view", self.pr_number, "--json", "body,title,author,files,additions,deletions"],
+                [
+                    "gh",
+                    "pr",
+                    "view",
+                    self.pr_number,
+                    "--json",
+                    "body,title,author,files,additions,deletions",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -516,11 +580,11 @@ class UltimatePRValueAnalyzer:
             pr_data = json.loads(result.stdout)
             pr_body = pr_data.get("body", "")
             self.metrics["pr_body"] = pr_body
-            
+
             # Detect value categories
             categories = self.detect_pr_value_categories(pr_data)
             self.metrics["value_categories"] = categories
-            
+
             # Extract ALL performance metrics
             performance = self.analyze_performance_metrics(pr_body)
             self.metrics["technical_metrics"]["performance"] = performance
@@ -582,28 +646,40 @@ class UltimatePRValueAnalyzer:
         """Print comprehensive analysis summary."""
         print("\n📊 PR Value Analysis Summary")
         print("=" * 50)
-        
+
         # Overall score with unified approach
         overall_score = self.metrics["kpis"]["overall_score"]
-        print(f"\n🎯 Overall Score: {overall_score}/10 ({self._get_score_status(overall_score)})")
+        print(
+            f"\n🎯 Overall Score: {overall_score}/10 ({self._get_score_status(overall_score)})"
+        )
         print("=" * 30)
-        
+
         # Value categories detected
         print("\n📋 PR Value Categories (Adaptive Scoring):")
         categories = self.metrics["value_categories"]
         active_cats = [(cat, score) for cat, score in categories.items() if score > 0.3]
         if active_cats:
-            for cat, confidence in sorted(active_cats, key=lambda x: x[1], reverse=True):
+            for cat, confidence in sorted(
+                active_cats, key=lambda x: x[1], reverse=True
+            ):
                 print(f"  • {cat}: {confidence:.0%} confidence")
-        
+
         # Individual scores
         kpis = self.metrics["kpis"]
         print(f"\n📈 Score Components:")
-        print(f"  {'✅' if kpis['innovation_score'] >= 6 else '❌'} Innovation: {kpis['innovation_score']}/10")
-        print(f"  {'✅' if kpis['performance_score'] >= 6 else '❌'} Performance: {kpis['performance_score']}/10")
-        print(f"  {'✅' if kpis['quality_score'] >= 6 else '❌'} Quality: {kpis['quality_score']}/10")
-        print(f"  {'✅' if kpis['business_value_score'] >= 6 else '❌'} Business Value: {kpis['business_value_score']}/10")
-        
+        print(
+            f"  {'✅' if kpis['innovation_score'] >= 6 else '❌'} Innovation: {kpis['innovation_score']}/10"
+        )
+        print(
+            f"  {'✅' if kpis['performance_score'] >= 6 else '❌'} Performance: {kpis['performance_score']}/10"
+        )
+        print(
+            f"  {'✅' if kpis['quality_score'] >= 6 else '❌'} Quality: {kpis['quality_score']}/10"
+        )
+        print(
+            f"  {'✅' if kpis['business_value_score'] >= 6 else '❌'} Business Value: {kpis['business_value_score']}/10"
+        )
+
         # Business metrics
         if self.metrics["business_metrics"]:
             print("\n💰 Business Metrics:")
@@ -628,13 +704,13 @@ class UltimatePRValueAnalyzer:
             print("\n🔮 Future Impact:")
             for key, value in self.metrics["future_impact"].items():
                 print(f"  • {key}: {value}")
-        
+
         # Unified scoring explanation
         print("\n📌 Unified Scoring Approach:")
         print("  • PRs are evaluated based on the value they actually deliver")
         print("  • Excel in ANY category to achieve a high score")
         print("  • Different PR types have equal opportunity to succeed")
-        
+
         # Thresholds
         print("\n🎯 Scoring Thresholds:")
         print("  • 7.0-10.0: Excellent (Any PR type can achieve this)")
@@ -655,23 +731,25 @@ class UltimatePRValueAnalyzer:
         suggestions = []
         kpis = self.metrics["kpis"]
         categories = self.metrics["value_categories"]
-        
+
         # Performance suggestions
         if categories.get("performance", 0) > 0.3 and kpis["performance_score"] < 6:
             suggestions.append("Add specific performance metrics (RPS, latency)")
-        
-        # Quality suggestions  
+
+        # Quality suggestions
         if categories.get("quality", 0) > 0.3 and kpis["quality_score"] < 6:
             suggestions.append("Include test coverage percentage")
-        
+
         # Business suggestions
         if categories.get("business", 0) > 0.3 and kpis["business_value_score"] < 6:
             suggestions.append("Quantify business impact (ROI, cost savings)")
-        
+
         # Documentation suggestions
         if categories.get("documentation", 0) > 0.3:
-            suggestions.append("This is a documentation PR - metrics not required for high score")
-        
+            suggestions.append(
+                "This is a documentation PR - metrics not required for high score"
+            )
+
         return suggestions
 
     def _generate_metric_explanations_dict(self) -> Dict[str, Dict[str, Any]]:
@@ -681,66 +759,62 @@ class UltimatePRValueAnalyzer:
                 "throughput_improvement_percent": {
                     "formula": "((current_rps / baseline_rps) - 1) × 100%",
                     "meaning": "How much faster the system processes requests vs baseline",
-                    "baseline": "500 RPS (typical microservice performance)"
+                    "baseline": "500 RPS (typical microservice performance)",
                 },
                 "infrastructure_savings_estimate": {
                     "formula": "servers_reduced × $12k/year + bandwidth_savings",
                     "meaning": "Annual cost reduction from needing fewer servers",
-                    "calculation": "Based on reduced server needs from performance gains"
+                    "calculation": "Based on reduced server needs from performance gains",
                 },
                 "servers_reduced": {
                     "formula": "max(0, baseline_servers - current_servers)",
                     "meaning": "Number of servers eliminated due to performance gains",
-                    "baseline_servers": "ceil(baseline_rps / 200)"
+                    "baseline_servers": "ceil(baseline_rps / 200)",
                 },
                 "developer_productivity_savings": {
                     "formula": "hours_saved × team_size × $150/hour",
                     "meaning": "Cost savings from developers working more efficiently",
-                    "hourly_rate": "$150/hour (industry standard)"
+                    "hourly_rate": "$150/hour (industry standard)",
                 },
                 "productivity_hours_saved": {
                     "formula": "hours_saved_per_week × 48 weeks × team_size",
-                    "meaning": "Total developer hours saved annually"
+                    "meaning": "Total developer hours saved annually",
                 },
                 "quality_improvement_savings": {
                     "formula": "bugs_prevented × $5k/bug",
                     "meaning": "Cost avoided by catching bugs before production",
-                    "bug_cost": "$5k average cost to fix bug in production"
+                    "bug_cost": "$5k average cost to fix bug in production",
                 },
                 "bugs_prevented_annually": {
                     "formula": "20 bugs/month × 12 months × bug_reduction_percent",
-                    "meaning": "Number of bugs prevented through quality improvements"
+                    "meaning": "Number of bugs prevented through quality improvements",
                 },
                 "total_annual_savings": {
                     "formula": "infrastructure + productivity + quality savings",
-                    "meaning": "Total projected annual cost reduction"
+                    "meaning": "Total projected annual cost reduction",
                 },
                 "risk_adjusted_savings": {
                     "formula": "total_savings × confidence_factor",
                     "meaning": "Conservative estimate accounting for uncertainty",
-                    "confidence_factors": {
-                        "high": 0.9,
-                        "medium": 0.8,
-                        "low": 0.7
-                    }
+                    "confidence_factors": {"high": 0.9, "medium": 0.8, "low": 0.7},
                 },
                 "total_investment": {
                     "formula": "dev_cost + qa_cost + deployment_cost + maintenance",
                     "meaning": "Total cost to implement this PR",
-                    "breakdown": "320 hours × $150/hour × 1.65 overhead factor"
+                    "breakdown": "320 hours × $150/hour × 1.65 overhead factor",
                 },
                 "roi_year_one_percent": {
                     "formula": "((risk_adjusted_savings - investment) / investment) × 100%",
                     "meaning": "Return on investment in the first year",
-                    "interpretation": ">100% means positive ROI within first year"
+                    "interpretation": ">100% means positive ROI within first year",
                 },
                 "roi_three_year_percent": {
                     "formula": "(risk_adjusted_savings × 3 / investment) × 100%",
-                    "meaning": "Return on investment over three years"
+                    "meaning": "Return on investment over three years",
                 },
                 "payback_period_months": {
                     "formula": "investment / (annual_savings / 12)",
-                    "meaning": "Time to recover the initial investment"
+                    "meaning": "Time to recover the initial investment",
                 },
                 "user_experience_score": {
                     "formula": "Based on response latency",
@@ -748,17 +822,17 @@ class UltimatePRValueAnalyzer:
                         "10": "<100ms (Exceptional)",
                         "9": "<200ms (Excellent)",
                         "8": "<500ms (Good)",
-                        "7": ">500ms (Needs improvement)"
-                    }
+                        "7": ">500ms (Needs improvement)",
+                    },
                 },
                 "confidence_level": {
                     "meaning": "Reliability of estimates based on performance factor",
                     "levels": {
                         "high": "Performance factor < 1.5x (realistic)",
                         "medium": "Performance factor 1.5-3x (optimistic)",
-                        "low": "Performance factor > 3x (very optimistic)"
-                    }
-                }
+                        "low": "Performance factor > 3x (very optimistic)",
+                    },
+                },
             },
             "performance_metrics": {
                 "peak_rps": {
@@ -767,8 +841,8 @@ class UltimatePRValueAnalyzer:
                         "low": "<100 RPS",
                         "medium": "100-500 RPS",
                         "high": "500-1000 RPS",
-                        "very_high": ">1000 RPS"
-                    }
+                        "very_high": ">1000 RPS",
+                    },
                 },
                 "latency_ms": {
                     "meaning": "Average time to process a request",
@@ -776,8 +850,8 @@ class UltimatePRValueAnalyzer:
                         "instant": "<100ms",
                         "fast": "100-300ms",
                         "acceptable": "300-1000ms",
-                        "slow": ">1000ms"
-                    }
+                        "slow": ">1000ms",
+                    },
                 },
                 "test_coverage": {
                     "meaning": "Percentage of code covered by tests",
@@ -785,8 +859,8 @@ class UltimatePRValueAnalyzer:
                         "excellent": ">80%",
                         "good": "60-80%",
                         "fair": "40-60%",
-                        "poor": "<40%"
-                    }
+                        "poor": "<40%",
+                    },
                 },
                 "success_rate": {
                     "meaning": "Percentage of successful requests",
@@ -794,9 +868,9 @@ class UltimatePRValueAnalyzer:
                         "excellent": ">99.9%",
                         "good": "99-99.9%",
                         "acceptable": "95-99%",
-                        "poor": "<95%"
-                    }
-                }
+                        "poor": "<95%",
+                    },
+                },
             },
             "kpi_scores": {
                 "performance_score": {
@@ -807,12 +881,12 @@ class UltimatePRValueAnalyzer:
                         "8": ">2,000 RPS or <200ms latency",
                         "7": ">1,000 RPS or <500ms latency",
                         "6": ">500 RPS",
-                        "5": ">200 RPS"
-                    }
+                        "5": ">200 RPS",
+                    },
                 },
                 "quality_score": {
                     "formula": "test_coverage / 10",
-                    "meaning": "Code quality based on test coverage"
+                    "meaning": "Code quality based on test coverage",
                 },
                 "business_value_score": {
                     "formula": "min(10, roi_percent / 30)",
@@ -822,8 +896,8 @@ class UltimatePRValueAnalyzer:
                         "8": "ROI >240%",
                         "6": "ROI >180%",
                         "4": "ROI >120%",
-                        "2": "ROI >60%"
-                    }
+                        "2": "ROI >60%",
+                    },
                 },
                 "innovation_score": {
                     "criteria": [
@@ -831,15 +905,15 @@ class UltimatePRValueAnalyzer:
                         "AI/ML features implemented",
                         "Novel solutions to complex problems",
                         "Industry best practices adopted",
-                        "Complex integrations completed"
+                        "Complex integrations completed",
                     ]
                 },
                 "overall_score": {
                     "formula": "Best category score + multi-category bonus",
                     "meaning": "Unified score based on strongest value contribution",
-                    "approach": "PRs succeed by excelling in ANY relevant area"
-                }
-            }
+                    "approach": "PRs succeed by excelling in ANY relevant area",
+                },
+            },
         }
 
 

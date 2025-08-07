@@ -94,6 +94,32 @@ just test             # → pytest (unit + e2e)
 open http://localhost:16686   # Jaeger UI
 ```
 
+### 🎨 NEW: Streamlit UI Dashboard
+```bash
+# One-time setup
+just ui-setup         # Install dependencies & configure
+
+# Run dashboard (after services are deployed)
+just ui-dashboard     # Opens at http://localhost:8501
+
+# Other UI commands
+just ui-docker        # Run dashboard in Docker
+just ui-deploy        # Deploy to Kubernetes cluster
+just ui-port-forward  # Access dashboard from k8s
+```
+
+The dashboard provides:
+- 📊 Real-time KPIs and metrics
+- 🏆 Achievement tracking and management  
+- 📝 AI-powered content generation
+- 📈 Performance analytics
+- 🔧 System health monitoring
+
+**Environment Configuration**: Copy `dashboard/.env.example` to `dashboard/.env` and update based on your setup:
+- Local development: Use `localhost` URLs (default)
+- Kubernetes: Use service names (see comments in .env.example)
+- Docker Compose: Use container names
+
 ### 🔌 Real Threads API Integration (NEW!)
 ```bash
 # Enable real posting to Threads (replaces fake-threads)
