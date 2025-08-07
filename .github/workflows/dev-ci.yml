@@ -221,7 +221,7 @@ jobs:
           helm upgrade --install threads ./chart \
             -f chart/values-ci.yaml \
             --set openai.apiKey="$OPENAI_API_KEY" \
-            --wait --timeout 300s --debug \
+            --wait --timeout 600s --debug \
             --atomic
 
       # ─── If Helm failed, dump cluster state ──────────────────────────────

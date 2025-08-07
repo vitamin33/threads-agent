@@ -27,13 +27,18 @@ spec:
           - -c
           - |
             echo "Waiting for threads_agent database to be created..."
-            for i in $(seq 1 60); do
-              if PGPASSWORD=pass psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1; then
+            # Wait longer for migrations to create the database
+            for i in $(seq 1 120); do
+              if PGPASSWORD=pass psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" 2>/dev/null | grep -q 1; then
                 echo "Database threads_agent exists!"
-                exit 0
+                # Additional check to ensure the database is accessible
+                if PGPASSWORD=pass psql -h postgres -U postgres -d threads_agent -tc "SELECT 1" 2>/dev/null | grep -q 1; then
+                  echo "Database is accessible!"
+                  exit 0
+                fi
               fi
-              echo "Waiting for database creation... (attempt $i/60)"
-              sleep 2
+              echo "Waiting for database creation... (attempt $i/120)"
+              sleep 3
             done
             echo "Database creation timeout!"
             exit 1
