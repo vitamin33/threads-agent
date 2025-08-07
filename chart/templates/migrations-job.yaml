@@ -20,7 +20,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Release.Name }}-postgresql
+              name: threads-postgresql
               key: POSTGRES_PASSWORD
         command: 
           - /bin/sh
@@ -52,7 +52,7 @@ spec:
       - name: alembic
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         envFrom:                       # lift pw directly into env
-          - secretRef: { name: {{ .Release.Name }}-postgresql }
+          - secretRef: { name: threads-postgresql }
         command:
           - /bin/sh
           - -c
