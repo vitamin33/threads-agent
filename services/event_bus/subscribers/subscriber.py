@@ -31,6 +31,7 @@ class EventSubscriber:
         """
         self.connection_manager = connection_manager
         self._handlers: Dict[str, List[Callable]] = defaultdict(list)
+        self._current_loop = None
 
     def register_handler(self, event_type: str, handler: Callable):
         """
@@ -100,6 +101,40 @@ class EventSubscriber:
             logger.error(f"Unexpected error processing message: {e}")
             return False
 
+    async def handle_message_async(self, event: BaseEvent) -> bool:
+        """
+        Handle a message asynchronously without creating new event loops.
+        
+        This is the optimized version that reuses the existing event loop.
+        
+        Args:
+            event: The event to handle
+            
+        Returns:
+            True if handling successful, False otherwise
+        """
+        try:
+            # Get handlers for this event type
+            handlers = self._handlers.get(event.event_type, [])
+            
+            if not handlers:
+                logger.info(f"No handlers registered for event type: {event.event_type}")
+            else:
+                # Execute all handlers for this event type
+                for handler in handlers:
+                    try:
+                        await handler(event)
+                        logger.debug(f"Handler {handler.__name__} executed successfully for event {event.event_id}")
+                    except Exception as e:
+                        logger.error(f"Handler {handler.__name__} failed for event {event.event_id}: {e}")
+                        return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Unexpected error handling message: {e}")
+            return False
+
     def _message_callback(self, channel, method, properties, body):
         """
         Callback for RabbitMQ message consumption (sync wrapper).
@@ -145,3 +180,42 @@ class EventSubscriber:
             queue=queue_name,
             on_message_callback=self._message_callback
         )
+
+    async def start_consuming_async(self, queue_name: str) -> None:
+        """
+        Start consuming messages from a queue using async aio-pika.
+        
+        Args:
+            queue_name: Name of the queue to consume from
+        """
+        try:
+            channel = await self.connection_manager.get_async_channel()
+            queue = await channel.declare_queue(queue_name)
+            
+            async def async_message_handler(message):
+                async with message.process():
+                    try:
+                        # Parse JSON message body
+                        event_data = json.loads(message.body.decode())
+                        
+                        # Reconstruct BaseEvent from JSON data
+                        event = BaseEvent(**event_data)
+                        
+                        # Handle the message using our optimized async handler
+                        success = await self.handle_message_async(event)
+                        
+                        if not success:
+                            # If handler fails, reject the message
+                            message.reject()
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to process async message: {e}")
+                        message.reject()
+            
+            # Start consuming with the async handler
+            await queue.consume(async_message_handler)
+            logger.info(f"Started async consuming from queue: {queue_name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to start async consuming from queue {queue_name}: {e}")
+            raise

@@ -9,6 +9,7 @@ import json
 import logging
 from typing import Optional
 import pika
+import aio_pika
 from models.base import BaseEvent
 
 
@@ -95,5 +96,65 @@ class EventPublisher:
                 else:
                     logger.error(
                         f"Failed to publish event {event.event_id} after {self.max_retries + 1} attempts"
+                    )
+                    return False
+
+    async def publish_async(
+        self,
+        event: BaseEvent,
+        exchange: str,
+        routing_key: str,
+        persistent: bool = False
+    ) -> bool:
+        """
+        Publish an event to RabbitMQ exchange using async aio-pika.
+        
+        Args:
+            event: Event to publish
+            exchange: RabbitMQ exchange name
+            routing_key: Routing key for the message
+            persistent: Whether message should be persistent
+            
+        Returns:
+            True if publishing successful, False otherwise
+        """
+        for attempt in range(self.max_retries + 1):
+            try:
+                # Get async channel from connection manager
+                channel = await self.connection_manager.get_async_channel()
+                
+                # Serialize event to JSON
+                message_body = event.model_dump_json()
+                
+                # Create aio-pika message
+                message = aio_pika.Message(
+                    message_body.encode(),
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT if persistent else aio_pika.DeliveryMode.NOT_PERSISTENT
+                )
+                
+                # Get exchange (or use default)
+                if exchange:
+                    exchange_obj = await channel.get_exchange(exchange)
+                else:
+                    exchange_obj = channel.default_exchange
+                
+                # Publish the message
+                await exchange_obj.publish(message, routing_key=routing_key)
+                
+                logger.info(
+                    f"Published event (async) {event.event_id} to exchange '{exchange}' "
+                    f"with routing key '{routing_key}' on attempt {attempt + 1}"
+                )
+                return True
+                
+            except Exception as e:
+                logger.warning(
+                    f"Async publish attempt {attempt + 1} failed for event {event.event_id}: {e}"
+                )
+                if attempt < self.max_retries:
+                    await asyncio.sleep(self.retry_delay)
+                else:
+                    logger.error(
+                        f"Failed to publish event (async) {event.event_id} after {self.max_retries + 1} attempts"
                     )
                     return False

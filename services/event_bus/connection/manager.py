@@ -8,6 +8,7 @@ import asyncio
 import logging
 from typing import Optional
 import pika
+import aio_pika
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ class RabbitMQConnectionManager:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self._connection: Optional[pika.BlockingConnection] = None
+        self._async_connection: Optional[aio_pika.Connection] = None
         self._is_connected = False
 
     @property
@@ -68,6 +70,30 @@ class RabbitMQConnectionManager:
                     self._is_connected = False
                     return False
 
+    async def connect_async(self) -> bool:
+        """
+        Connect to RabbitMQ using async aio-pika with retry logic.
+        
+        Returns:
+            True if connection successful, False otherwise
+        """
+        for attempt in range(self.max_retries + 1):
+            try:
+                # Use aio-pika for async connections
+                self._async_connection = await aio_pika.connect_robust(self.url)
+                self._is_connected = True
+                logger.info(f"Connected to RabbitMQ (async) on attempt {attempt + 1}")
+                return True
+            
+            except Exception as e:
+                logger.warning(f"Async connection attempt {attempt + 1} failed: {e}")
+                if attempt < self.max_retries:
+                    await asyncio.sleep(self.retry_delay)
+                else:
+                    logger.error("Failed to connect async after maximum retries")
+                    self._is_connected = False
+                    return False
+
     async def disconnect(self) -> None:
         """Disconnect from RabbitMQ."""
         if self._connection:
@@ -96,3 +122,18 @@ class RabbitMQConnectionManager:
             raise RuntimeError("Not connected to RabbitMQ")
         
         return self._connection.channel()
+
+    async def get_async_channel(self):
+        """
+        Get an async channel from the aio-pika connection.
+        
+        Returns:
+            aio_pika.Channel: Async RabbitMQ channel
+            
+        Raises:
+            RuntimeError: If not connected to RabbitMQ via async connection
+        """
+        if not self._async_connection:
+            raise RuntimeError("Not connected to RabbitMQ via async connection")
+        
+        return await self._async_connection.channel()

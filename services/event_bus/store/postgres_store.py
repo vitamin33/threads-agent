@@ -30,6 +30,28 @@ class PostgreSQLEventStore:
             database_url: PostgreSQL connection URL
         """
         self.database_url = database_url
+        self._pool = None
+
+    async def initialize_with_pool(
+        self,
+        min_size: int = 5,
+        max_size: int = 20,
+        command_timeout: int = 30
+    ) -> None:
+        """
+        Initialize the event store with connection pooling.
+        
+        Args:
+            min_size: Minimum number of connections in pool
+            max_size: Maximum number of connections in pool
+            command_timeout: Command timeout in seconds
+        """
+        self._pool = await asyncpg.create_pool(
+            self.database_url,
+            min_size=min_size,
+            max_size=max_size,
+            command_timeout=command_timeout
+        )
 
     async def initialize_schema(self) -> None:
         """
@@ -78,19 +100,32 @@ class PostgreSQLEventStore:
         """
         
         try:
-            connection = await asyncpg.connect(self.database_url)
-            try:
-                await connection.execute(
-                    insert_sql,
-                    event.event_id,
-                    event.timestamp,
-                    event.event_type,
-                    json.dumps(event.payload)
-                )
-                logger.info(f"Stored event {event.event_id} of type {event.event_type}")
-                return True
-            finally:
-                await connection.close()
+            if self._pool is not None:
+                # Use connection pool for better performance
+                async with self._pool.acquire() as connection:
+                    await connection.execute(
+                        insert_sql,
+                        event.event_id,
+                        event.timestamp,
+                        event.event_type,
+                        json.dumps(event.payload)
+                    )
+            else:
+                # Fallback to individual connection for backwards compatibility
+                connection = await asyncpg.connect(self.database_url)
+                try:
+                    await connection.execute(
+                        insert_sql,
+                        event.event_id,
+                        event.timestamp,
+                        event.event_type,
+                        json.dumps(event.payload)
+                    )
+                finally:
+                    await connection.close()
+            
+            logger.info(f"Stored event {event.event_id} of type {event.event_type}")
+            return True
                 
         except Exception as e:
             logger.error(f"Failed to store event {event.event_id}: {e}")
