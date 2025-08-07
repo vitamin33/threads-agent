@@ -39,6 +39,17 @@ Located in `./services/tech_doc_generator/`:
 - [AI_JOB_INTEGRATION.md](./services/tech_doc_generator/AI_JOB_INTEGRATION.md) - Complete AI Job Week 1 Epic implementation
 - [API_REFERENCE.md](./services/tech_doc_generator/API_REFERENCE.md) - Tech Doc Generator API endpoints
 
+## 🎯 Interview Preparation
+
+### Essential Interview Documents
+- **[INTERVIEW_PREPARATION_GUIDE.md](./INTERVIEW_PREPARATION_GUIDE.md)** - Complete interview prep with Q&A, architecture, and talking points
+- **[INTERVIEW_QUICK_REFERENCE.md](./INTERVIEW_QUICK_REFERENCE.md)** - Quick reference card with key numbers and stories
+- **[INTERVIEW_MONITORING_DEMO.md](../INTERVIEW_MONITORING_DEMO.md)** - Live monitoring demo guide with Grafana dashboards
+
+### Key Documents for Deep Dives
+- **[MONITORING_REQUIREMENTS.md](../MONITORING_REQUIREMENTS.md)** - Full monitoring architecture and requirements
+- **[CRA-236-IMPLEMENTATION-GUIDE.md](./CRA-236-IMPLEMENTATION-GUIDE.md)** - AI agent implementation details
+
 ## 🔗 Quick Links
 
 - **Main README**: [/README.md](../README.md)

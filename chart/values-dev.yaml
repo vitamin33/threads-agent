@@ -204,6 +204,8 @@ monitoring:
       enabled: true
       size: 2Gi
       storageClass: local-path
+  postgres:
+    enabled: true
   grafana:
     enabled: true
     adminPassword: admin123

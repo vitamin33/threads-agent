@@ -1,427 +1,150 @@
 {
   "dashboard": {
     "id": null,
+    "uid": "business-kpis",
     "title": "Threads Agent - Business KPIs",
-    "tags": ["threads-agent", "business", "kpi"],
-    "style": "dark",
+    "tags": ["business", "kpis"],
     "timezone": "browser",
-    "refresh": "30s",
-    "schemaVersion": 39,
-    "version": 1,
-    "time": {
-      "from": "now-1h",
-      "to": "now"
-    },
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "5s",
     "panels": [
       {
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
         "id": 1,
-        "title": "Revenue Projection to $20k MRR",
-        "type": "stat",
+        "title": "Engagement Rate",
+        "type": "gauge",
         "targets": [
           {
-            "expr": "revenue_projection_monthly{source=\"target\"}",
-            "refId": "A",
-            "legendFormat": "Target MRR"
-          },
-          {
-            "expr": "revenue_projection_monthly{source=\"current_run_rate\"}",
-            "refId": "B",
-            "legendFormat": "Current Run Rate"
-          },
-          {
-            "expr": "revenue_projection_monthly{source=\"forecast\"}",
-            "refId": "C",
-            "legendFormat": "Forecast"
+            "expr": "avg(posts_engagement_rate)",
+            "refId": "A"
           }
         ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "currencyUSD",
-            "min": 0,
-            "max": 25000,
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "steps": [
-                {
-                  "color": "red",
-                  "value": 0
-                },
-                {
-                  "color": "yellow",
-                  "value": 10000
-                },
-                {
-                  "color": "green",
-                  "value": 20000
-                }
-              ]
-            }
-          }
-        },
         "options": {
-          "reduceOptions": {
-            "values": false,
-            "calcs": ["lastNotNull"],
-            "fields": ""
-          },
-          "orientation": "auto",
-          "textMode": "auto",
-          "colorMode": "background"
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
         },
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 0,
-          "y": 0
-        }
-      },
-      {
-        "id": 2,
-        "title": "Engagement Rate (Target: 6%)",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "histogram_quantile(0.5, rate(posts_engagement_rate_bucket[1h]))",
-            "refId": "A",
-            "legendFormat": "Median Engagement Rate"
-          }
-        ],
         "fieldConfig": {
           "defaults": {
             "unit": "percent",
             "min": 0,
-            "max": 15,
-            "color": {
-              "mode": "thresholds"
-            },
+            "max": 10,
             "thresholds": {
+              "mode": "absolute",
               "steps": [
-                {
-                  "color": "red",
-                  "value": 0
-                },
-                {
-                  "color": "yellow",
-                  "value": 4
-                },
-                {
-                  "color": "green",
-                  "value": 6
-                }
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "green", "value": 6}
               ]
             }
           }
-        },
-        "options": {
-          "reduceOptions": {
-            "values": false,
-            "calcs": ["lastNotNull"],
-            "fields": ""
-          },
-          "orientation": "auto",
-          "textMode": "auto",
-          "colorMode": "background"
-        },
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 0
         }
       },
       {
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+        "id": 2,
+        "title": "Cost per Follow",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "avg(cost_per_follow_dollars)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "min": 0,
+            "max": 0.02,
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute", 
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.008},
+                {"color": "red", "value": 0.01}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
         "id": 3,
-        "title": "Cost per Follow (Target: $0.01)",
+        "title": "Monthly Revenue Projection",
         "type": "stat",
         "targets": [
           {
-            "expr": "histogram_quantile(0.5, rate(cost_per_follow_dollars_bucket[1h]))",
-            "refId": "A",
-            "legendFormat": "Median Cost/Follow"
+            "expr": "revenue_projection_monthly",
+            "refId": "A"
           }
         ],
         "fieldConfig": {
           "defaults": {
             "unit": "currencyUSD",
-            "min": 0,
-            "max": 0.05,
-            "color": {
-              "mode": "thresholds"
-            },
-            "thresholds": {
-              "steps": [
-                {
-                  "color": "green",
-                  "value": 0
-                },
-                {
-                  "color": "yellow",
-                  "value": 0.01
-                },
-                {
-                  "color": "red",
-                  "value": 0.02
-                }
-              ]
-            }
+            "decimals": 0
           }
-        },
-        "options": {
-          "reduceOptions": {
-            "values": false,
-            "calcs": ["lastNotNull"],
-            "fields": ""
-          },
-          "orientation": "auto",
-          "textMode": "auto",
-          "colorMode": "background"
-        },
-        "gridPos": {
-          "h": 8,
-          "w": 6,
-          "x": 0,
-          "y": 8
         }
       },
       {
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
         "id": 4,
-        "title": "Posts Generated Today",
+        "title": "API Latency (95th percentile)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(request_latency_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "p95 latency"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Latency"
+          }
+        ]
+      },
+      {
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "id": 5,
+        "title": "Token Usage by Model",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(token_usage_total[5m])",
+            "refId": "A",
+            "legendFormat": "{{model}}"
+          }
+        ]
+      },
+      {
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 16},
+        "id": 6,
+        "title": "Active Conversations",
         "type": "stat",
         "targets": [
           {
-            "expr": "sum(increase(posts_generated_total{status=\"success\"}[24h]))",
-            "refId": "A",
-            "legendFormat": "Successful Posts"
+            "expr": "active_conversations",
+            "refId": "A"
           }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "short",
-            "min": 0,
-            "color": {
-              "mode": "palette-classic"
-            }
-          }
-        },
-        "options": {
-          "reduceOptions": {
-            "values": false,
-            "calcs": ["lastNotNull"],
-            "fields": ""
-          },
-          "orientation": "auto",
-          "textMode": "auto",
-          "colorMode": "value"
-        },
-        "gridPos": {
-          "h": 8,
-          "w": 6,
-          "x": 6,
-          "y": 8
-        }
+        ]
       },
       {
-        "id": 5,
-        "title": "OpenAI Costs Hourly",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "rate(openai_cost_hourly_dollars_sum[5m]) * 3600",
-            "refId": "A",
-            "legendFormat": "{{model}} costs/hour"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "currencyUSD",
-            "min": 0,
-            "custom": {
-              "drawStyle": "line",
-              "lineInterpolation": "linear",
-              "barAlignment": 0,
-              "lineWidth": 1,
-              "fillOpacity": 10,
-              "gradientMode": "none",
-              "spanNulls": false,
-              "insertNulls": false,
-              "showPoints": "never",
-              "pointSize": 5,
-              "stacking": {
-                "mode": "none",
-                "group": "A"
-              },
-              "axisPlacement": "auto",
-              "axisLabel": "",
-              "axisColorMode": "text",
-              "scaleDistribution": {
-                "type": "linear"
-              },
-              "axisCenteredZero": false,
-              "hideFrom": {
-                "legend": false,
-                "tooltip": false,
-                "vis": false
-              },
-              "thresholdsStyle": {
-                "mode": "off"
-              }
-            },
-            "color": {
-              "mode": "palette-classic"
-            }
-          }
-        },
-        "options": {
-          "tooltip": {
-            "mode": "single",
-            "sort": "none"
-          },
-          "legend": {
-            "displayMode": "visible",
-            "placement": "bottom",
-            "calcs": []
-          }
-        },
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 8
-        }
-      },
-      {
-        "id": 6,
-        "title": "Content Quality Scores",
-        "type": "timeseries",
-        "targets": [
-          {
-            "expr": "content_quality_score",
-            "refId": "A",
-            "legendFormat": "{{persona_id}} - {{content_type}}"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "percentunit",
-            "min": 0,
-            "max": 1,
-            "custom": {
-              "drawStyle": "line",
-              "lineInterpolation": "linear",
-              "barAlignment": 0,
-              "lineWidth": 1,
-              "fillOpacity": 10,
-              "gradientMode": "none",
-              "spanNulls": false,
-              "insertNulls": false,
-              "showPoints": "auto",
-              "pointSize": 5,
-              "stacking": {
-                "mode": "none",
-                "group": "A"
-              },
-              "axisPlacement": "auto",
-              "axisLabel": "",
-              "axisColorMode": "text",
-              "scaleDistribution": {
-                "type": "linear"
-              },
-              "axisCenteredZero": false,
-              "hideFrom": {
-                "legend": false,
-                "tooltip": false,
-                "vis": false
-              }
-            },
-            "color": {
-              "mode": "palette-classic"
-            }
-          }
-        },
-        "options": {
-          "tooltip": {
-            "mode": "single",
-            "sort": "none"
-          },
-          "legend": {
-            "displayMode": "visible",
-            "placement": "bottom",
-            "calcs": []
-          }
-        },
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 0,
-          "y": 16
-        }
-      },
-      {
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 16},
         "id": 7,
-        "title": "Token Usage by Model",
-        "type": "timeseries",
+        "title": "Cache Hit Rate",
+        "type": "stat",
         "targets": [
           {
-            "expr": "rate(llm_tokens_total[5m])",
-            "refId": "A",
-            "legendFormat": "{{model}} tokens/sec"
+            "expr": "cache_hit_rate",
+            "refId": "A"
           }
         ],
         "fieldConfig": {
           "defaults": {
-            "unit": "short",
-            "min": 0,
-            "custom": {
-              "drawStyle": "line",
-              "lineInterpolation": "linear",
-              "barAlignment": 0,
-              "lineWidth": 1,
-              "fillOpacity": 10,
-              "gradientMode": "none",
-              "spanNulls": false,
-              "insertNulls": false,
-              "showPoints": "auto",
-              "pointSize": 5,
-              "stacking": {
-                "mode": "normal",
-                "group": "A"
-              },
-              "axisPlacement": "auto",
-              "axisLabel": "",
-              "axisColorMode": "text",
-              "scaleDistribution": {
-                "type": "linear"
-              },
-              "axisCenteredZero": false,
-              "hideFrom": {
-                "legend": false,
-                "tooltip": false,
-                "vis": false
-              }
-            },
-            "color": {
-              "mode": "palette-classic"
-            }
+            "unit": "percent"
           }
-        },
-        "options": {
-          "tooltip": {
-            "mode": "single",
-            "sort": "none"
-          },
-          "legend": {
-            "displayMode": "visible",
-            "placement": "bottom",
-            "calcs": []
-          }
-        },
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 16
         }
       }
     ]
