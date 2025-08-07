@@ -133,3 +133,4 @@ conversationEngine:
     enabled: false  # No PDB in CI
   autoscaling:
     enabled: false  # No HPA in CI
+# CI trigger
