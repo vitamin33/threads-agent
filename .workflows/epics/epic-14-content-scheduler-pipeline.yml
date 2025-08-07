@@ -43,6 +43,9 @@ dependencies:
   - dashboard/streamlit UI (existing)
   - PostgreSQL database (existing)
 
+related_epics:
+  - epic-25-content-scheduler-service-integration  # Advanced AI integration layer
+
 technical_architecture:
   - microservice: content_scheduler
   - event_driven: true
