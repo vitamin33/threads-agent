@@ -1,0 +1,191 @@
+feature_id: feat-mlops-004-002
+epic_id: mlops-004-chaos-engineering
+feature_name: "Advanced Failure Scenarios"
+description: |
+  Implement enterprise-grade failure injection scenarios covering all system components.
+  These realistic failure patterns demonstrate deep understanding of distributed system
+  failure modes and advanced MLOps troubleshooting skills worth $170-210k.
+
+priority: high
+status: planned
+estimated_effort_hours: 10
+
+business_value: |
+  - Demonstrates expertise in distributed system failure patterns
+  - Shows advanced troubleshooting and debugging skills
+  - Proves ability to design resilient AI systems
+  - Validates production incident response capabilities
+
+technical_details:
+  - Service mesh failure injection (network partitions, latency)
+  - Resource exhaustion scenarios (CPU, memory, disk)
+  - Database failure patterns (connection loss, slow queries)
+  - AI model failure simulation (API timeouts, rate limits)
+  - Kubernetes infrastructure failures (node failures, pod crashes)
+
+acceptance_criteria:
+  - 15+ realistic failure scenarios implemented
+  - All scenarios configurable and parameterized
+  - Failure scenarios cover all critical system components
+  - Recovery validation for each failure type
+  - Experiment results tracked and analyzed
+
+tasks:
+  - task_id: mlops-004-002-001
+    title: "Implement Network Failure Scenarios"
+    description: "Network-level chaos experiments for service communication"
+    type: implementation
+    estimated_hours: 2
+    requirements:
+      - Network partition between services
+      - Packet loss and latency injection
+      - DNS resolution failures
+      - Service mesh disruption patterns
+    validation:
+      - Services handle network partitions gracefully
+      - Circuit breakers activate on network issues
+      - System maintains core functionality during network stress
+
+  - task_id: mlops-004-002-002
+    title: "Resource Exhaustion Experiments"
+    description: "CPU, memory, and disk exhaustion scenarios"
+    type: implementation
+    estimated_hours: 2
+    requirements:
+      - CPU stress testing on specific nodes
+      - Memory pressure scenarios
+      - Disk space exhaustion simulation
+      - I/O throttling experiments
+    validation:
+      - Resource limits prevent complete system failure
+      - Kubernetes evicts pods appropriately
+      - Services degrade gracefully under resource pressure
+
+  - task_id: mlops-004-002-003
+    title: "Database Failure Patterns"
+    description: "PostgreSQL and Qdrant failure simulation"
+    type: implementation
+    estimated_hours: 2
+    requirements:
+      - Database connection pool exhaustion
+      - Slow query simulation
+      - Database server restart scenarios
+      - Transaction deadlock simulation
+    validation:
+      - Connection pooling prevents cascading failures
+      - Query timeouts handled appropriately
+      - System recovers from database restarts
+      - Deadlocks resolved automatically
+
+  - task_id: mlops-004-002-004
+    title: "AI Model Service Failures"
+    description: "OpenAI API and vLLM service failure scenarios"
+    type: implementation
+    estimated_hours: 2
+    requirements:
+      - API rate limit simulation
+      - Model timeout scenarios
+      - Invalid response handling
+      - Model service unavailability
+    validation:
+      - Rate limiting triggers appropriate backoff
+      - Timeouts don't cause request pile-up
+      - System handles invalid AI responses
+      - Fallback models activate when primary fails
+
+  - task_id: mlops-004-002-005
+    title: "Kubernetes Infrastructure Failures"
+    description: "Node and pod-level failure scenarios"
+    type: implementation
+    estimated_hours: 1.5
+    requirements:
+      - Node failure simulation
+      - Pod crash loop scenarios
+      - Persistent volume failures
+      - Network policy disruption
+    validation:
+      - Pods reschedule on node failures
+      - Crash loops trigger alerts appropriately
+      - Data persistence maintained during failures
+      - Network policies don't prevent recovery
+
+  - task_id: mlops-004-002-006
+    title: "Create Failure Scenario Library"
+    description: "Comprehensive catalog of failure patterns"
+    type: implementation
+    estimated_hours: 1
+    requirements:
+      - YAML-based scenario definitions
+      - Parameterized experiment templates
+      - Scenario difficulty levels
+      - Documentation for each pattern
+    validation:
+      - All scenarios can be executed from templates
+      - Parameters allow customization
+      - Documentation is clear and complete
+
+  - task_id: mlops-004-002-007
+    title: "Build Recovery Validation Framework"
+    description: "Automated validation of system recovery"
+    type: implementation
+    estimated_hours: 1.5
+    requirements:
+      - Health check automation
+      - Recovery time measurement
+      - Data integrity validation
+      - Performance baseline comparison
+    validation:
+      - Recovery validation runs automatically
+      - Recovery times measured accurately
+      - Data integrity confirmed post-failure
+      - Performance baselines maintained
+
+scenarios_implemented:
+  network_failures:
+    - Service mesh partition
+    - DNS failure injection
+    - Packet loss simulation
+    - Latency spike injection
+  
+  resource_exhaustion:
+    - CPU stress on nodes
+    - Memory pressure
+    - Disk space exhaustion
+    - I/O bandwidth limiting
+  
+  database_failures:
+    - Connection pool exhaustion
+    - Slow query injection
+    - Database restart simulation
+    - Transaction deadlock
+  
+  ai_model_failures:
+    - OpenAI API rate limiting
+    - vLLM service timeout
+    - Model response corruption
+    - Service unavailability
+  
+  kubernetes_failures:
+    - Node failure simulation
+    - Pod crash loops
+    - PV/PVC failures
+    - Network policy corruption
+
+technologies:
+  - LitmusChaos experiments
+  - Chaos Toolkit scenarios
+  - Kubernetes chaos engineering
+  - Network chaos (tc, iptables)
+  - Resource stress tools
+
+dependencies:
+  - Chaos engineering infrastructure deployed
+  - All services instrumented for monitoring
+  - Recovery procedures documented
+
+deliverables:
+  - 15+ failure scenarios implemented
+  - Scenario library with templates
+  - Recovery validation framework
+  - Comprehensive documentation
+  - Test suite for all scenarios

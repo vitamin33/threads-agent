@@ -157,7 +157,7 @@ def create_experiments():
                 },
             ],
             "status": "running",
-            "winner": null,
+            "winner": None,
         },
     ]
 

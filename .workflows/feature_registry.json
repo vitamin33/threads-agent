@@ -62,6 +62,48 @@
       "name": "A/B Testing Framework",
       "status": "planned",
       "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-001",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Chaos Engineering Infrastructure",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-002",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Advanced Failure Scenarios",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-003",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "SLA Tracking & Reliability Metrics",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-004",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Intelligent Recovery Systems",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-005",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Predictive Alerting & Incident Response",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-006",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Interview Demo Platform",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
     }
   ]
 }

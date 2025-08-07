@@ -17,6 +17,12 @@
       "name": "[AI Job] Week 3: Optimization - AI Enhancement & Multi-Platform",
       "status": "planned",
       "created": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "mlops-004-chaos-engineering",
+      "name": "MLOPS-004: Chaos Engineering & Reliability Testing",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
     }
   ]
 }
