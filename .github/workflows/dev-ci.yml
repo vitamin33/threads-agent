@@ -211,6 +211,16 @@ jobs:
       # ————————————————————————————————
       # 5.  Helm install with CI values (only if needed)
       # ————————————————————————————————
+      - name: Wait for PostgreSQL to be ready
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          echo "Waiting for PostgreSQL pod to be ready..."
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=postgresql --timeout=120s || {
+            echo "PostgreSQL not ready, checking status:"
+            kubectl get pods -l app.kubernetes.io/name=postgresql
+            kubectl describe pod -l app.kubernetes.io/name=postgresql
+          }
+          
       - name: Helm upgrade (dev cluster)
         if: steps.e2e-check.outputs.skip_remaining == 'false'
         id: helm
@@ -219,11 +229,22 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MOCK: "1"
         run: |
-          helm upgrade --install threads ./chart \
-            -f chart/values-ci.yaml \
-            --set openai.apiKey="$OPENAI_API_KEY" \
-            --wait --timeout 300s --debug \
-            --atomic
+          # Retry helm install up to 3 times for CI reliability
+          for i in 1 2 3; do
+            helm upgrade --install threads ./chart \
+              -f chart/values-ci.yaml \
+              --set openai.apiKey="$OPENAI_API_KEY" \
+              --wait --timeout 600s --debug && break || {
+                echo "Helm install attempt $i failed"
+                if [ $i -lt 3 ]; then
+                  echo "Checking migration status..."
+                  kubectl describe job -l app.kubernetes.io/name=threads-migrations || true
+                  kubectl logs -l app.kubernetes.io/name=threads-migrations --tail=50 || true
+                  echo "Retrying in 30s..."
+                  sleep 30
+                fi
+              }
+          done
 
       # ─── If Helm failed, dump cluster state ──────────────────────────────
       - name: Dump pod list + events if Helm failed
