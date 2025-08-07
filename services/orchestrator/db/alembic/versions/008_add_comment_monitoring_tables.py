@@ -57,16 +57,13 @@ def upgrade() -> None:
         unique=False,
     )
 
-    # Partial index for recent comments (hot data optimization)
-    op.execute("""
-        CREATE INDEX ix_comments_recent ON comments (post_id, created_at) 
-        WHERE created_at > NOW() - INTERVAL '7 days'
-    """)
+    # Note: Removed partial index for recent comments as NOW() is not immutable
+    # For hot data optimization, consider using a materialized view or
+    # application-level filtering instead
 
 
 def downgrade() -> None:
-    # Drop indexes first (including new optimized indexes)
-    op.execute("DROP INDEX IF EXISTS ix_comments_recent")
+    # Drop indexes first
     op.drop_index("ix_comments_author_timestamp", table_name="comments")
     op.drop_index("ix_comments_post_timestamp", table_name="comments")
     op.drop_index(op.f("ix_comments_post_id"), table_name="comments")
