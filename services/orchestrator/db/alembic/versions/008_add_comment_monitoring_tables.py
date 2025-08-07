@@ -40,27 +40,30 @@ def upgrade() -> None:
         op.f("ix_comments_comment_id"), "comments", ["comment_id"], unique=True
     )
     op.create_index(op.f("ix_comments_post_id"), "comments", ["post_id"], unique=False)
-    
+
     # Composite index for time-range queries by post (performance optimization)
     op.create_index(
-        "ix_comments_post_timestamp", "comments", ["post_id", "created_at"], unique=False
+        "ix_comments_post_timestamp",
+        "comments",
+        ["post_id", "created_at"],
+        unique=False,
     )
-    
+
     # Index for author analysis queries
     op.create_index(
-        "ix_comments_author_timestamp", "comments", ["author", "created_at"], unique=False
+        "ix_comments_author_timestamp",
+        "comments",
+        ["author", "created_at"],
+        unique=False,
     )
-    
-    # Partial index for recent comments (hot data optimization)
-    op.execute("""
-        CREATE INDEX ix_comments_recent ON comments (post_id, created_at) 
-        WHERE created_at > NOW() - INTERVAL '7 days'
-    """)
+
+    # Note: Removed partial index for recent comments as NOW() is not immutable
+    # For hot data optimization, consider using a materialized view or
+    # application-level filtering instead
 
 
 def downgrade() -> None:
-    # Drop indexes first (including new optimized indexes)
-    op.execute("DROP INDEX IF EXISTS ix_comments_recent")
+    # Drop indexes first
     op.drop_index("ix_comments_author_timestamp", table_name="comments")
     op.drop_index("ix_comments_post_timestamp", table_name="comments")
     op.drop_index(op.f("ix_comments_post_id"), table_name="comments")

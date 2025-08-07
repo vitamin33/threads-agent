@@ -32,18 +32,22 @@ class TestCommentMonitorIntegration:
         return httpx.Client(base_url="http://fake-threads:8080")
 
     @pytest.fixture
-    def comment_monitor_with_http(self, fake_threads_client, mock_celery_client, mock_db_session):
+    def comment_monitor_with_http(
+        self, fake_threads_client, mock_celery_client, mock_db_session
+    ):
         """Create CommentMonitor with real HTTP client."""
         return CommentMonitor(
             fake_threads_client=fake_threads_client,
             celery_client=mock_celery_client,
-            db_session=mock_db_session
+            db_session=mock_db_session,
         )
 
-    def test_end_to_end_comment_monitoring_flow(self, mock_celery_client, mock_db_session):
+    def test_end_to_end_comment_monitoring_flow(
+        self, mock_celery_client, mock_db_session
+    ):
         """
         Integration test: Complete comment monitoring flow from API to database.
-        
+
         This test simulates the full pipeline:
         1. Create comments via fake_threads API
         2. Monitor comments via CommentMonitor
@@ -54,19 +58,19 @@ class TestCommentMonitorIntegration:
         # Mock the HTTP calls to fake_threads
         mock_comments_response = [
             {
-                "id": "comment_1", 
+                "id": "comment_1",
                 "post_id": "post_123",
-                "text": "Great post!", 
-                "author": "user1", 
-                "timestamp": "2024-01-01T10:00:00Z"
+                "text": "Great post!",
+                "author": "user1",
+                "timestamp": "2024-01-01T10:00:00Z",
             },
             {
-                "id": "comment_2", 
+                "id": "comment_2",
                 "post_id": "post_123",
-                "text": "Nice work!", 
-                "author": "user2", 
-                "timestamp": "2024-01-01T10:01:00Z"
-            }
+                "text": "Nice work!",
+                "author": "user2",
+                "timestamp": "2024-01-01T10:01:00Z",
+            },
         ]
 
         # Mock HTTP client that returns our test comments
@@ -83,7 +87,7 @@ class TestCommentMonitorIntegration:
         comment_monitor = CommentMonitor(
             fake_threads_client=mock_http_client,
             celery_client=mock_celery_client,
-            db_session=mock_db_session
+            db_session=mock_db_session,
         )
 
         post_id = "post_123"
@@ -96,7 +100,7 @@ class TestCommentMonitorIntegration:
 
         # Verify comments were queued for analysis (2 comments)
         assert mock_celery_client.send_task.call_count == 2
-        
+
         # Verify comments were stored in database (2 add calls)
         assert mock_db_session.add.call_count == 2
         mock_db_session.commit.assert_called_once()
@@ -107,26 +111,28 @@ class TestCommentMonitorIntegration:
         assert result["queued_count"] == 2
         assert result["stored_count"] == 2
 
-    def test_comment_monitoring_with_existing_comments_deduplication(self, mock_celery_client, mock_db_session):
+    def test_comment_monitoring_with_existing_comments_deduplication(
+        self, mock_celery_client, mock_db_session
+    ):
         """
         Test that existing comments are properly deduplicated.
         """
         # Mock HTTP response with duplicate and new comments
         mock_comments_response = [
             {
-                "id": "comment_1", 
+                "id": "comment_1",
                 "post_id": "post_123",
-                "text": "Great post!", 
-                "author": "user1", 
-                "timestamp": "2024-01-01T10:00:00Z"
+                "text": "Great post!",
+                "author": "user1",
+                "timestamp": "2024-01-01T10:00:00Z",
             },
             {
-                "id": "comment_2", 
+                "id": "comment_2",
                 "post_id": "post_123",
-                "text": "Nice work!", 
-                "author": "user2", 
-                "timestamp": "2024-01-01T10:01:00Z"
-            }
+                "text": "Nice work!",
+                "author": "user2",
+                "timestamp": "2024-01-01T10:01:00Z",
+            },
         ]
 
         mock_http_client = Mock()
@@ -135,10 +141,10 @@ class TestCommentMonitorIntegration:
 
         # Mock database - comment_1 already exists, comment_2 doesn't
         call_count = {"total": 0}
-        
+
         def mock_filter_chain(filter_expr):
             result_mock = Mock()
-            
+
             def first():
                 call_count["total"] += 1
                 # First call is for comment_1 (should exist), second is for comment_2 (shouldn't exist)
@@ -146,7 +152,7 @@ class TestCommentMonitorIntegration:
                     return Mock(comment_id="comment_1")  # comment_1 exists in DB
                 else:
                     return None  # comment_2 doesn't exist in DB
-            
+
             result_mock.first = first
             return result_mock
 
@@ -157,7 +163,7 @@ class TestCommentMonitorIntegration:
         comment_monitor = CommentMonitor(
             fake_threads_client=mock_http_client,
             celery_client=mock_celery_client,
-            db_session=mock_db_session
+            db_session=mock_db_session,
         )
 
         post_id = "post_123"
@@ -166,13 +172,15 @@ class TestCommentMonitorIntegration:
         # Only comment_2 should be processed (comment_1 was deduplicated)
         assert mock_celery_client.send_task.call_count == 1
         assert mock_db_session.add.call_count == 1
-        
+
         assert result["status"] == "success"
         assert result["processed_count"] == 1  # Only comment_2
         assert result["queued_count"] == 1
         assert result["stored_count"] == 1
 
-    def test_comment_monitoring_handles_api_errors_gracefully(self, mock_celery_client, mock_db_session):
+    def test_comment_monitoring_handles_api_errors_gracefully(
+        self, mock_celery_client, mock_db_session
+    ):
         """
         Test that CommentMonitor handles API errors gracefully.
         """
@@ -183,7 +191,7 @@ class TestCommentMonitorIntegration:
         comment_monitor = CommentMonitor(
             fake_threads_client=mock_http_client,
             celery_client=mock_celery_client,
-            db_session=mock_db_session
+            db_session=mock_db_session,
         )
 
         post_id = "post_123"
