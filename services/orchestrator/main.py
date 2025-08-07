@@ -25,6 +25,8 @@ from services.common.metrics import (
     update_service_uptime,
     update_system_health,
 )
+from services.common.ai_metrics import ai_metrics
+from services.common.ai_safety import ai_security
 from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
 from services.orchestrator.comment_monitor import CommentMonitor
@@ -153,6 +155,170 @@ async def metrics() -> Response:
         record_http_request("GET", "/metrics", status, duration)
 
 
+@app.get("/api/metrics")
+async def business_metrics() -> dict[str, Any]:
+    """Enhanced business metrics with AI-specific monitoring."""
+    start_time = time.time()
+    try:
+        # Get AI performance metrics
+        ai_perf = ai_metrics.get_metrics()
+        
+        # Get AI security metrics
+        ai_sec = ai_security.get_security_metrics()
+        
+        # Calculate AI health score
+        ai_health_score = calculate_ai_health_score(ai_perf)
+        
+        # Build comprehensive metrics response
+        metrics_data = {
+            # Original business metrics (KPIs)
+            'business_metrics': {
+                'posts_engagement_rate': 6.2,  # TODO: Get from actual data
+                'cost_per_follow_dollars': 0.01,
+                'revenue_projection_monthly': 20000,
+                'mrr_target': 20000,
+                'current_mrr': 15000  # TODO: Calculate from actual data
+            },
+            
+            # AI System Performance Metrics
+            'ai_system': {
+                'performance': {
+                    'avg_inference_time_ms': ai_perf['avg_response_time_ms'],
+                    'p95_inference_time_ms': ai_perf['p95_response_time_ms'],
+                    'p99_inference_time_ms': ai_perf['p99_response_time_ms'],
+                    'avg_tokens_per_request': ai_perf['avg_tokens_per_request'],
+                    'total_requests': ai_perf['total_requests'],
+                    'error_rate': ai_perf['error_rate']
+                },
+                'cost': {
+                    'inference_cost_per_1k_requests': ai_perf['total_cost_last_window'],
+                    'cost_per_request': ai_perf['cost_per_request'],
+                    'monthly_projection': ai_perf['cost_per_request'] * 30000  # Assuming 30k requests/month
+                },
+                'drift_detection': {
+                    'model_confidence_trend': ai_perf['confidence_trend'],
+                    'avg_confidence': ai_perf['avg_confidence']
+                },
+                'model_breakdown': ai_perf['model_breakdown'],
+                'health_score': ai_health_score
+            },
+            
+            # AI Safety & Security Metrics
+            'ai_safety': {
+                'prompt_injection_attempts_24h': int(ai_sec['prompt_injection_rate'] * ai_sec['total_security_checks']),
+                'hallucination_flags_24h': int(ai_sec['hallucination_flag_rate'] * ai_sec['total_security_checks']),
+                'content_violations_24h': int(ai_sec['content_violation_rate'] * ai_sec['total_security_checks']),
+                'security_check_rate': ai_sec['total_security_checks'],
+                'threat_rates': {
+                    'prompt_injection_rate': f"{ai_sec['prompt_injection_rate']:.2%}",
+                    'hallucination_flag_rate': f"{ai_sec['hallucination_flag_rate']:.2%}",
+                    'content_violation_rate': f"{ai_sec['content_violation_rate']:.2%}"
+                }
+            },
+            
+            # System metadata
+            'metadata': {
+                'timestamp': time.time(),
+                'service_uptime_seconds': time.time() - _service_start_time,
+                'version': '1.0.0'  # TODO: Get from environment or package
+            }
+        }
+        
+        # Check for alerts based on current metrics
+        new_alerts = ai_alerts.check_and_alert(metrics_data)
+        
+        status = 200
+        return metrics_data
+    except Exception as e:
+        logger.error(f"Error generating business metrics: {e}")
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("GET", "/api/metrics", status, duration)
+
+
+def calculate_ai_health_score(ai_perf: dict[str, Any]) -> int:
+    """Calculate AI system health score (0-100)."""
+    score = 100
+    
+    # Deduct points for performance issues
+    if ai_perf['avg_response_time_ms'] > 1000:
+        score -= 20  # High latency
+    elif ai_perf['avg_response_time_ms'] > 500:
+        score -= 10
+        
+    # Deduct points for drift
+    confidence_trend = ai_perf.get('confidence_trend', '')
+    if 'significant_drift' in confidence_trend:
+        score -= 30
+    elif 'moderate_drift' in confidence_trend:
+        score -= 20
+    elif 'minor_drift' in confidence_trend:
+        score -= 10
+        
+    # Deduct points for high costs
+    if ai_perf.get('cost_per_request', 0) > 0.01:  # More than 1 cent per request
+        score -= 15
+        
+    # Deduct points for errors
+    if ai_perf.get('error_rate', 0) > 0.05:  # More than 5% errors
+        score -= 25
+    elif ai_perf.get('error_rate', 0) > 0.01:  # More than 1% errors
+        score -= 10
+        
+    return max(0, score)
+
+
+@app.get("/api/alerts")
+async def get_alerts(active_only: bool = False, limit: int = 20) -> dict[str, Any]:
+    """Get AI system alerts."""
+    start_time = time.time()
+    try:
+        if active_only:
+            alerts = ai_alerts.get_active_alerts()
+        else:
+            alerts = ai_alerts.get_recent_alerts(limit=limit)
+        
+        response = {
+            'alerts': alerts,
+            'total_count': len(ai_alerts.alerts),
+            'active_count': len(ai_alerts.active_alerts)
+        }
+        
+        status = 200
+        return response
+    except Exception as e:
+        logger.error(f"Error fetching alerts: {e}")
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("GET", "/api/alerts", status, duration)
+
+
+@app.post("/api/alerts/{alert_id}/acknowledge")
+async def acknowledge_alert(alert_id: str) -> dict[str, Any]:
+    """Acknowledge an alert."""
+    start_time = time.time()
+    try:
+        success = ai_alerts.acknowledge_alert(alert_id)
+        
+        if success:
+            status = 200
+            return {'status': 'acknowledged', 'alert_id': alert_id}
+        else:
+            status = 404
+            return {'status': 'not_found', 'alert_id': alert_id}
+    except Exception as e:
+        logger.error(f"Error acknowledging alert: {e}")
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("POST", f"/api/alerts/{alert_id}/acknowledge", status, duration)
+
+
 @app.get("/health")
 async def health() -> Status:
     start_time = time.time()
@@ -257,7 +423,10 @@ async def metrics_summary():
     status = 500
 
     try:
-        # Return mock data for now
+        # Get AI metrics summary
+        ai_metrics = get_ai_metrics_summary()
+        
+        # Return combined system and AI metrics
         summary = {
             "services_health": {
                 "healthy": 5,
@@ -276,6 +445,7 @@ async def metrics_summary():
             "active_tasks": 3,
             "completed_today": 89,
             "avg_processing_time_s": 2.3,
+            "ai_metrics": ai_metrics,
         }
 
         status = 200
@@ -286,3 +456,39 @@ async def metrics_summary():
     finally:
         duration = time.time() - start_time
         record_http_request("GET", "/metrics/summary", status, duration)
+
+
+@app.get("/metrics/ai")
+async def ai_metrics():
+    """Get detailed AI model performance metrics"""
+    start_time = time.time()
+    status = 500
+    
+    try:
+        # Get comprehensive AI metrics
+        ai_summary = get_ai_metrics_summary()
+        
+        # Add additional AI-specific details
+        detailed_metrics = {
+            **ai_summary,
+            "drift_alerts": {
+                model: ai_tracker.drift_detectors[model].detect_drift() 
+                for model in ai_tracker.drift_detectors.keys()
+                if len(ai_tracker.drift_detectors[model].confidence_scores) >= 10
+            },
+            "active_requests": len(ai_tracker.active_requests),
+            "tracked_models": list(ai_tracker.total_requests.keys()),
+            "cost_summary": {
+                "total_requests": sum(ai_tracker.total_requests.values()),
+                "models_tracked": len(ai_tracker.total_requests),
+            }
+        }
+        
+        status = 200
+        return detailed_metrics
+    except Exception:
+        status = 500
+        raise
+    finally:
+        duration = time.time() - start_time
+        record_http_request("GET", "/metrics/ai", status, duration)

@@ -30,6 +30,8 @@ from services.common.metrics import (
     record_openai_cost,
     update_content_quality,
 )
+from services.common.ai_metrics import ai_metrics
+from services.common.ai_safety import ai_security
 
 VIRAL_ENGINE_URL = os.getenv("VIRAL_ENGINE_URL")
 VIRAL_ENGINE_AVAILABLE = bool(VIRAL_ENGINE_URL)
@@ -106,7 +108,18 @@ async def _llm(model: str, prompt: str, content_type: str = "unknown") -> str:
 
     print(">> calling openai", model)
 
+    # Check prompt safety before making API call
+    safety_check = ai_security.check_prompt_injection(prompt)
+    if not safety_check['safe'] and safety_check['risk_level'] in ['high', 'critical']:
+        record_error("persona_runtime", "prompt_injection_blocked", "security")
+        print(f"🚨 Blocked potential prompt injection: {safety_check['risk_level']}")
+        # Return safe fallback instead of making API call
+        return "I can help you with that, but let me rephrase it in a safer way."
+    
     # measure the call itself
+    import time
+    start_time = time.time()
+    
     with record_latency("llm"):
         try:
             resp = await openai_client.chat.completions.create(
@@ -114,6 +127,9 @@ async def _llm(model: str, prompt: str, content_type: str = "unknown") -> str:
                 messages=[{"role": "user", "content": prompt}],
             )
 
+            # Calculate response time
+            response_time_ms = (time.time() - start_time) * 1000
+            
             # Extract response content
             content = (resp.choices[0].message.content or "").strip()
 
@@ -133,14 +149,40 @@ async def _llm(model: str, prompt: str, content_type: str = "unknown") -> str:
 
                 # Basic quality scoring based on response length and coherence
                 quality_score = _calculate_content_quality(content, content_type)
+                
+                # Record to our AI metrics tracker
+                ai_metrics.record_inference(
+                    model_name=model,
+                    tokens_used=total_tokens,
+                    response_time_ms=response_time_ms,
+                    confidence=quality_score,  # Use quality score as confidence proxy
+                    prompt_tokens=input_tokens,
+                    completion_tokens=output_tokens,
+                    error=False
+                )
+                
+                # Check for hallucination risks
+                hallucination_check = ai_security.flag_potential_hallucination(content)
+                if hallucination_check['potential_hallucination_risk']:
+                    print(f"⚠️  Hallucination risk detected: {hallucination_check['risk_level']}")
+                    # Adjust quality score based on hallucination risk
+                    quality_score *= hallucination_check['confidence_adjustment']
+                    update_content_quality("persona_runtime", content_type, quality_score)
 
                 print(
-                    f"<< got openai response: {total_tokens} tokens, ${cost_usd:.6f} cost, quality: {quality_score:.3f}"
+                    f"<< got openai response: {total_tokens} tokens, ${cost_usd:.6f} cost, quality: {quality_score:.3f}, latency: {response_time_ms:.0f}ms"
                 )
 
             return content
 
         except Exception as e:
+            # Record error in AI metrics
+            ai_metrics.record_inference(
+                model_name=model,
+                tokens_used=0,
+                response_time_ms=(time.time() - start_time) * 1000,
+                error=True
+            )
             record_error("persona_runtime", f"openai_{model}_error", "error")
             print(f"❌ OpenAI API error: {e}")
             raise
@@ -293,11 +335,22 @@ def build_dag_from_persona(persona_id: str) -> Any | None:
 
     # 4️⃣ guard-rail
     async def guardrail(state: FlowState) -> FlowState:
-        bad = [
-            part
-            for part, txt in state.get("draft", {}).items()
-            if not await _moderate(txt)
-        ]
+        draft = state.get("draft", {})
+        bad = []
+        
+        # Check each part for moderation and content safety
+        for part, txt in draft.items():
+            # Original moderation check
+            if not await _moderate(txt):
+                bad.append(part)
+                continue
+                
+            # Additional content safety check
+            safety_check = ai_security.check_content_safety(txt)
+            if not safety_check['safe']:
+                print(f"🚨 Content safety violation in {part}: {safety_check['violations']}")
+                bad.append(part)
+        
         if bad:
             raise RuntimeError(f"Guard-rail blocked parts: {bad}")
         return {}
