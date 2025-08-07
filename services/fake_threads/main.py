@@ -78,11 +78,11 @@ def create_comment(post_id: str, comment: CommentCreate) -> Comment:
         post_id=post_id,
         text=comment.text,
         author=comment.author,
-        timestamp=datetime.utcnow().isoformat() + "Z"
+        timestamp=datetime.utcnow().isoformat() + "Z",
     )
-    
+
     if post_id not in _comments:
         _comments[post_id] = []
-    
+
     _comments[post_id].append(new_comment)
     return new_comment

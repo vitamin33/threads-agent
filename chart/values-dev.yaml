@@ -274,3 +274,11 @@ mlflow:
     monitoring:
       serviceMonitor:
         enabled: false  # Disable ServiceMonitor (requires Prometheus Operator)
+
+# Revenue service for monetization
+revenue:
+  enabled: true
+  image:
+    repository: revenue
+    tag: "local"
+    pullPolicy: IfNotPresent

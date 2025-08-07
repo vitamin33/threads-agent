@@ -20,13 +20,33 @@ spec:
       - name: wait-for-postgres
         image: busybox:1.36
         command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done']
+      - name: wait-for-db-creation
+        image: bitnami/postgresql:16
+        command: 
+          - /bin/sh
+          - -c
+          - |
+            echo "Waiting for threads_agent database to be created..."
+            for i in $(seq 1 60); do
+              if PGPASSWORD=pass psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1; then
+                echo "Database threads_agent exists!"
+                exit 0
+              fi
+              echo "Waiting for database creation... (attempt $i/60)"
+              sleep 2
+            done
+            echo "Database creation timeout!"
+            exit 1
+        env:
+        - name: PGPASSWORD
+          value: "pass"
       - name: run-migrations
         image: {{ .Values.revenue.image.repository }}:{{ .Values.revenue.image.tag }}
         imagePullPolicy: {{ .Values.revenue.image.pullPolicy }}
-        command: ['alembic', '-c', 'services/revenue/db/alembic.ini', 'upgrade', 'head']
+        command: ['alembic', '-c', 'services/revenue/db/alembic.ini', '-x', 'sqlalchemy.url=postgresql://postgres:pass@postgres:5432/threads_agent', 'upgrade', 'head']
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:pass@postgres:5432/postgres"
+          value: "postgresql://postgres:pass@postgres:5432/threads_agent"
       containers:
       - name: revenue
         image: {{ .Values.revenue.image.repository }}:{{ .Values.revenue.image.tag }}
@@ -40,7 +60,7 @@ spec:
           protocol: TCP
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:pass@postgres:5432/postgres"
+          value: "postgresql://postgres:pass@postgres:5432/threads_agent"
         - name: STRIPE_API_KEY
           valueFrom:
             secretKeyRef:

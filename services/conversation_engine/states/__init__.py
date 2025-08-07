@@ -1,4 +1,5 @@
 """State handlers for conversation state machine."""
+
 from .base import BaseStateHandler
 from .initial_contact import InitialContactHandler
 from .interest_qualification import InterestQualificationHandler
@@ -11,7 +12,7 @@ from .post_purchase import PostPurchaseHandler
 __all__ = [
     "BaseStateHandler",
     "InitialContactHandler",
-    "InterestQualificationHandler", 
+    "InterestQualificationHandler",
     "ValuePropositionHandler",
     "ObjectionHandlingHandler",
     "PriceNegotiationHandler",

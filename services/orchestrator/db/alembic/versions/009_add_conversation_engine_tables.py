@@ -30,11 +30,21 @@ def upgrade() -> None:
         sa.Column("metadata", sa.JSON(), nullable=True),
         sa.Column("conversion_probability", sa.Float(), nullable=True),
         sa.Column("last_interaction", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Add indexes for conversation_states
     op.create_index(
         op.f("ix_conversation_states_conversation_id"),
@@ -60,7 +70,7 @@ def upgrade() -> None:
         ["last_interaction"],
         unique=False,
     )
-    
+
     # Create conversation_turns table
     op.create_table(
         "conversation_turns",
@@ -73,10 +83,15 @@ def upgrade() -> None:
         sa.Column("state_after", sa.String(length=50), nullable=False),
         sa.Column("intent_analysis", sa.JSON(), nullable=True),
         sa.Column("response_time_ms", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Add indexes for conversation_turns
     op.create_index(
         op.f("ix_conversation_turns_conversation_id"),
@@ -96,14 +111,14 @@ def upgrade() -> None:
         ["created_at"],
         unique=False,
     )
-    
+
     # Partial index for active conversations (optimization)
     op.execute("""
         CREATE INDEX ix_conversation_states_active 
         ON conversation_states (user_id, last_interaction) 
         WHERE last_interaction > NOW() - INTERVAL '7 days'
     """)
-    
+
     # Index for analytics queries
     op.execute("""
         CREATE INDEX ix_conversation_states_analytics 
@@ -115,16 +130,31 @@ def downgrade() -> None:
     # Drop indexes first
     op.execute("DROP INDEX IF EXISTS ix_conversation_states_analytics")
     op.execute("DROP INDEX IF EXISTS ix_conversation_states_active")
-    
-    op.drop_index(op.f("ix_conversation_turns_created_at"), table_name="conversation_turns")
-    op.drop_index(op.f("ix_conversation_turns_turn_number"), table_name="conversation_turns")
-    op.drop_index(op.f("ix_conversation_turns_conversation_id"), table_name="conversation_turns")
-    
-    op.drop_index(op.f("ix_conversation_states_last_interaction"), table_name="conversation_states")
-    op.drop_index(op.f("ix_conversation_states_current_state"), table_name="conversation_states")
-    op.drop_index(op.f("ix_conversation_states_user_id"), table_name="conversation_states")
-    op.drop_index(op.f("ix_conversation_states_conversation_id"), table_name="conversation_states")
-    
+
+    op.drop_index(
+        op.f("ix_conversation_turns_created_at"), table_name="conversation_turns"
+    )
+    op.drop_index(
+        op.f("ix_conversation_turns_turn_number"), table_name="conversation_turns"
+    )
+    op.drop_index(
+        op.f("ix_conversation_turns_conversation_id"), table_name="conversation_turns"
+    )
+
+    op.drop_index(
+        op.f("ix_conversation_states_last_interaction"),
+        table_name="conversation_states",
+    )
+    op.drop_index(
+        op.f("ix_conversation_states_current_state"), table_name="conversation_states"
+    )
+    op.drop_index(
+        op.f("ix_conversation_states_user_id"), table_name="conversation_states"
+    )
+    op.drop_index(
+        op.f("ix_conversation_states_conversation_id"), table_name="conversation_states"
+    )
+
     # Drop tables
     op.drop_table("conversation_turns")
     op.drop_table("conversation_states")
