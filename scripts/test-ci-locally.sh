@@ -87,7 +87,16 @@ log_success "k3d cluster created successfully"
 
 # Step 4: Build/pull images (matching CI logic)
 log_step "Step 4: Building/pulling images"
-SERVICES="orchestrator celery_worker persona_runtime fake_threads"
+# Service list configuration
+if [ "$1" = "--ci-only" ]; then
+    # CI mode: Only essential services (matches .github/workflows/dev-ci.yml)
+    SERVICES="orchestrator celery_worker persona_runtime fake_threads"
+    log_warning "CI mode: Building only essential services"
+else
+    # Full mode: All services for local testing
+    SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_metrics"
+    log_warning "Full mode: Building all services"
+fi
 
 for svc in $SERVICES; do
     IMAGE_NAME="ghcr.io/threads-agent-stack/threads-agent/${svc}:main"
@@ -116,17 +125,33 @@ docker pull qdrant/qdrant:v1.9.4
 
 # Import images to k3d
 log_step "Importing images to k3d cluster..."
-k3d image import \
-    orchestrator:local \
-    celery-worker:local \
-    persona-runtime:local \
-    fake-threads:local \
-    bitnami/postgresql:16 \
-    rabbitmq:3.13-management-alpine \
-    qdrant/qdrant:v1.9.4 \
-    -c $CLUSTER_NAME
+# Note: Image names use dashes, not underscores (e.g., celery-worker not celery_worker)
+for img in orchestrator:local celery-worker:local persona-runtime:local fake-threads:local bitnami/postgresql:16 rabbitmq:3.13-management-alpine qdrant/qdrant:v1.9.4; do
+    echo "  Importing $img..."
+    k3d image import $img -c $CLUSTER_NAME || {
+        log_error "Failed to import $img to k3d cluster"
+        exit 1
+    }
+done
 
 log_success "All images imported to k3d"
+
+# Wait a moment for images to be fully available
+sleep 2
+
+# Verify images are available in cluster
+log_step "Verifying images in k3d cluster..."
+for img in orchestrator:local celery-worker:local persona-runtime:local fake-threads:local; do
+    # Images are stored with docker.io/library/ prefix in k3d
+    if docker exec k3d-${CLUSTER_NAME}-server-0 ctr -n k8s.io image ls | grep -q "docker.io/library/$img"; then
+        log_success "$img - verified in cluster"
+    else
+        log_error "$img - NOT FOUND in cluster!"
+        # Try to debug why
+        echo "  Checking all images with 'orchestrator' in name:"
+        docker exec k3d-${CLUSTER_NAME}-server-0 ctr -n k8s.io image ls | grep orchestrator || echo "  No orchestrator images found"
+    fi
+done
 
 # Step 5: Pre-deployment validation
 log_step "Step 5: Pre-deployment validation"

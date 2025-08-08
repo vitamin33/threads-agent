@@ -166,7 +166,8 @@ jobs:
         run: |
           # Try to pull from GHCR first, build only if not found or force_build is true
           # OPTIMIZATION: Build only essential services for CI speed  
-          SERVICES="orchestrator celery_worker persona_runtime fake_threads"  # Core workflow with optimized celery
+          # Only build services that are enabled in values-ci-fast.yaml
+          SERVICES="orchestrator celery_worker persona_runtime fake_threads"  # Core workflow only
           FORCE_BUILD="${{ github.event.inputs.force_build || 'false' }}"
 
           # Determine image tag based on event type

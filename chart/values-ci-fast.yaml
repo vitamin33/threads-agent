@@ -136,9 +136,16 @@ revenue:
 viralMetrics:
   enabled: false
 
+mlflow:
+  performanceOptimization:
+    enabled: false
+
 # Minimal Qdrant
 qdrant:
   enabled: true
+  image:
+    repository: qdrant/qdrant
+    tag: "v1.9.4"  # Match the version we import in CI
   resources:
     requests:
       memory: "64Mi"
