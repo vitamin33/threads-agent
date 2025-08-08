@@ -261,7 +261,9 @@ class TestChaosCLI:
         ])
 
         assert result.exit_code != 0
-        assert 'Invalid experiment type' in result.output
+        # Click provides its own validation message for choices
+        assert "Invalid value for '--type'" in result.output
+        assert "'invalid_type' is not one of" in result.output
 
     def test_run_experiment_without_required_args_shows_error(self, runner):
         """Test that missing required arguments show error."""
