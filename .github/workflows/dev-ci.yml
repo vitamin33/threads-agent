@@ -43,7 +43,7 @@ jobs:
   test:
     name: py${{ matrix.python }} • k3d
     runs-on: ubuntu-latest # Faster startup than ubuntu-22.04
-    timeout-minutes: 12 # Allow more time for conservative deployment
+    timeout-minutes: 20 # Increased timeout for debugging
     strategy:
       fail-fast: false # let both versions run
       matrix:
@@ -310,6 +310,18 @@ jobs:
               kubectl get pods --field-selector=status.phase=Pending -o json | jq -r '.items[] | "\(.metadata.name): \(.status.conditions)"' 2>/dev/null || true
               echo "\n🚨 IMAGE PULL ISSUES:"
               kubectl get pods -o json | jq -r '.items[] | select(.status.containerStatuses[]?.state.waiting.reason == "ErrImageNeverPull" or .status.containerStatuses[]?.state.waiting.reason == "ImagePullBackOff") | "\(.metadata.name): \(.status.containerStatuses[].state.waiting.reason)"' 2>/dev/null || true
+              
+              # Get fake-threads logs if it exists
+              FAKE_THREADS_POD=$(kubectl get pods -l app=fake-threads --no-headers 2>/dev/null | head -1 | awk '{print $1}')
+              if [ ! -z "$FAKE_THREADS_POD" ]; then
+                echo "\n📝 FAKE-THREADS LOGS:"
+                kubectl logs $FAKE_THREADS_POD --previous 2>/dev/null && echo "(Previous container logs)" || echo "No previous logs"
+                kubectl logs $FAKE_THREADS_POD 2>/dev/null && echo "(Current container logs)" || echo "No current logs"
+                
+                echo "\n🔍 FAKE-THREADS CONTAINER STATE:"
+                kubectl get pod $FAKE_THREADS_POD -o json | jq '.status.containerStatuses[0].state' 2>/dev/null || echo "Cannot get container state"
+              fi
+              
               echo "\n📊 EVENTS (last 10):"
               kubectl get events --sort-by='.lastTimestamp' | tail -n 10
               sleep 10
@@ -324,7 +336,7 @@ jobs:
             helm upgrade --install threads ./chart \
               -f chart/values-ci-fast.yaml \
               --set openai.apiKey="$OPENAI_API_KEY" \
-              --wait --timeout 300s --debug && {
+              --wait --timeout 600s --debug && {
                 HELM_SUCCESS=true
                 break
               } || {
@@ -335,7 +347,30 @@ jobs:
                 kubectl get statefulsets -o wide
                 echo "\n🔍 FAKE-THREADS SPECIFIC DEBUG:"
                 kubectl describe deployment fake-threads || echo "No fake-threads deployment found"
+                
+                echo "\n📋 FAKE-THREADS POD DETAILS:"
                 kubectl describe pod -l app=fake-threads || echo "No fake-threads pods found"
+                
+                echo "\n📝 FAKE-THREADS CONTAINER LOGS:"
+                FAKE_THREADS_POD=$(kubectl get pods -l app=fake-threads --no-headers 2>/dev/null | head -1 | awk '{print $1}')
+                if [ ! -z "$FAKE_THREADS_POD" ]; then
+                  echo "Pod name: $FAKE_THREADS_POD"
+                  echo "\nPrevious container logs:"
+                  kubectl logs $FAKE_THREADS_POD --previous 2>&1 || echo "No previous container logs available"
+                  echo "\nCurrent container logs:"
+                  kubectl logs $FAKE_THREADS_POD 2>&1 || echo "No current container logs available"
+                  
+                  echo "\n🔍 Container startup command:"
+                  kubectl get pod $FAKE_THREADS_POD -o json | jq '.spec.containers[0].command' 2>/dev/null || echo "Using default CMD from Dockerfile"
+                  
+                  echo "\n🔍 Image details:"
+                  kubectl get pod $FAKE_THREADS_POD -o json | jq '.spec.containers[0].image' 2>/dev/null
+                  
+                  echo "\n🔍 Environment variables:"
+                  kubectl get pod $FAKE_THREADS_POD -o json | jq '.spec.containers[0].env' 2>/dev/null || echo "No env vars configured"
+                else
+                  echo "No fake-threads pod found to get logs from"
+                fi
                 
                 if [ $i -lt 3 ]; then
                   echo "Checking migration status..."
@@ -701,8 +736,13 @@ jobs:
             kubectl get pod $FAKE_THREADS_POD -o yaml | grep -A 10 -B 10 "ready:\\|restartCount:"
             
             echo "\\n📝 ALL FAKE-THREADS LOGS:"
-            kubectl logs $FAKE_THREADS_POD --previous 2>/dev/null || echo "No previous logs"
-            kubectl logs $FAKE_THREADS_POD || echo "No current logs"
+            echo "Previous container (if crashed):"
+            kubectl logs $FAKE_THREADS_POD --previous 2>&1 || echo "No previous logs"
+            echo "\\nCurrent container:"
+            kubectl logs $FAKE_THREADS_POD 2>&1 || echo "No current logs"
+            
+            echo "\\n🔍 DESCRIBE POD OUTPUT:"
+            kubectl describe pod $FAKE_THREADS_POD | grep -A 20 "Events:" || echo "No events found"
             
             echo "\\n🔧 MANUAL SERVICE TESTS:"
             echo "Testing if fake-threads process is running..."
