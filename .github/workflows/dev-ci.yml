@@ -246,10 +246,10 @@ jobs:
         if: steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           echo "⏳ Waiting for PostgreSQL pod to be ready..."
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=postgresql --timeout=120s || {
+          kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s || {
             echo "PostgreSQL not ready, checking status:"
-            kubectl get pods -l app.kubernetes.io/name=postgresql
-            kubectl describe pod -l app.kubernetes.io/name=postgresql
+            kubectl get pods -l app=postgres
+            kubectl describe pod -l app=postgres
           }
           
       - name: Helm upgrade (dev cluster)

@@ -62,6 +62,8 @@ fakeThreads:
 postgres:
   enabled: true
   storage: 500Mi  # Minimal storage
+  auth:
+    postgresPassword: "postgres"  # Simple password for CI
   resources:
     requests:
       memory: "64Mi"

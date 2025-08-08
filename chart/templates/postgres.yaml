@@ -45,6 +45,13 @@ spec:
               valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
             - name: POSTGRESQL_PASSWORD
               valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
+          resources:
+            requests:
+              memory: "{{ .Values.postgres.resources.requests.memory | default "64Mi" }}"
+              cpu: "{{ .Values.postgres.resources.requests.cpu | default "25m" }}"
+            limits:
+              memory: "{{ .Values.postgres.resources.limits.memory | default "128Mi" }}"
+              cpu: "{{ .Values.postgres.resources.limits.cpu | default "100m" }}"
           volumeMounts:
             - name: pgdata
               mountPath: /bitnami/postgresql
@@ -56,7 +63,7 @@ spec:
         accessModes: [ReadWriteOnce]
         resources:
           requests:
-            storage: 1Gi
+            storage: "{{ .Values.postgres.storage | default "1Gi" }}"
 
 ---
 
