@@ -6,8 +6,6 @@ import redis
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
-import asyncio
-from contextlib import asynccontextmanager
 
 from sqlalchemy import (
     create_engine,
@@ -20,7 +18,7 @@ from sqlalchemy import (
     JSON,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 

@@ -8,9 +8,8 @@ different kinds of contributions (features, bugs, docs, CI, etc).
 
 import json
 import subprocess
-import re
 from datetime import datetime
-from typing import Dict, List, Any, Tuple
+from typing import Dict, Any, Tuple
 import os
 import sys
 
@@ -414,7 +413,7 @@ class PRValueAnalyzerV2:
             )
 
         # Interpretation
-        print(f"\n📋 Interpretation:")
+        print("\n📋 Interpretation:")
         if overall_score >= 8:
             print("  ✅ Excellent PR - High value contribution")
         elif overall_score >= 6:

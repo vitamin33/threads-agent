@@ -1,10 +1,8 @@
 # /services/orchestrator/tests/test_comment_monitor.py
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime
-from typing import List, Dict, Any
+from unittest.mock import Mock, AsyncMock
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 class TestCommentMonitor:

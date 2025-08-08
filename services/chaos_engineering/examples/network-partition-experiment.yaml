@@ -1,0 +1,47 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: celery-network-partition
+  namespace: litmus
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    experiment-type: network-partition
+    target-service: celery-worker
+spec:
+  appinfo:
+    appns: default
+    applabel: "app=celery-worker"
+    appkind: "deployment"
+  engineState: "active"
+  chaosServiceAccount: litmus
+  experiments:
+  - name: pod-network-partition
+    spec:
+      components:
+        env:
+        # Duration for which chaos is injected
+        - name: TOTAL_CHAOS_DURATION
+          value: "60s"
+        # Network interface to partition
+        - name: NETWORK_INTERFACE
+          value: "eth0"
+        # Destination IPs/hosts to block
+        - name: DESTINATION_IPS
+          value: "orchestrator,postgres,rabbitmq"
+        # Percentage of pods to affect
+        - name: PODS_AFFECTED_PERC
+          value: "25"
+      probe:
+      - name: celery-worker-health
+        type: cmdProbe
+        mode: Edge
+        runProperties:
+          probeTimeout: 10s
+          retry: 3
+          interval: 5s
+        cmdProbe/inputs:
+          command: kubectl get pods -l app=celery-worker --field-selector=status.phase=Running
+          comparator:
+            type: int
+            criteria: ">="
+            value: "1"

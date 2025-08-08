@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaos-engineering
+  labels:
+    name: chaos-engineering
+    app.kubernetes.io/name: chaos-engineering
+    app.kubernetes.io/component: chaos-experiments

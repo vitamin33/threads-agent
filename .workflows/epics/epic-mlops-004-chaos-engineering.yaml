@@ -1,0 +1,101 @@
+epic_id: mlops-004-chaos-engineering
+epic_name: "MLOPS-004: Chaos Engineering & Reliability Testing"
+description: |
+  Enterprise-grade chaos engineering implementation demonstrating advanced MLOps skills for $170-210k roles.
+  Build comprehensive failure injection, reliability testing, and recovery automation systems that enterprise
+  companies require. Showcase expertise in Kubernetes reliability, SRE practices, and automated incident response.
+  
+  This epic demonstrates enterprise-level reliability engineering capabilities:
+  - Automated chaos experiments with controlled failure injection
+  - Advanced SLA tracking with MTBF/MTTR measurements
+  - Intelligent recovery systems with automated rollback
+  - Production-ready incident response automation
+  - Enterprise monitoring with predictive alerting
+
+status: planned
+priority: critical
+business_value: |
+  - Demonstrates enterprise-grade SRE/MLOps expertise worth $170-210k
+  - Shows advanced Kubernetes reliability engineering skills
+  - Proves ability to design fault-tolerant AI systems at scale
+  - Validates incident response and automation capabilities
+  - Positions for Staff/Principal MLOps Engineer roles
+
+target_completion: 2025-08-20
+
+success_metrics:
+  - "99.9% system uptime during chaos experiments"
+  - "MTTR < 2 minutes for automated recovery"
+  - "100% SLA compliance tracking across all services"
+  - "Zero data loss during failure scenarios"
+  - "Automated incident response in < 30 seconds"
+  - "Interview demo ready with live chaos engineering"
+
+features:
+  - feature_id: feat-mlops-004-001
+    name: "Chaos Engineering Infrastructure"
+    description: "Production-ready chaos engineering platform with Chaos Toolkit and LitmusChaos"
+    priority: high
+    estimated_effort: 12
+
+  - feature_id: feat-mlops-004-002
+    name: "Advanced Failure Scenarios"
+    description: "Enterprise-grade failure injection covering all system components"
+    priority: high
+    estimated_effort: 10
+
+  - feature_id: feat-mlops-004-003
+    name: "SLA Tracking & Reliability Metrics"
+    description: "Comprehensive SLA monitoring with MTBF/MTTR measurement systems"
+    priority: high
+    estimated_effort: 8
+
+  - feature_id: feat-mlops-004-004
+    name: "Intelligent Recovery Systems"
+    description: "Automated recovery with circuit breakers and progressive rollback"
+    priority: high
+    estimated_effort: 10
+
+  - feature_id: feat-mlops-004-005
+    name: "Predictive Alerting & Incident Response"
+    description: "AI-powered anomaly detection with automated incident response"
+    priority: high
+    estimated_effort: 8
+
+  - feature_id: feat-mlops-004-006
+    name: "Interview Demo Platform"
+    description: "Interactive chaos engineering demonstration for technical interviews"
+    priority: medium
+    estimated_effort: 6
+
+dependencies:
+  - "MLOPS-003 vLLM cost optimization completed"
+  - "Kubernetes cluster operational with monitoring"
+  - "Prometheus/AlertManager configured"
+  - "All core services instrumented"
+
+risks:
+  - "Chaos experiments may cause temporary service disruption"
+  - "Complex recovery scenarios require extensive testing"
+  - "Integration with existing monitoring needs careful coordination"
+
+tags:
+  - chaos-engineering
+  - reliability-testing
+  - sla-tracking
+  - kubernetes
+  - sre-practices
+  - enterprise-mlops
+  - interview-preparation
+
+notes: |
+  This epic demonstrates enterprise-grade reliability engineering skills that distinguish
+  senior MLOps engineers at top-tier companies. The implementation showcases:
+  
+  - Advanced chaos engineering methodologies
+  - Production-ready SRE practices
+  - Automated incident response systems
+  - Sophisticated monitoring and alerting
+  - Enterprise-grade reliability patterns
+  
+  Perfect for technical interviews at companies requiring $170-210k MLOps expertise.

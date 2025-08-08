@@ -9,7 +9,6 @@ import structlog
 
 from ..models.article import Platform
 from ..services.achievement_integration import AchievementIntegration
-from ..core.config import get_settings
 
 router = APIRouter(prefix="/auto-publish", tags=["auto-publish"])
 logger = structlog.get_logger()

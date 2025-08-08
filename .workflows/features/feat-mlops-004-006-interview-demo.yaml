@@ -1,0 +1,212 @@
+feature_id: feat-mlops-004-006
+epic_id: mlops-004-chaos-engineering
+feature_name: "Interview Demo Platform"
+description: |
+  Create an interactive chaos engineering demonstration platform for technical interviews.
+  This provides a compelling live demonstration of enterprise-grade reliability engineering
+  skills that command $170-210k salaries at top-tier tech companies.
+
+priority: medium
+status: planned
+estimated_effort_hours: 6
+
+business_value: |
+  - Provides impressive live demonstration for interviews
+  - Shows real-time problem-solving capabilities
+  - Demonstrates depth of reliability engineering knowledge
+  - Creates memorable interview experience for hiring managers
+
+technical_details:
+  - Interactive web interface for chaos experiments
+  - Live monitoring dashboard with real-time metrics
+  - Guided chaos engineering scenarios
+  - Recovery demonstration workflows
+  - Interview-specific presentation materials
+
+acceptance_criteria:
+  - Interactive demo runs reliably in 5-10 minutes
+  - Live metrics dashboard shows real-time system state
+  - Multiple failure scenarios demonstrate different skills
+  - Recovery processes are clearly visible
+  - Demo can run offline for interview presentations
+
+tasks:
+  - task_id: mlops-004-006-001
+    title: "Build Interactive Demo Interface"
+    description: "Web interface for conducting chaos experiments"
+    type: implementation
+    estimated_hours: 2
+    requirements:
+      - Simple web UI for experiment selection
+      - Real-time experiment status display
+      - One-click chaos experiment triggers
+      - Visual system topology display
+    validation:
+      - UI loads quickly and reliably
+      - Experiments can be triggered easily
+      - Status updates appear in real-time
+      - System topology is clear and informative
+
+  - task_id: mlops-004-006-002
+    title: "Create Live Monitoring Dashboard"
+    description: "Real-time dashboard showing system health and metrics"
+    type: implementation
+    estimated_hours: 1.5
+    requirements:
+      - Real-time metrics visualization
+      - Service health status indicators
+      - Alert and recovery status display
+      - Performance trend charts
+    validation:
+      - Metrics update in real-time
+      - Health indicators are accurate
+      - Alerts visible immediately
+      - Charts show meaningful trends
+
+  - task_id: mlops-004-006-003
+    title: "Design Interview Scenarios"
+    description: "Curated chaos engineering scenarios for interviews"
+    type: implementation
+    estimated_hours: 1
+    requirements:
+      - 3-4 impressive but quick scenarios
+      - Clear narrative for each scenario
+      - Expected outcomes documented
+      - Recovery process visibility
+    validation:
+      - Scenarios complete in 2-3 minutes each
+      - Narratives are compelling
+      - Outcomes are predictable
+      - Recovery processes are visible
+
+  - task_id: mlops-004-006-004
+    title: "Build Presentation Materials"
+    description: "Supporting materials for interview presentations"
+    type: documentation
+    estimated_hours: 1
+    requirements:
+      - Architecture diagrams and explanations
+      - Chaos engineering methodology overview
+      - Enterprise reliability patterns
+      - Q&A preparation materials
+    validation:
+      - Diagrams are professional and clear
+      - Methodology explanation is concise
+      - Patterns demonstrate enterprise knowledge
+      - Q&A covers common questions
+
+  - task_id: mlops-004-006-005
+    title: "Create Offline Demo Capability"
+    description: "Self-contained demo for offline presentations"
+    type: implementation
+    estimated_hours: 1.5
+    requirements:
+      - Containerized demo environment
+      - Pre-recorded demo videos
+      - Slide deck with screenshots
+      - Setup instructions for laptops
+    validation:
+      - Demo runs completely offline
+      - Videos show all key scenarios
+      - Slides tell compelling story
+      - Setup is simple and reliable
+
+interview_scenarios:
+  scenario_1_network_partition:
+    title: "Microservices Network Partition Recovery"
+    duration: "3 minutes"
+    description: "Demonstrate circuit breakers and service mesh resilience"
+    steps:
+      - Show healthy system with live traffic
+      - Inject network partition between services
+      - Watch circuit breakers activate
+      - Show system maintaining core functionality
+      - Remove partition and watch recovery
+    talking_points:
+      - "Notice how circuit breakers prevent cascade failures..."
+      - "The service mesh automatically reroutes traffic..."
+      - "Recovery happens automatically without manual intervention..."
+  
+  scenario_2_resource_exhaustion:
+    title: "Auto-Scaling Under Resource Pressure"
+    duration: "2 minutes"  
+    description: "Show intelligent auto-scaling and resource management"
+    steps:
+      - Show baseline resource utilization
+      - Inject CPU/memory pressure
+      - Watch predictive alerting trigger
+      - Show auto-scaling activation
+      - Demonstrate load redistribution
+    talking_points:
+      - "Predictive alerting gives us early warning..."
+      - "Auto-scaling responds to both current and predicted load..."
+      - "Cost optimization prevents over-scaling..."
+  
+  scenario_3_database_failure:
+    title: "Database Failure with Automated Recovery"
+    duration: "2.5 minutes"
+    description: "Demonstrate database resilience and recovery automation"
+    steps:
+      - Show normal database operations
+      - Simulate database connection failure
+      - Watch connection pool management
+      - Show automated failover to read replicas
+      - Demonstrate recovery validation
+    talking_points:
+      - "Connection pooling prevents request pile-up..."
+      - "Automated failover maintains system availability..."
+      - "Recovery validation ensures data consistency..."
+
+demo_architecture:
+  components:
+    web_interface:
+      technology: "React + TypeScript"
+      purpose: "Interactive experiment control"
+      
+    metrics_dashboard:
+      technology: "Grafana embedded panels"
+      purpose: "Real-time system visualization"
+      
+    experiment_engine:
+      technology: "Python + LitmusChaos API"
+      purpose: "Chaos experiment orchestration"
+      
+    demo_data:
+      technology: "Synthetic workload generators"
+      purpose: "Realistic system load simulation"
+
+presentation_structure:
+  introduction: "2 minutes"
+  - Role of chaos engineering in enterprise systems
+  - Why reliability engineering matters for AI systems
+  - Architecture overview
+  
+  live_demo: "6 minutes"
+  - Scenario 1: Network partition (3 min)
+  - Scenario 2: Resource pressure (2 min)  
+  - Scenario 3: Database failure (1 min)
+  
+  technical_discussion: "2 minutes"
+  - Methodology and best practices
+  - Enterprise patterns implemented
+  - Q&A and deeper technical discussion
+
+technologies:
+  - React/TypeScript for demo UI
+  - Grafana for real-time dashboards
+  - Docker for containerization
+  - LitmusChaos for experiment execution
+  - Prometheus for metrics collection
+
+dependencies:
+  - Chaos engineering infrastructure operational
+  - All failure scenarios implemented
+  - Monitoring dashboards functional
+
+deliverables:
+  - Interactive demo interface
+  - Live monitoring dashboard
+  - Curated interview scenarios
+  - Presentation materials
+  - Offline demo capability
+  - Interview preparation guide

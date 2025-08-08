@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-08-07T16:20:20.447036",
+  "latency": {
+    "p95_ms": 59,
+    "p99_ms": 75,
+    "target_ms": 400,
+    "status": "\u2705 EXCELLENT"
+  },
+  "throughput": {
+    "current_qps": 920,
+    "target_qps": 1000,
+    "status": "\ud83d\udd27 SCALING"
+  },
+  "cost": {
+    "per_1k_tokens": 0.008,
+    "target_per_1k": 0.008,
+    "monthly_projection": 20736.0,
+    "status": "\u2705 OPTIMIZED"
+  },
+  "reliability": {
+    "error_rate_pct": 0.0,
+    "target_error_rate": 1.0,
+    "uptime_pct": 100.0,
+    "status": "\u2705 STABLE"
+  },
+  "optimization": {
+    "cache_hit_rate_pct": 95.0,
+    "db_pool_size": 20,
+    "batching_enabled": true,
+    "connection_pooling": true
+  }
+}

@@ -3,7 +3,6 @@
 
 import asyncio
 import json
-from datetime import datetime
 import sys
 
 sys.path.append(".")
@@ -60,13 +59,13 @@ This has transformed how I approach job interviews and performance reviews.
         formatted_content=LinkedInManualWorkflow.format_for_copy_paste(article),
     )
 
-    print(f"\n✅ Draft Created!")
+    print("\n✅ Draft Created!")
     print(f"Draft ID: {draft_result['draft_id']}")
-    print(f"\n📋 Instructions:")
+    print("\n📋 Instructions:")
     for i, instruction in enumerate(draft_result["instructions"], 1):
         print(f"   {i}. {instruction}")
 
-    print(f"\n📄 Formatted Content for LinkedIn:")
+    print("\n📄 Formatted Content for LinkedIn:")
     print("-" * 60)
     print(draft_result["content"])
     print("-" * 60)
@@ -81,9 +80,9 @@ This has transformed how I approach job interviews and performance reviews.
         post_url="https://www.linkedin.com/posts/example-post-url",
     )
 
-    print(f"\n✅ Post Confirmed!")
+    print("\n✅ Post Confirmed!")
     print(f"Status: {confirm_result['message']}")
-    print(f"\n📊 Next Steps:")
+    print("\n📊 Next Steps:")
     for step in confirm_result["next_steps"]:
         print(f"   • {step}")
 

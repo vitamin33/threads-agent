@@ -8,17 +8,15 @@ behavior with exponential backoff for API calls.
 
 import pytest
 import time
-import asyncio
 import threading
 import psutil
-from unittest.mock import Mock, patch, AsyncMock
-from typing import List, Dict, Any, Optional
+from unittest.mock import Mock
+from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from contextlib import contextmanager
 import httpx
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 @dataclass

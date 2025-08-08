@@ -6,7 +6,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime
 import calendar
 
 st.set_page_config(
@@ -461,7 +461,7 @@ with tab3:
             engagement_pct = f"{impact_score / 10:.1f}%"
 
             # Calculate days ago from created_at
-            from datetime import datetime, timedelta
+            from datetime import datetime
 
             try:
                 created_at = achievement.get("created_at", "")

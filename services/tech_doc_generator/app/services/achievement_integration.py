@@ -4,17 +4,15 @@ Automatically generates and publishes content based on achievements
 """
 
 import httpx
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import structlog
-from sqlalchemy.orm import Session
 
-from ..models.article import ArticleContent, Platform, ArticleStatus
+from ..models.article import ArticleContent, Platform
 from ..core.config import get_settings
 from ..services.content_generator import ContentGenerator
 from ..services.platform_publisher import PlatformPublisher
 from ..services.insight_predictor import InsightPredictor
-from ..core.database import get_db
 
 logger = structlog.get_logger()
 

@@ -8,7 +8,6 @@ sys.path.append(".")
 
 from app.models.article import ArticleContent, Platform
 from app.services.platform_publisher import PlatformPublisher
-from app.core.config import Settings
 
 
 # Mock settings for testing

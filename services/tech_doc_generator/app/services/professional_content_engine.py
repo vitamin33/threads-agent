@@ -6,8 +6,6 @@ focused on attracting AI job opportunities. Uses proven viral patterns
 but adjusted for professional, authority-building tone.
 """
 
-import asyncio
-from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import httpx
 import structlog

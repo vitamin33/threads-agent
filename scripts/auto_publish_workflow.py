@@ -8,7 +8,6 @@ import asyncio
 import httpx
 import os
 import sys
-from datetime import datetime
 from pathlib import Path
 
 # Add parent directory to path
@@ -108,16 +107,16 @@ async def run_publishing_workflow(test_mode: bool = True):
             result = publish_response.json()
 
             # 5. Display results
-            print(f"\n📊 Publishing Results:")
+            print("\n📊 Publishing Results:")
             print(f"   Status: {result['result']['status']}")
 
             if result["result"]["content"]:
-                print(f"\n   📝 Generated Content:")
+                print("\n   📝 Generated Content:")
                 print(f"      Title: {result['result']['content']['title']}")
                 print(f"      Word Count: {result['result']['content']['word_count']}")
                 print(f"      Insights: {result['result']['content']['insights']}")
 
-            print(f"\n   🌐 Platform Results:")
+            print("\n   🌐 Platform Results:")
             for platform, platform_result in result["result"]["platforms"].items():
                 if platform_result.get("success"):
                     print(f"      ✅ {platform}: Success")
@@ -135,7 +134,7 @@ async def run_publishing_workflow(test_mode: bool = True):
                 else:
                     print(f"      ❌ {platform}: {platform_result.get('error')}")
 
-            print(f"\n✅ Workflow completed successfully!")
+            print("\n✅ Workflow completed successfully!")
 
         except Exception as e:
             print(f"\n❌ Workflow error: {str(e)}")
@@ -158,7 +157,7 @@ async def check_platform_status():
                     user = response.json()
                     print(f"   Connected as: @{user.get('username')}")
                 else:
-                    print(f"   ❌ Invalid API key")
+                    print("   ❌ Invalid API key")
         except Exception as e:
             print(f"   ❌ Connection error: {e}")
     else:
@@ -179,7 +178,7 @@ async def check_platform_status():
     print("\n✅ LinkedIn: Manual workflow (no API key needed)")
 
     # Check service availability
-    print(f"\n🔍 Checking Tech Doc Generator Service...")
+    print("\n🔍 Checking Tech Doc Generator Service...")
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{TECH_DOC_API}/health")

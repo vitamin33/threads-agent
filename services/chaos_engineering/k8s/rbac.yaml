@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chaos-engineering
+  namespace: chaos-engineering
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    app.kubernetes.io/component: service-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: chaos-engineering
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    app.kubernetes.io/component: cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "nodes", "events"]
+  verbs: ["get", "list", "create", "delete", "patch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "patch"]
+- apiGroups: ["litmuschaos.io"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["create", "delete", "get", "list"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: chaos-engineering
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    app.kubernetes.io/component: cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: chaos-engineering
+subjects:
+- kind: ServiceAccount
+  name: chaos-engineering
+  namespace: chaos-engineering

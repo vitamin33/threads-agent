@@ -9,15 +9,13 @@ batch processing behavior for Celery task queuing.
 import pytest
 import time
 import threading
-from unittest.mock import Mock, patch, MagicMock, call
-from typing import List, Dict, Any, Optional
+from unittest.mock import Mock
+from typing import Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from contextlib import contextmanager
-import asyncio
 from queue import Queue, Empty
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 @dataclass
@@ -154,7 +152,7 @@ class TestCommentMonitorDatabaseConnectionPooling:
                     def first():
                         # Simulate database lookup
                         self.connection.execute_query(
-                            f"SELECT * FROM comments WHERE comment_id = ?"
+                            "SELECT * FROM comments WHERE comment_id = ?"
                         )
                         return None  # No existing comment found
 

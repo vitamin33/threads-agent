@@ -1,0 +1,50 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: orchestrator-pod-kill
+  namespace: litmus
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    experiment-type: pod-kill
+    target-service: orchestrator
+spec:
+  appinfo:
+    appns: default
+    applabel: "app=orchestrator"
+    appkind: "deployment"
+  engineState: "active"
+  chaosServiceAccount: litmus
+  experiments:
+  - name: pod-delete
+    spec:
+      components:
+        env:
+        # Duration for which chaos is injected
+        - name: TOTAL_CHAOS_DURATION
+          value: "30s"
+        # Interval between chaos injections
+        - name: CHAOS_INTERVAL
+          value: "10s"
+        # Force delete pod (true/false)
+        - name: FORCE
+          value: "false"
+        # Number of pods to kill (empty means random)
+        - name: PODS_AFFECTED_PERC
+          value: "50"
+        # Target specific pods by label
+        - name: TARGET_PODS
+          value: ""
+      probe:
+      - name: orchestrator-health-check
+        type: httpProbe
+        mode: Continuous
+        runProperties:
+          probeTimeout: 5s
+          retry: 3
+          interval: 2s
+        httpProbe/inputs:
+          url: http://orchestrator:8080/health
+          method:
+            get:
+              criteria: ==
+              responseCode: "200"

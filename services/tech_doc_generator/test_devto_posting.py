@@ -72,7 +72,7 @@ Our achievement collector service tracks:
 
             if response.status_code == 201:
                 result = response.json()
-                print(f"\n✅ SUCCESS! Article created as draft")
+                print("\n✅ SUCCESS! Article created as draft")
                 print(f"📝 Article ID: {result.get('id')}")
                 print(f"🔗 URL: {result.get('url')}")
                 print(f"📅 Created at: {result.get('created_at')}")
@@ -93,7 +93,7 @@ Our achievement collector service tracks:
                 return True
 
             else:
-                print(f"\n❌ Failed to create article")
+                print("\n❌ Failed to create article")
                 print(f"Status: {response.status_code}")
                 print(f"Response: {response.text}")
                 return False

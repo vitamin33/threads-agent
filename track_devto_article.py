@@ -10,7 +10,6 @@ import asyncio
 import httpx
 import argparse
 from datetime import datetime
-import json
 
 
 async def track_devto_article(article_url: str, title: str):

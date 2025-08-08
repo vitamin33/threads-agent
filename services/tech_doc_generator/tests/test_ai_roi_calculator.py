@@ -9,8 +9,6 @@ Comprehensive test suite covering:
 """
 
 import pytest
-from datetime import datetime
-from unittest.mock import AsyncMock, patch
 import asyncio
 
 from app.services.ai_roi_calculator import (

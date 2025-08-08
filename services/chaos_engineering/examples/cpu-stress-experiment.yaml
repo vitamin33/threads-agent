@@ -1,0 +1,63 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: persona-runtime-cpu-stress
+  namespace: litmus
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    experiment-type: cpu-stress
+    target-service: persona-runtime
+spec:
+  appinfo:
+    appns: default
+    applabel: "app=persona-runtime"
+    appkind: "deployment"
+  engineState: "active"
+  chaosServiceAccount: litmus
+  experiments:
+  - name: pod-cpu-hog
+    spec:
+      components:
+        env:
+        # Duration for which chaos is injected
+        - name: TOTAL_CHAOS_DURATION
+          value: "120s"
+        # Number of CPU cores to stress
+        - name: CPU_CORES
+          value: "1"
+        # CPU load percentage
+        - name: CPU_LOAD
+          value: "100"
+        # Percentage of pods to affect
+        - name: PODS_AFFECTED_PERC
+          value: "50"
+        # Container to target (empty means random)
+        - name: TARGET_CONTAINER
+          value: ""
+      probe:
+      - name: persona-runtime-response-time
+        type: httpProbe
+        mode: Continuous
+        runProperties:
+          probeTimeout: 30s
+          retry: 3
+          interval: 10s
+        httpProbe/inputs:
+          url: http://persona-runtime:8080/health
+          method:
+            get:
+              criteria: <=
+              responseTimeout: 10s
+      - name: system-cpu-usage
+        type: promProbe
+        mode: Edge
+        runProperties:
+          probeTimeout: 5s
+          retry: 2
+          interval: 5s
+        promProbe/inputs:
+          endpoint: http://prometheus:9090
+          query: avg(100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100))
+          comparator:
+            criteria: <=
+            value: "80"

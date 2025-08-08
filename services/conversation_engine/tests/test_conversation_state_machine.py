@@ -1,4 +1,3 @@
-import pytest
 from services.conversation_engine.state_machine import (
     ConversationStateMachine,
     ConversationState,

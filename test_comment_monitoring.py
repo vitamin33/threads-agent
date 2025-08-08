@@ -2,7 +2,6 @@
 """Test script for CRA-235 Comment Monitoring Pipeline"""
 
 import time
-import json
 import random
 from datetime import datetime
 

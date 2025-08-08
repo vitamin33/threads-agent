@@ -5,7 +5,6 @@ Content Drafts Management - View, edit, and manage generated content
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import json
 
 st.set_page_config(
     page_title="Content Drafts - Threads Agent", page_icon="📄", layout="wide"
@@ -104,7 +103,7 @@ if content_posts:
                 )
 
                 # Update button
-                if st.button(f"💾 Save Changes", key=f"save_{post['id']}"):
+                if st.button("💾 Save Changes", key=f"save_{post['id']}"):
                     updates = {"hook": hook_text, "body": body_text}
                     result = api_client.update_content_post(post["id"], updates)
                     if result.get("success", True):
@@ -136,7 +135,7 @@ if content_posts:
                     key=f"platforms_{post['id']}",
                 )
 
-                if st.button(f"🔄 Adapt Content", key=f"adapt_{post['id']}"):
+                if st.button("🔄 Adapt Content", key=f"adapt_{post['id']}"):
                     if platforms:
                         adapted_content = api_client.adapt_content_for_platforms(
                             post["id"], platforms
@@ -177,7 +176,7 @@ if content_posts:
                 action_col1, action_col2 = st.columns(2)
 
                 with action_col1:
-                    if st.button(f"✅ Mark Ready", key=f"ready_{post['id']}"):
+                    if st.button("✅ Mark Ready", key=f"ready_{post['id']}"):
                         result = api_client.update_content_post(
                             post["id"], {"status": "ready"}
                         )
@@ -186,13 +185,13 @@ if content_posts:
                             st.rerun()
 
                 with action_col2:
-                    if st.button(f"⏰ Schedule", key=f"schedule_{post['id']}"):
+                    if st.button("⏰ Schedule", key=f"schedule_{post['id']}"):
                         st.info("📅 Scheduling feature coming soon!")
 
                 # Danger zone
                 with st.expander("⚠️ Danger Zone"):
                     if st.button(
-                        f"🗑️ Delete", key=f"delete_{post['id']}", type="secondary"
+                        "🗑️ Delete", key=f"delete_{post['id']}", type="secondary"
                     ):
                         st.error("🚫 Delete functionality not yet implemented")
 

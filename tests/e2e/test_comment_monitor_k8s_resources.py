@@ -8,18 +8,12 @@ resource scaling, and pod resource management in Kubernetes environments.
 
 import pytest
 import time
-import asyncio
-import threading
-from unittest.mock import Mock, patch, AsyncMock
-from typing import List, Dict, Any, Optional
+from unittest.mock import Mock
+from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from contextlib import contextmanager
-import psutil
-import subprocess
-import json
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 @dataclass
@@ -150,7 +144,7 @@ class TestCommentMonitorK8sResourceConstraints:
 
                     # Call original deduplication
                     return self._deduplicate_comments(comments)
-                except Exception as e:
+                except Exception:
                     self.error_count += 1
                     raise
 
@@ -309,7 +303,7 @@ class TestCommentMonitorK8sResourceConstraints:
                 )
                 processing_time = time.time() - start_time
                 success = True
-            except Exception as e:
+            except Exception:
                 processing_time = time.time() - start_time
                 success = False
                 unique_comments = []

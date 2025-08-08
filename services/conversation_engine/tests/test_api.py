@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 from services.conversation_engine.main import app
 

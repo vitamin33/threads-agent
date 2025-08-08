@@ -1,0 +1,62 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: orchestrator-memory-pressure
+  namespace: litmus
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    experiment-type: memory-pressure
+    target-service: orchestrator
+spec:
+  appinfo:
+    appns: default
+    applabel: "app=orchestrator"
+    appkind: "deployment"
+  engineState: "active"
+  chaosServiceAccount: litmus
+  experiments:
+  - name: pod-memory-hog
+    spec:
+      components:
+        env:
+        # Duration for which chaos is injected
+        - name: TOTAL_CHAOS_DURATION
+          value: "90s"
+        # Memory to consume in MB
+        - name: MEMORY_CONSUMPTION
+          value: "500"
+        # Percentage of pods to affect
+        - name: PODS_AFFECTED_PERC
+          value: "33"
+        # Container to target
+        - name: TARGET_CONTAINER
+          value: ""
+      probe:
+      - name: orchestrator-api-availability
+        type: httpProbe
+        mode: Continuous
+        runProperties:
+          probeTimeout: 10s
+          retry: 3
+          interval: 5s
+        httpProbe/inputs:
+          url: http://orchestrator:8080/task
+          method:
+            post:
+              contentType: application/json
+              body: '{"persona_id": "test", "hook": "health check"}'
+              criteria: ==
+              responseCode: "200"
+      - name: memory-usage-check
+        type: promProbe
+        mode: Continuous
+        runProperties:
+          probeTimeout: 5s
+          retry: 2
+          interval: 10s
+        promProbe/inputs:
+          endpoint: http://prometheus:9090
+          query: avg(container_memory_usage_bytes{pod=~"orchestrator-.*"}) / avg(container_spec_memory_limit_bytes{pod=~"orchestrator-.*"}) * 100
+          comparator:
+            criteria: <=
+            value: "90"
