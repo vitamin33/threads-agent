@@ -198,12 +198,14 @@ resources: {}
 # ───────── monitoring & observability ─────────
 monitoring:
   prometheus:
-    enabled: false
+    enabled: true
     url: http://prometheus:9090
     persistence:
       enabled: true
       size: 2Gi
       storageClass: local-path
+  postgres:
+    enabled: true
   grafana:
     enabled: true
     adminPassword: admin123
