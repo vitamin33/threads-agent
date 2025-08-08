@@ -35,9 +35,9 @@ spec:
             - name: PERSONA_RUNTIME_URL
               value: "http://persona-runtime:8080"
             - name: POSTGRES_DSN
-              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
+              value: "postgresql://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/threads_agent"
             - name: DATABASE_URL
-              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
+              value: "postgresql://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/threads_agent"
             - name: QDRANT_URL
               value: "http://qdrant:6333"
             - name: VIRAL_ENGINE_URL

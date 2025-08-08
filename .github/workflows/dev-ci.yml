@@ -242,16 +242,6 @@ jobs:
             fi
           done
           
-      - name: Wait for PostgreSQL to be ready  
-        if: steps.e2e-check.outputs.skip_remaining == 'false'
-        run: |
-          echo "⏳ Waiting for PostgreSQL pod to be ready..."
-          kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s || {
-            echo "PostgreSQL not ready, checking status:"
-            kubectl get pods -l app=postgres
-            kubectl describe pod -l app=postgres
-          }
-          
       - name: Helm upgrade (dev cluster)
         if: steps.e2e-check.outputs.skip_remaining == 'false'
         id: helm
@@ -279,6 +269,18 @@ jobs:
                 fi
               }
           done
+
+      # ─── Wait for PostgreSQL after Helm deployment ──────────────────────────────
+      - name: Wait for PostgreSQL to be ready  
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          echo "⏳ Waiting for PostgreSQL StatefulSet to be ready..."
+          kubectl wait --for=condition=ready pod -l app=postgres --timeout=120s || {
+            echo "PostgreSQL not ready, checking status:"
+            kubectl get pods -l app=postgres -o wide
+            kubectl describe pod -l app=postgres
+            kubectl get statefulset postgres -o yaml | grep -A 10 -B 10 "conditions\|status"
+          }
 
       # ─── If Helm failed, dump cluster state ──────────────────────────────
       - name: Dump pod list + events if Helm failed
