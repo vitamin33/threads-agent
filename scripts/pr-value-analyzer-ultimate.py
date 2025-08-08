@@ -13,7 +13,7 @@ import json
 import subprocess
 import re
 from datetime import datetime
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 import os
 import sys
 import math
@@ -377,40 +377,72 @@ class UltimatePRValueAnalyzer:
         )
         scores["innovation_score"] = innovation_score
 
-        # UNIFIED SCORING APPROACH
-        # Take the best score from all categories
+        # UNIFIED SCORING APPROACH - Best Practice Implementation
+        # Always consider all valid scores, use weighted best-of approach
+        all_scores = []
+        
+        # Collect all non-zero scores with confidence weights
+        if perf_score > 0:
+            confidence_weight = categories.get("performance", 0) + 0.3  # Base confidence
+            all_scores.append((perf_score, confidence_weight, "performance"))
+            
+        if quality_score > 0:
+            confidence_weight = categories.get("quality", 0) + 0.3
+            all_scores.append((quality_score, confidence_weight, "quality"))
+            
+        if business_score > 0:
+            confidence_weight = categories.get("business", 0) + 0.3
+            all_scores.append((business_score, confidence_weight, "business"))
+            
+        if innovation_score > 0:
+            confidence_weight = categories.get("innovation", 0) + 0.3
+            all_scores.append((innovation_score, confidence_weight, "innovation"))
+
+        # Add category-specific bonuses for specialized PR types
         category_scores = []
-
-        # Add category-specific bonus based on PR focus
-        if categories.get("performance", 0) > 0.5:
-            category_scores.append(perf_score)
-        if categories.get("quality", 0) > 0.5:
-            category_scores.append(quality_score)
-        if categories.get("business", 0) > 0.5:
-            category_scores.append(business_score)
-        if categories.get("innovation", 0) > 0.5:
-            category_scores.append(innovation_score)
-
-        # Documentation bonus
-        if categories.get("documentation", 0) > 0.5:
-            doc_score = 7 + (categories["documentation"] * 3)
+        
+        # Documentation bonus - lower threshold since docs PRs are valuable
+        if categories.get("documentation", 0) > 0.3:
+            doc_score = 6 + (categories["documentation"] * 4)
             category_scores.append(doc_score)
 
-        # Infrastructure bonus
-        if categories.get("infrastructure", 0) > 0.5:
-            infra_score = 6 + (categories["infrastructure"] * 4)
+        # Infrastructure bonus - critical for system stability  
+        pr_title = self.metrics.get("technical_metrics", {}).get("title", "")
+        if categories.get("infrastructure", 0) > 0.3 or "fix" in pr_title.lower():
+            infra_score = 7 + (categories.get("infrastructure", 0.5) * 3)
             category_scores.append(infra_score)
+            
+        # Testing/stability bonus
+        if categories.get("testing", 0) > 0.3:
+            test_score = 6 + (categories["testing"] * 4)
+            category_scores.append(test_score)
 
-        # Calculate overall - best of approach with small multi-category bonus
-        if category_scores:
-            best_score = max(category_scores)
-            multi_bonus = min(1, len([s for s in category_scores if s > 6]) * 0.3)
-            overall = min(10, best_score + multi_bonus)
+        # Calculate overall using best practice weighted approach
+        if all_scores:
+            # Use confidence-weighted best score
+            weighted_scores = [(score * weight, score) for score, weight, cat in all_scores]
+            best_weighted = max(weighted_scores)
+            primary_score = best_weighted[1]  # Actual score value
+            
+            # Add category bonuses
+            if category_scores:
+                category_bonus = max(category_scores)
+                overall = max(primary_score, category_bonus)
+            else:
+                overall = primary_score
+                
+            # Multi-category excellence bonus
+            excellent_categories = len([s for s, w, c in all_scores if s > 6])
+            if excellent_categories > 1:
+                overall = min(10, overall + (excellent_categories - 1) * 0.5)
+                
+        elif category_scores:
+            # Pure infrastructure/docs/testing PR
+            overall = max(category_scores)
         else:
-            # Fallback to average
-            overall = (
-                perf_score + quality_score + business_score + innovation_score
-            ) / 4
+            # True fallback - but this should rarely happen
+            valid_scores = [s for s in [perf_score, quality_score, business_score, innovation_score] if s > 0]
+            overall = max(valid_scores) if valid_scores else 0
 
         scores["overall_score"] = round(overall, 1)
 
@@ -666,7 +698,7 @@ class UltimatePRValueAnalyzer:
 
         # Individual scores
         kpis = self.metrics["kpis"]
-        print(f"\n📈 Score Components:")
+        print("\n📈 Score Components:")
         print(
             f"  {'✅' if kpis['innovation_score'] >= 6 else '❌'} Innovation: {kpis['innovation_score']}/10"
         )
