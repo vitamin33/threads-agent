@@ -3,7 +3,7 @@
 
 # Use local images (already in values-ci.yaml)
 image:
-  repository: orchestrator
+  repository: docker.io/library/orchestrator
   tag: "local"
   pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
 
@@ -11,7 +11,7 @@ personaRuntime:
   enabled: true
   replicas: 1  # Minimal replicas for CI
   image:
-    repository: persona-runtime
+    repository: docker.io/library/persona-runtime
     tag: "local"
     pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
   resources:
@@ -26,7 +26,7 @@ personaRuntime:
 fakeThreads:
   enabled: true
   image:
-    repository: fake-threads
+    repository: docker.io/library/fake-threads
     tag: "local" 
     pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
   port: 9009
@@ -99,7 +99,7 @@ celeryWorker:
   enabled: true
   replicas: 1
   image:
-    repository: celery-worker
+    repository: docker.io/library/celery-worker
     tag: "local"
     pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
   resources:

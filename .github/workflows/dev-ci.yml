@@ -200,6 +200,13 @@ jobs:
           docker pull bitnami/postgresql:16
           docker pull rabbitmq:3.13-management-alpine
           docker pull qdrant/qdrant:v1.9.4
+          
+          # Tag images with registry prefix to match k3d import
+          echo "🏷️ Tagging images with registry prefix for k3d compatibility..."
+          docker tag orchestrator:local docker.io/library/orchestrator:local
+          docker tag celery-worker:local docker.io/library/celery-worker:local
+          docker tag persona-runtime:local docker.io/library/persona-runtime:local
+          docker tag fake-threads:local docker.io/library/fake-threads:local
 
           # Import only essential images to k3d (faster import)
           echo "🔍 Verifying images before import:"
@@ -207,10 +214,10 @@ jobs:
           
           echo "📦 Importing images to k3d cluster..."
           k3d image import \
-            orchestrator:local \
-            celery-worker:local \
-            persona-runtime:local \
-            fake-threads:local \
+            docker.io/library/orchestrator:local \
+            docker.io/library/celery-worker:local \
+            docker.io/library/persona-runtime:local \
+            docker.io/library/fake-threads:local \
             bitnami/postgresql:16 \
             rabbitmq:3.13-management-alpine \
             qdrant/qdrant:v1.9.4 \
