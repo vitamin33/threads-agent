@@ -1,5 +1,5 @@
-# Ultra-fast CI values - optimized for 8-minute total runtime
-# Extends values-ci.yaml with additional optimizations
+# Conservative CI values - optimized for reliability over speed
+# Focus on service reduction rather than aggressive resource limits
 
 # Use local images (already in values-ci.yaml)
 image:
@@ -16,13 +16,13 @@ personaRuntime:
     pullPolicy: Never
   resources:
     requests:
-      memory: "64Mi"   # Reduced memory
-      cpu: "25m"       # Reduced CPU
+      memory: "128Mi"  # Conservative memory for LLM service
+      cpu: "100m"      # More CPU for AI processing
     limits:
-      memory: "128Mi"  # Reduced limits
-      cpu: "100m"
+      memory: "256Mi"  # Adequate limits
+      cpu: "300m"
 
-# Critical: Optimize fake-threads (source of timeout)
+# Conservative fake-threads config (avoid over-optimization)
 fakeThreads:
   enabled: true
   image:
@@ -33,28 +33,28 @@ fakeThreads:
   replicas: 1
   resources:
     requests:
-      memory: "32Mi"   # Minimal memory
-      cpu: "10m"       # Minimal CPU
+      memory: "64Mi"   # Reasonable memory
+      cpu: "50m"       # Reasonable CPU
     limits:
-      memory: "64Mi"   # Small limits
-      cpu: "50m"
-  # Fast health checks
+      memory: "128Mi"  # Conservative limits
+      cpu: "200m"
+  # Reasonable health checks
   livenessProbe:
     httpGet:
       path: /health
       port: 9009
-    initialDelaySeconds: 5   # Reduced from default
-    periodSeconds: 10        # Check every 10s
-    timeoutSeconds: 3        # Quick timeout
+    initialDelaySeconds: 10   # Give it time to start
+    periodSeconds: 20        # Less frequent checks
+    timeoutSeconds: 5        # Reasonable timeout
     successThreshold: 1
     failureThreshold: 3
   readinessProbe:
     httpGet:
       path: /health
       port: 9009
-    initialDelaySeconds: 2   # Very fast startup
-    periodSeconds: 5         # Check every 5s
-    timeoutSeconds: 2        # Quick timeout
+    initialDelaySeconds: 5   # Reasonable startup time
+    periodSeconds: 10        # Less frequent checks
+    timeoutSeconds: 5        # Reasonable timeout
     successThreshold: 1
     failureThreshold: 3
 
@@ -107,9 +107,17 @@ celeryWorker:
     limits:
       memory: "256Mi"  # Should be enough with concurrency=2
       cpu: "200m"
-  # Disable health checks for CI speed (celery is lightweight)
-  # livenessProbe: {}   # Disabled
-  # readinessProbe: {}  # Disabled
+  # Conservative health checks for CI reliability
+  livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
 
 viralEngine:
   enabled: false
