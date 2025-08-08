@@ -5,14 +5,13 @@ This module tests the command-line interface for managing chaos experiments.
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, call
+from unittest.mock import Mock, patch, AsyncMock
 from click.testing import CliRunner
 import json
-import yaml
-from typing import Dict, Any
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from chaos_cli import (
@@ -21,7 +20,7 @@ from chaos_cli import (
     list_experiments,
     get_experiment_status,
     stop_experiment,
-    create_experiment_from_yaml
+    create_experiment_from_yaml,
 )
 
 
@@ -41,7 +40,7 @@ class TestChaosCLI:
         executor.emergency_stop = AsyncMock()
         return executor
 
-    @pytest.fixture  
+    @pytest.fixture
     def mock_litmus_manager(self):
         """Mock LitmusChaos manager."""
         manager = Mock()
@@ -53,16 +52,16 @@ class TestChaosCLI:
 
     def test_cli_main_command_shows_help(self, runner):
         """Test that the main CLI command shows help information."""
-        result = runner.invoke(cli, ['--help'])
-        
-        assert result.exit_code == 0
-        assert 'Chaos Engineering CLI' in result.output
-        assert 'run' in result.output
-        assert 'list' in result.output  
-        assert 'status' in result.output
-        assert 'stop' in result.output
+        result = runner.invoke(cli, ["--help"])
 
-    @patch('chaos_cli.ChaosExperimentExecutor')
+        assert result.exit_code == 0
+        assert "Chaos Engineering CLI" in result.output
+        assert "run" in result.output
+        assert "list" in result.output
+        assert "status" in result.output
+        assert "stop" in result.output
+
+    @patch("chaos_cli.ChaosExperimentExecutor")
     def test_run_pod_kill_experiment_command(self, mock_executor_class, runner):
         """Test running a pod kill experiment via CLI."""
         # Arrange
@@ -79,33 +78,40 @@ class TestChaosCLI:
         mock_executor_class.return_value = mock_executor
 
         # Act
-        result = runner.invoke(cli, [
-            'run',
-            '--type', 'pod_kill',
-            '--name', 'test-pod-kill',
-            '--namespace', 'default',
-            '--target-app', 'orchestrator',
-            '--duration', '30'
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--type",
+                "pod_kill",
+                "--name",
+                "test-pod-kill",
+                "--namespace",
+                "default",
+                "--target-app",
+                "orchestrator",
+                "--duration",
+                "30",
+            ],
+        )
 
-        # Assert  
+        # Assert
         assert result.exit_code == 0
-        assert 'Experiment test-pod-kill completed with status: COMPLETED' in result.output
-        assert 'Execution time: 45.2 seconds' in result.output
-        assert 'Safety checks: PASSED' in result.output
+        assert (
+            "Experiment test-pod-kill completed with status: COMPLETED" in result.output
+        )
+        assert "Execution time: 45.2 seconds" in result.output
+        assert "Safety checks: PASSED" in result.output
 
-    @patch('chaos_cli.ChaosExperimentExecutor')
+    @patch("chaos_cli.ChaosExperimentExecutor")
     def test_run_experiment_with_json_config(self, mock_executor_class, runner):
         """Test running experiment with JSON configuration file."""
         # Arrange
         config_data = {
             "name": "network-chaos-test",
             "type": "network_partition",
-            "target": {
-                "namespace": "default",
-                "app_label": "celery-worker"
-            },
-            "duration": 60
+            "target": {"namespace": "default", "app_label": "celery-worker"},
+            "duration": 60,
         }
 
         mock_executor = Mock()
@@ -122,79 +128,86 @@ class TestChaosCLI:
 
         # Act - using temporary file
         with runner.isolated_filesystem():
-            with open('config.json', 'w') as f:
+            with open("config.json", "w") as f:
                 json.dump(config_data, f)
-            
-            result = runner.invoke(cli, [
-                'run',
-                '--config', 'config.json'
-            ])
+
+            result = runner.invoke(cli, ["run", "--config", "config.json"])
 
         # Assert
         assert result.exit_code == 0
-        assert 'network-chaos-test' in result.output
+        assert "network-chaos-test" in result.output
         mock_executor.execute_experiment.assert_called_once()
 
-    @patch('chaos_cli.LitmusChaosManager')
+    @patch("chaos_cli.LitmusChaosManager")
     def test_list_experiments_command(self, mock_litmus_class, runner):
         """Test listing all chaos experiments."""
         # Arrange
         mock_manager = Mock()
-        mock_manager.list_experiments = AsyncMock(return_value={
-            "items": [
-                {
-                    "metadata": {"name": "exp-1", "creationTimestamp": "2024-01-01T10:00:00Z"},
-                    "status": {"phase": "Running"}
-                },
-                {
-                    "metadata": {"name": "exp-2", "creationTimestamp": "2024-01-01T11:00:00Z"},
-                    "status": {"phase": "Completed"}
-                }
-            ]
-        })
+        mock_manager.list_experiments = AsyncMock(
+            return_value={
+                "items": [
+                    {
+                        "metadata": {
+                            "name": "exp-1",
+                            "creationTimestamp": "2024-01-01T10:00:00Z",
+                        },
+                        "status": {"phase": "Running"},
+                    },
+                    {
+                        "metadata": {
+                            "name": "exp-2",
+                            "creationTimestamp": "2024-01-01T11:00:00Z",
+                        },
+                        "status": {"phase": "Completed"},
+                    },
+                ]
+            }
+        )
         mock_litmus_class.return_value = mock_manager
 
         # Act
-        result = runner.invoke(cli, ['list'])
+        result = runner.invoke(cli, ["list"])
 
         # Assert
         assert result.exit_code == 0
-        assert 'exp-1' in result.output
-        assert 'exp-2' in result.output
-        assert 'Running' in result.output
-        assert 'Completed' in result.output
+        assert "exp-1" in result.output
+        assert "exp-2" in result.output
+        assert "Running" in result.output
+        assert "Completed" in result.output
 
-    @patch('chaos_cli.LitmusChaosManager')
+    @patch("chaos_cli.LitmusChaosManager")
     def test_get_experiment_status_command(self, mock_litmus_class, runner):
         """Test getting status of a specific experiment."""
         # Arrange
         experiment_name = "test-experiment"
         mock_manager = Mock()
-        mock_manager.get_experiment_status = AsyncMock(return_value={
-            "metadata": {"name": experiment_name},
-            "status": {
-                "phase": "Completed",
-                "experimentStatus": {
-                    "pod-delete": {
-                        "verdict": "Pass",
-                        "probeSuccessPercentage": "100"
-                    }
-                }
+        mock_manager.get_experiment_status = AsyncMock(
+            return_value={
+                "metadata": {"name": experiment_name},
+                "status": {
+                    "phase": "Completed",
+                    "experimentStatus": {
+                        "pod-delete": {
+                            "verdict": "Pass",
+                            "probeSuccessPercentage": "100",
+                        }
+                    },
+                },
             }
-        })
+        )
         mock_litmus_class.return_value = mock_manager
 
         # Act
-        result = runner.invoke(cli, ['status', experiment_name])
+        result = runner.invoke(cli, ["status", experiment_name])
 
         # Assert
         assert result.exit_code == 0
         assert experiment_name in result.output
-        assert 'Completed' in result.output
-        assert 'Pass' in result.output
-        assert '100' in result.output
+        assert "Completed" in result.output
+        assert "Pass" in result.output
+        assert "100" in result.output
 
-    @patch('chaos_cli.ChaosExperimentExecutor')
+    @patch("chaos_cli.ChaosExperimentExecutor")
     def test_stop_experiment_command(self, mock_executor_class, runner):
         """Test stopping a running experiment via emergency stop."""
         # Arrange
@@ -203,11 +216,11 @@ class TestChaosCLI:
         mock_executor_class.return_value = mock_executor
 
         # Act
-        result = runner.invoke(cli, ['stop', 'test-experiment'])
+        result = runner.invoke(cli, ["stop", "test-experiment"])
 
         # Assert
         assert result.exit_code == 0
-        assert 'Emergency stop triggered' in result.output
+        assert "Emergency stop triggered" in result.output
         mock_executor.emergency_stop.assert_called_once()
 
     def test_create_experiment_from_yaml_command(self, runner):
@@ -237,28 +250,33 @@ class TestChaosCLI:
 
         # Act
         with runner.isolated_filesystem():
-            with open('chaos-experiment.yaml', 'w') as f:
+            with open("chaos-experiment.yaml", "w") as f:
                 f.write(yaml_config)
-            
-            result = runner.invoke(cli, [
-                'create',
-                '--yaml', 'chaos-experiment.yaml'
-            ])
+
+            result = runner.invoke(cli, ["create", "--yaml", "chaos-experiment.yaml"])
 
         # Assert
         assert result.exit_code == 0
-        assert 'cpu-stress-test' in result.output
+        assert "cpu-stress-test" in result.output
 
     def test_run_experiment_with_invalid_type_shows_error(self, runner):
         """Test that invalid experiment type shows appropriate error."""
-        result = runner.invoke(cli, [
-            'run',
-            '--type', 'invalid_type',
-            '--name', 'test',
-            '--namespace', 'default',
-            '--target-app', 'app',
-            '--duration', '30'
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "run",
+                "--type",
+                "invalid_type",
+                "--name",
+                "test",
+                "--namespace",
+                "default",
+                "--target-app",
+                "app",
+                "--duration",
+                "30",
+            ],
+        )
 
         assert result.exit_code != 0
         # Click provides its own validation message for choices
@@ -267,29 +285,24 @@ class TestChaosCLI:
 
     def test_run_experiment_without_required_args_shows_error(self, runner):
         """Test that missing required arguments show error."""
-        result = runner.invoke(cli, ['run'])
+        result = runner.invoke(cli, ["run"])
 
         assert result.exit_code != 0
 
-    @patch('chaos_cli.LitmusChaosManager')
+    @patch("chaos_cli.LitmusChaosManager")
     def test_list_experiments_with_output_format_json(self, mock_litmus_class, runner):
         """Test listing experiments with JSON output format."""
         # Arrange
         experiments_data = {
-            "items": [
-                {
-                    "metadata": {"name": "exp-1"},
-                    "status": {"phase": "Running"}
-                }
-            ]
+            "items": [{"metadata": {"name": "exp-1"}, "status": {"phase": "Running"}}]
         }
-        
+
         mock_manager = Mock()
         mock_manager.list_experiments = AsyncMock(return_value=experiments_data)
         mock_litmus_class.return_value = mock_manager
 
         # Act
-        result = runner.invoke(cli, ['list', '--output', 'json'])
+        result = runner.invoke(cli, ["list", "--output", "json"])
 
         # Assert
         assert result.exit_code == 0
@@ -300,11 +313,11 @@ class TestChaosCLI:
 
     def test_cli_version_command(self, runner):
         """Test that version command works correctly."""
-        result = runner.invoke(cli, ['--version'])
+        result = runner.invoke(cli, ["--version"])
 
         assert result.exit_code == 0
-        assert 'Chaos Engineering CLI' in result.output
-        assert 'version' in result.output.lower()
+        assert "Chaos Engineering CLI" in result.output
+        assert "version" in result.output.lower()
 
 
 class TestCLIHelpers:
@@ -319,15 +332,11 @@ class TestCLIHelpers:
             experiment_name="test",
             status=Mock(value="COMPLETED"),
             execution_time=30.0,
-            safety_checks_passed=True
+            safety_checks_passed=True,
         )
         mock_executor.execute_experiment = AsyncMock(return_value=mock_result)
 
-        experiment_config = {
-            "name": "test",
-            "type": "pod_kill",
-            "duration": 30
-        }
+        experiment_config = {"name": "test", "type": "pod_kill", "duration": 30}
 
         # Act
         result = await run_experiment(mock_executor, experiment_config)
@@ -352,7 +361,7 @@ class TestCLIHelpers:
         assert result == expected_result
         mock_manager.list_experiments.assert_called_once()
 
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_get_experiment_status_helper_function(self):
         """Test the get_experiment_status helper function."""
         # Arrange
@@ -360,7 +369,7 @@ class TestCLIHelpers:
         mock_manager = Mock()
         expected_status = {
             "metadata": {"name": experiment_name},
-            "status": {"phase": "Running"}
+            "status": {"phase": "Running"},
         }
         mock_manager.get_experiment_status = AsyncMock(return_value=expected_status)
 

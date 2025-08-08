@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Minimal Prometheus
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: threads-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+
+  # Minimal Grafana
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: threads-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - monitoring
+
+  # Mock metrics generator (for demo)
+  metrics-generator:
+    image: python:3.12-slim
+    container_name: threads-metrics-generator
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./monitoring/mock_metrics.py:/app/mock_metrics.py
+    command: python /app/mock_metrics.py
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  monitoring:
+    driver: bridge
