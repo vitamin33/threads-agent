@@ -6,9 +6,6 @@ import pytest
 from unittest.mock import Mock, AsyncMock
 import numpy as np
 
-# Configure asyncio for tests
-pytest_plugins = ["pytest_asyncio"]
-
 # Set asyncio mode for pytest-asyncio
 pytestmark = pytest.mark.asyncio
 
