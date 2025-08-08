@@ -326,17 +326,60 @@ jobs:
           echo "\n🔍 POD RESOURCE USAGE:"
           kubectl top pods 2>/dev/null || echo "Metrics server not available"
           
-          echo "\n🏥 SPECIFIC SERVICE ANALYSIS:"
-          for service in fake-threads celery-worker persona-runtime orchestrator; do
-            echo "\n--- $service ---"
-            kubectl describe deployment $service 2>/dev/null | grep -A 10 -B 5 "Conditions\|Events" || echo "No deployment found"
+          echo "\n🏥 FAKE-THREADS DEEP DIVE (PRIMARY ISSUE):"
+          echo "============================================"
+          
+          # Get fake-threads pod name
+          FAKE_THREADS_POD=$(kubectl get pods -l app=fake-threads --no-headers 2>/dev/null | head -1 | awk '{print $1}')
+          
+          if [ ! -z "$FAKE_THREADS_POD" ]; then
+            echo "\n🔍 FAKE-THREADS POD: $FAKE_THREADS_POD"
             
-            # Get pod for this service
-            POD=$(kubectl get pods -l app=$service --no-headers 2>/dev/null | head -1 | awk '{print $1}')
-            if [ ! -z "$POD" ]; then
-              echo "Pod: $POD"
-              kubectl get pod $POD -o yaml | grep -A 10 -B 5 "conditions\|containerStatuses" || true
-            fi
+            echo "\n📋 POD YAML (conditions & container status):"
+            kubectl get pod $FAKE_THREADS_POD -o yaml | grep -A 20 -B 5 "conditions:\|containerStatuses:" || true
+            
+            echo "\n🏥 HEALTH CHECK DETAILS:"
+            kubectl get pod $FAKE_THREADS_POD -o json | jq '.spec.containers[0] | {
+              name: .name,
+              ports: .ports,
+              livenessProbe: .livenessProbe,
+              readinessProbe: .readinessProbe,
+              resources: .resources
+            }' 2>/dev/null || echo "jq not available"
+            
+            echo "\n📊 POD EVENTS:"
+            kubectl get events --field-selector involvedObject.name=$FAKE_THREADS_POD --sort-by='.lastTimestamp' || true
+            
+            echo "\n🔬 CONTAINER STATE DETAILS:"
+            kubectl get pod $FAKE_THREADS_POD -o json | jq '.status.containerStatuses[] | {
+              name: .name,
+              ready: .ready,
+              restartCount: .restartCount,
+              state: .state,
+              lastState: .lastState
+            }' 2>/dev/null || echo "jq not available"
+            
+            echo "\n📝 RECENT LOGS:"
+            kubectl logs $FAKE_THREADS_POD --tail=50 || echo "No logs available"
+            
+            echo "\n🔧 TRYING MANUAL HEALTH CHECK:"
+            kubectl exec $FAKE_THREADS_POD -- curl -sf http://localhost:9009/health 2>/dev/null || {
+              echo "Manual health check failed"
+              kubectl exec $FAKE_THREADS_POD -- ps aux || echo "Cannot list processes"
+              kubectl exec $FAKE_THREADS_POD -- netstat -tlnp || echo "Cannot check ports"
+            }
+            
+          else
+            echo "❌ No fake-threads pod found!"
+          fi
+          
+          echo "\n🚀 FAKE-THREADS DEPLOYMENT DETAILS:"
+          kubectl describe deployment fake-threads | grep -A 15 -B 15 "Conditions\|Events\|Replicas" || true
+          
+          echo "\n🏥 OTHER SERVICES (BRIEF):"
+          for service in celery-worker persona-runtime orchestrator; do
+            echo "\n--- $service ---"
+            kubectl describe deployment $service 2>/dev/null | grep -A 5 -B 5 "Conditions" || echo "No deployment found"
           done
           
       - name: Wait for core pods (parallel)
@@ -509,12 +552,65 @@ jobs:
             kill $PF_ORCH $PF_THREADS $PF_QDRANT $PF_POSTGRES || true
           fi
 
-      # ─── EXTRA: show Celery-worker logs if the tests failed ──────────────
+      # ─── CRITICAL: Enhanced failure diagnostics focused on fake-threads ──────────────
       - name: Comprehensive failure diagnostics
         if: failure()
         run: |
           echo "🚨 COMPREHENSIVE FAILURE ANALYSIS"
           echo "================================="
+          echo "Focus: Understanding why fake-threads fails in CI but works locally"
+          
+          echo "\\n🎯 FAKE-THREADS ROOT CAUSE ANALYSIS:"
+          echo "===================================="
+          
+          FAKE_THREADS_POD=$(kubectl get pods -l app=fake-threads --no-headers 2>/dev/null | head -1 | awk '{print $1}')
+          
+          if [ ! -z "$FAKE_THREADS_POD" ]; then
+            echo "\\nPod exists: $FAKE_THREADS_POD"
+            
+            echo "\\n🔍 EXACT POD STATE:"
+            kubectl describe pod $FAKE_THREADS_POD | grep -A 30 "Conditions:\\|Events:"
+            
+            echo "\\n🏥 READINESS/LIVENESS PROBE STATUS:"
+            kubectl get pod $FAKE_THREADS_POD -o json | jq '.status.containerStatuses[0] | {
+              name: .name,
+              ready: .ready,
+              restartCount: .restartCount,
+              state: .state,
+              lastState: .lastState
+            }' 2>/dev/null || echo "Raw status check..."
+            kubectl get pod $FAKE_THREADS_POD -o yaml | grep -A 10 -B 10 "ready:\\|restartCount:"
+            
+            echo "\\n📝 ALL FAKE-THREADS LOGS:"
+            kubectl logs $FAKE_THREADS_POD --previous 2>/dev/null || echo "No previous logs"
+            kubectl logs $FAKE_THREADS_POD || echo "No current logs"
+            
+            echo "\\n🔧 MANUAL SERVICE TESTS:"
+            echo "Testing if fake-threads process is running..."
+            kubectl exec $FAKE_THREADS_POD -- ps aux | grep -v grep | grep fake || echo "Process check failed"
+            
+            echo "Testing if port 9009 is listening..."
+            kubectl exec $FAKE_THREADS_POD -- netstat -tlnp | grep 9009 || echo "Port not listening"
+            
+            echo "Testing health endpoint manually..."
+            kubectl exec $FAKE_THREADS_POD -- curl -v http://localhost:9009/health || echo "Health check failed"
+            
+          else
+            echo "\\n❌ NO FAKE-THREADS POD EXISTS!"
+            echo "This means the deployment itself failed to create pods"
+          fi
+          
+          echo "\\n📊 CI vs LOCAL ENVIRONMENT COMPARISON:"
+          echo "====================================="
+          
+          echo "\\nHelm values being used:"
+          helm get values threads | grep -A 20 -B 5 "fakeThreads"
+          
+          echo "\\nDeployment spec:"
+          kubectl get deployment fake-threads -o yaml | grep -A 20 -B 5 "spec:\\|containers:"
+          
+          echo "\\nResource constraints:"
+          kubectl describe nodes | grep -A 10 "Allocatable:\\|Allocated resources:"
           
           echo "\\n📊 FINAL POD STATUS:"
           kubectl get pods -o wide
