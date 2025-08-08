@@ -5,7 +5,7 @@
 image:
   repository: orchestrator
   tag: "local"
-  pullPolicy: Never
+  pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
 
 personaRuntime:
   enabled: true
@@ -13,7 +13,7 @@ personaRuntime:
   image:
     repository: persona-runtime
     tag: "local"
-    pullPolicy: Never
+    pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
   resources:
     requests:
       memory: "128Mi"  # Conservative memory for LLM service
@@ -28,7 +28,7 @@ fakeThreads:
   image:
     repository: fake-threads
     tag: "local" 
-    pullPolicy: Never
+    pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
   port: 9009
   replicas: 1
   resources:
@@ -101,7 +101,7 @@ celeryWorker:
   image:
     repository: celery-worker
     tag: "local"
-    pullPolicy: Never
+    pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
   resources:
     requests:
       memory: "128Mi"  # Reasonable for 2 worker processes
@@ -157,8 +157,6 @@ monitoring:
 
 # Global deployment optimizations
 global:
-  # Use IfNotPresent for CI (Never doesn't work reliably in GitHub Actions)
-  imagePullPolicy: IfNotPresent
   # Reduced resource requests across all services
   resources:
     requests:

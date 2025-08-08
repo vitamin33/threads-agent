@@ -227,9 +227,30 @@ jobs:
           
           # Verify images are available in the cluster
           echo "🔍 Checking imported images in k3d cluster:"
+          echo "\nFull image list in k3d:"
+          docker exec k3d-dev-server-0 crictl images || echo "Failed to list images"
+          
+          echo "\nChecking specific images:"
           for img in orchestrator:local celery-worker:local persona-runtime:local fake-threads:local; do
-            docker exec k3d-dev-server-0 crictl images | grep "$img" && echo "✅ $img found" || echo "❌ $img NOT FOUND"
+            if docker exec k3d-dev-server-0 crictl images | grep -q "$img"; then
+              echo "✅ $img found in cluster"
+              # Get the full image ID
+              IMAGE_ID=$(docker exec k3d-dev-server-0 crictl images | grep "$img" | awk '{print $3}')
+              echo "   Image ID: $IMAGE_ID"
+            else
+              echo "❌ $img NOT FOUND in cluster"
+              # Check if it exists in local Docker
+              if docker images | grep -q "$img"; then
+                echo "   🔍 Image exists in local Docker but not in k3d cluster"
+                docker images | grep "$img"
+              else
+                echo "   🔍 Image not found in local Docker either"
+              fi
+            fi
           done
+          
+          echo "\n🔍 Checking imagePullPolicy in values:"
+          grep -A5 -B5 "imagePullPolicy" chart/values-ci-fast.yaml || true
 
       # ————————————————————————————————
       # 5.  Helm install with CI values (only if needed)
@@ -273,22 +294,91 @@ jobs:
           # Create OpenAI secret before Helm deployment
           kubectl create secret generic openai-secret --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" --dry-run=client -o yaml | kubectl apply -f -
           
+          # Start background monitoring of pod status
+          {
+            while true; do
+              echo "\n🔍 POD STATUS CHECK at $(date -u +%H:%M:%S):"
+              kubectl get pods -o wide | grep -E "fake-threads|postgres|qdrant|celery-worker" || true
+              echo "\n📋 PENDING PODS:"
+              kubectl get pods --field-selector=status.phase=Pending -o json | jq -r '.items[] | "\(.metadata.name): \(.status.conditions)"' 2>/dev/null || true
+              echo "\n🚨 IMAGE PULL ISSUES:"
+              kubectl get pods -o json | jq -r '.items[] | select(.status.containerStatuses[]?.state.waiting.reason == "ErrImageNeverPull" or .status.containerStatuses[]?.state.waiting.reason == "ImagePullBackOff") | "\(.metadata.name): \(.status.containerStatuses[].state.waiting.reason)"' 2>/dev/null || true
+              echo "\n📊 EVENTS (last 10):"
+              kubectl get events --sort-by='.lastTimestamp' | tail -n 10
+              sleep 10
+            done
+          } &
+          MONITOR_PID=$!
+          
           # Retry helm install up to 3 times for CI reliability
+          HELM_SUCCESS=false
           for i in 1 2 3; do
+            echo "\n🚀 HELM INSTALL ATTEMPT $i at $(date -u +%H:%M:%S)"
             helm upgrade --install threads ./chart \
               -f chart/values-ci-fast.yaml \
               --set openai.apiKey="$OPENAI_API_KEY" \
-              --wait --timeout 480s --debug && break || {
-                echo "Helm install attempt $i failed"
+              --wait --timeout 300s --debug && {
+                HELM_SUCCESS=true
+                break
+              } || {
+                echo "\n❌ Helm install attempt $i failed at $(date -u +%H:%M:%S)"
+                echo "\n🔍 DEPLOYMENT STATUS:"
+                kubectl get deployments -o wide
+                echo "\n🔍 STATEFULSET STATUS:"
+                kubectl get statefulsets -o wide
+                echo "\n🔍 FAKE-THREADS SPECIFIC DEBUG:"
+                kubectl describe deployment fake-threads || echo "No fake-threads deployment found"
+                kubectl describe pod -l app=fake-threads || echo "No fake-threads pods found"
+                
                 if [ $i -lt 3 ]; then
                   echo "Checking migration status..."
                   kubectl describe job -l app.kubernetes.io/name=threads-migrations || true
                   kubectl logs -l app.kubernetes.io/name=threads-migrations --tail=50 || true
-                  echo "Retrying in 30s..."
-                  sleep 30
+                  echo "Retrying in 20s..."
+                  sleep 20
+                else
+                  # Final attempt failed - gather all debug info
+                  echo "\n🚨 FINAL FAILURE - COMPREHENSIVE DEBUG INFO:"
+                  kubectl get all -o wide
+                  echo "\n📋 HELM RELEASE STATUS:"
+                  helm list
+                  helm status threads || true
                 fi
               }
           done
+          
+          # Stop monitoring
+          kill $MONITOR_PID 2>/dev/null || true
+          
+          if [ "$HELM_SUCCESS" != "true" ]; then
+            echo "❌ All Helm install attempts failed"
+            exit 1
+          fi
+
+      # ─── Debug Image Pull Policy and Pod Issues ──────────────────────────────
+      - name: Debug deployment issues
+        if: steps.helm.outcome == 'failure' && steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          echo "🔍 DEBUGGING DEPLOYMENT ISSUES"
+          echo "=============================="
+          
+          echo "\n📋 Checking all pod statuses:"
+          kubectl get pods -o wide
+          
+          echo "\n🔍 Checking fake-threads deployment spec:"
+          kubectl get deployment fake-threads -o yaml | grep -A 20 "spec:" | grep -E "image:|imagePullPolicy:|repository:|tag:" || echo "No deployment found"
+          
+          echo "\n🔍 Checking pod specs for imagePullPolicy:"
+          kubectl get pods -o json | jq -r '.items[] | select(.metadata.name | contains("fake-threads")) | {name: .metadata.name, containers: .spec.containers[] | {name: .name, image: .image, imagePullPolicy: .imagePullPolicy}}' || echo "No pods found"
+          
+          echo "\n🔍 Checking if images are available:"
+          kubectl get pods -o json | jq -r '.items[] | select(.status.containerStatuses[].state.waiting.reason == "ErrImageNeverPull") | "\(.metadata.name): \(.spec.containers[].image) - \(.status.containerStatuses[].state.waiting.reason)"' || echo "No image pull errors"
+          
+          echo "\n🔍 Rendered Helm values:"
+          helm get values threads || echo "No release found"
+          
+          echo "\n🔍 Pod events:"
+          kubectl get events --field-selector involvedObject.kind=Pod --sort-by='.lastTimestamp' | tail -20
 
       # ─── Wait for PostgreSQL after Helm deployment ──────────────────────────────
       - name: Wait for PostgreSQL to be ready  
