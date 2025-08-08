@@ -1,5 +1,5 @@
-# Conservative CI values - optimized for reliability over speed
-# Focus on service reduction rather than aggressive resource limits
+# CI values with probes disabled for debugging
+# Copy all values from values-ci-fast.yaml and override fake-threads probes
 
 # Use local images (already in values-ci.yaml)
 image:
@@ -22,7 +22,7 @@ personaRuntime:
       memory: "256Mi"  # Adequate limits
       cpu: "300m"
 
-# Conservative fake-threads config (avoid over-optimization)
+# Conservative fake-threads config with NO PROBES
 fakeThreads:
   enabled: true
   image:
@@ -38,29 +38,10 @@ fakeThreads:
     limits:
       memory: "128Mi"  # Conservative limits
       cpu: "200m"
-  # More forgiving health checks for CI
-  readinessProbe:
-    httpGet:
-      path: /health
-      port: 9009
-    initialDelaySeconds: 1
-    periodSeconds: 2
-    timeoutSeconds: 1
-    failureThreshold: 60   # Give it 2 minutes to warm up
-  livenessProbe:
-    httpGet:
-      path: /health
-      port: 9009
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 6
-  startupProbe:
-    httpGet:
-      path: /health
-      port: 9009
-    failureThreshold: 120
-    periodSeconds: 1
+  # PROBES DISABLED FOR DEBUGGING
+  readinessProbe: false
+  livenessProbe: false
+  startupProbe: false
 
 # Minimal PostgreSQL for CI
 postgres:
@@ -75,17 +56,6 @@ postgres:
     limits:
       memory: "128Mi"
       cpu: "100m"
-  # Fast PostgreSQL startup
-  primary:
-    configuration: |
-      shared_preload_libraries = ''
-      max_connections = 20
-      shared_buffers = 16MB
-      effective_cache_size = 32MB
-      maintenance_work_mem = 4MB
-      checkpoint_completion_target = 0.9
-      wal_buffers = 1MB
-      default_statistics_target = 10
 
 # Minimal RabbitMQ
 rabbitmq:
@@ -117,21 +87,17 @@ celeryWorker:
   livenessProbe: false
   readinessProbe: false
 
+# Disable all optional services
 viralEngine:
   enabled: false
-
 achievementCollector:
   enabled: false
-
 conversationEngine:
   enabled: false
-
 revenue:
   enabled: false
-
 viralMetrics:
   enabled: false
-
 mlflow:
   performanceOptimization:
     enabled: false

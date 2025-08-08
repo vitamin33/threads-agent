@@ -517,11 +517,22 @@ jobs:
             kubectl logs $FAKE_THREADS_POD --tail=50 || echo "No logs available"
             
             echo "\n🔧 TRYING MANUAL HEALTH CHECK:"
-            kubectl exec $FAKE_THREADS_POD -- curl -sf http://localhost:9009/health 2>/dev/null || {
-              echo "Manual health check failed"
-              kubectl exec $FAKE_THREADS_POD -- ps aux || echo "Cannot list processes"
-              kubectl exec $FAKE_THREADS_POD -- netstat -tlnp || echo "Cannot check ports"
+            kubectl exec $FAKE_THREADS_POD -- curl -sf http://localhost:9009/health 2>&1 || {
+              echo "Manual health check failed, trying /ping endpoint..."
+              kubectl exec $FAKE_THREADS_POD -- curl -sf http://localhost:9009/ping 2>&1 || echo "Both endpoints failed"
             }
+            
+            echo "\n🔍 NODE RESOURCE PRESSURE:"
+            kubectl describe nodes | grep -A5 "Allocatable" | head -20
+            kubectl top pods 2>/dev/null || echo "Metrics not available"
+            
+            echo "\n🏷️ LABEL VERIFICATION:"
+            echo "Deployment selector:"
+            kubectl get deploy fake-threads -o json | jq '.spec.selector.matchLabels' 2>/dev/null
+            echo "Pod template labels:"
+            kubectl get deploy fake-threads -o json | jq '.spec.template.metadata.labels' 2>/dev/null
+            echo "Service selector:"
+            kubectl get svc fake-threads -o json | jq '.spec.selector' 2>/dev/null
             
           else
             echo "❌ No fake-threads pod found!"
