@@ -27,6 +27,7 @@ from services.common.metrics import (
 )
 from services.common.ai_metrics import ai_metrics
 from services.common.ai_safety import ai_security
+from services.common.alerts import ai_alerts
 from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
 from services.orchestrator.comment_monitor import CommentMonitor
@@ -416,6 +417,25 @@ async def process_comments(post_id: str, background_tasks: BackgroundTasks):
         )
 
 
+def get_ai_metrics_summary() -> dict[str, Any]:
+    """Get AI metrics summary for dashboard display."""
+    try:
+        perf_metrics = ai_metrics.get_metrics()
+        sec_metrics = ai_security.get_security_metrics()
+        
+        return {
+            "model_usage": perf_metrics.get('model_breakdown', {}),
+            "avg_latency_ms": perf_metrics.get('avg_response_time_ms', 0),
+            "total_cost_24h": perf_metrics.get('total_cost_last_window', 0),
+            "confidence_trend": perf_metrics.get('confidence_trend', 'stable'),
+            "security_incidents_24h": int(sec_metrics.get('prompt_injection_rate', 0) * sec_metrics.get('total_security_checks', 0)),
+            "active_alerts": len(ai_alerts.get_active_alerts())
+        }
+    except Exception as e:
+        logger.error(f"Error getting AI metrics summary: {e}")
+        return {}
+
+
 @app.get("/metrics/summary")
 async def metrics_summary():
     """Get system-wide metrics summary for dashboard"""
@@ -424,7 +444,7 @@ async def metrics_summary():
 
     try:
         # Get AI metrics summary
-        ai_metrics = get_ai_metrics_summary()
+        ai_metrics_data = get_ai_metrics_summary()
         
         # Return combined system and AI metrics
         summary = {
@@ -445,7 +465,7 @@ async def metrics_summary():
             "active_tasks": 3,
             "completed_today": 89,
             "avg_processing_time_s": 2.3,
-            "ai_metrics": ai_metrics,
+            "ai_metrics": ai_metrics_data,
         }
 
         status = 200
@@ -459,29 +479,23 @@ async def metrics_summary():
 
 
 @app.get("/metrics/ai")
-async def ai_metrics():
+async def get_ai_metrics_detail():
     """Get detailed AI model performance metrics"""
     start_time = time.time()
     status = 500
     
     try:
         # Get comprehensive AI metrics
-        ai_summary = get_ai_metrics_summary()
+        ai_perf = ai_metrics.get_metrics()
         
         # Add additional AI-specific details
         detailed_metrics = {
-            **ai_summary,
-            "drift_alerts": {
-                model: ai_tracker.drift_detectors[model].detect_drift() 
-                for model in ai_tracker.drift_detectors.keys()
-                if len(ai_tracker.drift_detectors[model].confidence_scores) >= 10
-            },
-            "active_requests": len(ai_tracker.active_requests),
-            "tracked_models": list(ai_tracker.total_requests.keys()),
-            "cost_summary": {
-                "total_requests": sum(ai_tracker.total_requests.values()),
-                "models_tracked": len(ai_tracker.total_requests),
-            }
+            **ai_perf,
+            "model_breakdown": ai_perf.get('model_breakdown', {}),
+            "health_score": calculate_ai_health_score(ai_perf),
+            "security_metrics": ai_security.get_security_metrics(),
+            "active_alerts": ai_alerts.get_active_alerts(),
+            "alert_thresholds": ai_alerts.thresholds
         }
         
         status = 200
