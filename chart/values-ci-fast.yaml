@@ -1,0 +1,145 @@
+# Ultra-fast CI values - optimized for 8-minute total runtime
+# Extends values-ci.yaml with additional optimizations
+
+# Use local images (already in values-ci.yaml)
+image:
+  repository: orchestrator
+  tag: "local"
+  pullPolicy: Never
+
+personaRuntime:
+  enabled: true
+  replicas: 1  # Minimal replicas for CI
+  image:
+    repository: persona-runtime
+    tag: "local"
+    pullPolicy: Never
+  resources:
+    requests:
+      memory: "64Mi"   # Reduced memory
+      cpu: "25m"       # Reduced CPU
+    limits:
+      memory: "128Mi"  # Reduced limits
+      cpu: "100m"
+
+# Critical: Optimize fake-threads (source of timeout)
+fakeThreads:
+  enabled: true
+  image:
+    repository: fake-threads
+    tag: "local" 
+    pullPolicy: Never
+  port: 9009
+  replicas: 1
+  resources:
+    requests:
+      memory: "32Mi"   # Minimal memory
+      cpu: "10m"       # Minimal CPU
+    limits:
+      memory: "64Mi"   # Small limits
+      cpu: "50m"
+  # Fast health checks
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 9009
+    initialDelaySeconds: 5   # Reduced from default
+    periodSeconds: 10        # Check every 10s
+    timeoutSeconds: 3        # Quick timeout
+    successThreshold: 1
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 9009
+    initialDelaySeconds: 2   # Very fast startup
+    periodSeconds: 5         # Check every 5s
+    timeoutSeconds: 2        # Quick timeout
+    successThreshold: 1
+    failureThreshold: 3
+
+# Minimal PostgreSQL for CI
+postgres:
+  enabled: true
+  storage: 500Mi  # Minimal storage
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  # Fast PostgreSQL startup
+  primary:
+    configuration: |
+      shared_preload_libraries = ''
+      max_connections = 20
+      shared_buffers = 16MB
+      effective_cache_size = 32MB
+      maintenance_work_mem = 4MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 1MB
+      default_statistics_target = 10
+
+# Minimal RabbitMQ
+rabbitmq:
+  enabled: true
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+# Disable heavy services for speed
+celeryWorker:
+  enabled: false
+
+viralEngine:
+  enabled: false
+
+achievementCollector:
+  enabled: false
+
+conversationEngine:
+  enabled: false
+
+revenue:
+  enabled: false
+
+viralMetrics:
+  enabled: false
+
+# Minimal Qdrant
+qdrant:
+  enabled: true
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+# Skip monitoring entirely
+monitoring:
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+
+# Global deployment optimizations
+global:
+  # Fast image pulls
+  imagePullPolicy: Never
+  # Reduced resource requests across all services
+  resources:
+    requests:
+      memory: "32Mi"
+      cpu: "10m"
+    limits:
+      memory: "128Mi" 
+      cpu: "100m"
