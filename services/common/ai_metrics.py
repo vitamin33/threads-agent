@@ -8,6 +8,81 @@ from datetime import datetime
 from collections import deque
 import statistics
 from typing import Optional, Dict, Any
+from prometheus_client import Counter, Histogram, Gauge, Summary
+
+# Prometheus metrics for AI monitoring
+AI_REQUESTS_TOTAL = Counter(
+    'ai_requests_total',
+    'Total number of AI inference requests',
+    ['model', 'service']
+)
+
+AI_ERRORS_TOTAL = Counter(
+    'ai_errors_total',
+    'Total number of AI inference errors',
+    ['model', 'service', 'error_type']
+)
+
+AI_RESPONSE_TIME = Histogram(
+    'ai_response_time_ms',
+    'AI model response time in milliseconds',
+    ['model', 'service'],
+    buckets=(50, 100, 200, 500, 1000, 2000, 5000, 10000, 30000)
+)
+
+AI_TOKENS_TOTAL = Counter(
+    'ai_tokens_total',
+    'Total tokens consumed by AI models',
+    ['model', 'service', 'token_type']
+)
+
+AI_COST_DOLLARS = Counter(
+    'ai_cost_dollars_total',
+    'Total cost in dollars for AI inference',
+    ['model', 'service']
+)
+
+AI_CONFIDENCE_SCORE = Gauge(
+    'ai_confidence_score',
+    'Current confidence score of AI model outputs',
+    ['model', 'service']
+)
+
+AI_CONFIDENCE_DRIFT = Gauge(
+    'ai_confidence_drift_percentage',
+    'Percentage drift in model confidence',
+    ['model', 'service']
+)
+
+AI_PROMPT_INJECTIONS = Counter(
+    'ai_prompt_injection_attempts_total',
+    'Total prompt injection attempts detected',
+    ['service', 'severity']
+)
+
+AI_HALLUCINATION_FLAGS = Counter(
+    'ai_hallucination_flags_total',
+    'Total hallucination flags raised',
+    ['model', 'service', 'risk_level']
+)
+
+AI_SECURITY_INCIDENTS = Counter(
+    'ai_security_incidents_total',
+    'Total AI security incidents',
+    ['service', 'incident_type']
+)
+
+AI_ACTIVE_ALERTS = Gauge(
+    'ai_active_alerts',
+    'Number of currently active AI alerts',
+    ['alert_type', 'severity']
+)
+
+AI_COST_PER_REQUEST = Summary(
+    'ai_cost_per_request',
+    'Cost per AI request in dollars',
+    ['model', 'service']
+)
 
 
 class AIMetricsTracker:
@@ -39,7 +114,8 @@ class AIMetricsTracker:
         confidence: Optional[float] = None,
         prompt_tokens: int = 0,
         completion_tokens: int = 0,
-        error: bool = False
+        error: bool = False,
+        service: str = "unknown"
     ) -> None:
         """
         Record metrics for each AI inference.
@@ -52,16 +128,31 @@ class AIMetricsTracker:
             prompt_tokens: Number of prompt tokens
             completion_tokens: Number of completion tokens
             error: Whether the inference resulted in an error
+            service: Service name making the request
         """
         timestamp = datetime.utcnow()
         self.total_requests += 1
         
+        # Emit Prometheus metrics
+        AI_REQUESTS_TOTAL.labels(model=model_name, service=service).inc()
+        
         if error:
             self.error_count += 1
+            AI_ERRORS_TOTAL.labels(model=model_name, service=service, error_type="inference_error").inc()
             return
         
         # Calculate cost based on model
         cost = self._calculate_cost(model_name, prompt_tokens, completion_tokens)
+        
+        # Emit Prometheus metrics
+        AI_RESPONSE_TIME.labels(model=model_name, service=service).observe(response_time_ms)
+        AI_TOKENS_TOTAL.labels(model=model_name, service=service, token_type="prompt").inc(prompt_tokens)
+        AI_TOKENS_TOTAL.labels(model=model_name, service=service, token_type="completion").inc(completion_tokens)
+        AI_COST_DOLLARS.labels(model=model_name, service=service).inc(cost)
+        AI_COST_PER_REQUEST.labels(model=model_name, service=service).observe(cost)
+        
+        if confidence is not None:
+            AI_CONFIDENCE_SCORE.labels(model=model_name, service=service).set(confidence)
         
         # Update global metrics
         self.token_usage.append(tokens_used)
@@ -151,6 +242,10 @@ class AIMetricsTracker:
             drift_percentage = ((previous_avg - recent_avg) / previous_avg) * 100
         else:
             drift_percentage = 0
+        
+        # Emit drift metrics to Prometheus for all models
+        for model_name in self.model_metrics.keys():
+            AI_CONFIDENCE_DRIFT.labels(model=model_name, service="global").set(abs(drift_percentage))
         
         # Categorize drift
         if abs(drift_percentage) > 15:

@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Literal
 from collections import deque
 import logging
+from services.common.ai_metrics import AI_ACTIVE_ALERTS
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +119,19 @@ class AIAlertManager:
             self.alerts.append(alert)
             self.active_alerts[alert.type] = alert
             logger.warning(f"AI Alert triggered: {alert.type} - {alert.message}")
+        
+        # Update Prometheus metrics for active alerts
+        alert_counts = {}
+        for alert in self.active_alerts.values():
+            key = (alert.type, alert.severity)
+            alert_counts[key] = alert_counts.get(key, 0) + 1
+        
+        # Update all alert type/severity combinations
+        for alert_type in ["MODEL_DRIFT", "HIGH_LATENCY", "HIGH_COST", "HIGH_ERROR_RATE", 
+                          "SECURITY_INCIDENT", "RESOURCE_EXHAUSTION", "QUALITY_DEGRADATION"]:
+            for severity in ["INFO", "WARNING", "ERROR", "CRITICAL"]:
+                count = alert_counts.get((alert_type, severity), 0)
+                AI_ACTIVE_ALERTS.labels(alert_type=alert_type, severity=severity).set(count)
             
         return alerts_triggered
     

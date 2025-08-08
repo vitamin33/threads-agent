@@ -8,6 +8,7 @@ import re
 from typing import Dict, List, Any, Tuple
 from datetime import datetime
 import logging
+from services.common.ai_metrics import AI_PROMPT_INJECTIONS, AI_HALLUCINATION_FLAGS, AI_SECURITY_INCIDENTS
 
 logger = logging.getLogger(__name__)
 
@@ -64,12 +65,13 @@ class AISecurityMonitor:
             'total_checks': 0
         }
         
-    def check_prompt_injection(self, user_input: str) -> Dict[str, Any]:
+    def check_prompt_injection(self, user_input: str, service: str = "unknown") -> Dict[str, Any]:
         """
         Detect potential prompt injection attempts.
         
         Args:
             user_input: The user's input to check
+            service: Service name for metrics
             
         Returns:
             Dict with safety assessment and details
@@ -92,6 +94,10 @@ class AISecurityMonitor:
             max_severity = max(detected_patterns, key=lambda x: 
                               {'low': 1, 'medium': 2, 'high': 3, 'critical': 4}.get(x['severity'], 0))
             
+            # Emit Prometheus metrics
+            AI_PROMPT_INJECTIONS.labels(service=service, severity=max_severity['severity']).inc()
+            AI_SECURITY_INCIDENTS.labels(service=service, incident_type="prompt_injection").inc()
+            
             logger.warning(f"Prompt injection detected: {detected_patterns}")
             
             return {
@@ -109,12 +115,14 @@ class AISecurityMonitor:
             'timestamp': datetime.utcnow().isoformat()
         }
     
-    def flag_potential_hallucination(self, ai_output: str) -> Dict[str, Any]:
+    def flag_potential_hallucination(self, ai_output: str, model: str = "unknown", service: str = "unknown") -> Dict[str, Any]:
         """
         Flag outputs that might contain hallucinated facts.
         
         Args:
             ai_output: The AI-generated text to check
+            model: Model name for metrics
+            service: Service name for metrics
             
         Returns:
             Dict with hallucination risk assessment
@@ -144,6 +152,8 @@ class AISecurityMonitor:
         
         if flags:
             self.security_events['hallucination_flags'] += 1
+            # Emit Prometheus metrics
+            AI_HALLUCINATION_FLAGS.labels(model=model, service=service, risk_level=max_risk_level).inc()
         
         # Calculate confidence adjustment based on risk
         confidence_adjustments = {
