@@ -17,20 +17,21 @@
 ## Optimization Strategy
 
 ### 1. Service Reduction (80/20 Principle)
-**Before**: 8 services built and deployed
+**Before**: 8+ services built and deployed
 ```yaml
-SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_engine revenue viral_metrics conversation_engine"
+SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_engine revenue viral_metrics conversation_engine achievement_collector finops_engine"
 ```
 
-**After**: 3 essential services only
+**After**: 4 core workflow services only
 ```yaml  
-SERVICES="orchestrator persona_runtime fake_threads"  # Reduced set for faster CI
+SERVICES="orchestrator celery_worker persona_runtime fake_threads"  # Core content generation workflow
 ```
 
 **Impact**: 
-- 60% fewer Docker builds
-- 70% less k3d image import time  
-- 80% fewer deployment readiness checks
+- 60% fewer Docker builds (10+ → 4 services)
+- 65% less k3d image import time  
+- 70% fewer deployment readiness checks
+- **CRITICAL**: Maintains complete e2e workflow testing
 
 ### 2. Resource Optimization
 **Before**: Default resource requests

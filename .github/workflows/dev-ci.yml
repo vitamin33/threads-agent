@@ -165,8 +165,8 @@ jobs:
         if: steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           # Try to pull from GHCR first, build only if not found or force_build is true
-          # OPTIMIZATION: Build only essential services for CI speed
-          SERVICES="orchestrator persona_runtime fake_threads"  # Reduced set for faster CI
+          # OPTIMIZATION: Build only essential services for CI speed  
+          SERVICES="orchestrator celery_worker persona_runtime fake_threads"  # Core workflow with optimized celery
           FORCE_BUILD="${{ github.event.inputs.force_build || 'false' }}"
 
           # Determine image tag based on event type
@@ -203,6 +203,7 @@ jobs:
           # Import only essential images to k3d (faster import)
           k3d image import \
             orchestrator:local \
+            celery-worker:local \
             persona-runtime:local \
             fake-threads:local \
             bitnami/postgresql:16 \
@@ -231,6 +232,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MOCK: "1"
         run: |
+          # Create OpenAI secret before Helm deployment
+          kubectl create secret generic openai-secret --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" --dry-run=client -o yaml | kubectl apply -f -
+          
           # Retry helm install up to 3 times for CI reliability
           for i in 1 2 3; do
             helm upgrade --install threads ./chart \
@@ -267,8 +271,9 @@ jobs:
         run: |
           echo "⏳ Waiting for all pods to be ready (in parallel)..."
 
-          # Start essential checks in parallel (reduced set for faster CI)
+          # Start essential checks in parallel (optimized 4-service workflow)
           kubectl rollout status deploy/orchestrator     --timeout=60s &
+          kubectl rollout status deploy/celery-worker    --timeout=60s &
           kubectl rollout status deploy/fake-threads     --timeout=60s &
           kubectl rollout status deploy/persona-runtime  --timeout=60s &
           kubectl rollout status sts/qdrant              --timeout=60s &
@@ -304,8 +309,9 @@ jobs:
           # Install only if venv doesn't exist or is incomplete
           if [ ! -f ".venv/pyvenv.cfg" ] || ! python -c "import fastapi, celery, pytest" 2>/dev/null; then
             echo "📦 Installing dependencies..."
-            # Install with prefer-binary for speed
+            # Install with prefer-binary for speed (optimized 4-service workflow)
             pip install -r services/orchestrator/requirements.txt --prefer-binary
+            pip install -r services/celery_worker/requirements.txt --prefer-binary
             pip install -r services/persona_runtime/requirements.txt --prefer-binary
             pip install -r services/fake_threads/requirements.txt --prefer-binary
             pip install -r tests/requirements.txt --prefer-binary

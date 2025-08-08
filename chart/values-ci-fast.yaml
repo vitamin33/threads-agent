@@ -92,9 +92,24 @@ rabbitmq:
       memory: "128Mi"
       cpu: "100m"
 
-# Disable heavy services for speed
+# Enable celery worker with optimized settings for CI
 celeryWorker:
-  enabled: false
+  enabled: true
+  replicas: 1
+  image:
+    repository: celery-worker
+    tag: "local"
+    pullPolicy: Never
+  resources:
+    requests:
+      memory: "128Mi"  # Reasonable for 2 worker processes
+      cpu: "50m"       # Minimal CPU for CI
+    limits:
+      memory: "256Mi"  # Should be enough with concurrency=2
+      cpu: "200m"
+  # Disable health checks for CI speed (celery is lightweight)
+  # livenessProbe: {}   # Disabled
+  # readinessProbe: {}  # Disabled
 
 viralEngine:
   enabled: false
