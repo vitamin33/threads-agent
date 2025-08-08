@@ -55,7 +55,8 @@ spec:
             - name: metrics
               containerPort: 9090
 
-          # Health checks using netstat to check if metrics port is listening
+          # Conditional health checks
+          {{- if .Values.celeryWorker.livenessProbe }}
           livenessProbe:
             tcpSocket:
               port: 9090
@@ -63,7 +64,9 @@ spec:
             periodSeconds: {{ .Values.celeryWorker.livenessProbe.periodSeconds | default 30 }}
             timeoutSeconds: {{ .Values.celeryWorker.livenessProbe.timeoutSeconds | default 5 }}
             failureThreshold: 3
+          {{- end }}
 
+          {{- if .Values.celeryWorker.readinessProbe }}
           readinessProbe:
             tcpSocket:
               port: 9090
@@ -71,6 +74,7 @@ spec:
             periodSeconds: {{ .Values.celeryWorker.readinessProbe.periodSeconds | default 10 }}
             timeoutSeconds: {{ .Values.celeryWorker.readinessProbe.timeoutSeconds | default 3 }}
             failureThreshold: 3
+          {{- end }}
 
           resources:
             {{- toYaml .Values.celeryWorker.resources | nindent 12 }}
