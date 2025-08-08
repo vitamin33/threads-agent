@@ -43,7 +43,7 @@ jobs:
   test:
     name: py${{ matrix.python }} • k3d
     runs-on: ubuntu-latest # Faster startup than ubuntu-22.04
-    timeout-minutes: 10 # Optimized for essential services only
+    timeout-minutes: 12 # Allow more time for conservative deployment
     strategy:
       fail-fast: false # let both versions run
       matrix:
@@ -240,7 +240,7 @@ jobs:
             helm upgrade --install threads ./chart \
               -f chart/values-ci-fast.yaml \
               --set openai.apiKey="$OPENAI_API_KEY" \
-              --wait --timeout 300s --debug && break || {
+              --wait --timeout 480s --debug && break || {
                 echo "Helm install attempt $i failed"
                 if [ $i -lt 3 ]; then
                   echo "Checking migration status..."
@@ -266,17 +266,29 @@ jobs:
           done
           # Fail the step explicitly so the job still turns red
           exit 1
+          
+      - name: Show deployment progress
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          echo "📊 Current deployment status..."
+          kubectl get pods -o wide
+          echo ""
+          kubectl get deployments
+          echo ""
+          echo "Recent events:"
+          kubectl get events --sort-by='.lastTimestamp' | tail -n 10
+          
       - name: Wait for core pods (parallel)
         if: steps.e2e-check.outputs.skip_remaining == 'false'
         run: |
           echo "⏳ Waiting for all pods to be ready (in parallel)..."
 
-          # Start essential checks in parallel (optimized 4-service workflow)
-          kubectl rollout status deploy/orchestrator     --timeout=60s &
-          kubectl rollout status deploy/celery-worker    --timeout=60s &
-          kubectl rollout status deploy/fake-threads     --timeout=60s &
-          kubectl rollout status deploy/persona-runtime  --timeout=60s &
-          kubectl rollout status sts/qdrant              --timeout=60s &
+          # Start essential checks in parallel with increased patience
+          kubectl rollout status deploy/orchestrator     --timeout=90s &
+          kubectl rollout status deploy/celery-worker    --timeout=90s &
+          kubectl rollout status deploy/fake-threads     --timeout=90s &
+          kubectl rollout status deploy/persona-runtime  --timeout=90s &
+          kubectl rollout status sts/qdrant              --timeout=90s &
 
           # Wait for all background jobs to complete
           JOBS=$(jobs -p)
