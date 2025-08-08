@@ -157,8 +157,8 @@ monitoring:
 
 # Global deployment optimizations
 global:
-  # Fast image pulls
-  imagePullPolicy: Never
+  # Use IfNotPresent for CI (Never doesn't work reliably in GitHub Actions)
+  imagePullPolicy: IfNotPresent
   # Reduced resource requests across all services
   resources:
     requests:
