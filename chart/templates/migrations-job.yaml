@@ -25,12 +25,15 @@ spec:
               name: threads-postgresql
               key: POSTGRES_PASSWORD
         command: 
-          - /bin/sh
+          - /bin/bash
           - -c
           - |
             echo '⏳ waiting for Postgres super-user …'
+            # Add psql to PATH for bitnami image
+            export PATH="/opt/bitnami/postgresql/bin:$PATH"
             for i in $(seq 1 60); do
               PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -c 'select 1' >/dev/null 2>&1 && break
+              echo "  Attempt $i/60 - waiting 2s..."
               sleep 2
             done
             if [ $i -eq 60 ]; then 
@@ -42,6 +45,7 @@ spec:
             if ! PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1; then
               echo 'Creating threads_agent database...'
               PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -c 'CREATE DATABASE threads_agent;'
+              echo 'Database created successfully'
             else
               echo 'threads_agent database already exists'
             fi

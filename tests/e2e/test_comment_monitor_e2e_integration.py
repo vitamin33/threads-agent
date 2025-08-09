@@ -21,7 +21,9 @@ import json
 from services.orchestrator.comment_monitor import CommentMonitor, Comment
 
 # Skip these mock-based tests in CI - they're flaky and not true e2e tests
-pytestmark = pytest.mark.skip(reason="Mock-based tests are flaky in CI - use real e2e tests instead")
+pytestmark = pytest.mark.skip(
+    reason="Mock-based tests are flaky in CI - use real e2e tests instead"
+)
 
 
 @dataclass

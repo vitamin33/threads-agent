@@ -162,7 +162,9 @@ def _usd(model: str, pt: int, ct: int) -> float:
 #  Sync **cached** wrapper for simple chat-completions
 # ---------------------------------------------------------------------------
 @functools.lru_cache(maxsize=512)
-def _chat_call_uncached(model: str, prompt: str) -> Tuple[str, int, float, CompletionUsage]:
+def _chat_call_uncached(
+    model: str, prompt: str
+) -> Tuple[str, int, float, CompletionUsage]:
     """
     Low-level chat request with 512-entry LRU cache.
 
@@ -170,7 +172,7 @@ def _chat_call_uncached(model: str, prompt: str) -> Tuple[str, int, float, Compl
         tuple of (text, total_tokens, latency_ms, usage)
     """
     start_time = time.perf_counter()
-    
+
     # measure the OpenAI round-trip – labels it as "llm" latency
     with record_latency("llm"):
         resp = _retry(_sync_ai().chat.completions.create)(
@@ -195,32 +197,38 @@ def chat(model: str, prompt: str) -> str:
     * tracks AI metrics for monitoring
     """
     start_time = time.perf_counter()
-    
+
     # Import here to avoid circular dependency
     from services.common.ai_metrics import ai_metrics
     from services.common.ai_safety import ai_security
-    
+
     # Detect service from call stack or use default
     import inspect
+
     service = "unknown"
     for frame_info in inspect.stack()[1:]:
         module = inspect.getmodule(frame_info.frame)
-        if module and hasattr(module, '__name__'):
-            module_parts = module.__name__.split('.')
-            if 'services' in module_parts and len(module_parts) > 1:
-                service_idx = module_parts.index('services')
+        if module and hasattr(module, "__name__"):
+            module_parts = module.__name__.split(".")
+            if "services" in module_parts and len(module_parts) > 1:
+                service_idx = module_parts.index("services")
                 if service_idx + 1 < len(module_parts):
                     service = module_parts[service_idx + 1]
                     break
-    
+
     # Security check before API call
     security_check = ai_security.check_prompt_injection(prompt, service=service)
-    if not security_check['safe'] and security_check['risk_level'] in ['high', 'critical']:
-        raise ValueError(f"Potential prompt injection detected: {security_check['risk_level']}")
-    
+    if not security_check["safe"] and security_check["risk_level"] in [
+        "high",
+        "critical",
+    ]:
+        raise ValueError(
+            f"Potential prompt injection detected: {security_check['risk_level']}"
+        )
+
     try:
         text, tokens, latency_ms, usage = _chat_call_uncached(model, prompt)
-        
+
         # Record AI metrics
         ai_metrics.record_inference(
             model_name=model,
@@ -229,18 +237,22 @@ def chat(model: str, prompt: str) -> str:
             prompt_tokens=usage.prompt_tokens,
             completion_tokens=usage.completion_tokens,
             error=False,
-            service=service
+            service=service,
         )
-        
+
         # Check output for hallucinations
-        hallucination_check = ai_security.flag_potential_hallucination(text, model=model, service=service)
-        if hallucination_check['potential_hallucination_risk']:
+        hallucination_check = ai_security.flag_potential_hallucination(
+            text, model=model, service=service
+        )
+        if hallucination_check["potential_hallucination_risk"]:
             # Log but don't block - let caller decide what to do
-            logger.warning(f"Potential hallucination detected in {model} response: {hallucination_check['risk_level']}")
-        
+            logger.warning(
+                f"Potential hallucination detected in {model} response: {hallucination_check['risk_level']}"
+            )
+
         # Record Prometheus metrics
         LLM_TOKENS_TOTAL.labels(model=model).inc(tokens)
-        
+
         return text
     except Exception as e:
         # Record error in AI metrics
@@ -249,7 +261,7 @@ def chat(model: str, prompt: str) -> str:
             tokens_used=0,
             response_time_ms=(time.perf_counter() - start_time) * 1000,
             error=True,
-            service=service
+            service=service,
         )
         raise
 

@@ -21,7 +21,9 @@ import json
 from services.orchestrator.comment_monitor import CommentMonitor, Comment
 
 # Skip chaos engineering tests in CI - they're flaky and require special infrastructure
-pytestmark = pytest.mark.skip(reason="Chaos engineering tests are flaky in CI - require dedicated infrastructure")
+pytestmark = pytest.mark.skip(
+    reason="Chaos engineering tests are flaky in CI - require dedicated infrastructure"
+)
 
 
 @dataclass
