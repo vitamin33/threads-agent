@@ -181,7 +181,11 @@ jobs:
             IMAGE_NAME="ghcr.io/${{ github.repository }}/${svc}:${IMAGE_TAG}"
             LOCAL_NAME="${svc//_/-}:local"
 
-            if [ "$FORCE_BUILD" = "true" ]; then
+            # TEMPORARY: Always build fake_threads to fix prometheus_client issue
+            if [ "$svc" = "fake_threads" ]; then
+              echo "🔨 Force building $svc to fix prometheus_client issue..."
+              docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
+            elif [ "$FORCE_BUILD" = "true" ]; then
               echo "🔨 Force building $svc..."
               docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
             else
