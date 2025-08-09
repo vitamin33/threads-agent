@@ -18,16 +18,11 @@ class RabbitMQConnectionManager:
     """
     Manages RabbitMQ connections with retry logic and automatic reconnection.
     """
-    
-    def __init__(
-        self,
-        url: str,
-        max_retries: int = 3,
-        retry_delay: float = 1.0
-    ):
+
+    def __init__(self, url: str, max_retries: int = 3, retry_delay: float = 1.0):
         """
         Initialize the connection manager.
-        
+
         Args:
             url: RabbitMQ connection URL
             max_retries: Maximum number of retry attempts
@@ -48,7 +43,7 @@ class RabbitMQConnectionManager:
     async def connect(self) -> bool:
         """
         Connect to RabbitMQ with retry logic.
-        
+
         Returns:
             True if connection successful, False otherwise
         """
@@ -60,7 +55,7 @@ class RabbitMQConnectionManager:
                 self._is_connected = True
                 logger.info(f"Connected to RabbitMQ on attempt {attempt + 1}")
                 return True
-            
+
             except Exception as e:
                 logger.warning(f"Connection attempt {attempt + 1} failed: {e}")
                 if attempt < self.max_retries:
@@ -73,7 +68,7 @@ class RabbitMQConnectionManager:
     async def connect_async(self) -> bool:
         """
         Connect to RabbitMQ using async aio-pika with retry logic.
-        
+
         Returns:
             True if connection successful, False otherwise
         """
@@ -84,7 +79,7 @@ class RabbitMQConnectionManager:
                 self._is_connected = True
                 logger.info(f"Connected to RabbitMQ (async) on attempt {attempt + 1}")
                 return True
-            
+
             except Exception as e:
                 logger.warning(f"Async connection attempt {attempt + 1} failed: {e}")
                 if attempt < self.max_retries:
@@ -99,7 +94,7 @@ class RabbitMQConnectionManager:
         if self._connection:
             try:
                 # Try to check if connection is closed, if not close it
-                if not getattr(self._connection, 'is_closed', False):
+                if not getattr(self._connection, "is_closed", False):
                     self._connection.close()
             except AttributeError:
                 # For mock objects or objects without is_closed attribute
@@ -111,29 +106,29 @@ class RabbitMQConnectionManager:
     async def get_channel(self):
         """
         Get a channel from the connection.
-        
+
         Returns:
             pika.channel.Channel: RabbitMQ channel
-            
+
         Raises:
             RuntimeError: If not connected to RabbitMQ
         """
         if not self._is_connected or not self._connection:
             raise RuntimeError("Not connected to RabbitMQ")
-        
+
         return self._connection.channel()
 
     async def get_async_channel(self):
         """
         Get an async channel from the aio-pika connection.
-        
+
         Returns:
             aio_pika.Channel: Async RabbitMQ channel
-            
+
         Raises:
             RuntimeError: If not connected to RabbitMQ via async connection
         """
         if not self._async_connection:
             raise RuntimeError("Not connected to RabbitMQ via async connection")
-        
+
         return await self._async_connection.channel()

@@ -22,16 +22,16 @@ from services.orchestrator.db.models import ContentItem
 
 async def main():
     """Demonstrate publishing engine usage."""
-    
+
     print("🚀 Multi-Platform Publishing Engine Demo")
     print("=" * 50)
-    
+
     # Initialize the publishing engine
     engine = PublishingEngine()
-    
+
     print(f"📝 Registered platforms: {list(engine.adapters.keys())}")
     print()
-    
+
     # Create sample content
     content_item = ContentItem(
         id=1,
@@ -58,26 +58,26 @@ transformed our AI pipeline from fragile prototype to robust production system.
         content_metadata={
             "tags": ["ai", "machine-learning", "scalability", "production", "systems"],
             "description": "Essential guide to building AI systems that scale",
-            "industry_focus": "technology"
+            "industry_focus": "technology",
         },
         created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc)
+        updated_at=datetime.now(timezone.utc),
     )
-    
+
     print(f"📄 Content: {content_item.title}")
     print(f"📊 Tags: {content_item.content_metadata['tags']}")
     print()
-    
+
     # Test Dev.to publishing (would need real API key)
     print("🔧 Testing Dev.to Publishing:")
     print("-" * 30)
-    
+
     devto_result = await engine.publish_to_platform(
         content_item=content_item,
         platform="dev.to",
-        platform_config={"api_key": "demo_key"}  # Would be real API key in production
+        platform_config={"api_key": "demo_key"},  # Would be real API key in production
     )
-    
+
     print(f"✅ Success: {devto_result.success}")
     print(f"🌐 Platform: {devto_result.platform}")
     if devto_result.success:
@@ -86,48 +86,54 @@ transformed our AI pipeline from fragile prototype to robust production system.
     else:
         print(f"❌ Error: {devto_result.error_message}")
     print()
-    
+
     # Test LinkedIn publishing (manual workflow)
     print("💼 Testing LinkedIn Publishing:")
     print("-" * 30)
-    
+
     linkedin_result = await engine.publish_to_platform(
         content_item=content_item,
         platform="linkedin",
-        platform_config={}  # No API key needed for manual workflow
+        platform_config={},  # No API key needed for manual workflow
     )
-    
+
     print(f"✅ Success: {linkedin_result.success}")
     print(f"🌐 Platform: {linkedin_result.platform}")
     if linkedin_result.success and linkedin_result.metadata:
         print(f"📝 Draft Created: {linkedin_result.metadata.get('draft', False)}")
-        print(f"📋 Manual Posting Required: {linkedin_result.metadata.get('manual_posting_required', False)}")
-        
+        print(
+            f"📋 Manual Posting Required: {linkedin_result.metadata.get('manual_posting_required', False)}"
+        )
+
         # Show formatted content preview
-        formatted_content = linkedin_result.metadata.get('formatted_content', '')
-        preview = formatted_content[:200] + "..." if len(formatted_content) > 200 else formatted_content
+        formatted_content = linkedin_result.metadata.get("formatted_content", "")
+        preview = (
+            formatted_content[:200] + "..."
+            if len(formatted_content) > 200
+            else formatted_content
+        )
         print(f"📖 Preview: {preview}")
     print()
-    
+
     # Test mock platform (Twitter example)
     print("🐦 Testing Mock Platform (Twitter):")
     print("-" * 35)
-    
+
     twitter_result = await engine.publish_to_platform(
         content_item=content_item,
         platform="twitter",
-        platform_config={"api_key": "demo_key"}
+        platform_config={"api_key": "demo_key"},
     )
-    
+
     print(f"✅ Success: {twitter_result.success}")
     print(f"🌐 Platform: {twitter_result.platform}")
     print(f"🔗 Mock URL: {twitter_result.url}")
     print()
-    
+
     # Demonstrate content validation
     print("🔍 Testing Content Validation:")
     print("-" * 30)
-    
+
     # Test with invalid content (empty title)
     invalid_content = ContentItem(
         id=2,
@@ -135,27 +141,27 @@ transformed our AI pipeline from fragile prototype to robust production system.
         content="Valid content",
         content_type="article",
         author_id="demo_author",
-        status="ready"
+        status="ready",
     )
-    
+
     validation_result = await engine.publish_to_platform(
         content_item=invalid_content,
         platform="dev.to",
-        platform_config={"api_key": "demo_key"}
+        platform_config={"api_key": "demo_key"},
     )
-    
+
     print(f"❌ Invalid Content Result: {validation_result.success}")
     print(f"📝 Error Message: {validation_result.error_message}")
     print()
-    
+
     # Show adapter capabilities
     print("⚙️ Adapter Capabilities:")
     print("-" * 25)
-    
+
     for platform_name, adapter in engine.adapters.items():
         retry_support = "✅" if adapter.supports_retry else "❌"
         print(f"{platform_name:12} | Retry Support: {retry_support}")
-    
+
     print()
     print("🎉 Demo Complete!")
     print("\nNext Steps:")

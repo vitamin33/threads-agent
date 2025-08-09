@@ -25,11 +25,11 @@ spec:
           protocol: TCP
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:postgres@postgresql:5432/threads"
+          value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
         - name: PYTHONPATH
           value: "/app"
         - name: RABBITMQ_URL
-          value: "amqp://user:pass@rabbitmq:5672/%2f"
+          value: {{ .Values.rabbitmq.url | quote }}
         - name: QDRANT_URL
           value: "http://qdrant:6333"
         {{- if .Values.finopsEngine.env }}

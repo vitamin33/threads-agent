@@ -13,16 +13,25 @@ from pydantic import BaseModel, Field
 
 class BaseEvent(BaseModel):
     """Base event model - minimal implementation"""
-    event_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique event identifier")
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Event creation timestamp")
+
+    event_id: str = Field(
+        default_factory=lambda: str(uuid4()), description="Unique event identifier"
+    )
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Event creation timestamp",
+    )
     event_type: str = Field(..., description="Type of event")
-    payload: Dict[str, Any] = Field(default_factory=dict, description="Event data payload")
+    payload: Dict[str, Any] = Field(
+        default_factory=dict, description="Event data payload"
+    )
 
 
 class ContentQualityCheckRequestedPayload(BaseModel):
     """Payload for content quality check request event"""
+
     content_id: int
-    content: str 
+    content: str
     title: str
     author_id: str
     content_type: str
@@ -31,12 +40,16 @@ class ContentQualityCheckRequestedPayload(BaseModel):
 
 class ContentQualityCheckRequested(BaseEvent):
     """Event triggered when content needs quality check"""
-    event_type: str = Field(default="ContentQualityCheckRequested", description="Event type")
+
+    event_type: str = Field(
+        default="ContentQualityCheckRequested", description="Event type"
+    )
     payload: ContentQualityCheckRequestedPayload
 
 
 class ContentQualityScoredPayload(BaseModel):
     """Payload for content quality score result event"""
+
     content_id: int
     quality_score: float
     predicted_engagement_rate: float
@@ -48,5 +61,6 @@ class ContentQualityScoredPayload(BaseModel):
 
 class ContentQualityScored(BaseEvent):
     """Event triggered when content quality scoring is complete"""
+
     event_type: str = Field(default="ContentQualityScored", description="Event type")
     payload: ContentQualityScoredPayload

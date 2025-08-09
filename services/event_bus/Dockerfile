@@ -7,15 +7,18 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy only Event Bus requirements
+COPY services/event_bus/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy service code
-COPY . .
+# Copy Event Bus service code
+COPY services/event_bus ./services/event_bus
 
-# Add parent directory to Python path for imports
-ENV PYTHONPATH=/app:/app/..
+# Set Python path for imports
+ENV PYTHONPATH=/app
+
+# Make run script executable
+RUN chmod +x /app/services/event_bus/run.py
 
 # Run the API server
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "/app/services/event_bus/run.py"]

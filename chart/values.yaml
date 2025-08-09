@@ -33,6 +33,7 @@ postgres:
   enabled: false                   # turn ON in dev/ci values
   storage: 1Gi                     # PVC size; template uses .Values.postgres.storage
   auth:
+    username: "postgres"
     postgresPassword: "postgres"   # override in production
     database: "threads"
 
@@ -185,6 +186,38 @@ revenue:
     apiKey: ""                     # Stripe API key (sk_test_... or sk_live_...)
     webhookSecret: ""              # Stripe webhook endpoint secret
     priceBasic: ""                 # Stripe price ID for basic tier
+
+# ───────── Event Bus Service ─────────
+eventBus:
+  enabled: false                   # turn ON to enable event-driven architecture
+  image:
+    repository: event-bus
+    tag: "local"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  database:
+    name: "events"                 # Database name for event store
+  logLevel: "INFO"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 5
+  batching:
+    enabled: true
+    batchSize: 100
+    batchTimeout: 1.0              # seconds
     pricePro: ""                   # Stripe price ID for pro tier
     priceEnterprise: ""            # Stripe price ID for enterprise tier
   affiliateId: "viral123"          # Default affiliate tracking ID

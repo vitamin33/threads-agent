@@ -7,7 +7,7 @@ to mock database operations. Tests focus on endpoint behavior and validation.
 
 import pytest
 from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
@@ -28,10 +28,10 @@ def app_with_router(mock_db):
     """FastAPI app with our router and mocked database."""
     app = FastAPI()
     app.include_router(router)
-    
+
     # Override the database dependency
     app.dependency_overrides[get_db_session] = lambda: mock_db
-    
+
     return app
 
 
@@ -87,34 +87,34 @@ class TestContentManagementEndpoints:
         # Mock database operations
         mock_db.add = Mock()
         mock_db.commit = Mock()
-        mock_db.refresh = Mock(side_effect=lambda obj: setattr(obj, 'id', 1) or obj)
+        mock_db.refresh = Mock(side_effect=lambda obj: setattr(obj, "id", 1) or obj)
         mock_db.rollback = Mock()
-        
+
         # Mock the created content item
         def mock_refresh(obj):
             obj.id = 1
             obj.created_at = datetime.now(timezone.utc)
             obj.updated_at = datetime.now(timezone.utc)
-        
+
         mock_db.refresh.side_effect = mock_refresh
-        
+
         # Test data
         content_data = {
             "title": "Advanced AI Development Techniques",
             "content": "A comprehensive guide to modern AI development practices.",
             "content_type": "blog_post",
-            "author_id": "ai_expert_001"
+            "author_id": "ai_expert_001",
         }
-        
+
         response = client.post("/api/v1/content", json=content_data)
-        
+
         assert response.status_code == 201
         data = response.json()
         assert "id" in data
         assert data["title"] == content_data["title"]
         assert data["content"] == content_data["content"]
         assert data["status"] == "draft"
-        
+
         # Verify database operations
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
@@ -125,12 +125,12 @@ class TestContentManagementEndpoints:
         invalid_data = {
             "content": "Test content",
             "content_type": "blog_post",
-            "author_id": "test_author"
+            "author_id": "test_author",
             # Missing title
         }
-        
+
         response = client.post("/api/v1/content", json=invalid_data)
-        
+
         assert response.status_code == 422
         error_data = response.json()
         assert "detail" in error_data
@@ -145,11 +145,11 @@ class TestContentManagementEndpoints:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = [sample_content_item]
         mock_query.count.return_value = 1
-        
+
         mock_db.query.return_value = mock_query
-        
+
         response = client.get("/api/v1/content")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
@@ -169,11 +169,11 @@ class TestContentManagementEndpoints:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = [sample_content_item]
         mock_query.count.return_value = 1
-        
+
         mock_db.query.return_value = mock_query
-        
+
         response = client.get("/api/v1/content?status=draft&author_id=test_author")
-        
+
         assert response.status_code == 200
         # Verify filters were applied (mock was called with filter)
         assert mock_query.filter.call_count >= 2  # At least 2 filters applied
@@ -185,9 +185,9 @@ class TestContentManagementEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = sample_content_item
         mock_db.query.return_value = mock_query
-        
+
         response = client.get("/api/v1/content/1")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == 1
@@ -200,9 +200,9 @@ class TestContentManagementEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = None
         mock_db.query.return_value = mock_query
-        
+
         response = client.get("/api/v1/content/999")
-        
+
         assert response.status_code == 404
         error_data = response.json()
         assert "not found" in error_data["detail"].lower()
@@ -217,14 +217,11 @@ class TestContentManagementEndpoints:
         mock_db.commit = Mock()
         mock_db.refresh = Mock()
         mock_db.rollback = Mock()
-        
-        update_data = {
-            "title": "Updated AI Development Techniques",
-            "status": "ready"
-        }
-        
+
+        update_data = {"title": "Updated AI Development Techniques", "status": "ready"}
+
         response = client.put("/api/v1/content/1", json=update_data)
-        
+
         assert response.status_code == 200
         mock_db.commit.assert_called_once()
 
@@ -235,11 +232,11 @@ class TestContentManagementEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = None
         mock_db.query.return_value = mock_query
-        
+
         update_data = {"title": "Updated Title"}
-        
+
         response = client.put("/api/v1/content/999", json=update_data)
-        
+
         assert response.status_code == 404
 
     def test_delete_content_item_success(self, client, mock_db, sample_content_item):
@@ -252,9 +249,9 @@ class TestContentManagementEndpoints:
         mock_db.delete = Mock()
         mock_db.commit = Mock()
         mock_db.rollback = Mock()
-        
+
         response = client.delete("/api/v1/content/1")
-        
+
         assert response.status_code == 204
         mock_db.delete.assert_called_once_with(sample_content_item)
         mock_db.commit.assert_called_once()
@@ -266,27 +263,29 @@ class TestContentManagementEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = None
         mock_db.query.return_value = mock_query
-        
+
         response = client.delete("/api/v1/content/999")
-        
+
         assert response.status_code == 404
 
 
 class TestSchedulingEndpoints:
     """Test scheduling operations."""
 
-    def test_create_schedule_success(self, client, mock_db, sample_content_item, sample_schedule):
+    def test_create_schedule_success(
+        self, client, mock_db, sample_content_item, sample_schedule
+    ):
         """POST /api/v1/schedules should create schedule."""
         # Mock content exists query
         content_query = Mock()
         content_query.filter.return_value = content_query
         content_query.first.return_value = sample_content_item
-        
+
         # Mock schedule creation
         mock_db.query.return_value = content_query
         mock_db.add = Mock()
         mock_db.commit = Mock()
-        
+
         def mock_refresh(obj):
             obj.id = 1
             obj.retry_count = 0
@@ -296,22 +295,24 @@ class TestSchedulingEndpoints:
             obj.error_message = None
             obj.created_at = datetime.now(timezone.utc)
             obj.updated_at = datetime.now(timezone.utc)
-        
+
         mock_db.refresh = Mock(side_effect=mock_refresh)
         mock_db.rollback = Mock()
-        
+
         schedule_data = {
             "content_item_id": 1,
             "platform": "linkedin",
-            "scheduled_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+            "scheduled_time": (
+                datetime.now(timezone.utc) + timedelta(hours=2)
+            ).isoformat(),
         }
-        
+
         response = client.post("/api/v1/schedules", json=schedule_data)
-        
+
         if response.status_code != 201:
             print(f"Response status: {response.status_code}")
             print(f"Response content: {response.text}")
-        
+
         assert response.status_code == 201
         data = response.json()
         assert "id" in data
@@ -325,15 +326,17 @@ class TestSchedulingEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = None
         mock_db.query.return_value = mock_query
-        
+
         schedule_data = {
             "content_item_id": 999,
             "platform": "linkedin",
-            "scheduled_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat()
+            "scheduled_time": (
+                datetime.now(timezone.utc) + timedelta(hours=2)
+            ).isoformat(),
         }
-        
+
         response = client.post("/api/v1/schedules", json=schedule_data)
-        
+
         assert response.status_code == 400
         error_data = response.json()
         assert "content" in error_data["detail"].lower()
@@ -341,15 +344,15 @@ class TestSchedulingEndpoints:
     def test_create_schedule_validation_error(self, client, mock_db):
         """POST /api/v1/schedules should return 422 for past time."""
         past_time = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-        
+
         schedule_data = {
             "content_item_id": 1,
             "platform": "linkedin",
-            "scheduled_time": past_time
+            "scheduled_time": past_time,
         }
-        
+
         response = client.post("/api/v1/schedules", json=schedule_data)
-        
+
         assert response.status_code == 422
 
     def test_get_schedules_calendar_success(self, client, mock_db, sample_schedule):
@@ -359,11 +362,11 @@ class TestSchedulingEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.all.return_value = [sample_schedule]
-        
+
         mock_db.query.return_value = mock_query
-        
+
         response = client.get("/api/v1/schedules/calendar")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "schedules" in data
@@ -380,13 +383,11 @@ class TestSchedulingEndpoints:
         mock_db.commit = Mock()
         mock_db.refresh = Mock()
         mock_db.rollback = Mock()
-        
-        update_data = {
-            "platform": "twitter"
-        }
-        
+
+        update_data = {"platform": "twitter"}
+
         response = client.put("/api/v1/schedules/1", json=update_data)
-        
+
         assert response.status_code == 200
         mock_db.commit.assert_called_once()
 
@@ -400,9 +401,9 @@ class TestSchedulingEndpoints:
         mock_db.delete = Mock()
         mock_db.commit = Mock()
         mock_db.rollback = Mock()
-        
+
         response = client.delete("/api/v1/schedules/1")
-        
+
         assert response.status_code == 204
         mock_db.delete.assert_called_once()
         mock_db.commit.assert_called_once()
@@ -411,18 +412,20 @@ class TestSchedulingEndpoints:
 class TestRealTimeStatusEndpoints:
     """Test real-time status endpoints."""
 
-    def test_get_content_status_success(self, client, mock_db, sample_content_item, sample_schedule):
+    def test_get_content_status_success(
+        self, client, mock_db, sample_content_item, sample_schedule
+    ):
         """GET /api/v1/content/{id}/status should return status."""
         # Mock content query
         content_query = Mock()
         content_query.filter.return_value = content_query
         content_query.first.return_value = sample_content_item
-        
+
         # Mock schedules query
         schedule_query = Mock()
         schedule_query.filter.return_value = schedule_query
         schedule_query.all.return_value = [sample_schedule]
-        
+
         # Setup query routing
         def mock_query(model):
             if model == ContentItem:
@@ -430,11 +433,11 @@ class TestRealTimeStatusEndpoints:
             elif model == ContentSchedule:
                 return schedule_query
             return Mock()
-        
+
         mock_db.query.side_effect = mock_query
-        
+
         response = client.get("/api/v1/content/1/status")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["content_id"] == 1
@@ -449,9 +452,9 @@ class TestRealTimeStatusEndpoints:
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = None
         mock_db.query.return_value = mock_query
-        
+
         response = client.get("/api/v1/content/999/status")
-        
+
         assert response.status_code == 404
 
     def test_get_upcoming_schedules_success(self, client, mock_db, sample_schedule):
@@ -462,14 +465,15 @@ class TestRealTimeStatusEndpoints:
         mock_query.order_by.return_value = mock_query
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = [sample_schedule]
-        
+
         # Mock count queries
         mock_count_query = Mock()
         mock_count_query.filter.return_value = mock_count_query
         mock_count_query.count.return_value = 1
-        
+
         # Route queries properly
         call_count = 0
+
         def mock_query_router(model):
             nonlocal call_count
             call_count += 1
@@ -477,11 +481,11 @@ class TestRealTimeStatusEndpoints:
                 return mock_query
             else:  # Subsequent calls for counts
                 return mock_count_query
-        
+
         mock_db.query.side_effect = mock_query_router
-        
+
         response = client.get("/api/v1/schedules/upcoming")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "schedules" in data
@@ -489,7 +493,9 @@ class TestRealTimeStatusEndpoints:
         assert "next_24_hours" in data
         assert "next_week" in data
 
-    def test_get_upcoming_schedules_with_filters(self, client, mock_db, sample_schedule):
+    def test_get_upcoming_schedules_with_filters(
+        self, client, mock_db, sample_schedule
+    ):
         """GET /api/v1/schedules/upcoming should support platform filtering."""
         # Mock query
         mock_query = Mock()
@@ -497,13 +503,14 @@ class TestRealTimeStatusEndpoints:
         mock_query.order_by.return_value = mock_query
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = [sample_schedule]
-        
+
         # Mock count query
         mock_count_query = Mock()
         mock_count_query.filter.return_value = mock_count_query
         mock_count_query.count.return_value = 1
-        
+
         call_count = 0
+
         def mock_query_router(model):
             nonlocal call_count
             call_count += 1
@@ -511,11 +518,11 @@ class TestRealTimeStatusEndpoints:
                 return mock_query
             else:
                 return mock_count_query
-        
+
         mock_db.query.side_effect = mock_query_router
-        
+
         response = client.get("/api/v1/schedules/upcoming?platform=linkedin&limit=10")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data["schedules"]) <= 10

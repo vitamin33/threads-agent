@@ -1,12 +1,10 @@
 """Test fixtures for orchestrator service tests."""
 
-import os
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from services.orchestrator.db import Base
 
 
 @pytest.fixture(scope="function")
@@ -16,19 +14,23 @@ def db_engine():
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
-        echo=False  # Set to True for SQL debugging
+        echo=False,  # Set to True for SQL debugging
     )
-    
+
     # Import only the models we need to avoid PostgreSQL-specific types
-    from services.orchestrator.db.models import ContentItem, ContentSchedule, ContentAnalytics
-    
+    from services.orchestrator.db.models import (
+        ContentItem,
+        ContentSchedule,
+        ContentAnalytics,
+    )
+
     # Create only the tables we need for our tests
     ContentItem.__table__.create(engine, checkfirst=True)
     ContentSchedule.__table__.create(engine, checkfirst=True)
     ContentAnalytics.__table__.create(engine, checkfirst=True)
-    
+
     yield engine
-    
+
     # Clean up
     ContentItem.__table__.drop(engine, checkfirst=True)
     ContentSchedule.__table__.drop(engine, checkfirst=True)
@@ -41,7 +43,7 @@ def db_session(db_engine):
     """Create database session for testing."""
     SessionLocal = sessionmaker(bind=db_engine, expire_on_commit=False)
     session = SessionLocal()
-    
+
     try:
         yield session
     finally:
@@ -61,8 +63,8 @@ def sample_content_data():
             "content_metadata": {
                 "tags": ["AI", "Development", "Machine Learning"],
                 "estimated_read_time": 8,
-                "target_audience": "developers"
-            }
+                "target_audience": "developers",
+            },
         },
         "social_post": {
             "title": "Quick AI Tip",
@@ -71,9 +73,9 @@ def sample_content_data():
             "author_id": "ai_expert_001",
             "content_metadata": {
                 "hashtags": ["#AI", "#MachineLearning", "#Tips"],
-                "target_platforms": ["linkedin", "twitter"]
-            }
-        }
+                "target_platforms": ["linkedin", "twitter"],
+            },
+        },
     }
 
 
@@ -85,23 +87,23 @@ def sample_platform_configs():
             "hashtags": ["#AI", "#TechLeadership", "#Innovation"],
             "mention_users": ["@techleader"],
             "include_call_to_action": True,
-            "optimize_for_engagement": True
+            "optimize_for_engagement": True,
         },
         "devto": {
             "tags": ["ai", "machinelearning", "python"],
             "series_name": "AI Development Series",
             "canonical_url": None,
-            "cover_image": "https://example.com/cover.jpg"
+            "cover_image": "https://example.com/cover.jpg",
         },
         "twitter": {
             "thread_mode": False,
             "hashtags": ["#AI", "#ML"],
             "mention_users": [],
-            "include_media": False
+            "include_media": False,
         },
         "medium": {
             "publication": "AI Developer Community",
             "tags": ["artificial-intelligence", "machine-learning", "programming"],
-            "subtitle": "Insights from the AI development trenches"
-        }
+            "subtitle": "Insights from the AI development trenches",
+        },
     }

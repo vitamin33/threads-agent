@@ -25,7 +25,9 @@ def upgrade() -> None:
         sa.Column("content", sa.Text(), nullable=False),
         sa.Column("content_type", sa.String(length=50), nullable=False),
         sa.Column("author_id", sa.String(length=100), nullable=False),
-        sa.Column("status", sa.String(length=20), nullable=False, server_default="draft"),
+        sa.Column(
+            "status", sa.String(length=20), nullable=False, server_default="draft"
+        ),
         sa.Column("slug", sa.String(length=200), nullable=True),
         sa.Column("content_metadata", sa.JSON(), nullable=True),
         sa.Column(
@@ -65,8 +67,12 @@ def upgrade() -> None:
         sa.Column("content_item_id", sa.BigInteger(), nullable=False),
         sa.Column("platform", sa.String(length=50), nullable=False),
         sa.Column("scheduled_time", sa.DateTime(), nullable=False),
-        sa.Column("timezone_name", sa.String(length=50), nullable=False, server_default="UTC"),
-        sa.Column("status", sa.String(length=20), nullable=False, server_default="scheduled"),
+        sa.Column(
+            "timezone_name", sa.String(length=50), nullable=False, server_default="UTC"
+        ),
+        sa.Column(
+            "status", sa.String(length=20), nullable=False, server_default="scheduled"
+        ),
         sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("max_retries", sa.Integer(), nullable=False, server_default="3"),
         sa.Column("next_retry_time", sa.DateTime(), nullable=True),
@@ -87,7 +93,9 @@ def upgrade() -> None:
 
     # Create indexes for content_schedules
     op.create_index(
-        "idx_content_schedules_content_item_id", "content_schedules", ["content_item_id"]
+        "idx_content_schedules_content_item_id",
+        "content_schedules",
+        ["content_item_id"],
     )
     op.create_index("idx_content_schedules_platform", "content_schedules", ["platform"])
     op.create_index(
@@ -136,13 +144,19 @@ def upgrade() -> None:
 
     # Create indexes for content_analytics
     op.create_index(
-        "idx_content_analytics_content_item_id", "content_analytics", ["content_item_id"]
+        "idx_content_analytics_content_item_id",
+        "content_analytics",
+        ["content_item_id"],
     )
     op.create_index("idx_content_analytics_platform", "content_analytics", ["platform"])
     op.create_index(
-        "idx_content_analytics_engagement_rate", "content_analytics", ["engagement_rate"]
+        "idx_content_analytics_engagement_rate",
+        "content_analytics",
+        ["engagement_rate"],
     )
-    op.create_index("idx_content_analytics_measured_at", "content_analytics", ["measured_at"])
+    op.create_index(
+        "idx_content_analytics_measured_at", "content_analytics", ["measured_at"]
+    )
 
     # Composite indexes for analytics queries
     op.create_index(
@@ -164,7 +178,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop indexes first, then tables (reverse order of creation)
-    
+
     # content_analytics indexes
     op.drop_index(
         "idx_content_analytics_engagement_measured", table_name="content_analytics"

@@ -28,9 +28,9 @@ spec:
           
           env:
             - name: POSTGRES_DSN
-              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
+              value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
             - name: DATABASE_URL
-              value: "postgresql://postgres:pass@postgres:5432/threads_agent"
+              value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
             - name: REDIS_URL
               value: "redis://redis:6379/0"
             - name: RABBITMQ_URL

@@ -80,6 +80,7 @@ rabbitmq:
 postgres:
   enabled: true
   auth:
+    username: postgres
     postgresPassword: pass
   storage: 1Gi                         # pvc size used in pvc.yaml / template
 
@@ -237,3 +238,9 @@ mlflow:
     monitoring:
       serviceMonitor:
         enabled: false  # Disable ServiceMonitor (requires Prometheus Operator)
+
+# Event Bus for event-driven architecture
+eventBus:
+  enabled: true
+  image:
+    tag: "final"

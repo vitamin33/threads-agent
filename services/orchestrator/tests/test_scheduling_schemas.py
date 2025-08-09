@@ -25,7 +25,7 @@ try:
         PaginatedContentResponse,
         ContentStatus,
         PlatformType,
-        ContentType
+        ContentType,
     )
 except ImportError:
     # Expected failure - schemas don't exist yet
@@ -41,9 +41,9 @@ class TestContentItemSchemas:
             ContentItemCreate(
                 content="Test content",
                 content_type="blog_post",
-                author_id="test_author"
+                author_id="test_author",
             )
-        
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("title",) for error in error_data)
 
@@ -51,11 +51,9 @@ class TestContentItemSchemas:
         """ContentItemCreate should require content field."""
         with pytest.raises(ValidationError) as exc_info:
             ContentItemCreate(
-                title="Test Title",
-                content_type="blog_post",
-                author_id="test_author"
+                title="Test Title", content_type="blog_post", author_id="test_author"
             )
-        
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("content",) for error in error_data)
 
@@ -63,11 +61,9 @@ class TestContentItemSchemas:
         """ContentItemCreate should require content_type field."""
         with pytest.raises(ValidationError) as exc_info:
             ContentItemCreate(
-                title="Test Title",
-                content="Test content",
-                author_id="test_author"
+                title="Test Title", content="Test content", author_id="test_author"
             )
-        
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("content_type",) for error in error_data)
 
@@ -75,11 +71,9 @@ class TestContentItemSchemas:
         """ContentItemCreate should require author_id field."""
         with pytest.raises(ValidationError) as exc_info:
             ContentItemCreate(
-                title="Test Title",
-                content="Test content",
-                content_type="blog_post"
+                title="Test Title", content="Test content", content_type="blog_post"
             )
-        
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("author_id",) for error in error_data)
 
@@ -90,12 +84,9 @@ class TestContentItemSchemas:
             content="A comprehensive guide to modern AI development practices.",
             content_type="blog_post",
             author_id="ai_expert_001",
-            content_metadata={
-                "tags": ["AI", "Development"],
-                "estimated_read_time": 8
-            }
+            content_metadata={"tags": ["AI", "Development"], "estimated_read_time": 8},
         )
-        
+
         assert item.title == "Advanced AI Development Techniques"
         assert item.content_type == "blog_post"
         assert item.author_id == "ai_expert_001"
@@ -108,9 +99,9 @@ class TestContentItemSchemas:
             title="Test Title",
             content="Test content",
             content_type="blog_post",
-            author_id="test_author"
+            author_id="test_author",
         )
-        
+
         assert item.status == "draft"
 
     def test_content_item_create_validates_content_type(self):
@@ -120,9 +111,9 @@ class TestContentItemSchemas:
                 title="Test Title",
                 content="Test content",
                 content_type="invalid_type",
-                author_id="test_author"
+                author_id="test_author",
             )
-        
+
         error_data = exc_info.value.errors()
         assert any("invalid_type" in str(error) for error in error_data)
 
@@ -134,16 +125,16 @@ class TestContentItemSchemas:
                 content="Test content",
                 content_type="blog_post",
                 author_id="test_author",
-                status="invalid_status"
+                status="invalid_status",
             )
-        
+
         error_data = exc_info.value.errors()
         assert any("invalid_status" in str(error) for error in error_data)
 
     def test_content_item_response_includes_timestamps(self):
         """ContentItemResponse should include created_at and updated_at."""
         now = datetime.now(timezone.utc)
-        
+
         response = ContentItemResponse(
             id=1,
             title="Test Title",
@@ -152,9 +143,9 @@ class TestContentItemSchemas:
             author_id="test_author",
             status="draft",
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
-        
+
         assert response.id == 1
         assert response.created_at == now
         assert response.updated_at == now
@@ -164,7 +155,7 @@ class TestContentItemSchemas:
         # Should not raise validation error with no fields
         update = ContentItemUpdate()
         assert update is not None
-        
+
         # Should accept partial updates
         update = ContentItemUpdate(title="New Title")
         assert update.title == "New Title"
@@ -180,9 +171,9 @@ class TestContentScheduleSchemas:
         with pytest.raises(ValidationError) as exc_info:
             ContentScheduleCreate(
                 platform="linkedin",
-                scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2)
+                scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
             )
-        
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("content_item_id",) for error in error_data)
 
@@ -191,20 +182,17 @@ class TestContentScheduleSchemas:
         with pytest.raises(ValidationError) as exc_info:
             ContentScheduleCreate(
                 content_item_id=1,
-                scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2)
+                scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
             )
-        
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("platform",) for error in error_data)
 
     def test_content_schedule_create_requires_scheduled_time(self):
         """ContentScheduleCreate should require scheduled_time."""
         with pytest.raises(ValidationError) as exc_info:
-            ContentScheduleCreate(
-                content_item_id=1,
-                platform="linkedin"
-            )
-        
+            ContentScheduleCreate(content_item_id=1, platform="linkedin")
+
         error_data = exc_info.value.errors()
         assert any(error["loc"] == ("scheduled_time",) for error in error_data)
 
@@ -214,9 +202,9 @@ class TestContentScheduleSchemas:
             ContentScheduleCreate(
                 content_item_id=1,
                 platform="invalid_platform",
-                scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2)
+                scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
             )
-        
+
         error_data = exc_info.value.errors()
         assert any("invalid_platform" in str(error) for error in error_data)
 
@@ -225,9 +213,9 @@ class TestContentScheduleSchemas:
         schedule = ContentScheduleCreate(
             content_item_id=1,
             platform="linkedin",
-            scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2)
+            scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
         )
-        
+
         assert schedule.timezone_name == "UTC"
 
     def test_content_schedule_create_defaults_status_to_scheduled(self):
@@ -235,31 +223,31 @@ class TestContentScheduleSchemas:
         schedule = ContentScheduleCreate(
             content_item_id=1,
             platform="linkedin",
-            scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2)
+            scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
         )
-        
+
         assert schedule.status == "scheduled"
 
     def test_content_schedule_create_accepts_platform_config(self):
         """ContentScheduleCreate should accept platform_config as dict."""
         config = {
             "hashtags": ["#AI", "#TechLeadership"],
-            "mention_users": ["@techleader"]
+            "mention_users": ["@techleader"],
         }
-        
+
         schedule = ContentScheduleCreate(
             content_item_id=1,
             platform="linkedin",
             scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
-            platform_config=config
+            platform_config=config,
         )
-        
+
         assert schedule.platform_config == config
 
     def test_content_schedule_response_includes_retry_fields(self):
         """ContentScheduleResponse should include retry mechanism fields."""
         now = datetime.now(timezone.utc)
-        
+
         response = ContentScheduleResponse(
             id=1,
             content_item_id=1,
@@ -270,9 +258,9 @@ class TestContentScheduleSchemas:
             retry_count=0,
             max_retries=3,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
-        
+
         assert response.retry_count == 0
         assert response.max_retries == 3
         assert response.next_retry_time is None
@@ -282,7 +270,7 @@ class TestContentScheduleSchemas:
         # Valid status updates should work
         update = ContentScheduleUpdate(status="published")
         assert update.status == "published"
-        
+
         # Invalid status should fail
         with pytest.raises(ValidationError):
             ContentScheduleUpdate(status="invalid_status")
@@ -294,7 +282,7 @@ class TestResponseSchemas:
     def test_content_status_response_structure(self):
         """ContentStatusResponse should have proper structure."""
         now = datetime.now(timezone.utc)
-        
+
         status = ContentStatusResponse(
             content_id=1,
             status="draft",
@@ -303,11 +291,11 @@ class TestResponseSchemas:
                 "total_platforms": 2,
                 "published_platforms": 0,
                 "failed_platforms": 0,
-                "scheduled_platforms": 2
+                "scheduled_platforms": 2,
             },
-            last_updated=now
+            last_updated=now,
         )
-        
+
         assert status.content_id == 1
         assert status.status == "draft"
         assert isinstance(status.schedules, list)
@@ -315,14 +303,8 @@ class TestResponseSchemas:
 
     def test_paginated_content_response_structure(self):
         """PaginatedContentResponse should have proper pagination structure."""
-        response = PaginatedContentResponse(
-            items=[],
-            total=0,
-            page=1,
-            size=20,
-            pages=1
-        )
-        
+        response = PaginatedContentResponse(items=[], total=0, page=1, size=20, pages=1)
+
         assert response.items == []
         assert response.total == 0
         assert response.page == 1
@@ -332,12 +314,9 @@ class TestResponseSchemas:
     def test_upcoming_schedules_response_structure(self):
         """UpcomingSchedulesResponse should have proper structure."""
         response = UpcomingSchedulesResponse(
-            schedules=[],
-            total=0,
-            next_24_hours=0,
-            next_week=0
+            schedules=[], total=0, next_24_hours=0, next_week=0
         )
-        
+
         assert response.schedules == []
         assert response.total == 0
         assert response.next_24_hours == 0
@@ -347,16 +326,13 @@ class TestResponseSchemas:
         """CalendarViewResponse should have proper structure."""
         start_date = datetime.now(timezone.utc).date()
         end_date = start_date + timedelta(days=7)
-        
+
         response = CalendarViewResponse(
             schedules=[],
-            date_range={
-                "start": start_date.isoformat(),
-                "end": end_date.isoformat()
-            },
-            grouped_by_date={}
+            date_range={"start": start_date.isoformat(), "end": end_date.isoformat()},
+            grouped_by_date={},
         )
-        
+
         assert response.schedules == []
         assert "start" in response.date_range
         assert "end" in response.date_range
@@ -401,14 +377,12 @@ class TestValidationLogic:
     def test_scheduled_time_must_be_future(self):
         """scheduled_time should be validated to be in the future."""
         past_time = datetime.now(timezone.utc) - timedelta(hours=1)
-        
+
         with pytest.raises(ValidationError) as exc_info:
             ContentScheduleCreate(
-                content_item_id=1,
-                platform="linkedin",
-                scheduled_time=past_time
+                content_item_id=1, platform="linkedin", scheduled_time=past_time
             )
-        
+
         error_data = exc_info.value.errors()
         assert any("future" in str(error).lower() for error in error_data)
 
@@ -419,9 +393,9 @@ class TestValidationLogic:
                 content_item_id=1,
                 platform="linkedin",
                 scheduled_time=datetime.now(timezone.utc) + timedelta(hours=2),
-                timezone_name="Invalid/Timezone"
+                timezone_name="Invalid/Timezone",
             )
-        
+
         error_data = exc_info.value.errors()
         assert any("timezone" in str(error).lower() for error in error_data)
 
@@ -433,15 +407,15 @@ class TestValidationLogic:
                 title="",  # Empty title
                 content="Test content",
                 content_type="blog_post",
-                author_id="test_author"
+                author_id="test_author",
             )
-        
+
         with pytest.raises(ValidationError):
             ContentItemCreate(
                 title="x" * 501,  # Too long title (assuming 500 char limit)
                 content="Test content",
                 content_type="blog_post",
-                author_id="test_author"
+                author_id="test_author",
             )
 
     def test_content_metadata_json_validation(self):
@@ -450,15 +424,15 @@ class TestValidationLogic:
             "tags": ["AI", "Development"],
             "estimated_read_time": 8,
             "target_audience": "developers",
-            "seo_keywords": ["AI", "machine learning"]
+            "seo_keywords": ["AI", "machine learning"],
         }
-        
+
         item = ContentItemCreate(
             title="Test Title",
             content="Test content",
             content_type="blog_post",
             author_id="test_author",
-            content_metadata=valid_metadata
+            content_metadata=valid_metadata,
         )
-        
+
         assert item.content_metadata == valid_metadata

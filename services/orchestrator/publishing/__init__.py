@@ -5,7 +5,7 @@ across multiple platforms including Dev.to, LinkedIn, Twitter, Threads, and Medi
 
 Key Components:
 - PublishingEngine: Main orchestrator for multi-platform publishing
-- PlatformAdapter: Base interface for platform-specific implementations  
+- PlatformAdapter: Base interface for platform-specific implementations
 - Celery tasks: Async processing and retry mechanisms
 - Rate limiting and error handling
 """

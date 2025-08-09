@@ -8,35 +8,39 @@ from celery import Celery, shared_task
 from sqlalchemy import and_
 
 # Create Celery app instance
-celery = Celery('performance_monitor')
-celery.config_from_object('services.common.celery_config')
+celery = Celery("performance_monitor")
+celery.config_from_object("services.common.celery_config")
 
 from contextlib import contextmanager
 from services.performance_monitor.early_kill import EarlyKillMonitor, VariantPerformance
 from services.performance_monitor.models import VariantMonitoring
 from services.performance_monitor.cache import PerformanceCache
+
+
 # Mock implementation since ThreadsClientSync doesn't exist
 class ThreadsClientSync:
     def __init__(self):
         pass
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-    
+
     def bulk_get_performance(self, post_ids):
         """Mock performance data for testing"""
         import random
+
         return [
             {
                 "views": random.randint(100, 1000),
-                "interactions": random.randint(5, 50), 
-                "engagement_rate": random.uniform(0.01, 0.10)
+                "interactions": random.randint(5, 50),
+                "engagement_rate": random.uniform(0.01, 0.10),
             }
             for _ in post_ids
         ]
+
 
 logger = logging.getLogger(__name__)
 

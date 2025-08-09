@@ -18,7 +18,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import event
 import re
-from typing import Optional
 
 from . import Base
 
@@ -28,11 +27,11 @@ def generate_slug(title: str) -> str:
     # Convert to lowercase, replace spaces with hyphens
     slug = title.lower().strip()
     # Remove special characters
-    slug = re.sub(r'[^\w\s-]', '', slug)
+    slug = re.sub(r"[^\w\s-]", "", slug)
     # Replace spaces with hyphens
-    slug = re.sub(r'[-\s]+', '-', slug)
+    slug = re.sub(r"[-\s]+", "-", slug)
     # Remove leading/trailing hyphens
-    slug = slug.strip('-')
+    slug = slug.strip("-")
     return slug[:200]  # Limit to 200 chars
 
 
@@ -353,24 +352,33 @@ class EmotionPerformance(Base):
 
 class ContentItem(Base):
     """Primary content storage with lifecycle management."""
-    
+
     __tablename__ = "content_items"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     content_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     author_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="draft", index=True)
-    
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="draft", index=True
+    )
+
     # Optional fields
-    slug: Mapped[str] = mapped_column(String(200), nullable=True, unique=True, index=True)
+    slug: Mapped[str] = mapped_column(
+        String(200), nullable=True, unique=True, index=True
+    )
     content_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
-    
+
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc), index=True)
-    updated_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc), index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
     # Relationships
     schedules: Mapped[List["ContentSchedule"]] = relationship(
         "ContentSchedule", back_populates="content_item", cascade="all, delete-orphan"
@@ -381,7 +389,7 @@ class ContentItem(Base):
 
 
 # Event listener to auto-generate slug before insert
-@event.listens_for(ContentItem, 'before_insert')
+@event.listens_for(ContentItem, "before_insert")
 def generate_content_slug(mapper, connection, target):
     """Auto-generate slug from title if not provided."""
     if target.slug is None and target.title:
@@ -390,68 +398,85 @@ def generate_content_slug(mapper, connection, target):
 
 class ContentSchedule(Base):
     """Multi-platform scheduling with timezone support."""
-    
+
     __tablename__ = "content_schedules"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     content_item_id: Mapped[int] = mapped_column(
-        Integer, 
-        ForeignKey("content_items.id", ondelete="CASCADE"), 
-        nullable=False, 
-        index=True
+        Integer,
+        ForeignKey("content_items.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     platform: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     scheduled_time: Mapped[datetime] = mapped_column(nullable=False, index=True)
-    timezone_name: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="scheduled", index=True)
-    
+    timezone_name: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="UTC"
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="scheduled", index=True
+    )
+
     # Retry mechanism
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     next_retry_time: Mapped[datetime] = mapped_column(nullable=True)
-    
+
     # Platform-specific configuration
     platform_config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
-    
+
     # Publish tracking
     published_at: Mapped[datetime] = mapped_column(nullable=True)
     error_message: Mapped[str] = mapped_column(Text, nullable=True)
-    
+
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
     # Relationships
-    content_item: Mapped["ContentItem"] = relationship("ContentItem", back_populates="schedules")
+    content_item: Mapped["ContentItem"] = relationship(
+        "ContentItem", back_populates="schedules"
+    )
 
 
 class ContentAnalytics(Base):
     """Performance tracking and analytics."""
-    
+
     __tablename__ = "content_analytics"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     content_item_id: Mapped[int] = mapped_column(
-        Integer, 
-        ForeignKey("content_items.id", ondelete="CASCADE"), 
-        nullable=False, 
-        index=True
+        Integer,
+        ForeignKey("content_items.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     platform: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    
+
     # Core metrics
     views: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     likes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     comments: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     shares: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    engagement_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0, index=True)
-    
+    engagement_rate: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0, index=True
+    )
+
     # Additional platform-specific metrics
     additional_metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
-    
+
     # Time tracking
     measured_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
-    
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+
     # Relationships
-    content_item: Mapped["ContentItem"] = relationship("ContentItem", back_populates="analytics")
+    content_item: Mapped["ContentItem"] = relationship(
+        "ContentItem", back_populates="analytics"
+    )

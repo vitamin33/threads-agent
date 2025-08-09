@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test dashboard connections"""
+
 import requests
-import json
 
 print("Testing Dashboard Connections...")
 print("=" * 50)
