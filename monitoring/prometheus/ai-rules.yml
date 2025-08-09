@@ -1,0 +1,191 @@
+groups:
+  - name: ai_monitoring
+    interval: 30s
+    rules:
+      # AI Model Performance
+      - alert: AIHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(ai_response_time_ms_bucket[5m])) by (model, le)) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "High AI model latency detected"
+          description: "Model {{ $labels.model }} P95 latency is {{ $value }}ms (threshold: 2000ms)"
+          
+      - alert: AIVeryHighLatency
+        expr: |
+          histogram_quantile(0.99, sum(rate(ai_response_time_ms_bucket[5m])) by (model, le)) > 5000
+        for: 5m
+        labels:
+          severity: critical
+          component: ai
+        annotations:
+          summary: "Critical AI model latency"
+          description: "Model {{ $labels.model }} P99 latency is {{ $value }}ms (threshold: 5000ms)"
+      
+      # AI Error Rate
+      - alert: AIHighErrorRate
+        expr: |
+          sum(rate(ai_errors_total[5m])) by (model) / sum(rate(ai_requests_total[5m])) by (model) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "High AI error rate"
+          description: "Model {{ $labels.model }} error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+          
+      - alert: AICriticalErrorRate
+        expr: |
+          sum(rate(ai_errors_total[5m])) by (model) / sum(rate(ai_requests_total[5m])) by (model) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: ai
+        annotations:
+          summary: "Critical AI error rate"
+          description: "Model {{ $labels.model }} error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+      
+      # AI Cost Monitoring
+      - alert: AIHighCostPerRequest
+        expr: |
+          avg(ai_cost_per_request) by (model) > 0.015
+        for: 10m
+        labels:
+          severity: warning
+          component: ai
+          team: finops
+        annotations:
+          summary: "High AI cost per request"
+          description: "Model {{ $labels.model }} costs ${{ $value }} per request (threshold: $0.015)"
+          
+      - alert: AIMonthlyBudgetExceeded
+        expr: |
+          sum(increase(ai_cost_dollars_total[30d])) > 1000
+        labels:
+          severity: critical
+          component: ai
+          team: finops
+        annotations:
+          summary: "AI monthly budget exceeded"
+          description: "AI costs for the month: ${{ $value }} (budget: $1000)"
+      
+      # Model Drift Detection
+      - alert: AIModelDriftDetected
+        expr: |
+          ai_confidence_drift_percentage > 10
+        for: 30m
+        labels:
+          severity: warning
+          component: ai
+          team: mlops
+        annotations:
+          summary: "AI model drift detected"
+          description: "Model {{ $labels.model }} confidence has drifted by {{ $value }}%"
+          
+      - alert: AISevereModelDrift
+        expr: |
+          ai_confidence_drift_percentage > 15
+        for: 15m
+        labels:
+          severity: critical
+          component: ai
+          team: mlops
+        annotations:
+          summary: "Severe AI model drift"
+          description: "Model {{ $labels.model }} confidence has drifted by {{ $value }}% - consider retraining"
+      
+      # Security Monitoring
+      - alert: AIPromptInjectionAttempts
+        expr: |
+          sum(increase(ai_prompt_injection_attempts_total[1h])) > 5
+        labels:
+          severity: warning
+          component: ai
+          team: security
+        annotations:
+          summary: "Multiple prompt injection attempts detected"
+          description: "{{ $value }} prompt injection attempts in the last hour"
+          
+      - alert: AISecurityIncident
+        expr: |
+          sum(increase(ai_security_incidents_total[1h])) > 10
+        labels:
+          severity: critical
+          component: ai
+          team: security
+        annotations:
+          summary: "AI security incident"
+          description: "{{ $value }} security incidents detected in the last hour"
+      
+      # Quality Monitoring
+      - alert: AILowConfidence
+        expr: |
+          avg(ai_confidence_score) by (model) < 0.7
+        for: 15m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "Low AI model confidence"
+          description: "Model {{ $labels.model }} average confidence is {{ $value }} (threshold: 0.7)"
+          
+      - alert: AIHallucinationRisk
+        expr: |
+          sum(rate(ai_hallucination_flags_total[5m])) by (model) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "High hallucination risk"
+          description: "Model {{ $labels.model }} showing {{ $value | humanizePercentage }} hallucination flag rate"
+      
+      # Resource Monitoring
+      - alert: AITokenExhaustion
+        expr: |
+          predict_linear(ai_tokens_remaining[1h], 3600) < 0
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "AI token exhaustion predicted"
+          description: "Tokens will be exhausted in approximately 1 hour at current rate"
+          
+      - alert: AIRateLimitApproaching
+        expr: |
+          sum(rate(ai_requests_total[1m])) by (model) > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: ai
+        annotations:
+          summary: "Approaching AI rate limits"
+          description: "Model {{ $labels.model }} at {{ $value }} requests/minute"
+
+  - name: ai_recording_rules
+    interval: 30s
+    rules:
+      # Pre-calculate commonly used metrics for dashboard performance
+      - record: ai:requests:rate5m
+        expr: sum(rate(ai_requests_total[5m])) by (model)
+        
+      - record: ai:errors:rate5m
+        expr: sum(rate(ai_errors_total[5m])) by (model)
+        
+      - record: ai:error_rate
+        expr: ai:errors:rate5m / ai:requests:rate5m
+        
+      - record: ai:latency:p95
+        expr: histogram_quantile(0.95, sum(rate(ai_response_time_ms_bucket[5m])) by (model, le))
+        
+      - record: ai:latency:p99
+        expr: histogram_quantile(0.99, sum(rate(ai_response_time_ms_bucket[5m])) by (model, le))
+        
+      - record: ai:cost:hourly_rate
+        expr: sum(rate(ai_cost_dollars_total[5m])) by (model) * 3600
+        
+      - record: ai:tokens:rate5m
+        expr: sum(rate(ai_tokens_total[5m])) by (model)

@@ -116,6 +116,20 @@ mlflow:
 global:
   storageClass: local-path
 
+# CI-specific overrides to improve reliability
+viral_metrics:
+  autoscaling:
+    enabled: false  # Disable HPA in CI to avoid metrics API issues
+
+# Disable other autoscaling in CI
+autoscaling:
+  enabled: false
+
+# Increase job timeouts for CI
+migrations:
+  backoffLimit: 6  # Increase from 3
+  activeDeadlineSeconds: 600  # 10 minutes timeout
+
 service:
   type: ClusterIP
   port: 8080

@@ -1,3 +1,4 @@
 # /services/fake_threads/requirements.txt
 fastapi==0.111.*
 uvicorn[standard]==0.30.*
+prometheus-client>=0.22.1

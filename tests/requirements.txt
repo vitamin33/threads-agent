@@ -9,3 +9,4 @@ qdrant-client>=1.9
 psycopg2-binary==2.9.*         # For direct database access in e2e tests
 fakeredis>=2.23
 prometheus-client>=0.22.1
+psutil>=5.9.0                  # For memory and CPU monitoring in performance tests

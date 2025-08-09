@@ -1,0 +1,64 @@
+{
+  "test_date": "2025-08-05T22:09:39.656659",
+  "test_description": "CRA-298 Mock Analysis - 5 Representative PRs",
+  "total_portfolio_value": 235300.0,
+  "projected_full_value": 4706000.0,
+  "sample_size": 5,
+  "average_roi": 497.8,
+  "categories": {
+    "ai_ml": {
+      "count": 3,
+      "value": 200300.0
+    },
+    "performance": {
+      "count": 1,
+      "value": 27000.0
+    },
+    "bugfix": {
+      "count": 1,
+      "value": 8000.0
+    }
+  },
+  "achievements": [
+    {
+      "pr_number": 94,
+      "title": "feat: CRA-284 Complete Apache Airflow orchestration system with monitoring",
+      "value": 72600.0,
+      "roi": 750,
+      "category": "ai_ml",
+      "confidence": "high"
+    },
+    {
+      "pr_number": 91,
+      "title": "feat(CRA-320): RAG Pipeline + Achievement Calculation Transparency",
+      "value": 70200.0,
+      "roi": 750,
+      "category": "ai_ml",
+      "confidence": "high"
+    },
+    {
+      "pr_number": 92,
+      "title": "feat(AI-Job-Week2): Automation & ROI Tools - Content Scheduler, Professional Engine",
+      "value": 57500.0,
+      "roi": 625.0,
+      "category": "ai_ml",
+      "confidence": "high"
+    },
+    {
+      "pr_number": 89,
+      "title": "feat: Optimize viral engine performance by 140% with caching layer",
+      "value": 27000.0,
+      "roi": 324.0,
+      "category": "performance",
+      "confidence": "high"
+    },
+    {
+      "pr_number": 87,
+      "title": "fix: resolve CI failures and improve test coverage to 92%",
+      "value": 8000.0,
+      "roi": 40.0,
+      "category": "bugfix",
+      "confidence": "high"
+    }
+  ]
+}

@@ -28,18 +28,18 @@ spec:
           imagePullPolicy: {{ .Values.fakeThreads.image.pullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: {{ .Values.fakeThreads.port }}
-          readinessProbe:                      # ——— health checks ———
-            httpGet:
-              path: /ping
-              port: {{ .Values.fakeThreads.port }}
-            initialDelaySeconds: 2
-            periodSeconds: 5
+          {{- if .Values.fakeThreads.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.fakeThreads.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.fakeThreads.livenessProbe }}
           livenessProbe:
-            httpGet:
-              path: /health
-              port: {{ .Values.fakeThreads.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            {{- toYaml .Values.fakeThreads.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.fakeThreads.resources }}
+          resources:
+            {{- toYaml .Values.fakeThreads.resources | nindent 12 }}
+          {{- end }}
 ---
 apiVersion: v1
 kind: Service

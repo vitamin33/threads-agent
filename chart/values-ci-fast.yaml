@@ -1,0 +1,171 @@
+# Conservative CI values - optimized for reliability over speed
+# Focus on service reduction rather than aggressive resource limits
+
+# Use local images (already in values-ci.yaml)
+image:
+  repository: docker.io/library/orchestrator
+  tag: "local"
+  pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
+
+personaRuntime:
+  enabled: true
+  replicas: 1  # Minimal replicas for CI
+  image:
+    repository: docker.io/library/persona-runtime
+    tag: "local"
+    pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
+  resources:
+    requests:
+      memory: "128Mi"  # Conservative memory for LLM service
+      cpu: "100m"      # More CPU for AI processing
+    limits:
+      memory: "256Mi"  # Adequate limits
+      cpu: "300m"
+
+# Conservative fake-threads config (avoid over-optimization)
+fakeThreads:
+  enabled: true
+  image:
+    repository: docker.io/library/fake-threads
+    tag: "local" 
+    pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
+  port: 9009
+  replicas: 1
+  resources:
+    requests:
+      memory: "32Mi"   # Minimal for CI
+      cpu: "20m"       # Minimal CPU
+    limits:
+      memory: "128Mi"  # Conservative limits
+      cpu: "200m"
+  # More forgiving health checks for CI
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 9009
+    initialDelaySeconds: 1
+    periodSeconds: 2
+    timeoutSeconds: 1
+    failureThreshold: 60   # Give it 2 minutes to warm up
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 9009
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 6
+  startupProbe:
+    httpGet:
+      path: /health
+      port: 9009
+    failureThreshold: 120
+    periodSeconds: 1
+
+# Minimal PostgreSQL for CI
+postgres:
+  enabled: true
+  storage: 500Mi  # Minimal storage
+  auth:
+    postgresPassword: "postgres"  # Simple password for CI
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  # Fast PostgreSQL startup
+  primary:
+    configuration: |
+      shared_preload_libraries = ''
+      max_connections = 20
+      shared_buffers = 16MB
+      effective_cache_size = 32MB
+      maintenance_work_mem = 4MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 1MB
+      default_statistics_target = 10
+
+# Minimal RabbitMQ
+rabbitmq:
+  enabled: true
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+# Enable celery worker with optimized settings for CI
+celeryWorker:
+  enabled: true
+  replicas: 1
+  image:
+    repository: docker.io/library/celery-worker
+    tag: "local"
+    pullPolicy: IfNotPresent  # Changed from Never for CI compatibility
+  resources:
+    requests:
+      memory: "128Mi"  # Reasonable for 2 worker processes
+      cpu: "50m"       # Minimal CPU for CI
+    limits:
+      memory: "256Mi"  # Should be enough with concurrency=2
+      cpu: "200m"
+  # Disable health checks in CI - metrics port not reliably available
+  livenessProbe: false
+  readinessProbe: false
+
+viralEngine:
+  enabled: false
+
+achievementCollector:
+  enabled: false
+
+conversationEngine:
+  enabled: false
+
+revenue:
+  enabled: false
+
+viralMetrics:
+  enabled: false
+
+mlflow:
+  performanceOptimization:
+    enabled: false
+
+# Minimal Qdrant
+qdrant:
+  enabled: true
+  image:
+    repository: qdrant/qdrant
+    tag: "v1.9.4"  # Match the version we import in CI
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+# Skip monitoring entirely
+monitoring:
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+
+# Global deployment optimizations
+global:
+  # Reduced resource requests across all services
+  resources:
+    requests:
+      memory: "32Mi"
+      cpu: "10m"
+    limits:
+      memory: "128Mi" 
+      cpu: "100m"

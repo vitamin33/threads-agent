@@ -530,6 +530,12 @@ monitoring:
       requests:
         cpu: 100m
         memory: 128Mi
+    # AI monitoring configuration
+    aiMonitoring:
+      enabled: true
+      rulesFile: /etc/prometheus/rules/ai-rules.yml
+      scrapeInterval: 30s
+      evaluationInterval: 30s
   grafana:
     enabled: false                     # turn ON in dev/prod values
     image:
@@ -548,6 +554,10 @@ monitoring:
       requests:
         cpu: 100m
         memory: 128Mi
+    # AI monitoring dashboards
+    aiDashboards:
+      enabled: true
+      configMap: ai-monitoring-dashboard
   alertmanager:
     enabled: false                        # turn ON in dev/prod values
     image:

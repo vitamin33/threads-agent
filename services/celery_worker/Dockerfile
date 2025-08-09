@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir -r services/common/requirements.txt
 COPY services/common ./services/common
 COPY services/celery_worker ./services/celery_worker
 
-CMD ["celery", "-A", "services.celery_worker.main", "worker", "-l", "info"]
+CMD sh -c "celery -A services.celery_worker.main worker -l info --concurrency=\${CELERY_WORKER_CONCURRENCY:-2} --max-memory-per-child=\${CELERY_WORKER_MAX_MEMORY_PER_CHILD:-50000}"
