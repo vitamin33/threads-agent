@@ -254,7 +254,7 @@ def chat(model: str, prompt: str) -> str:
         LLM_TOKENS_TOTAL.labels(model=model).inc(tokens)
 
         return text
-    except Exception as e:
+    except Exception:
         # Record error in AI metrics
         ai_metrics.record_inference(
             model_name=model,

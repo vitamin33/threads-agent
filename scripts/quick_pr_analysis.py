@@ -125,11 +125,11 @@ def quick_portfolio_analysis():
         categories[cat]["value"] += result["portfolio_value"]
 
     # Display results
-    print(f"\n📊 PORTFOLIO VALIDATION RESULTS")
+    print("\n📊 PORTFOLIO VALIDATION RESULTS")
     print("=" * 60)
     print(f"🎯 Portfolio Value (8 High-Impact PRs): ${total_value:,.2f}")
     print(f"📈 Projected Total (est. 40+ PRs): ${total_value * 5:,.2f}")
-    print(f"🏆 Target Range: $200,000 - $350,000")
+    print("🏆 Target Range: $200,000 - $350,000")
 
     projected_total = total_value * 5
     if 200000 <= projected_total <= 350000:
@@ -142,7 +142,7 @@ def quick_portfolio_analysis():
     print(f"📊 STATUS: {status}")
     print(f"📊 Average ROI: {avg_roi:.1f}%")
 
-    print(f"\n🏷️ VALUE BY CATEGORY:")
+    print("\n🏷️ VALUE BY CATEGORY:")
     for category, stats in sorted(
         categories.items(), key=lambda x: x[1]["value"], reverse=True
     ):

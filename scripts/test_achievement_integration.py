@@ -7,8 +7,6 @@ Tests creating achievements with business value metrics
 import json
 import urllib.request
 import urllib.parse
-from datetime import datetime
-from pathlib import Path
 
 
 def test_achievement_creation():
@@ -122,7 +120,7 @@ def test_portfolio_summary():
 
             if achievements:
                 avg_roi = total_roi / len(achievements)
-                print(f"✅ Portfolio Summary:")
+                print("✅ Portfolio Summary:")
                 print(f"   Total Achievements: {len(achievements)}")
                 print(f"   Total Portfolio Value: ${total_value:,.0f}")
                 print(f"   Average ROI: {avg_roi:.1f}%")
@@ -134,7 +132,7 @@ def test_portfolio_summary():
                         achievements,
                         key=lambda x: x.get("metrics", {}).get("portfolio_value", 0),
                     )
-                    print(f"\n📊 Top Achievement:")
+                    print("\n📊 Top Achievement:")
                     print(f"   {top.get('title', 'N/A')}")
                     print(
                         f"   Value: ${top.get('metrics', {}).get('portfolio_value', 0):,.0f}"

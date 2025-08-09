@@ -6,9 +6,8 @@ Analyzes GitHub Actions run times and suggests optimizations
 
 import json
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional
-import sys
 
 
 class CIPerformanceAnalyzer:

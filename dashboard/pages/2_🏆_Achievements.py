@@ -5,10 +5,8 @@ Achievements Page - Track and manage professional achievements
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import json
-import httpx
 from typing import List, Dict, Any
 import re
 

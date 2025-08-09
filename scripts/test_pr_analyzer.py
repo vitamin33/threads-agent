@@ -6,7 +6,7 @@ Tests the core business value calculation logic without external dependencies
 
 import json
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import List
 
 
@@ -229,19 +229,19 @@ def test_pr_analysis():
         categories[bv.value_category]["value"] += bv.portfolio_value
 
     # Display results
-    print(f"📊 PORTFOLIO ANALYSIS RESULTS (Sample of 5 PRs)")
+    print("📊 PORTFOLIO ANALYSIS RESULTS (Sample of 5 PRs)")
     print("=" * 60)
     print(f"Total Portfolio Value: ${total_value:,.2f}")
     print(
         f"Projected Full Portfolio: ${total_value * 20:,.2f}"
     )  # Estimate for ~100 PRs
-    print(f"Target Range: $200,000 - $350,000")
+    print("Target Range: $200,000 - $350,000")
     print(
         f"Status: {'✅ LIKELY VALIDATED' if (total_value * 20) >= 200000 else '⚠️ NEEDS MORE DATA'}"
     )
     print(f"Average ROI: {avg_roi:.1f}%")
 
-    print(f"\n📊 VALUE BY CATEGORY:")
+    print("\n📊 VALUE BY CATEGORY:")
     for category, stats in sorted(
         categories.items(), key=lambda x: x[1]["value"], reverse=True
     ):

@@ -438,7 +438,7 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
             pr = next(pr for pr in pr_metrics if pr.pr_number == bv.pr_number)
             report += f"| #{bv.pr_number} | {pr.title[:40]}... | ${bv.portfolio_value:,.0f} | {bv.roi_percent:.0f}% | {bv.value_category} |\n"
 
-        report += f"\n## Validation Result\n\n"
+        report += "\n## Validation Result\n\n"
         if 200000 <= summary["total_portfolio_value"] <= 350000:
             report += "✅ **VALIDATED**: Portfolio value falls within target range ($200K-$350K)\n"
         else:
@@ -462,7 +462,7 @@ async def main():
 
     # Print summary
     total_value = sum(bv.portfolio_value for bv in business_values)
-    print(f"\n✅ Analysis Complete!")
+    print("\n✅ Analysis Complete!")
     print(f"Total PRs: {len(pr_metrics)}")
     print(f"Portfolio Value: ${total_value:,.2f}")
     print(f"Results exported to: {analyzer.results_dir}")

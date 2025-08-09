@@ -12,16 +12,13 @@ Features:
 """
 
 import asyncio
-from datetime import datetime
 from typing import Dict, List, Optional, Any
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field, validator
 import structlog
 
 from ..services.ai_roi_calculator import (
-    AIROICalculator,
     ROIInput,
-    ROIResult,
     AIUseCase,
     IndustryType,
     get_ai_roi_calculator,

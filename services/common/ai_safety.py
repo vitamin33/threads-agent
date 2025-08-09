@@ -6,7 +6,7 @@ and content safety checks for AI-generated outputs.
 """
 
 import re
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 from datetime import datetime
 import logging
 from services.common.ai_metrics import (

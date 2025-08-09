@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from typing import Optional
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func

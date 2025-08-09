@@ -10,7 +10,7 @@ import json
 import os
 import time
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import List, Dict
 
 
@@ -235,7 +235,7 @@ def analyze_real_repository(owner: str = "vitamin33", repo: str = "threads-agent
     print("🚀 REAL REPOSITORY ANALYSIS - CRA-298")
     print("=" * 60)
     print(f"Repository: {owner}/{repo}")
-    print(f"Target: Validate $200K-350K portfolio for AI job interviews")
+    print("Target: Validate $200K-350K portfolio for AI job interviews")
 
     # Check for GitHub token
     token = os.getenv("GITHUB_TOKEN")
@@ -309,7 +309,7 @@ def analyze_real_repository(owner: str = "vitamin33", repo: str = "threads-agent
     print("📊 REAL PORTFOLIO ANALYSIS RESULTS")
     print("=" * 60)
     print(f"🎯 Total Portfolio Value: ${total_value:,.2f}")
-    print(f"📈 Target Range: $200,000 - $350,000")
+    print("📈 Target Range: $200,000 - $350,000")
 
     if 200000 <= total_value <= 350000:
         print("✅ STATUS: VALIDATED FOR AI JOB STRATEGY!")
@@ -318,7 +318,7 @@ def analyze_real_repository(owner: str = "vitamin33", repo: str = "threads-agent
     else:
         print("⚠️ STATUS: BELOW TARGET - NEED MORE HIGH-VALUE PRs")
 
-    print(f"\n📊 Key Metrics:")
+    print("\n📊 Key Metrics:")
     print(f"• Total PRs Analyzed: {len(pr_metrics_list)}")
     print(f"• Average ROI: {avg_roi:.1f}%")
     print(
@@ -331,7 +331,7 @@ def analyze_real_repository(owner: str = "vitamin33", repo: str = "threads-agent
         f"• Total Productivity Hours: {sum(bv.productivity_hours for bv in business_values):,.0f}"
     )
 
-    print(f"\n🏷️ VALUE BY CATEGORY:")
+    print("\n🏷️ VALUE BY CATEGORY:")
     for category, stats in sorted(
         categories.items(), key=lambda x: x[1]["value"], reverse=True
     ):

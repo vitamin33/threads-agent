@@ -44,12 +44,12 @@ async def analyze_threads_agent():
         print("📊 AI JOB STRATEGY PORTFOLIO METRICS")
         print("=" * 60)
         print(f"Total Portfolio Value: ${total_value:,.2f}")
-        print(f"Target Range: $200,000 - $350,000")
+        print("Target Range: $200,000 - $350,000")
         print(
             f"Status: {'✅ VALIDATED' if 200000 <= total_value <= 350000 else '⚠️ NEEDS ADJUSTMENT'}"
         )
         print()
-        print(f"Key Metrics for $170-210K Remote Jobs:")
+        print("Key Metrics for $170-210K Remote Jobs:")
         print(f"• Total PRs Analyzed: {len(pr_metrics)}")
         print(f"• Average ROI: {avg_roi:.1f}%")
         print(
@@ -71,7 +71,7 @@ async def analyze_threads_agent():
                 f"   💰 Value: ${bv.portfolio_value:,.0f} | ROI: {bv.roi_percent:.0f}% | Category: {bv.value_category}"
             )
 
-        print(f"\n📁 Results exported to: pr_analysis_results/")
+        print("\n📁 Results exported to: pr_analysis_results/")
         print("\n🎯 Next Steps for AI Job Strategy:")
         print("1. Add these metrics to your portfolio website")
         print("2. Create LinkedIn posts about top achievements")

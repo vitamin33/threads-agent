@@ -2,9 +2,8 @@
 
 import os
 import json
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from dataclasses import dataclass
-import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from services.common.openai_wrapper import chat

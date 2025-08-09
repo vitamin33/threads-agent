@@ -1,6 +1,5 @@
 """Tests for AI safety and security monitoring."""
 
-import pytest
 from services.common.ai_safety import AISecurityMonitor
 
 

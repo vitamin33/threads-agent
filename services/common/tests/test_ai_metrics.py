@@ -1,6 +1,5 @@
 """Tests for AI metrics tracking system."""
 
-import pytest
 from services.common.ai_metrics import AIMetricsTracker
 
 

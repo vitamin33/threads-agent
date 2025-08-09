@@ -483,14 +483,14 @@ Based on your analysis:
             print(f"{Colors.BOLD}{Colors.GREEN}")
             print("🎉 ALL TESTS PASSED! 🎉")
             print(f"{Colors.END}")
-            print_success(f"Your PR Analysis system is fully functional!")
+            print_success("Your PR Analysis system is fully functional!")
             print_success(
                 f"Portfolio Value: ${results.get('quick_portfolio_value', 0):,.2f}"
             )
-            print_success(f"Ready for $170K-210K AI job applications!")
+            print_success("Ready for $170K-210K AI job applications!")
         else:
-            print_warning(f"Some tests failed, but core functionality works")
-            print_info(f"Check test report for details")
+            print_warning("Some tests failed, but core functionality works")
+            print_info("Check test report for details")
 
         print(f"\n{Colors.BOLD}Next Steps:{Colors.END}")
         print("1. Review the generated test report")

@@ -5,7 +5,7 @@ Handles all communication with backend microservices
 
 import httpx
 import streamlit as st
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 import asyncio
 from datetime import datetime
 import os

@@ -7,7 +7,6 @@ Uses the Achievement Collector REST API for integration
 import json
 import urllib.request
 import urllib.parse
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
@@ -87,7 +86,7 @@ class AchievementCollectorClient:
 
             with urllib.request.urlopen(request) as response:
                 if response.status in [200, 201]:
-                    print(f"    ✅ Created via PR analysis endpoint")
+                    print("    ✅ Created via PR analysis endpoint")
                     return True
 
         except:

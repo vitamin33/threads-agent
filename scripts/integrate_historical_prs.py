@@ -6,7 +6,6 @@ Imports historical PR analysis results into the Achievement Collector system
 
 import json
 import sys
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional

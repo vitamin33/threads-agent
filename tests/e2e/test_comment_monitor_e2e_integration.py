@@ -8,17 +8,15 @@ to analysis, including all optimizations and performance characteristics.
 
 import pytest
 import time
-import asyncio
-import threading
-from unittest.mock import Mock, patch, AsyncMock
-from typing import List, Dict, Any, Optional, Tuple
+from unittest.mock import Mock
+from typing import Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from contextlib import contextmanager
 import statistics
 import json
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 # Skip these mock-based tests in CI - they're flaky and not true e2e tests
 pytestmark = pytest.mark.skip(

@@ -5,8 +5,7 @@ Demonstrates the autoposting system with real development metrics.
 """
 
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict
 
 # Mock achievement data from the last 3 weeks
 DEVELOPMENT_METRICS = {

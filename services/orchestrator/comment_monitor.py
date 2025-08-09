@@ -1,6 +1,6 @@
 # /services/orchestrator/comment_monitor.py
 import uuid
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import datetime
 
 from sqlalchemy import String, Text, DateTime, BigInteger
@@ -140,7 +140,7 @@ class CommentMonitor:
         try:
             self.db_session.bulk_save_objects(comment_objects)
             self.db_session.commit()
-        except Exception as e:
+        except Exception:
             self.db_session.rollback()
             # Fall back to individual inserts if bulk fails
             for comment in comment_objects:

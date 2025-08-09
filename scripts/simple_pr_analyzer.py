@@ -10,7 +10,7 @@ import requests
 import time
 from datetime import datetime
 from typing import Dict, List, Optional
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 
 @dataclass
@@ -255,14 +255,14 @@ def analyze_repository(owner: str = "vitamin33", repo: str = "threads-agent"):
     print("📊 PORTFOLIO ANALYSIS RESULTS")
     print("=" * 60)
     print(f"Total Portfolio Value: ${total_value:,.2f}")
-    print(f"Target Range: $200,000 - $350,000")
+    print("Target Range: $200,000 - $350,000")
     print(
         f"Status: {'✅ VALIDATED' if 200000 <= total_value <= 350000 else '⚠️ NEEDS ADJUSTMENT'}"
     )
     print(f"Total PRs Analyzed: {len(pr_metrics_list)}")
     print(f"Average ROI: {avg_roi:.1f}%")
 
-    print(f"\n📊 VALUE BY CATEGORY:")
+    print("\n📊 VALUE BY CATEGORY:")
     for category, stats in sorted(
         categories.items(), key=lambda x: x[1]["value"], reverse=True
     ):

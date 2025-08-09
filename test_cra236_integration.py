@@ -5,7 +5,6 @@ Tests the conversation engine deployed on local k3d cluster
 """
 
 import requests
-import json
 import sys
 import subprocess
 import time

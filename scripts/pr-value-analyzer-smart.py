@@ -5,12 +5,11 @@ Only analyzes when needed, tracks history
 """
 
 import json
-import os
 import sys
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, Tuple
 
 # Import the ultimate analyzer for actual analysis
 try:
