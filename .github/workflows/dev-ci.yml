@@ -181,17 +181,7 @@ jobs:
             IMAGE_NAME="ghcr.io/${{ github.repository }}/${svc}:${IMAGE_TAG}"
             LOCAL_NAME="${svc//_/-}:local"
 
-            # TEMPORARY: Always build fake_threads to fix prometheus_client issue
-            if [ "$svc" = "fake_threads" ]; then
-              echo "🔨 Force building $svc to fix prometheus_client issue..."
-              # Remove any existing fake-threads image to ensure fresh build
-              docker rmi "$LOCAL_NAME" 2>/dev/null || true
-              docker rmi "docker.io/library/$LOCAL_NAME" 2>/dev/null || true
-              docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" --no-cache .
-              # Verify the built image doesn't have prometheus imports
-              echo "🔍 Verifying fake-threads image content..."
-              docker run --rm "$LOCAL_NAME" cat /app/services/fake_threads/main.py | head -20 || echo "Failed to check image content"
-            elif [ "$FORCE_BUILD" = "true" ]; then
+            if [ "$FORCE_BUILD" = "true" ]; then
               echo "🔨 Force building $svc..."
               docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
             else
