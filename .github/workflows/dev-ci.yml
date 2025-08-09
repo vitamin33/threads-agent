@@ -201,15 +201,8 @@ jobs:
           docker pull rabbitmq:3.13-management-alpine
           docker pull qdrant/qdrant:v1.9.4
           
-          # Tag images with registry prefix to match k3d import
-          echo "🏷️ Tagging images with registry prefix for k3d compatibility..."
-          echo "Available images before tagging:"
-          docker images | grep -E "(orchestrator|celery-worker|persona-runtime|fake-threads)" || echo "No service images found"
-          
-          docker tag orchestrator:local docker.io/library/orchestrator:local || echo "Failed to tag orchestrator"
-          docker tag celery-worker:local docker.io/library/celery-worker:local || echo "Failed to tag celery-worker"
-          docker tag persona-runtime:local docker.io/library/persona-runtime:local || echo "Failed to tag persona-runtime"
-          docker tag fake-threads:local docker.io/library/fake-threads:local || echo "Failed to tag fake-threads"
+          # Note: Docker builds already create images with docker.io/library/ prefix
+          # No additional tagging needed
 
           # Import only essential images to k3d (faster import)
           echo "🔍 Verifying images before import:"
