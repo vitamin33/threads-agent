@@ -24,30 +24,48 @@ spec:
             secretKeyRef:
               name: threads-postgresql
               key: POSTGRES_PASSWORD
-        command: ["/bin/sh", "-c"]
+        command: ["/bin/bash"]
         args:
+          - -c
           - |
             set -e
-            echo "waiting for Postgres..."
+            echo "Setting up PostgreSQL client environment..."
+            export PATH="/opt/bitnami/postgresql/bin:$PATH"
             export PGPASSWORD="${POSTGRES_PASSWORD}"
             
-            # Wait for postgres to be ready
-            until /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -c "SELECT 1" >/dev/null 2>&1; do
-              echo "Postgres is unavailable - sleeping"
+            echo "Waiting for PostgreSQL to be ready..."
+            MAX_ATTEMPTS=60
+            ATTEMPT=0
+            
+            while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+              if psql -h postgres -U postgres -c "SELECT 1" >/dev/null 2>&1; then
+                echo "PostgreSQL is ready!"
+                break
+              fi
+              ATTEMPT=$((ATTEMPT + 1))
+              echo "Attempt $ATTEMPT/$MAX_ATTEMPTS - PostgreSQL not ready, waiting 2s..."
               sleep 2
             done
             
-            echo "Postgres is ready"
-            
-            # Check if database exists
-            if /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -lqt | cut -d \| -f 1 | grep -qw threads_agent; then
-              echo "Database threads_agent already exists"
-            else
-              echo "Creating database threads_agent"
-              /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -c "CREATE DATABASE threads_agent;"
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "ERROR: PostgreSQL did not become ready in time"
+              exit 1
             fi
             
-            echo "Database setup complete"
+            # Check and create database
+            echo "Checking database existence..."
+            if psql -h postgres -U postgres -lqt | cut -d \| -f 1 | grep -qw threads_agent; then
+              echo "Database 'threads_agent' already exists"
+            else
+              echo "Creating database 'threads_agent'..."
+              psql -h postgres -U postgres -c "CREATE DATABASE threads_agent;"
+              echo "Database created successfully"
+            fi
+            
+            # Verify connection to the new database
+            echo "Verifying database connection..."
+            psql -h postgres -U postgres -d threads_agent -c "SELECT 1" >/dev/null 2>&1
+            echo "Database is ready for migrations!"
 
       # 2️⃣  Run Alembic migrations
       containers:
