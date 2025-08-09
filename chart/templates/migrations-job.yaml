@@ -24,33 +24,30 @@ spec:
             secretKeyRef:
               name: threads-postgresql
               key: POSTGRES_PASSWORD
-        command: 
-          - /bin/sh
-          - -c
+        command: ["/bin/sh", "-c"]
+        args:
           - |
-            echo 'waiting for Postgres super-user...'
-            export PGPASSWORD="$POSTGRES_PASSWORD"
-            for i in $(seq 1 60); do
-              /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -c 'select 1' >/dev/null 2>&1 && break
-              echo "  Attempt $i/60 - waiting 2s..."
+            set -e
+            echo "waiting for Postgres..."
+            export PGPASSWORD="${POSTGRES_PASSWORD}"
+            
+            # Wait for postgres to be ready
+            until /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -c "SELECT 1" >/dev/null 2>&1; do
+              echo "Postgres is unavailable - sleeping"
               sleep 2
             done
-            if [ $i -eq 60 ]; then 
-              echo 'postgres still locked'
-              exit 1
-            fi
-            echo 'Postgres is ready'
-            echo 'Checking if threads_agent database exists...'
-            if ! /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1; then
-              echo 'Creating threads_agent database...'
-              /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -c 'CREATE DATABASE threads_agent;'
-              echo 'Database created successfully'
+            
+            echo "Postgres is ready"
+            
+            # Check if database exists
+            if /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -lqt | cut -d \| -f 1 | grep -qw threads_agent; then
+              echo "Database threads_agent already exists"
             else
-              echo 'threads_agent database already exists'
+              echo "Creating database threads_agent"
+              /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -c "CREATE DATABASE threads_agent;"
             fi
-            echo 'Verifying database creation...'
-            /opt/bitnami/postgresql/bin/psql -h postgres -U postgres -lqt | cut -d '|' -f 1 | grep -qw threads_agent || exit 1
-            echo 'Database ready'
+            
+            echo "Database setup complete"
 
       # 2️⃣  Run Alembic migrations
       containers:
