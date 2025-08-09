@@ -203,15 +203,18 @@ jobs:
           
           # Tag images with registry prefix to match k3d import
           echo "🏷️ Tagging images with registry prefix for k3d compatibility..."
-          docker tag orchestrator:local docker.io/library/orchestrator:local
-          docker tag celery-worker:local docker.io/library/celery-worker:local
-          docker tag persona-runtime:local docker.io/library/persona-runtime:local
-          docker tag fake-threads:local docker.io/library/fake-threads:local
+          echo "Available images before tagging:"
+          docker images | grep -E "(orchestrator|celery-worker|persona-runtime|fake-threads)" || echo "No service images found"
+          
+          docker tag orchestrator:local docker.io/library/orchestrator:local || echo "Failed to tag orchestrator"
+          docker tag celery-worker:local docker.io/library/celery-worker:local || echo "Failed to tag celery-worker"
+          docker tag persona-runtime:local docker.io/library/persona-runtime:local || echo "Failed to tag persona-runtime"
+          docker tag fake-threads:local docker.io/library/fake-threads:local || echo "Failed to tag fake-threads"
 
           # Import only essential images to k3d (faster import)
           echo "🔍 Verifying images before import:"
           echo "All local images:"
-          docker images | grep ":local"
+          docker images | grep ":local" || echo "No :local images found"
           echo "Images to import:"
           docker images | grep -E "(orchestrator|celery-worker|persona-runtime|fake-threads):local" || echo "Local images not found"
           
