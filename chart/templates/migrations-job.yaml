@@ -25,7 +25,7 @@ spec:
               name: threads-postgresql
               key: POSTGRES_PASSWORD
         command: 
-          - /bin/bash
+          - /bin/sh
           - -c
           - |
             echo '⏳ waiting for Postgres super-user …'
