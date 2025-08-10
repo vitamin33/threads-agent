@@ -17,7 +17,13 @@ from fastapi import BackgroundTasks, FastAPI, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
+# Configure debug logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info("🚀 Starting orchestrator service...")
+
 # ── shared helpers ────────────────────────────────────────────────────────────
+logger.info("📊 Importing metrics...")
 from services.common.metrics import (
     maybe_start_metrics_server,
     record_http_request,
@@ -25,23 +31,41 @@ from services.common.metrics import (
     update_service_uptime,
     update_system_health,
 )
+
+logger.info("🤖 Importing AI metrics...")
 from services.common.ai_metrics import ai_metrics
 from services.common.ai_safety import ai_security
 from services.common.alerts import ai_alerts
+
+logger.info("🔍 Importing search...")
 from services.orchestrator.search_endpoints import search_router
+
+logger.info("🔢 Importing vector...")
 from services.orchestrator.vector import ensure_posts_collection
+
+logger.info("💬 Importing comment monitor...")
 from services.orchestrator.comment_monitor import CommentMonitor
+
+logger.info("📈 Importing viral metrics...")
 from services.orchestrator.viral_metrics_endpoints import viral_metrics_router
 
 # ── constants & wiring ────────────────────────────────────────────────────────
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
 PERSONA_RUNTIME_URL = os.getenv("PERSONA_RUNTIME_URL", "http://persona-runtime:8080")
 
+logger.info("🚀 Creating FastAPI app...")
 app = FastAPI(title="orchestrator")  # single public symbol
-celery_app = Celery("orchestrator", broker=BROKER_URL)
-maybe_start_metrics_server()  # Prom-client HTTP at :9090
 
-logger = logging.getLogger(__name__)
+# Initialize Celery with error handling to prevent startup failures
+logger.info("🐰 Initializing Celery connection...")
+try:
+    celery_app = Celery("orchestrator", broker=BROKER_URL)
+    logger.info("✅ Celery connection established")
+except Exception as e:
+    logger.warning(f"⚠️ Celery connection failed (will retry on first use): {e}")
+    celery_app = Celery("orchestrator", broker=BROKER_URL)  # Create anyway for decorators
+
+maybe_start_metrics_server()  # Prom-client HTTP at :9090
 
 # Include routers
 app.include_router(search_router)
