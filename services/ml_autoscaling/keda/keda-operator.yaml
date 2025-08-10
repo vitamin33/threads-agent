@@ -1,0 +1,132 @@
+# KEDA Operator Installation
+# This installs KEDA v2.13 in the keda namespace
+# For production, use Helm chart: helm install keda kedacore/keda --namespace keda
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keda
+  labels:
+    app.kubernetes.io/name: keda
+    app.kubernetes.io/version: "2.13.0"
+
+---
+# Note: For actual deployment, use the official KEDA Helm chart:
+# helm repo add kedacore https://kedacore.github.io/charts
+# helm repo update
+# helm install keda kedacore/keda --namespace keda --create-namespace
+
+# For k3d local development:
+# kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.13.0/keda-2.13.0.yaml
+
+# This file serves as a reference for the required KEDA components:
+# 1. KEDA Operator Deployment
+# 2. KEDA Metrics Server Deployment
+# 3. KEDA Admission Webhooks
+# 4. Required CRDs (ScaledObject, ScaledJob, TriggerAuthentication)
+# 5. RBAC (ServiceAccounts, Roles, RoleBindings)
+
+---
+# Quick install script for local development
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keda-install-script
+  namespace: keda
+data:
+  install.sh: |
+    #!/bin/bash
+    echo "Installing KEDA v2.13.0..."
+    
+    # Install KEDA using kubectl
+    kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.13.0/keda-2.13.0.yaml
+    
+    # Wait for KEDA to be ready
+    echo "Waiting for KEDA operator to be ready..."
+    kubectl wait --for=condition=ready pod -l app=keda-operator -n keda --timeout=120s
+    
+    echo "Waiting for KEDA metrics server to be ready..."
+    kubectl wait --for=condition=ready pod -l app=keda-operator-metrics-apiserver -n keda --timeout=120s
+    
+    # Verify installation
+    echo "Verifying KEDA installation..."
+    kubectl get pods -n keda
+    
+    echo "KEDA installation complete!"
+    
+    # Apply our custom ScaledObjects
+    echo "Applying ML autoscaling configurations..."
+    kubectl apply -f /scaled-objects/
+    
+    echo "ML autoscaling setup complete!"
+
+---
+# KEDA Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keda-config
+  namespace: keda
+data:
+  # KEDA Controller configuration
+  controller.yaml: |
+    # Logging level (debug, info, error)
+    logLevel: info
+    
+    # Polling interval for metrics
+    pollingInterval: 30
+    
+    # Cooldown period before scaling down
+    cooldownPeriod: 300
+    
+    # Maximum number of replicas KEDA can scale to
+    maxReplicaCount: 100
+    
+    # Minimum number of replicas
+    minReplicaCount: 0
+    
+  # Metrics Server configuration
+  metrics-server.yaml: |
+    # Metrics server port
+    port: 8080
+    
+    # Use TLS
+    useTLS: true
+    
+    # Certificate paths
+    certDir: /certs
+    
+  # Prometheus scaler configuration
+  prometheus-scaler.yaml: |
+    # Default Prometheus server address
+    serverAddress: http://prometheus:9090
+    
+    # Ignore null values in metrics
+    ignoreNullValues: true
+    
+    # Unsafely ignore certificate errors (only for development)
+    unsafeSSL: false
+
+---
+# KEDA Metrics Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: keda-operator-metrics
+  namespace: keda
+  labels:
+    app.kubernetes.io/name: keda-operator-metrics
+    app.kubernetes.io/part-of: keda
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics-api
+    port: 443
+    targetPort: 6443
+    protocol: TCP
+  selector:
+    app: keda-operator-metrics-apiserver

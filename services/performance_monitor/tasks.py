@@ -44,6 +44,13 @@ class ThreadsClientSync:
 
 logger = logging.getLogger(__name__)
 
+# Try to import threads_adaptor, fall back to mock if not available
+try:
+    from services.threads_adaptor.client_sync import ThreadsClientSync
+except ImportError:
+    logger.warning("threads_adaptor not found, using mock client")
+    from services.performance_monitor.client_mock import ThreadsClientSync
+
 
 @contextmanager
 def get_db_session():

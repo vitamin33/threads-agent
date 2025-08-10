@@ -1,0 +1,192 @@
+{{- if and .Values.enabled .Values.monitoring.enabled .Values.monitoring.dashboards.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-ml-autoscaling-dashboards
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "ml-autoscaling.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: monitoring
+    grafana_dashboard: "1"
+data:
+  ml-autoscaling-overview.json: |
+    {
+      "dashboard": {
+        "title": "ML Autoscaling Overview",
+        "uid": "ml-autoscaling-overview",
+        "tags": ["ml", "autoscaling", "keda"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "Current Replicas by Service",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "keda_scaler_active{namespace=~\"$namespace\"}",
+                "legendFormat": "{{ "{{" }} scaledObject {{ "}}" }}"
+              }
+            ]
+          },
+          {
+            "title": "Scaling Events",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(keda_scaled_object_events_total[5m])",
+                "legendFormat": "{{ "{{" }} type {{ "}}" }} - {{ "{{" }} scaledObject {{ "}}" }}"
+              }
+            ]
+          },
+          {
+            "title": "GPU Utilization",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "avg(gpu_utilization_percent)",
+                "legendFormat": "GPU Utilization %"
+              }
+            ]
+          },
+          {
+            "title": "Inference Latency P95",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(inference_duration_seconds_bucket[5m])) by (le)) * 1000",
+                "legendFormat": "P95 Latency (ms)"
+              }
+            ]
+          },
+          {
+            "title": "Cost per Hour",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(inference_cost_dollars[1h])) * 3600",
+                "legendFormat": "$/hour"
+              }
+            ]
+          },
+          {
+            "title": "Predicted vs Actual Load",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "predicted_load",
+                "legendFormat": "Predicted"
+              },
+              {
+                "expr": "actual_load",
+                "legendFormat": "Actual"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  
+  ml-predictive-scaling.json: |
+    {
+      "dashboard": {
+        "title": "ML Predictive Scaling",
+        "uid": "ml-predictive-scaling",
+        "tags": ["ml", "predictive", "forecasting"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "Forecast Accuracy",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "1 - (abs(predicted_load - actual_load) / actual_load)",
+                "legendFormat": "Accuracy %"
+              }
+            ]
+          },
+          {
+            "title": "Detected Patterns",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "ml_pattern_detected",
+                "format": "table"
+              }
+            ]
+          },
+          {
+            "title": "Proactive Scaling Events",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "increase(proactive_scaling_triggered_total[1h])",
+                "legendFormat": "{{ "{{" }} service {{ "}}" }}"
+              }
+            ]
+          },
+          {
+            "title": "Business Hours Impact",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "avg_over_time(replicas_count[1h]) by (hour, day_of_week)",
+                "format": "heatmap"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  
+  ml-cost-optimization.json: |
+    {
+      "dashboard": {
+        "title": "ML Cost Optimization",
+        "uid": "ml-cost-optimization",
+        "tags": ["ml", "cost", "optimization"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "Monthly Budget Usage",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "sum(increase(total_cost_dollars[30d])) / {{ .Values.mlMetrics.cost.monthlyBudget }}",
+                "legendFormat": "Budget %"
+              }
+            ]
+          },
+          {
+            "title": "Cost by Service",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(rate(service_cost_dollars[1h])) by (service) * 3600",
+                "legendFormat": "{{ "{{" }} service {{ "}}" }}"
+              }
+            ]
+          },
+          {
+            "title": "Spot vs On-Demand Savings",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(spot_instance_savings_dollars)",
+                "legendFormat": "Total Savings"
+              }
+            ]
+          },
+          {
+            "title": "Cost per Request",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(inference_cost_dollars[5m])) / sum(rate(requests_total[5m]))",
+                "legendFormat": "$/request"
+              }
+            ]
+          }
+        ]
+      }
+    }
+{{- end }}

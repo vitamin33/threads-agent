@@ -107,6 +107,51 @@
       "title": "Content Template Management System",
       "epic_id": "epic-14-content-scheduler-pipeline",
       "priority": "medium",
+      "id": "feat-mlops-004-001",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Chaos Engineering Infrastructure",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-002",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Advanced Failure Scenarios",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-003",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "SLA Tracking & Reliability Metrics",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-004",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Intelligent Recovery Systems",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-005",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Predictive Alerting & Incident Response",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-006",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Interview Demo Platform",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-235-001",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "Real-time Comment Monitoring & Ingestion Pipeline",
       "status": "planned",
       "estimated_hours": 40,
       "estimated_story_points": 10,
@@ -135,6 +180,110 @@
         "Email service provider (SendGrid, SES)",
         "Push notification services (FCM, APNS)"
       ]
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-235-003",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "Intent Scoring & Classification System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-235-004",
+      "epic_id": "epic-235-comment-intent-dm-trigger",
+      "name": "DM Trigger & Message Template System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-001",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Conversation State Machine Core Engine",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-002",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "GPT-4o Integration & Response Generation",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-003",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Redis State Caching & Performance Layer",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-004",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "PostgreSQL Conversation Persistence",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-005",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Context Management & Memory System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-006",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Human Handoff & Escalation System",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-236-007",
+      "epic_id": "epic-236-conversation-state-machine",
+      "name": "Analytics & Optimization Dashboard",
+      "status": "planned",
+      "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-001",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "KEDA ScaledObject Generator",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-002",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "ML Metrics Collector",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-003",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "Predictive Scaler with Pattern Detection",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-004",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "GPU Scale-to-Zero Optimization",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-005",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "Helm Chart for ML Autoscaling",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
     }
   ],
   "metadata": {
