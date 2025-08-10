@@ -1257,8 +1257,6 @@ class PRValueAnalyzer:
                     },
                 },
             },
-                },
-            },
         }
         return explanations
 

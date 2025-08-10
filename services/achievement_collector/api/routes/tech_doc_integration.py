@@ -340,7 +340,6 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
     """
     # Total portfolio-ready achievements
     total_ready = (
-        db.query(AchievementModel).filter(AchievementModel.portfolio_ready).count()
         db.query(AchievementModel)
         .filter(AchievementModel.portfolio_ready == True)
         .count()
@@ -375,7 +374,6 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
 
     # Unprocessed achievements - simple approach without JSON queries
     total_portfolio_ready = (
-        db.query(AchievementModel).filter(AchievementModel.portfolio_ready).count()
         db.query(AchievementModel)
         .filter(AchievementModel.portfolio_ready == True)
         .count()
