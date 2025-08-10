@@ -1,0 +1,327 @@
+# ML Autoscaling Configuration
+# MLOPS-008 Implementation
+
+# Enable/disable ML autoscaling features
+enabled: true
+
+# KEDA configuration
+keda:
+  enabled: true
+  # Use external KEDA if already installed
+  useExternal: false
+  namespace: keda
+  
+  # KEDA operator settings
+  operator:
+    replicaCount: 1
+    logLevel: info
+    
+  # Metrics server settings
+  metricsServer:
+    replicaCount: 1
+    useHostNetwork: false
+
+# Predictive scaling configuration
+predictiveScaling:
+  enabled: true
+  
+  # Prediction settings
+  lookbackHours: 168  # 1 week
+  forecastMinutes: 30
+  confidenceThreshold: 0.7
+  
+  # Proactive scaling
+  enableProactiveScaling: true
+  scaleAheadMinutes: 15
+  
+  # Pattern detection
+  detectDailyPatterns: true
+  detectWeeklyPatterns: true
+  detectAnomalies: true
+
+# Service-specific scaling configurations
+services:
+  celeryWorker:
+    enabled: true
+    namespace: default
+    deployment: celery-worker
+    
+    # Scaling limits
+    minReplicas: 2
+    maxReplicas: 20
+    
+    # Triggers
+    triggers:
+      rabbitmq:
+        enabled: true
+        queueName: celery
+        queueLength: 5
+        host: "amqp://user:pass@rabbitmq.default.svc.cluster.local:5672/%2f"
+      
+      latency:
+        enabled: true
+        targetValue: 10  # seconds
+        
+      errorRate:
+        enabled: true
+        threshold: 0.05  # 5% error rate
+    
+    # Scaling behavior
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+      
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Min
+  
+  vllmService:
+    enabled: true
+    namespace: ml-inference
+    deployment: vllm-service
+    
+    # GPU-aware scaling
+    minReplicas: 0  # Scale to zero when idle
+    maxReplicas: 4
+    idleReplicaCount: 0
+    
+    # GPU cost optimization
+    preferSpotInstances: true
+    scaleToZeroAfterMinutes: 5
+    
+    triggers:
+      requestRate:
+        enabled: true
+        targetValue: 10  # requests per second
+        
+      latency:
+        enabled: true
+        targetValue: 500  # milliseconds
+        
+      gpuUtilization:
+        enabled: true
+        targetValue: 80  # percentage
+        
+      tokenRate:
+        enabled: true
+        targetValue: 5000  # tokens per second
+    
+    # Fast scale-up for user-facing services
+    scaleUp:
+      stabilizationWindowSeconds: 15
+      policies:
+        - type: Percent
+          value: 200
+          periodSeconds: 30
+      selectPolicy: Max
+      
+    # Slow scale-down to avoid GPU thrashing
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+      selectPolicy: Min
+  
+  orchestrator:
+    enabled: true
+    namespace: default
+    deployment: orchestrator
+    
+    minReplicas: 2
+    maxReplicas: 10
+    
+    triggers:
+      httpRate:
+        enabled: true
+        targetValue: 100  # requests per second
+        
+      latency:
+        enabled: true
+        targetValue: 0.5  # seconds
+        
+      cpu:
+        enabled: true
+        targetValue: 70  # percentage
+        
+      memory:
+        enabled: true
+        targetValue: 80  # percentage
+        
+      engagementQueue:
+        enabled: true
+        targetValue: 50  # queue depth
+
+# Prometheus configuration
+prometheus:
+  serverAddress: "http://prometheus:9090"
+  # Authentication if needed
+  auth:
+    enabled: false
+    username: ""
+    password: ""
+  
+  # Custom queries for ML metrics
+  customQueries:
+    inferenceLatency: |
+      histogram_quantile(0.95, 
+        sum(rate(inference_duration_seconds_bucket[5m])) 
+        by (le)
+      ) * 1000
+    
+    trainingProgress: |
+      avg(training_progress_percentage)
+    
+    gpuMemoryUsage: |
+      avg(gpu_memory_usage_bytes) / avg(gpu_memory_total_bytes) * 100
+    
+    costPerInference: |
+      sum(rate(inference_cost_dollars[1h]))
+
+# RabbitMQ configuration
+rabbitmq:
+  host: rabbitmq
+  port: 5672
+  username: user
+  password: pass
+  vhost: "/"
+
+# ML-specific metrics collection
+mlMetrics:
+  enabled: true
+  
+  # Inference metrics
+  inference:
+    collectLatency: true
+    collectThroughput: true
+    collectErrorRate: true
+    collectTokenUsage: true
+    
+  # Training metrics
+  training:
+    collectProgress: true
+    collectLoss: true
+    collectAccuracy: true
+    collectEpochTime: true
+    
+  # GPU metrics
+  gpu:
+    collectUtilization: true
+    collectMemory: true
+    collectTemperature: true
+    collectPowerUsage: true
+    
+  # Cost metrics
+  cost:
+    trackInferenceCost: true
+    trackTrainingCost: true
+    trackGPUCost: true
+    alertOnBudgetExceed: true
+    monthlyBudget: 10000  # dollars
+
+# Business rules
+businessRules:
+  # Business hours configuration
+  businessHours:
+    enabled: true
+    timezone: "US/Pacific"
+    startHour: 9
+    endHour: 17
+    weekdaysOnly: true
+    
+    # Scale up before business hours
+    preScaleMinutes: 30
+    businessHoursMultiplier: 1.5
+    
+  # Cost optimization
+  costOptimization:
+    enabled: true
+    maxHourlyCost: 100  # dollars
+    preferSpotInstances: true
+    spotDiscountPercentage: 70
+    
+  # SLA requirements
+  sla:
+    enabled: true
+    targetAvailability: 99.9  # percentage
+    maxLatencyMs: 1000
+    minThroughputRps: 100
+
+# Monitoring and alerting
+monitoring:
+  enabled: true
+  
+  # Dashboards
+  dashboards:
+    enabled: true
+    createGrafanaDashboards: true
+    
+  # Alerts
+  alerts:
+    enabled: true
+    
+    # Scaling alerts
+    scaling:
+      maxReplicasReached: true
+      frequentScaling: true
+      scalingFailures: true
+      
+    # Performance alerts
+    performance:
+      highLatency: true
+      lowThroughput: true
+      highErrorRate: true
+      
+    # Cost alerts
+    cost:
+      budgetExceeded: true
+      highCostPerRequest: true
+      inefficientScaling: true
+    
+    # Notification channels
+    notifications:
+      slack:
+        enabled: false
+        webhook: ""
+      email:
+        enabled: false
+        recipients: []
+      pagerduty:
+        enabled: false
+        serviceKey: ""
+
+# Advanced features
+advanced:
+  # A/B testing for scaling policies
+  abTesting:
+    enabled: false
+    policies:
+      - name: aggressive
+        weight: 50
+      - name: conservative
+        weight: 50
+  
+  # Multi-region support
+  multiRegion:
+    enabled: false
+    regions: []
+    
+  # Chaos engineering
+  chaosEngineering:
+    enabled: false
+    experiments: []

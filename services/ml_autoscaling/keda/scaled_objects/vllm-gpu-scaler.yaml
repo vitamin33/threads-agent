@@ -1,0 +1,119 @@
+# KEDA ScaledObject for vLLM GPU Service
+# Optimized for GPU workloads with scale-to-zero capability
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: vllm-gpu-scaler
+  namespace: ml-inference
+  labels:
+    app.kubernetes.io/name: vllm-service
+    app.kubernetes.io/component: autoscaling
+    ml-autoscaling/gpu-aware: "true"
+  annotations:
+    ml-autoscaling/cost-optimization: "enabled"
+    ml-autoscaling/spot-instances: "preferred"
+spec:
+  scaleTargetRef:
+    name: vllm-service
+    kind: Deployment
+  
+  # Scale to zero when not in use (GPU cost savings)
+  minReplicaCount: 0
+  maxReplicaCount: 4
+  
+  # Idle replica count for scale-to-zero
+  idleReplicaCount: 0
+  
+  # Poll every 15 seconds for faster response
+  pollingInterval: 15
+  
+  # 5 minute cooldown for GPU instances
+  cooldownPeriod: 300
+  
+  triggers:
+  # Scale based on inference request rate
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: vllm_requests_per_second
+      threshold: "10"
+      query: |
+        sum(rate(vllm_requests_total[1m]))
+      
+  # Scale based on P95 latency
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: vllm_inference_latency_p95_ms
+      threshold: "500"
+      query: |
+        histogram_quantile(0.95, 
+          sum(rate(vllm_request_duration_seconds_bucket[5m])) 
+          by (le)
+        ) * 1000
+        
+  # Scale based on GPU utilization (when GPUs are available)
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: gpu_utilization_percent
+      threshold: "80"
+      query: |
+        avg(gpu_utilization_percent{job="vllm-service"})
+        
+  # Scale based on token generation rate
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: vllm_tokens_per_second
+      threshold: "5000"
+      query: |
+        sum(rate(vllm_tokens_generated_total[1m]))
+  
+  # Advanced scaling behavior for GPU workloads
+  advanced:
+    behavior:
+      scaleUp:
+        # Fast scale-up for user-facing services
+        stabilizationWindowSeconds: 15
+        policies:
+        - type: Percent
+          value: 200  # Double quickly
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+        selectPolicy: Max
+      scaleDown:
+        # Slow scale-down to avoid GPU thrashing
+        stabilizationWindowSeconds: 600
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+        selectPolicy: Min
+    
+    # Horizontal pod autoscaler configuration
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+        scaleDown:
+          policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 300
+
+---
+# TriggerAuthentication for secure metric access
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: prometheus-auth
+  namespace: ml-inference
+spec:
+  # Could add authentication if Prometheus is secured
+  # For now, using no auth for local development

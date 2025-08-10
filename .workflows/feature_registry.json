@@ -181,6 +181,46 @@
       "name": "Analytics & Optimization Dashboard",
       "status": "planned",
       "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-001",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "KEDA ScaledObject Generator",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-002",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "ML Metrics Collector",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-003",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "Predictive Scaler with Pattern Detection",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-004",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "GPU Scale-to-Zero Optimization",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-005",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "Helm Chart for ML Autoscaling",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
     }
   ]
 }

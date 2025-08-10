@@ -1,0 +1,83 @@
+# KEDA ScaledObject for Orchestrator Service
+# Multi-metric scaling for the main orchestration service
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: orchestrator-scaler
+  namespace: default
+  labels:
+    app.kubernetes.io/name: orchestrator
+    app.kubernetes.io/component: autoscaling
+    ml-autoscaling/enabled: "true"
+spec:
+  scaleTargetRef:
+    name: orchestrator
+    kind: Deployment
+  
+  minReplicaCount: 2
+  maxReplicaCount: 10
+  
+  pollingInterval: 30
+  cooldownPeriod: 180
+  
+  triggers:
+  # Scale based on HTTP request rate
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: http_requests_per_second
+      threshold: "100"
+      query: |
+        sum(rate(http_requests_total{job="orchestrator"}[1m]))
+  
+  # Scale based on request latency
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: http_request_duration_p95
+      threshold: "0.5"
+      query: |
+        histogram_quantile(0.95,
+          sum(rate(http_request_duration_seconds_bucket{job="orchestrator"}[5m]))
+          by (le)
+        )
+  
+  # Scale based on engagement prediction queue
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: engagement_prediction_queue
+      threshold: "50"
+      query: |
+        engagement_prediction_queue_depth
+  
+  # Scale based on CPU utilization
+  - type: cpu
+    metadata:
+      type: Utilization
+      value: "70"
+  
+  # Scale based on memory utilization
+  - type: memory
+    metadata:
+      type: Utilization
+      value: "80"
+  
+  advanced:
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 60
+        policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+        selectPolicy: Max
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
