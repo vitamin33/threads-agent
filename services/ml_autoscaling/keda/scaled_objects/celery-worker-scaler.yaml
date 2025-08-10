@@ -1,0 +1,79 @@
+# KEDA ScaledObject for Celery Workers
+# Auto-scales based on RabbitMQ queue depth and task processing latency
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: celery-worker-scaler
+  namespace: default
+  labels:
+    app.kubernetes.io/name: celery-worker
+    app.kubernetes.io/component: autoscaling
+    ml-autoscaling/enabled: "true"
+spec:
+  scaleTargetRef:
+    name: celery-worker
+    kind: Deployment
+  
+  minReplicaCount: 2
+  maxReplicaCount: 20
+  
+  # Poll every 30 seconds
+  pollingInterval: 30
+  
+  # Wait 60 seconds before scaling down
+  cooldownPeriod: 60
+  
+  triggers:
+  # Scale based on RabbitMQ queue depth
+  - type: rabbitmq
+    metadata:
+      host: amqp://user:pass@rabbitmq:5672/%2f
+      queueName: celery
+      queueLength: "5"
+      protocol: amqp
+      
+  # Scale based on task processing latency
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: celery_task_duration_p95
+      threshold: "10"
+      query: |
+        histogram_quantile(0.95, 
+          sum(rate(celery_task_duration_seconds_bucket[5m])) 
+          by (le)
+        )
+        
+  # Scale based on error rate
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: celery_task_error_rate
+      threshold: "0.05"
+      query: |
+        sum(rate(celery_task_failed_total[5m])) / 
+        sum(rate(celery_task_total[5m]))
+  
+  # Advanced scaling behavior
+  advanced:
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 30
+        policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+        selectPolicy: Max
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+        selectPolicy: Min

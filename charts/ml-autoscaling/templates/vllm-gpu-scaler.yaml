@@ -1,0 +1,98 @@
+{{- if and .Values.enabled .Values.services.vllmService.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Release.Name }}-vllm-gpu-scaler
+  namespace: {{ .Values.services.vllmService.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "ml-autoscaling.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: vllm-gpu-scaler
+    ml-autoscaling/gpu-aware: "true"
+  annotations:
+    ml-autoscaling/cost-optimization: "enabled"
+    {{- if .Values.services.vllmService.preferSpotInstances }}
+    ml-autoscaling/spot-instances: "preferred"
+    {{- end }}
+spec:
+  scaleTargetRef:
+    name: {{ .Values.services.vllmService.deployment }}
+    kind: Deployment
+  
+  minReplicaCount: {{ .Values.services.vllmService.minReplicas }}
+  maxReplicaCount: {{ .Values.services.vllmService.maxReplicas }}
+  idleReplicaCount: {{ .Values.services.vllmService.idleReplicaCount }}
+  
+  pollingInterval: 15
+  cooldownPeriod: 300
+  
+  triggers:
+  {{- if .Values.services.vllmService.triggers.requestRate.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: vllm_requests_per_second
+      threshold: {{ .Values.services.vllmService.triggers.requestRate.targetValue | quote }}
+      query: |
+        sum(rate(vllm_requests_total[1m]))
+  {{- end }}
+  
+  {{- if .Values.services.vllmService.triggers.latency.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: vllm_inference_latency_p95_ms
+      threshold: {{ .Values.services.vllmService.triggers.latency.targetValue | quote }}
+      query: |
+        histogram_quantile(0.95, 
+          sum(rate(vllm_request_duration_seconds_bucket[5m])) 
+          by (le)
+        ) * 1000
+  {{- end }}
+  
+  {{- if .Values.services.vllmService.triggers.gpuUtilization.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: gpu_utilization_percent
+      threshold: {{ .Values.services.vllmService.triggers.gpuUtilization.targetValue | quote }}
+      query: |
+        avg(gpu_utilization_percent{job="vllm-service"})
+  {{- end }}
+  
+  {{- if .Values.services.vllmService.triggers.tokenRate.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: vllm_tokens_per_second
+      threshold: {{ .Values.services.vllmService.triggers.tokenRate.targetValue | quote }}
+      query: |
+        sum(rate(vllm_tokens_generated_total[1m]))
+  {{- end }}
+  
+  advanced:
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: {{ .Values.services.vllmService.scaleUp.stabilizationWindowSeconds }}
+        policies:
+{{ toYaml .Values.services.vllmService.scaleUp.policies | indent 8 }}
+        selectPolicy: {{ .Values.services.vllmService.scaleUp.selectPolicy }}
+      scaleDown:
+        stabilizationWindowSeconds: {{ .Values.services.vllmService.scaleDown.stabilizationWindowSeconds }}
+        policies:
+{{ toYaml .Values.services.vllmService.scaleDown.policies | indent 8 }}
+        selectPolicy: {{ .Values.services.vllmService.scaleDown.selectPolicy }}
+    
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+        scaleDown:
+          policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 300
+{{- end }}

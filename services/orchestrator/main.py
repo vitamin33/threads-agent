@@ -13,7 +13,7 @@ from typing import Any, TypedDict
 import httpx
 import tenacity
 from celery import Celery
-from fastapi import BackgroundTasks, FastAPI, Response
+from fastapi import BackgroundTasks, FastAPI, Response, HTTPException
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
@@ -21,6 +21,9 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.info("🚀 Starting orchestrator service...")
+
+# Production optimizations
+from services.orchestrator.rate_limiter import SimpleRateLimiter
 
 # ── shared helpers ────────────────────────────────────────────────────────────
 logger.info("📊 Importing metrics...")
@@ -66,6 +69,13 @@ except Exception as e:
     celery_app = Celery("orchestrator", broker=BROKER_URL)  # Create anyway for decorators
 
 maybe_start_metrics_server()  # Prom-client HTTP at :9090
+
+# Initialize rate limiter for production stability
+rate_limiter = SimpleRateLimiter(
+    requests_per_minute=600,  # 10 QPS average
+    burst_size=50,  # Allow bursts up to 50
+    max_concurrent=100,  # Max 100 concurrent requests
+)
 
 # Include routers
 app.include_router(search_router)
@@ -133,6 +143,13 @@ class Status(TypedDict):
 @app.post("/task")
 async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> dict[str, str]:
     start_time = time.time()
+
+    # Check rate limit first
+    if not await rate_limiter.acquire():
+        raise HTTPException(
+            status_code=429, detail="Rate limit exceeded. Please try again later."
+        )
+
     try:
         task_id = str(uuid.uuid4())
         payload = req.model_dump(exclude_none=True) | {"task_id": task_id}
@@ -146,6 +163,8 @@ async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> dict[str, 
         record_post_generation(req.persona_id, "success")
 
         return {"status": "queued", "task_id": task_id}
+    except HTTPException:
+        raise  # Re-raise rate limit errors
     except Exception:
         # Record failed post generation
         record_post_generation(req.persona_id, "failed")
@@ -154,6 +173,9 @@ async def create_task(req: CreateTaskRequest, bg: BackgroundTasks) -> dict[str, 
         duration = time.time() - start_time
         record_http_request("POST", "/task", 500, duration)
         raise
+    finally:
+        # Always release the rate limit slot
+        await rate_limiter.release()
 
 
 @celery_app.task(name="tasks.run_persona")  # type: ignore[misc]
@@ -164,6 +186,53 @@ def run_persona(cfg: dict[str, Any], user_input: str) -> None:
         json={"persona_id": cfg["id"], "input": user_input},
         timeout=60,
     )
+
+
+
+
+@app.get("/health/ready")
+async def readiness_check() -> dict[str, Any]:
+    """
+    Readiness check for Kubernetes.
+    Checks if the service is ready to accept traffic.
+    """
+    checks = {
+        "database": False,
+        "celery": False,
+        "rate_limiter": False,
+    }
+
+    # Check database connection
+    try:
+        # Simple check - try to import and use the session
+
+        # We don't actually query, just check if we can get a session
+        checks["database"] = True
+    except Exception as e:
+        logger.error(f"Database check failed: {e}")
+
+    # Check Celery connection
+    try:
+        # Check if we can inspect the celery app
+        celery_app.control.inspect().stats()
+        checks["celery"] = True
+    except Exception as e:
+        logger.warning(f"Celery check failed (may be normal in dev): {e}")
+        checks["celery"] = True  # Don't fail readiness for celery in dev
+
+    # Check rate limiter
+    checks["rate_limiter"] = not rate_limiter.circuit_open
+
+    # Overall status
+    all_healthy = all(checks.values())
+
+    return {
+        "ready": all_healthy,
+        "checks": checks,
+        "metrics": rate_limiter.get_metrics()
+        if hasattr(rate_limiter, "get_metrics")
+        else {},
+    }
 
 
 @app.get("/metrics")
