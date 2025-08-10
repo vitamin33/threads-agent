@@ -1,0 +1,391 @@
+# .github/workflows/dev-ci.yml
+name: dev-ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - '.env.example'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build all images (ignore cache)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: read
+  pull-requests: read
+#   #dev branches keep feedback loop tight
+#   push:
+#     branches: [cra-*]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: py${{ matrix.python }} • k3d
+    runs-on: ubuntu-latest # Faster startup than ubuntu-22.04
+    timeout-minutes: 12 # Reduced from 15 minutes
+    strategy:
+      fail-fast: false # let both versions run
+      matrix:
+        python: ["3.12"]
+
+    steps:
+      # ————————————————————————————————
+      # 0.  Checkout code (optimized)
+      # ————————————————————————————————
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # Shallow clone for speed (changed from 0)
+
+      # ————————————————————————————————
+      # 0.25  Detect changed files
+      # ————————————————————————————————
+      - name: Detect changed files
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          token: ${{ github.token }}
+          filters: |
+            python:
+              - '**/*.py'
+              - '**/requirements*.txt'
+              - 'pytest.ini'
+              - 'pyproject.toml'
+              - 'mypy.ini'
+            orchestrator:
+              - 'services/orchestrator/**'
+              - 'services/common/**'
+            celery_worker:
+              - 'services/celery_worker/**'
+              - 'services/common/**'
+            persona_runtime:
+              - 'services/persona_runtime/**'
+              - 'services/common/**'
+            fake_threads:
+              - 'services/fake_threads/**'
+              - 'services/common/**'
+            viral_engine:
+              - 'services/viral_engine/**'
+              - 'services/common/**'
+            revenue:
+              - 'services/revenue/**'
+              - 'services/common/**'
+            tests:
+              - 'tests/**'
+            e2e_required:
+              - 'chart/**'
+              - '**/Dockerfile'
+              - 'scripts/**'
+
+      # ————————————————————————————————
+      # 0.5  Enhanced caching (optimized)
+      # ————————————————————————————————
+      - name: Cache test results and dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pytest_cache
+            .mypy_cache
+            htmlcov
+            .coverage
+            ~/.cache/pip
+            .venv
+            __pycache__
+          key: dev-ci-cache-${{ runner.os }}-py${{ matrix.python }}-${{ hashFiles('**/*.py', '**/requirements*.txt', 'mypy.ini', 'pytest.ini', 'pyproject.toml') }}
+          restore-keys: |
+            dev-ci-cache-${{ runner.os }}-py${{ matrix.python }}-
+            dev-ci-cache-${{ runner.os }}-
+
+      # ————————————————————————————————
+      # 1.  Login to GitHub Container Registry
+      # ————————————————————————————————
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ————————————————————————————————
+      # 2.  Early exit if no infrastructure changes
+      # ————————————————————————————————
+      - name: Check if e2e tests needed
+        id: e2e-check
+        run: |
+          if [ "${{ steps.changes.outputs.e2e_required }}" != "true" ]; then
+            echo "✅ No infrastructure changes detected"
+            echo "✅ Unit tests already handled by quick-ci jobs"
+            echo "✅ Skipping expensive k3d cluster and Docker operations"
+            echo "skip_remaining=true" >> $GITHUB_OUTPUT
+          else
+            echo "🏗️ Infrastructure changes detected, running full e2e tests"
+            echo "skip_remaining=false" >> $GITHUB_OUTPUT
+          fi
+
+      # ————————————————————————————————
+      # 3.  Spin local k3d cluster (only if needed)
+      # ————————————————————————————————
+      - name: Create k3d cluster
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        uses: AbsaOSS/k3d-action@v2
+        with:
+          cluster-name: dev # => kubectl context "k3d-dev"
+          args: >-
+            --agents 1
+            --registry-create k3d-dev-registry:0.0.0.0:5111
+
+      # ————————————————————————————————
+      # 4.  Pull or build images (only if needed)
+      # ————————————————————————————————
+      - name: Pull or build images
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          # Try to pull from GHCR first, build only if not found or force_build is true
+          SERVICES="orchestrator celery_worker persona_runtime fake_threads viral_engine revenue viral_metrics"
+          FORCE_BUILD="${{ github.event.inputs.force_build || 'false' }}"
+
+          # Determine image tag based on event type
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            IMAGE_TAG="pr-${{ github.event.pull_request.number }}"
+          else
+            IMAGE_TAG="main"
+          fi
+
+          for svc in $SERVICES; do
+            IMAGE_NAME="ghcr.io/${{ github.repository }}/${svc}:${IMAGE_TAG}"
+            LOCAL_NAME="${svc//_/-}:local"
+
+            if [ "$FORCE_BUILD" = "true" ]; then
+              echo "🔨 Force building $svc..."
+              docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
+            else
+              echo "Attempting to pull $IMAGE_NAME..."
+              if docker pull "$IMAGE_NAME" 2>/dev/null; then
+                echo "✅ Found pre-built image for $svc"
+                docker tag "$IMAGE_NAME" "$LOCAL_NAME"
+              else
+                echo "⚠️  No pre-built image found for $svc, building locally..."
+                docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
+              fi
+            fi
+          done
+
+          # Always pull these third-party images
+          docker pull bitnami/postgresql:16
+          docker pull rabbitmq:3.13-management-alpine
+          docker pull qdrant/qdrant:v1.9.4
+
+          # Import all images to k3d
+          k3d image import \
+            orchestrator:local \
+            celery-worker:local \
+            persona-runtime:local \
+            fake-threads:local \
+            viral-engine:local \
+            revenue:local \
+            viral-metrics:local \
+            qdrant/qdrant:v1.9.4 \
+            -c dev
+
+      # ————————————————————————————————
+      # 5.  Helm install with CI values (only if needed)
+      # ————————————————————————————————
+      - name: Helm upgrade (dev cluster)
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        id: helm
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MOCK: "1"
+        run: |
+          helm upgrade --install threads ./chart \
+            -f chart/values-ci.yaml \
+            --set openai.apiKey="$OPENAI_API_KEY" \
+            --wait --timeout 300s --debug \
+            --atomic
+
+      # ─── If Helm failed, dump cluster state ──────────────────────────────
+      - name: Dump pod list + events if Helm failed
+        if: steps.helm.outcome == 'failure' && steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          echo "❌ Helm release did not become ready. Dumping diagnostics …"
+          kubectl get pods -A -o wide
+          kubectl get events --sort-by='.lastTimestamp' -A | tail -n 40
+          # Show logs of pods stuck in Pending / CrashLoop
+          for p in $(kubectl get pods --no-headers | awk '$3!="Running"{print $1}'); do
+            echo "──── logs: $p ────"
+            kubectl logs "$p" --tail=100 || true
+          done
+          # Fail the step explicitly so the job still turns red
+          exit 1
+      - name: Wait for core pods (parallel)
+        if: steps.e2e-check.outputs.skip_remaining == 'false'
+        run: |
+          echo "⏳ Waiting for all pods to be ready (in parallel)..."
+
+          # Start all checks in parallel
+          kubectl rollout status deploy/orchestrator     --timeout=120s &
+          kubectl rollout status deploy/celery-worker    --timeout=120s &
+          kubectl rollout status deploy/fake-threads     --timeout=120s &
+          kubectl rollout status deploy/persona-runtime  --timeout=120s &
+          kubectl rollout status deploy/viral-engine     --timeout=120s &
+          # Check revenue deployment if it exists (with release prefix)
+          if kubectl get deploy/threads-revenue >/dev/null 2>&1; then
+            kubectl rollout status deploy/threads-revenue --timeout=120s &
+          else
+            echo "Revenue deployment not found (may be disabled)"
+          fi
+          kubectl rollout status sts/qdrant              --timeout=120s &
+
+          # Wait for all background jobs to complete
+          JOBS=$(jobs -p)
+          for job in $JOBS; do
+            wait $job || exit 1
+          done
+
+          echo "✅ All pods are ready!"
+
+      # ————————————————————————————————
+      # 4.  Set-up Python & cache venv
+      # ————————————————————————————————
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      # OPTIMIZATION: Skip separate pip cache since it's included in main cache above
+
+      - name: Setup virtual environment
+        run: |
+          python -m venv .venv
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install deps (optimized with better caching)
+        run: |
+          # Upgrade pip first
+          python -m pip install -U pip wheel setuptools --prefer-binary
+
+          # Install only if venv doesn't exist or is incomplete
+          if [ ! -f ".venv/pyvenv.cfg" ] || ! python -c "import fastapi, celery, pytest" 2>/dev/null; then
+            echo "📦 Installing dependencies..."
+            # Install with prefer-binary for speed
+            pip install -r services/orchestrator/requirements.txt --prefer-binary
+            pip install -r services/celery_worker/requirements.txt --prefer-binary
+            pip install -r services/persona_runtime/requirements.txt --prefer-binary
+            pip install -r services/fake_threads/requirements.txt --prefer-binary
+            pip install -r services/viral_engine/requirements.txt --prefer-binary
+            pip install -r services/revenue/requirements.txt --prefer-binary
+            pip install -r tests/requirements.txt --prefer-binary
+          else
+            echo "✅ Dependencies already installed in venv!"
+          fi
+
+          # Remove langsmith completely to avoid Python 3.12 compatibility issues in CI
+          echo "🔧 Removing langsmith to prevent pydantic v1 conflicts in CI..."
+          pip uninstall -y langsmith || true
+
+      # ————————————————————————————————
+      # 5.  Run unit + e2e suites (smart selection)
+      # ————————————————————————————————
+      - name: pytest (e2e only) - optimized parallel execution
+        id: tests
+        env:
+          # Disable all langchain tracing to avoid langsmith issues
+          LANGCHAIN_TRACING_V2: "false"
+          LANGSMITH_TRACING: "false"
+          LANGCHAIN_TRACING: "false"
+          LANGCHAIN_CALLBACKS_MANAGER: "false"
+          LANGSMITH_API_KEY: ""
+          LANGCHAIN_API_KEY: ""
+        run: |
+          # OPTIMIZATION: More aggressive pytest settings for speed
+          PYTEST_ARGS="-q -p no:langsmith -n auto --maxprocesses=6 --dist loadscope --timeout=45 --tb=short"
+
+          # If no Python files changed, skip tests entirely
+          if [ "${{ steps.changes.outputs.python }}" != "true" ]; then
+            echo "✅ No Python files changed, skipping tests"
+            exit 0
+          fi
+
+          # OPTIMIZATION: Since quick-ci already runs unit tests,
+          # dev-ci will focus ONLY on e2e integration tests
+          
+          # Check if we need to run e2e tests
+          if [ "${{ steps.changes.outputs.e2e_required }}" = "true" ]; then
+            TEST_PATHS="tests/e2e"
+            RUN_E2E=true
+            echo "🎯 Running ONLY e2e tests (unit tests handled by quick-ci)"
+          else
+            # Skip all tests if no infrastructure changes
+            echo "✅ No infrastructure changes, skipping e2e tests"
+            echo "✅ Unit tests already passed in quick-ci jobs"
+            exit 0
+          fi
+
+          # Only start port-forwards if running e2e tests
+          if [ "$RUN_E2E" = "true" ]; then
+            # ➊ start port-forwards in the background (parallel startup)
+            kubectl port-forward svc/orchestrator 8080:8080   & PF_ORCH=$!
+            kubectl port-forward svc/fake-threads 9009:9009   & PF_THREADS=$!
+            kubectl port-forward svc/qdrant 6333:6333         & PF_QDRANT=$!
+            kubectl port-forward svc/postgres 15432:5432      & PF_POSTGRES=$!
+            # Reduced wait time
+            sleep 3
+          fi
+
+          # ➋ run the test suite with optimized parallel execution
+          export PYTHONPATH=$PWD:$PYTHONPATH
+          # Disable langsmith to avoid pydantic v1 compatibility issues
+          export LANGCHAIN_TRACING_V2=false
+          export LANGSMITH_TRACING=false
+
+          echo "🧪 Running tests for: $TEST_PATHS"
+          pytest $PYTEST_ARGS $TEST_PATHS --maxfail=3  # Stop after 3 failures instead of 1
+
+          # ➌ tidy up port-forwards if started
+          if [ "$RUN_E2E" = "true" ]; then
+            kill $PF_ORCH $PF_THREADS $PF_QDRANT $PF_POSTGRES || true
+          fi
+
+      # ─── EXTRA: show Celery-worker logs if the tests failed ──────────────
+      - name: Dump worker logs if pytest failed
+        if: failure()
+        run: |
+          echo "⚠️  pytest failed, printing celery-worker logs…"
+          kubectl logs deploy/celery-worker --tail=150 || true
+
+
+      # ————————————————————————————————
+      # 6.  Summary step
+      # ————————————————————————————————
+      - name: CI Summary
+        if: always()
+        run: |
+          if [ "${{ steps.e2e-check.outputs.skip_remaining }}" = "true" ]; then
+            echo "🚀 dev-ci completed quickly! No infrastructure changes detected."
+            echo "   • Unit tests: ✅ Handled by quick-ci jobs"
+            echo "   • Docker builds: ⏭️ Skipped (no changes)"
+            echo "   • k3d cluster: ⏭️ Skipped (no changes)"
+            echo "   • e2e tests: ⏭️ Skipped (no changes)"
+            echo ""
+            echo "💡 This optimization saves ~10 minutes when only code changes!"
+          else
+            echo "🏗️ dev-ci ran full integration tests (infrastructure changed)"
+            echo "   • Unit tests: ⏭️ Skipped (handled by quick-ci)"
+            echo "   • Docker/k3d: ✅ Full setup completed"
+            echo "   • e2e tests: ✅ Integration tests passed"
+          fi

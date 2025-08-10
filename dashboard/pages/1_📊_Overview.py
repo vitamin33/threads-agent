@@ -100,6 +100,21 @@ def get_real_metrics():
             "completed_today": metrics.get("completed_today", today_count),
             "total_value": achievement_stats.get("total_value_generated", 0),
             "total_achievements": achievement_stats.get("total_achievements", 0),
+            "completed_today": metrics.get(
+                "completed_today",
+                len(
+                    [
+                        a
+                        for a in achievements
+                        if "created_at" in a
+                        and a["created_at"].startswith(
+                            datetime.now().strftime("%Y-%m-%d")
+                        )
+                    ]
+                )
+                if achievements
+                else 0,
+            ),
         }
     except Exception:
         # Return defaults if API fails

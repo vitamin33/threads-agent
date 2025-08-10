@@ -13,16 +13,53 @@ celeryWorker:
     tag: local
 
 viralEngine:
-  enabled: true
+  enabled: false
   image:
     repository: viral-engine
     tag: local
 
 viralPatternEngine:
-  enabled: true
+  enabled: false
   image:
     repository: viral-pattern-engine
     tag: local
+
+# Enable comment monitoring for development testing
+orchestrator:
+  commentMonitoring:
+    enabled: true
+    batchSize: 5                       # Smaller batches for dev
+    dedupCacheTTL: 1800               # Shorter TTL for dev testing
+    processingTimeout: 15              # Shorter timeout for dev
+    rateLimitPerMinute: 50            # Lower rate limit for dev
+    metrics:
+      enabled: false                  # Disable for now
+    alerts:
+      queueBacklogThreshold: 100      # Lower threshold for dev testing
+  serviceMonitor:
+    enabled: false
+
+conversationEngine:
+  enabled: true
+  image:
+    repository: conversation-engine
+    tag: local
+  replicas: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  serviceMonitor:
+    enabled: false                    # Disable for now
+  autoscaling:
+    enabled: false                    # Disable autoscaling in dev
+  pdb:
+    enabled: false                    # Disable PDB in dev
 
 techDocGenerator:
   enabled: false    # Temporarily disabled for CI stability
@@ -56,7 +93,7 @@ personaRuntime:
     tag: local
 
 ragPipeline:
-  enabled: true
+  enabled: false
   image:
     repository: rag-pipeline
     tag: latest
@@ -168,6 +205,8 @@ monitoring:
       enabled: true
       size: 2Gi
       storageClass: local-path
+  postgres:
+    enabled: true
   grafana:
     enabled: true
     adminPassword: admin123
@@ -244,3 +283,11 @@ eventBus:
   enabled: true
   image:
     tag: "final"
+
+# Revenue service for monetization
+revenue:
+  enabled: true
+  image:
+    repository: revenue
+    tag: "local"
+    pullPolicy: IfNotPresent

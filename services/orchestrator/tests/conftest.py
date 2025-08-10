@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 
-
 @pytest.fixture(scope="function")
 def db_engine():
     """Create in-memory SQLite database engine for testing."""

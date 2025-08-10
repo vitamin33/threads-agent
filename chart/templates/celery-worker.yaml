@@ -1,10 +1,12 @@
-# chart/templates/celery-worker.yaml
+{{- if .Values.celeryWorker.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: celery-worker
+  labels:
+    app: celery-worker
 spec:
-  replicas: 1
+  replicas: {{ .Values.celeryWorker.replicas | default 1 }}
   selector:
     matchLabels:
       app: celery-worker
@@ -15,25 +17,36 @@ spec:
     spec:
       containers:
         - name: celery-worker
-          image: "{{ tpl .Values.celeryWorker.image.repository $ }}:{{ tpl .Values.celeryWorker.image.tag $ }}"
+          image: "{{ .Values.celeryWorker.image.repository }}:{{ .Values.celeryWorker.image.tag }}"
           imagePullPolicy: {{ .Values.celeryWorker.image.pullPolicy | default "IfNotPresent" }}
           env:
             - name: RABBITMQ_URL
-              value: {{ .Values.rabbitmq.url }}
+              value: {{ .Values.rabbitmq.url | quote }}
             - name: CELERY_BROKER_URL
-              value: {{ .Values.rabbitmq.url }}
+              value: {{ .Values.rabbitmq.url | quote }}
             - name: THREADS_BASE_URL
               {{- if .Values.threadsAdaptor.enabled }}
               value: "http://threads-adaptor:8080"
+              {{- else if .Values.fakeThreads.enabled }}
+              value: "http://fake-threads:{{ .Values.fakeThreads.port }}"
               {{- else }}
-              value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
+              value: "http://fake-threads:9009"
               {{- end }}
+            - name: PERSONA_RUNTIME_URL
+              value: "http://persona-runtime:8080"
             - name: POSTGRES_DSN
               value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
             - name: DATABASE_URL
               value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
             - name: QDRANT_URL
               value: "http://qdrant:6333"
+            - name: VIRAL_ENGINE_URL
+              value: "http://viral-engine:8080"
+            # Optimize celery for CI - reduce concurrency
+            - name: CELERY_WORKER_CONCURRENCY
+              value: "2"  # Reduced from default ~14
+            - name: CELERY_WORKER_MAX_MEMORY_PER_CHILD
+              value: "50000"  # 50MB per child (KB)
           envFrom:
             - secretRef:
                 name: openai-secret
@@ -42,4 +55,27 @@ spec:
             - name: metrics
               containerPort: 9090
 
-          resources: {}
+          # Conditional health checks
+          {{- if .Values.celeryWorker.livenessProbe }}
+          livenessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: {{ .Values.celeryWorker.livenessProbe.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.celeryWorker.livenessProbe.periodSeconds | default 30 }}
+            timeoutSeconds: {{ .Values.celeryWorker.livenessProbe.timeoutSeconds | default 5 }}
+            failureThreshold: 3
+          {{- end }}
+
+          {{- if .Values.celeryWorker.readinessProbe }}
+          readinessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: {{ .Values.celeryWorker.readinessProbe.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.celeryWorker.readinessProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.celeryWorker.readinessProbe.timeoutSeconds | default 3 }}
+            failureThreshold: 3
+          {{- end }}
+
+          resources:
+            {{- toYaml .Values.celeryWorker.resources | nindent 12 }}
+{{- end }}

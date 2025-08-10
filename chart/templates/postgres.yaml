@@ -36,18 +36,26 @@ spec:
       serviceAccountName: postgres-sa
       containers:
         - name: postgres
-          image: bitnami/postgresql:16
+          image: postgres:16-alpine
           ports:
             - containerPort: 5432
           env:
-            # either var works – we set both to silence warning logs
-            - name: POSTGRESQL_POSTGRES_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
-            - name: POSTGRESQL_PASSWORD
-              valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_DB
+              value: threads_agent  # Automatically create the database
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests:
+              memory: "{{ .Values.postgres.resources.requests.memory | default "64Mi" }}"
+              cpu: "{{ .Values.postgres.resources.requests.cpu | default "25m" }}"
+            limits:
+              memory: "{{ .Values.postgres.resources.limits.memory | default "128Mi" }}"
+              cpu: "{{ .Values.postgres.resources.limits.cpu | default "100m" }}"
           volumeMounts:
             - name: pgdata
-              mountPath: /bitnami/postgresql
+              mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
     - metadata:
         name: pgdata
@@ -56,7 +64,7 @@ spec:
         accessModes: [ReadWriteOnce]
         resources:
           requests:
-            storage: 1Gi
+            storage: "{{ .Values.postgres.storage | default "1Gi" }}"
 
 ---
 
