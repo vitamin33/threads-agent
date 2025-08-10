@@ -19,6 +19,19 @@
       "created": "2025-08-04T00:00:00Z"
     },
     {
+      "id": "mlops-004-chaos-engineering",
+      "name": "MLOPS-004: Chaos Engineering & Reliability Testing",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "mlops-008-ml-autoscaling",
+      "name": "MLOPS-008: ML Infrastructure Auto-scaling",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
       "id": "epic-235-comment-intent-dm-trigger",
       "name": "[CRA-235] Comment Intent Analysis & DM Trigger System",
       "status": "planned",

@@ -64,6 +64,48 @@
       "created": "2025-08-04T00:00:00Z"
     },
     {
+      "id": "feat-mlops-004-001",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Chaos Engineering Infrastructure",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-002",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Advanced Failure Scenarios",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-003",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "SLA Tracking & Reliability Metrics",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-004",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Intelligent Recovery Systems",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-005",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Predictive Alerting & Incident Response",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-004-006",
+      "epic_id": "mlops-004-chaos-engineering",
+      "name": "Interview Demo Platform",
+      "status": "planned",
+      "created": "2025-08-07T00:00:00Z"
+    },
+    {
       "id": "feat-235-001",
       "epic_id": "epic-235-comment-intent-dm-trigger",
       "name": "Real-time Comment Monitoring & Ingestion Pipeline",
@@ -139,6 +181,46 @@
       "name": "Analytics & Optimization Dashboard",
       "status": "planned",
       "created": "2025-08-05T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-001",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "KEDA ScaledObject Generator",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-002",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "ML Metrics Collector",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-003",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "Predictive Scaler with Pattern Detection",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-004",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "GPU Scale-to-Zero Optimization",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feat-mlops-008-005",
+      "epic_id": "mlops-008-ml-autoscaling",
+      "name": "Helm Chart for ML Autoscaling",
+      "status": "completed",
+      "created": "2025-08-09T00:00:00Z",
+      "completed": "2025-08-09T00:00:00Z"
     }
   ]
 }

@@ -1,0 +1,89 @@
+{{- if and .Values.enabled .Values.services.orchestrator.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Release.Name }}-orchestrator-scaler
+  namespace: {{ .Values.services.orchestrator.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "ml-autoscaling.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: orchestrator-scaler
+    ml-autoscaling/enabled: "true"
+spec:
+  scaleTargetRef:
+    name: {{ .Values.services.orchestrator.deployment }}
+    kind: Deployment
+  
+  minReplicaCount: {{ .Values.services.orchestrator.minReplicas }}
+  maxReplicaCount: {{ .Values.services.orchestrator.maxReplicas }}
+  
+  pollingInterval: 30
+  cooldownPeriod: 180
+  
+  triggers:
+  {{- if .Values.services.orchestrator.triggers.httpRate.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: http_requests_per_second
+      threshold: {{ .Values.services.orchestrator.triggers.httpRate.targetValue | quote }}
+      query: |
+        sum(rate(http_requests_total{job="orchestrator"}[1m]))
+  {{- end }}
+  
+  {{- if .Values.services.orchestrator.triggers.latency.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: http_request_duration_p95
+      threshold: {{ .Values.services.orchestrator.triggers.latency.targetValue | quote }}
+      query: |
+        histogram_quantile(0.95,
+          sum(rate(http_request_duration_seconds_bucket{job="orchestrator"}[5m]))
+          by (le)
+        )
+  {{- end }}
+  
+  {{- if .Values.services.orchestrator.triggers.engagementQueue.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ .Values.prometheus.serverAddress }}
+      metricName: engagement_prediction_queue
+      threshold: {{ .Values.services.orchestrator.triggers.engagementQueue.targetValue | quote }}
+      query: |
+        engagement_prediction_queue_depth
+  {{- end }}
+  
+  {{- if .Values.services.orchestrator.triggers.cpu.enabled }}
+  - type: cpu
+    metadata:
+      type: Utilization
+      value: {{ .Values.services.orchestrator.triggers.cpu.targetValue | quote }}
+  {{- end }}
+  
+  {{- if .Values.services.orchestrator.triggers.memory.enabled }}
+  - type: memory
+    metadata:
+      type: Utilization
+      value: {{ .Values.services.orchestrator.triggers.memory.targetValue | quote }}
+  {{- end }}
+  
+  advanced:
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 60
+        policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+        selectPolicy: Max
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+{{- end }}

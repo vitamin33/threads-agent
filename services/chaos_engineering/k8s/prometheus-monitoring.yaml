@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: chaos-engineering
+  namespace: chaos-engineering
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chaos-engineering
+  endpoints:
+  - port: http-metrics
+    interval: 30s
+    path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: chaos-engineering-alerts
+  namespace: chaos-engineering
+  labels:
+    app.kubernetes.io/name: chaos-engineering
+    app.kubernetes.io/component: alerting
+spec:
+  groups:
+  - name: chaos-engineering
+    rules:
+    - alert: ChaosExperimentFailed
+      expr: increase(chaos_experiments_total[5m]) > increase(chaos_experiments_success_total[5m])
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Chaos experiment failed"
+        description: "One or more chaos experiments have failed in the last 5 minutes"
+    
+    - alert: ChaosExperimentHighFailureRate
+      expr: |
+        (
+          rate(chaos_experiments_total[10m]) - rate(chaos_experiments_success_total[10m])
+        ) / rate(chaos_experiments_total[10m]) > 0.2
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High chaos experiment failure rate"
+        description: "More than 20% of chaos experiments are failing"
+    
+    - alert: ChaosServiceDown
+      expr: up{job="chaos-engineering"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Chaos engineering service is down"
+        description: "The chaos engineering service has been down for more than 5 minutes"
+    
+    - alert: LowSystemHealth
+      expr: chaos_system_health_score < 0.5
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "System health critically low"
+        description: "System health score is below 50% - chaos experiments may be unsafe"
