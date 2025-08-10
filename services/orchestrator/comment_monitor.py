@@ -2,10 +2,21 @@
 import uuid
 from typing import List, Dict, Any
 from datetime import datetime
+import logging
 
-from sqlalchemy import String, Text, DateTime, BigInteger
-from sqlalchemy.orm import Mapped, mapped_column
-from .db import Base
+logger = logging.getLogger(__name__)
+
+try:
+    from sqlalchemy import String, Text, DateTime, BigInteger
+    from sqlalchemy.orm import Mapped, mapped_column
+    from .db import Base
+    DB_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Database not available for comment monitoring: {e}")
+    DB_AVAILABLE = False
+    # Create dummy Base class to prevent import errors
+    class Base:
+        __tablename__ = "comments"
 
 
 class Comment(Base):

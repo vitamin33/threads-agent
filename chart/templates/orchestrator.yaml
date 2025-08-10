@@ -30,7 +30,9 @@ spec:
             - name: THREADS_BASE_URL
               value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
             - name: POSTGRES_DSN
-              value: "postgresql+psycopg2://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
+              value: {{ include "threads.postgres.dsn" . | quote }}
+            - name: DATABASE_URL
+              value: {{ include "threads.database.url" . | quote }}
             {{- if .Values.redis.enabled }}
             - name: REDIS_URL
               value: "redis://redis:{{ .Values.redis.port | default 6379 }}"

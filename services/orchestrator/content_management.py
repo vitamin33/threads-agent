@@ -18,12 +18,26 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Database setup
+# Database setup - lazy initialization to avoid startup failures
 POSTGRES_DSN = os.getenv(
     "POSTGRES_DSN", "postgresql://postgres:pass@postgres:5432/postgres"
 )
-engine = create_engine(POSTGRES_DSN)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Lazy initialization of database connection
+_engine = None
+_SessionLocal = None
+
+def get_engine():
+    global _engine
+    if _engine is None:
+        _engine = create_engine(POSTGRES_DSN)
+    return _engine
+
+def get_session():
+    global _SessionLocal
+    if _SessionLocal is None:
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    return _SessionLocal()
 
 router = APIRouter(prefix="/content", tags=["content"])
 
@@ -97,26 +111,50 @@ async def get_content_posts(
 ):
     """Get list of generated content posts with filters"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             # Base query - get posts with extended info
-            query = text("""
-                SELECT 
-                    p.id,
-                    p.persona_id,
-                    p.hook,
-                    p.body,
-                    CONCAT(p.hook, E'\n\n', p.body) as full_content,
-                    COALESCE(p.quality_score::text, 'null')::text as quality_score,
-                    p.tokens_used,
-                    p.ts as created_at,
-                    'draft' as status,  -- Default status for now
-                    ARRAY['dev.to', 'linkedin'] as platforms,  -- Default platforms
-                    null as scheduled_at,
-                    null as published_at
-                FROM posts p
-                ORDER BY p.ts DESC
-                LIMIT :limit OFFSET :offset
-            """)
+            # Use database-agnostic query
+            import os
+            if 'sqlite' in os.environ.get('DATABASE_URL', '').lower():
+                # SQLite compatible query
+                query = text("""
+                    SELECT 
+                        p.id,
+                        p.persona_id,
+                        p.hook,
+                        p.body,
+                        p.hook || CHAR(10) || CHAR(10) || p.body as full_content,
+                        COALESCE(CAST(p.quality_score AS TEXT), 'null') as quality_score,
+                        p.tokens_used,
+                        p.ts as created_at,
+                        'draft' as status,
+                        '["dev.to", "linkedin"]' as platforms,  -- JSON string for SQLite
+                        null as scheduled_at,
+                        null as published_at
+                    FROM posts p
+                    ORDER BY p.ts DESC
+                    LIMIT :limit OFFSET :offset
+                """)
+            else:
+                # PostgreSQL query
+                query = text("""
+                    SELECT 
+                        p.id,
+                        p.persona_id,
+                        p.hook,
+                        p.body,
+                        CONCAT(p.hook, E'\n\n', p.body) as full_content,
+                        COALESCE(p.quality_score::text, 'null')::text as quality_score,
+                        p.tokens_used,
+                        p.ts as created_at,
+                        'draft' as status,
+                        ARRAY['dev.to', 'linkedin'] as platforms,
+                        null as scheduled_at,
+                        null as published_at
+                    FROM posts p
+                    ORDER BY p.ts DESC
+                    LIMIT :limit OFFSET :offset
+                """)
 
             result = db.execute(query, {"limit": limit, "offset": offset})
 
@@ -160,7 +198,7 @@ async def get_content_posts(
 async def get_content_post(post_id: int):
     """Get specific content post by ID"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             query = text("""
                 SELECT 
                     p.id,
@@ -213,7 +251,7 @@ async def get_content_post(post_id: int):
 async def update_content_post(post_id: int, update: ContentUpdate):
     """Update content post (edit, change status, schedule, etc.)"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             # Build dynamic update query
             set_clauses = []
             params = {"post_id": post_id}
@@ -345,7 +383,7 @@ async def adapt_content_for_platforms(post_id: int, platforms: List[Platform]):
 async def get_content_stats():
     """Get content generation statistics"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             # Get basic stats
             stats_query = text("""
                 SELECT 

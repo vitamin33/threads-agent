@@ -48,6 +48,12 @@ just ship-it "feat: my feature"   # Test + Deploy + PR
 ├── just smart-deploy                # Safe deployment
 └── just health-check                # System status
 
+🔧 CONFIGURATION (NEW)
+├── Database Config                  # services/common/database_config.py
+├── ML/AI Config                     # services/common/ml_config.py  
+├── Helm Helpers                     # {{ include "threads.postgres.dsn" . }}
+└── See docs/DATABASE_CONFIGURATION.md for details
+
 🔍 QUICK FIXES
 ├── just logs                        # View logs
 ├── just cache-get/set               # Redis operations

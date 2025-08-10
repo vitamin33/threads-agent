@@ -202,7 +202,6 @@ async def filter_achievements(
 
     # Apply filters
     if filters.portfolio_ready_only:
-        query = query.filter(AchievementModel.portfolio_ready)
         query = query.filter(AchievementModel.portfolio_ready == True)
 
     if filters.categories:
@@ -266,7 +265,7 @@ async def get_content_ready_achievements(
         )
         .filter(
             and_(
-                AchievementModel.portfolio_ready == True,
+                AchievementModel.portfolio_ready,
                 AchievementModel.impact_score >= 70.0,
                 AchievementModel.portfolio_ready,
             )
@@ -340,9 +339,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
     """
     # Total portfolio-ready achievements
     total_ready = (
-        db.query(AchievementModel)
-        .filter(AchievementModel.portfolio_ready == True)
-        .count()
+        db.query(AchievementModel).filter(AchievementModel.portfolio_ready).count()
     )
 
     # High-impact achievements (80+)
@@ -350,7 +347,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
         db.query(AchievementModel)
         .filter(
             and_(
-                AchievementModel.portfolio_ready == True,
+                AchievementModel.portfolio_ready,
                 AchievementModel.impact_score >= 80.0,
                 AchievementModel.portfolio_ready,
             )
@@ -364,7 +361,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
         db.query(AchievementModel)
         .filter(
             and_(
-                AchievementModel.portfolio_ready == True,
+                AchievementModel.portfolio_ready,
                 AchievementModel.completed_at >= recent_cutoff,
                 AchievementModel.portfolio_ready,
             )
@@ -374,9 +371,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
 
     # Unprocessed achievements - simple approach without JSON queries
     total_portfolio_ready = (
-        db.query(AchievementModel)
-        .filter(AchievementModel.portfolio_ready == True)
-        .count()
+        db.query(AchievementModel).filter(AchievementModel.portfolio_ready).count()
     )
 
     # For now, assume most are unprocessed since this is a new feature
@@ -389,7 +384,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
         db.query(
             AchievementModel.category, func.count(AchievementModel.id).label("count")
         )
-        .filter(AchievementModel.portfolio_ready == True)
+        .filter(AchievementModel.portfolio_ready)
         .group_by(AchievementModel.category)
         .all()
     )

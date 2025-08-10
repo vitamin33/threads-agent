@@ -5,6 +5,7 @@ import random
 from typing import Any, Dict, List
 from datetime import datetime
 import uuid
+import logging
 
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
@@ -17,6 +18,11 @@ from services.common.metrics import (
     update_revenue_projection,
     record_cost_per_follow,
     maybe_start_metrics_server,
+)
+
+# Reduce health check log spam
+logging.getLogger("uvicorn.access").addFilter(
+    lambda record: "/health" not in record.getMessage()
 )
 
 app = FastAPI(title="fake-threads")

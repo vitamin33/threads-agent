@@ -12,14 +12,54 @@ from sqlalchemy import (
     String,
     Boolean,
     ForeignKey,
+    TypeDecorator,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import event
+import json
+import os
 import re
 
 from . import Base
+
+
+# Database compatibility layer for ARRAY type
+class ArrayType(TypeDecorator):
+    """Custom type that uses ARRAY for PostgreSQL and JSON for SQLite."""
+    impl = Text
+    cache_ok = True
+    
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(postgresql.ARRAY(String))
+        else:
+            return dialect.type_descriptor(JSON)
+    
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if dialect.name != 'postgresql':
+            # For SQLite, convert list to JSON string
+            return json.dumps(value) if isinstance(value, list) else value
+        return value
+    
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if dialect.name != 'postgresql' and isinstance(value, str):
+            # For SQLite, parse JSON string back to list
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                return value
+        return value
+
+
+def get_array_type(item_type):
+    """Return custom ArrayType that works with both PostgreSQL and SQLite."""
+    return ArrayType()
 
 
 def generate_slug(title: str) -> str:
@@ -269,7 +309,7 @@ class EmotionTemplate(Base):
     # Template characteristics
     trajectory_pattern: Mapped[str] = mapped_column(String(20), nullable=False)
     primary_emotions: Mapped[List[str]] = mapped_column(
-        postgresql.ARRAY(String), nullable=False
+        get_array_type(String), nullable=False
     )
     emotion_sequence: Mapped[str] = mapped_column(Text, nullable=False)  # JSON string
     transition_patterns: Mapped[str] = mapped_column(

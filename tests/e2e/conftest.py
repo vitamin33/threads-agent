@@ -59,7 +59,10 @@ def k8s_port_forwards() -> Iterator[None]:
     pf_orchestrator = _port_forward("orchestrator", ORCH_PORT, 8080)
     pf_fake_threads = _port_forward("fake-threads", THREADS_PORT, 9009)
     pf_qdrant = _port_forward("qdrant", QDRANT_PORT, 6333)
-    pf_postgres = _port_forward("postgres", POSTGRES_PORT, 5432)
+    pf_postgres = _port_forward("postgres-0", POSTGRES_PORT, 5432)
+    
+    # Give port forwards time to establish
+    time.sleep(2)
 
     # Wait for services to become available
     services_ready = True

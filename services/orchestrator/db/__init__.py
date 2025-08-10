@@ -16,10 +16,16 @@ class Base(DeclarativeBase):
 # Only create engine and session when needed, not on import
 def get_engine() -> Any:
     """Get database engine with production-optimized connection pooling."""
-    pg_dsn = os.getenv(
-        "POSTGRES_DSN",
-        "postgresql+psycopg2://postgres:pass@postgres:5432/threads_agent",
-    )
+    # Use centralized configuration
+    try:
+        from services.common.database_config import get_postgres_dsn
+        pg_dsn = get_postgres_dsn()
+    except ImportError:
+        # Fallback to environment variable or default
+        pg_dsn = os.getenv(
+            "POSTGRES_DSN",
+            "postgresql+psycopg2://postgres:pass@postgres:5432/threads_agent",
+        )
     # Production optimization: Increased pool size for better concurrency
     # This handles 100+ concurrent users without connection exhaustion
     return create_engine(

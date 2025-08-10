@@ -48,8 +48,21 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
-from .db.models import ContentItem, ContentSchedule
-from .db import get_db_session
+try:
+    from .db.models import ContentItem, ContentSchedule
+    from .db import get_db_session
+    DB_AVAILABLE = True
+except (ImportError, Exception) as e:
+    # Handle import errors gracefully in CI/test environments
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"Database models not available: {e}")
+    # Create dummy classes to prevent import errors
+    ContentItem = None
+    ContentSchedule = None
+    def get_db_session():
+        yield None
+    DB_AVAILABLE = False
 from .scheduling_schemas import (
     ContentItemCreate,
     ContentItemResponse,
@@ -178,6 +191,15 @@ def handle_quality_scored_event(
 
 # Create the router with API v1 prefix
 router = APIRouter(prefix="/api/v1", tags=["scheduling"])
+
+# Helper to check database availability
+def check_db_available():
+    """Check if database is available, raise error if not."""
+    if not DB_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Database service is not available. This endpoint requires database access."
+        )
 
 
 # Content Management Endpoints

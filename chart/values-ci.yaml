@@ -52,7 +52,9 @@ postgres:
     #
     # The migrations Job reads that same key, so *any* value works,
     # as long as it is present.
+    username: postgres
     postgresPassword: pass
+    database: threads_agent
 
 qdrant:
   enabled: true

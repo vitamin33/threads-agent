@@ -36,7 +36,7 @@ class ConversationStateDB(Base):
     current_state = Column(String(50), nullable=False)
     state_history = Column(JSON, default=list)
     user_profile = Column(JSON, default=dict)
-    metadata = Column(JSON, default=dict)
+    conversation_metadata = Column(JSON, default=dict)
     conversion_probability = Column(Float, default=0.0)
     last_interaction = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -160,7 +160,7 @@ class ConversationMemorySystem:
                 state_history=db_conv.state_history or [],
                 user_profile=db_conv.user_profile or {},
                 conversation_turns=[self._turn_to_dict(turn) for turn in turns],
-                metadata=db_conv.metadata or {},
+                metadata=db_conv.conversation_metadata or {},
                 conversion_probability=db_conv.conversion_probability,
                 last_interaction=db_conv.last_interaction,
             )
@@ -194,7 +194,7 @@ class ConversationMemorySystem:
                 db_conv.current_state = memory.current_state
                 db_conv.state_history = memory.state_history
                 db_conv.user_profile = memory.user_profile
-                db_conv.metadata = memory.metadata
+                db_conv.conversation_metadata = memory.metadata
                 db_conv.conversion_probability = memory.conversion_probability
                 db_conv.last_interaction = memory.last_interaction or datetime.utcnow()
                 db_conv.updated_at = datetime.utcnow()
@@ -206,7 +206,7 @@ class ConversationMemorySystem:
                     current_state=memory.current_state,
                     state_history=memory.state_history,
                     user_profile=memory.user_profile,
-                    metadata=memory.metadata,
+                    conversation_metadata=memory.metadata,
                     conversion_probability=memory.conversion_probability,
                     last_interaction=memory.last_interaction or datetime.utcnow(),
                 )
