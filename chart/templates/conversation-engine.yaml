@@ -27,7 +27,7 @@ spec:
           name: http
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/threads"
+          value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
         - name: REDIS_HOST
           value: "redis"
         - name: REDIS_PORT

@@ -1,0 +1,52 @@
+id: feature-25-4-pattern-analyzer-integration
+epic_id: epic-25-content-scheduler-service-integration
+title: "Pattern Analyzer Service Integration"
+description: |
+  Integrate Pattern Analyzer to detect content fatigue, ensure pattern freshness,
+  and optimize content variety. Prevent repetitive patterns and maintain high
+  engagement through intelligent pattern rotation.
+
+priority: high
+estimated_hours: 50
+
+acceptance_criteria:
+  - Pattern fatigue detection before publishing
+  - Freshness scoring for all content
+  - Pattern rotation recommendations
+  - Historical pattern usage tracking
+  - Cross-persona pattern analysis
+  - Automated pattern refresh suggestions
+
+technical_tasks:
+  - task-25-4-1-pattern-analyzer-client
+  - task-25-4-2-fatigue-detection-events
+  - task-25-4-3-freshness-scoring-api
+  - task-25-4-4-pattern-rotation-algo
+  - task-25-4-5-usage-tracking-system
+  - task-25-4-6-refresh-recommendation-engine
+
+integration_points:
+  - POST /check-pattern-fatigue endpoint
+  - GET /pattern-freshness-score endpoint
+  - GET /recent-patterns endpoint
+  - Event-based fatigue alerts
+
+event_contracts:
+  PatternFatigueCheckRequested:
+    - content_id: string
+    - patterns: array
+    - persona_id: string
+    
+  PatternFreshnessScored:
+    - content_id: string
+    - freshness_score: float
+    - fatigued_patterns: array
+    - recommended_alternatives: array
+
+business_logic:
+  - Reject content with freshness < 0.3
+  - Suggest alternatives for fatigued patterns
+  - Track pattern usage across all personas
+  - Weekly pattern diversity reports
+
+created_at: "2025-01-07"

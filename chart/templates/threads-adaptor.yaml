@@ -39,7 +39,7 @@ spec:
           name: metrics
         env:
         - name: DATABASE_URL
-          value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.password }}@postgres:5432/{{ .Values.postgres.auth.database }}"
+          value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
         - name: THREADS_RATE
           value: {{ .Values.threadsAdaptor.rateLimit | default 20 | quote }}
         envFrom:

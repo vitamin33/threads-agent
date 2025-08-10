@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """
-Hybrid PR Value Analyzer - Best of Both Worlds
+PR Value Analyzer - Automated Business & Technical Value Collection
 
-This analyzer combines:
-1. Smart adaptive scoring that evaluates PRs based on what they actually deliver
-2. Comprehensive business metrics and detailed calculations  
-3. Value category detection for intelligent analysis
-4. Career-focused outputs (interview points, portfolio summaries)
-5. Detailed metric explanations for professional development
+This script analyzes PRs to extract and calculate business value metrics,
+technical achievements, and future impact projections for achievement tracking.
 """
 
 import json
@@ -20,168 +16,23 @@ import sys
 import math
 
 
-class HybridPRValueAnalyzer:
-    """The ultimate PR analyzer combining smart scoring with comprehensive metrics."""
+class PRValueAnalyzer:
+    """Analyzes PR content to extract business and technical value metrics."""
 
     def __init__(self, pr_number: str):
         self.pr_number = pr_number
         self.metrics = {
             "pr_number": pr_number,
             "timestamp": datetime.now().isoformat(),
-            "value_categories": {},  # What types of value this PR provides
             "business_metrics": {},
             "technical_metrics": {},
             "achievement_tags": [],
             "kpis": {},
             "future_impact": {},
-            "active_metrics": {},  # Which metrics are relevant
-            "scoring_weights": {},  # Dynamic weights based on PR type
-            "pr_type": "unknown",  # Detected PR type for adaptive scoring
         }
-
-    def detect_pr_value_categories(self, pr_data: Dict) -> Dict[str, float]:
-        """
-        Detect what types of value this PR provides.
-        Returns confidence scores for each category.
-        """
-        title = pr_data.get("title", "").lower()
-        body = pr_data.get("body", "").lower()
-        files = pr_data.get("files", [])
-
-        categories = {
-            "performance": 0.0,
-            "business": 0.0,
-            "quality": 0.0,
-            "documentation": 0.0,
-            "infrastructure": 0.0,
-            "security": 0.0,
-            "user_experience": 0.0,
-            "technical_debt": 0.0,
-            "innovation": 0.0,
-        }
-
-        # Performance indicators
-        perf_keywords = [
-            "performance", "optimization", "speed", "latency", "rps", "throughput", 
-            "cache", "async", "concurrent", "parallel", "scalability"
-        ]
-        perf_score = sum(1 for kw in perf_keywords if kw in title + body) * 0.15
-        if re.search(r"\d+\s*rps|\d+ms\s*latency|throughput|scalability", body, re.IGNORECASE):
-            perf_score += 0.6
-        if "cleanup" in title.lower():
-            perf_score = max(0.3, perf_score)  # Cleanup PRs often have performance impact
-        categories["performance"] = min(perf_score, 1.0)
-
-        # Business value indicators
-        business_keywords = [
-            "roi", "revenue", "cost", "savings", "customer", "user growth", 
-            "conversion", "automation", "efficiency", "productivity"
-        ]
-        business_score = sum(1 for kw in business_keywords if kw in title + body) * 0.2
-        if re.search(r"\$\d+|%\s*improvement|%\s*increase|hours saved|cost reduction", body):
-            business_score += 0.4
-        categories["business"] = min(business_score, 1.0)
-
-        # Quality indicators
-        quality_keywords = [
-            "test", "coverage", "bug", "fix", "error", "crash", "stability",
-            "refactor", "cleanup", "maintainability", "code quality"
-        ]
-        quality_score = sum(1 for kw in quality_keywords if kw in title + body) * 0.15
-        if "cleanup" in title.lower():
-            quality_score += 0.7  # Cleanup PRs are primarily quality improvements
-        if re.search(r"\d+%\s*coverage|test.*added|bug.*fix", body, re.IGNORECASE):
-            quality_score += 0.3
-        categories["quality"] = min(quality_score, 1.0)
-
-        # Infrastructure indicators
-        infra_keywords = [
-            "deployment", "docker", "kubernetes", "ci/cd", "pipeline", "automation",
-            "monitoring", "logging", "metrics", "alerts"
-        ]
-        infra_score = sum(1 for kw in infra_keywords if kw in title + body) * 0.2
-        categories["infrastructure"] = min(infra_score, 1.0)
-
-        # Documentation indicators  
-        doc_keywords = ["doc", "readme", "guide", "tutorial", "comments", "wiki"]
-        doc_score = sum(1 for kw in doc_keywords if kw in title + body) * 0.3
-        categories["documentation"] = min(doc_score, 1.0)
-
-        # Security indicators
-        security_keywords = [
-            "security", "vulnerability", "auth", "encryption", "permissions", "ssl"
-        ]
-        security_score = sum(1 for kw in security_keywords if kw in title + body) * 0.3
-        categories["security"] = min(security_score, 1.0)
-
-        # Innovation indicators
-        innovation_keywords = [
-            "ai", "ml", "machine learning", "neural", "algorithm", "novel", "innovative",
-            "breakthrough", "cutting-edge", "state-of-the-art"
-        ]
-        innovation_score = sum(1 for kw in innovation_keywords if kw in title + body) * 0.25
-        categories["innovation"] = min(innovation_score, 1.0)
-
-        return categories
-
-    def determine_pr_type(self, categories: Dict[str, float]) -> str:
-        """Determine the primary PR type based on value categories."""
-        if not categories:
-            return "unknown"
-        
-        # Find the category with highest confidence
-        primary_category = max(categories.items(), key=lambda x: x[1])
-        
-        if primary_category[1] < 0.3:
-            return "general"
-        
-        return primary_category[0]
-
-    def get_adaptive_weights(self, pr_type: str) -> Dict[str, float]:
-        """Get scoring weights based on PR type."""
-        weight_profiles = {
-            "performance": {
-                "performance_score": 0.5,
-                "quality_score": 0.2,
-                "business_value_score": 0.2,
-                "innovation_score": 0.1,
-            },
-            "quality": {
-                "performance_score": 0.1,
-                "quality_score": 0.6,
-                "business_value_score": 0.2,
-                "innovation_score": 0.1,
-            },
-            "business": {
-                "performance_score": 0.2,
-                "quality_score": 0.1,
-                "business_value_score": 0.6,
-                "innovation_score": 0.1,
-            },
-            "innovation": {
-                "performance_score": 0.2,
-                "quality_score": 0.2,
-                "business_value_score": 0.2,
-                "innovation_score": 0.4,
-            },
-            "infrastructure": {
-                "performance_score": 0.3,
-                "quality_score": 0.3,
-                "business_value_score": 0.3,
-                "innovation_score": 0.1,
-            },
-            "general": {
-                "performance_score": 0.25,
-                "quality_score": 0.25,
-                "business_value_score": 0.25,
-                "innovation_score": 0.25,
-            }
-        }
-        
-        return weight_profiles.get(pr_type, weight_profiles["general"])
 
     def analyze_performance_metrics(self, pr_body: str) -> Dict[str, Any]:
-        """Extract comprehensive performance metrics from PR body."""
+        """Extract performance metrics from PR body."""
         metrics = {}
 
         # RPS (Requests Per Second)
@@ -189,176 +40,175 @@ class HybridPRValueAnalyzer:
         if rps_match:
             metrics["peak_rps"] = float(rps_match.group(1))
 
-        # Latency 
+        # Latency
         latency_match = re.search(r"<(\d+)ms", pr_body)
         if latency_match:
             metrics["latency_ms"] = int(latency_match.group(1))
-        else:
-            # Default reasonable latency for analysis
-            metrics["latency_ms"] = 200
 
         # Success Rate
         success_match = re.search(r"(\d+)%\s*success", pr_body, re.IGNORECASE)
         if success_match:
-            metrics["success_rate"] = float(success_match.group(1))
-
-        # Error Rate
-        error_match = re.search(r"(\d+\.?\d*)%\s*error", pr_body, re.IGNORECASE)
-        if error_match:
-            metrics["error_rate"] = float(error_match.group(1)) / 100
-        else:
-            metrics["error_rate"] = 0.01  # Default 1% error rate
+            metrics["success_rate"] = int(success_match.group(1))
 
         # Test Coverage
-        coverage_match = re.search(r"(\d+)%\s*coverage", pr_body, re.IGNORECASE)
+        coverage_match = re.search(
+            r"(\d+)%\s*(?:test\s*)?coverage", pr_body, re.IGNORECASE
+        )
         if coverage_match:
-            metrics["test_coverage"] = float(coverage_match.group(1))
-
-        # Memory Usage
-        memory_match = re.search(r"(\d+\.?\d*)\s*(MB|GB)\s*memory", pr_body, re.IGNORECASE)
-        if memory_match:
-            memory_val = float(memory_match.group(1))
-            unit = memory_match.group(2).upper()
-            metrics["memory_usage_mb"] = memory_val if unit == "MB" else memory_val * 1024
-
-        # CPU Usage
-        cpu_match = re.search(r"(\d+)%\s*CPU", pr_body, re.IGNORECASE)
-        if cpu_match:
-            metrics["cpu_usage_percent"] = float(cpu_match.group(1))
+            metrics["test_coverage"] = int(coverage_match.group(1))
 
         return metrics
 
-    def calculate_comprehensive_business_value(self, performance_metrics: Dict) -> Dict[str, Any]:
-        """Calculate comprehensive business value with detailed ROI analysis."""
-        business_metrics = {}
+    def calculate_business_value(self, performance_metrics: Dict) -> Dict[str, Any]:
+        """Calculate business value based on performance metrics with realistic assumptions."""
+        value = {}
 
-        # Base assumptions for calculations
-        baseline_rps = 500  # Typical microservice baseline
-        developer_hourly_rate = 150  # Industry standard
-        server_annual_cost = 12000  # AWS/cloud server cost
-        bug_fix_cost = 5000  # Average production bug fix cost
+        # Extract metrics
+        rps = performance_metrics.get("peak_rps", 200)
+        latency = performance_metrics.get("latency_ms", 500)
+        test_coverage = performance_metrics.get("test_coverage", 50)
 
-        peak_rps = performance_metrics.get("peak_rps", baseline_rps)
-        latency_ms = performance_metrics.get("latency_ms", 200)
-        error_rate = performance_metrics.get("error_rate", 0.01)
-        test_coverage = performance_metrics.get("test_coverage", 80)
+        # More realistic baselines
+        baseline_rps = 500  # Typical existing service
+        baseline_latency = 800  # Typical unoptimized latency
 
-        # Throughput improvement
-        if peak_rps > baseline_rps:
-            throughput_improvement = ((peak_rps / baseline_rps) - 1) * 100
-            business_metrics["throughput_improvement_percent"] = round(throughput_improvement, 1)
-            
-            # Infrastructure savings from better performance
-            servers_reduced = math.floor((peak_rps - baseline_rps) / baseline_rps)
-            business_metrics["servers_reduced"] = max(0, servers_reduced)
-            business_metrics["infrastructure_savings_estimate"] = servers_reduced * server_annual_cost
+        # Performance improvements
+        if rps > 0 and baseline_rps > 0:
+            throughput_improvement = rps / baseline_rps
+            latency_improvement = baseline_latency / latency if latency > 0 else 1
 
-        # Developer productivity improvements
-        # Estimate based on performance and quality improvements
-        productivity_factor = min(2.0, peak_rps / baseline_rps) * (test_coverage / 100)
-        productivity_hours_saved = max(0, (productivity_factor - 1) * 40 * 52)  # Hours per year
-        business_metrics["productivity_hours_saved"] = round(productivity_hours_saved)
-        business_metrics["developer_productivity_savings"] = round(productivity_hours_saved * developer_hourly_rate)
+            value["throughput_improvement_percent"] = round(
+                (throughput_improvement - 1) * 100, 1
+            )
 
-        # Quality improvement savings
-        # Higher test coverage and lower error rate prevent bugs
-        quality_factor = (test_coverage / 100) * (1 - error_rate) 
-        bugs_prevented = max(0, (quality_factor - 0.8) * 20) if quality_factor > 0.8 else 0
-        business_metrics["bugs_prevented_annually"] = round(bugs_prevented)
-        business_metrics["quality_improvement_savings"] = round(bugs_prevented * bug_fix_cost)
+            # Combined performance factor
+            performance_factor = (throughput_improvement * 0.7) + (
+                latency_improvement * 0.3
+            )
 
-        # Total annual savings
-        infrastructure_savings = business_metrics.get("infrastructure_savings_estimate", 0)
-        productivity_savings = business_metrics.get("developer_productivity_savings", 0)
-        quality_savings = business_metrics.get("quality_improvement_savings", 0)
-        
-        total_savings = infrastructure_savings + productivity_savings + quality_savings
-        business_metrics["total_annual_savings"] = total_savings
+            # Infrastructure savings (more realistic)
+            # $12k/server/year, 1 server per 200 RPS baseline
+            baseline_servers = math.ceil(baseline_rps / 200)
+            current_servers = math.ceil(rps / (200 * performance_factor))
+            servers_saved = max(0, baseline_servers - current_servers)
 
-        # Risk adjustment based on confidence
-        confidence_level = self.determine_confidence_level(performance_metrics)
-        confidence_multipliers = {"high": 0.9, "medium": 0.8, "low": 0.7}
-        risk_adjusted = total_savings * confidence_multipliers[confidence_level]
-        business_metrics["risk_adjusted_savings"] = round(risk_adjusted)
-        business_metrics["confidence_level"] = confidence_level
+            server_savings = servers_saved * 12000  # $12k per server/year
 
-        # Investment calculation (development cost)
-        # Estimate based on PR complexity and typical development time
-        estimated_dev_hours = self.estimate_development_hours(performance_metrics)
-        total_investment = estimated_dev_hours * developer_hourly_rate
-        business_metrics["total_investment"] = total_investment
+            # Additional savings
+            bandwidth_savings = 0
+            if latency_improvement > 1.2:  # 20% improvement
+                # Estimate bandwidth savings from faster responses
+                monthly_bandwidth_gb = 10000  # 10TB/month typical
+                bandwidth_reduction = (latency_improvement - 1) * 0.1
+                bandwidth_savings = (
+                    monthly_bandwidth_gb * bandwidth_reduction * 0.09 * 12
+                )  # $0.09/GB
 
-        # ROI calculations
-        if total_investment > 0:
-            roi_year_one = ((risk_adjusted - total_investment) / total_investment) * 100
-            business_metrics["roi_year_one_percent"] = round(roi_year_one, 1)
-            
-            # Payback period in months
-            monthly_savings = risk_adjusted / 12
-            if monthly_savings > 0:
-                payback_months = total_investment / monthly_savings
-                business_metrics["payback_period_months"] = round(payback_months, 1)
-            
-            # 3-year ROI
-            three_year_savings = risk_adjusted * 3
-            roi_three_year = ((three_year_savings - total_investment) / total_investment) * 100
-            business_metrics["roi_three_year_percent"] = round(roi_three_year, 1)
+            value["infrastructure_savings_estimate"] = round(
+                server_savings + bandwidth_savings, 0
+            )
+            value["servers_reduced"] = servers_saved
 
-        # User experience score based on latency
-        if latency_ms <= 100:
-            ux_score = 10
-        elif latency_ms <= 200:
-            ux_score = 9
-        elif latency_ms <= 300:
-            ux_score = 8
-        elif latency_ms <= 500:
-            ux_score = 7
-        elif latency_ms <= 1000:
-            ux_score = 5
+            # Confidence level
+            if performance_factor < 1.5:
+                value["confidence_level"] = "high"
+            elif performance_factor < 3.0:
+                value["confidence_level"] = "medium"
+            else:
+                value["confidence_level"] = "low"
+
+        # User experience score
+        if latency < 100:
+            value["user_experience_score"] = 10
+        elif latency < 200:
+            value["user_experience_score"] = 9
+        elif latency < 500:
+            value["user_experience_score"] = 8
         else:
-            ux_score = 3
+            value["user_experience_score"] = 7
 
-        business_metrics["user_experience_score"] = ux_score
+        # Developer productivity (conservative estimates)
+        if "peak_rps" in performance_metrics:
+            # Assume 10-person team, improvements in search/debug time
+            team_size = 10
+            search_time_saved_percent = min(
+                50, throughput_improvement * 20
+            )  # Cap at 50%
+            debug_time_saved_percent = min(40, latency_improvement * 15)  # Cap at 40%
 
-        return business_metrics
+            # 20% of time searching, 25% debugging
+            hours_saved_per_week = (8 * search_time_saved_percent / 100) + (
+                10 * debug_time_saved_percent / 100
+            )
+            annual_hours_saved = (
+                hours_saved_per_week * 48 * team_size
+            )  # 48 working weeks
 
-    def estimate_development_hours(self, performance_metrics: Dict) -> float:
-        """Estimate development hours based on performance metrics complexity."""
-        base_hours = 20  # Minimum for any PR
-        
-        # Add complexity based on metrics present
-        complexity_factors = {
-            "peak_rps": 10 if performance_metrics.get("peak_rps", 0) > 1000 else 5,
-            "latency_ms": 8 if performance_metrics.get("latency_ms", 500) < 100 else 4,
-            "test_coverage": 15 if performance_metrics.get("test_coverage", 0) > 80 else 5,
-            "memory_usage_mb": 6,
-            "cpu_usage_percent": 6,
-        }
-        
-        additional_hours = sum(
-            complexity_factors.get(metric, 0) 
-            for metric in performance_metrics.keys() 
-            if performance_metrics[metric] is not None
+            value["developer_productivity_savings"] = round(
+                annual_hours_saved * 150, 0
+            )  # $150/hour
+            value["productivity_hours_saved"] = round(annual_hours_saved, 0)
+
+        # Quality impact
+        if test_coverage > 0:
+            # Bug reduction based on coverage
+            bug_reduction_percent = min(50, test_coverage * 0.5)  # Cap at 50%
+            bugs_prevented_annually = round(
+                20 * 12 * bug_reduction_percent / 100, 0
+            )  # 20 bugs/month baseline
+
+            value["quality_improvement_savings"] = (
+                bugs_prevented_annually * 5000
+            )  # $5k per bug
+            value["bugs_prevented_annually"] = bugs_prevented_annually
+
+        # Total savings and ROI calculation
+        total_savings = (
+            value.get("infrastructure_savings_estimate", 0)
+            + value.get("developer_productivity_savings", 0)
+            + value.get("quality_improvement_savings", 0)
         )
-        
-        return base_hours + additional_hours
 
-    def determine_confidence_level(self, performance_metrics: Dict) -> str:
-        """Determine confidence level based on available metrics."""
-        metric_count = len([v for v in performance_metrics.values() if v is not None])
-        
-        if metric_count >= 4:
-            return "high"
-        elif metric_count >= 2:
-            return "medium"
-        else:
-            return "low"
+        if total_savings > 0:
+            # More realistic development cost with overhead
+            base_dev_hours = 320  # 2 devs × 4 weeks
+            dev_cost = base_dev_hours * 150  # $150/hour
+            qa_cost = dev_cost * 0.3  # 30% QA overhead
+            deployment_cost = dev_cost * 0.2  # 20% deployment overhead
+            maintenance_year_one = dev_cost * 0.15  # 15% maintenance
+
+            total_investment = (
+                dev_cost + qa_cost + deployment_cost + maintenance_year_one
+            )
+
+            # Risk-adjusted ROI
+            risk_factor = 0.8  # 80% success probability
+            risk_adjusted_savings = total_savings * risk_factor
+
+            value["total_annual_savings"] = round(total_savings, 0)
+            value["risk_adjusted_savings"] = round(risk_adjusted_savings, 0)
+            value["total_investment"] = round(total_investment, 0)
+            value["roi_year_one_percent"] = round(
+                (risk_adjusted_savings / total_investment) * 100, 0
+            )
+
+            if risk_adjusted_savings > 0:
+                value["payback_period_months"] = round(
+                    total_investment / risk_adjusted_savings * 12, 1
+                )
+
+            # 3-year ROI
+            value["roi_three_year_percent"] = round(
+                (risk_adjusted_savings * 3 / total_investment) * 100, 0
+            )
+
+        return value
 
     def calculate_realistic_performance_score(
         self, current_rps: float, latency_ms: float, error_rate: float
     ) -> float:
         """Calculate realistic performance score (0-10) using logarithmic scale."""
-        # RPS scoring (logarithmic scale for fairness)
+        # RPS scoring (logarithmic scale)
         if current_rps >= 10000:
             rps_score = 10
         elif current_rps >= 5000:
@@ -371,266 +221,398 @@ class HybridPRValueAnalyzer:
             rps_score = 6
         elif current_rps >= 200:
             rps_score = 5
-        elif current_rps >= 100:
-            rps_score = 4
-        elif current_rps >= 50:
-            rps_score = 3
         else:
-            rps_score = 2
+            rps_score = max(1, current_rps / 40)
 
-        # Latency scoring (lower is better)
+        # Latency scoring
         if latency_ms <= 50:
             latency_score = 10
         elif latency_ms <= 100:
             latency_score = 9
         elif latency_ms <= 200:
             latency_score = 8
-        elif latency_ms <= 300:
-            latency_score = 7
         elif latency_ms <= 500:
             latency_score = 6
+        elif latency_ms <= 1000:
+            latency_score = 4
         else:
-            latency_score = 5
+            latency_score = 2
 
-        # Error rate scoring (lower is better)  
-        if error_rate <= 0.001:
+        # Error rate scoring
+        if error_rate <= 0.001:  # 0.1%
             error_score = 10
-        elif error_rate <= 0.01:
-            error_score = 9
-        elif error_rate <= 0.02:
+        elif error_rate <= 0.01:  # 1%
             error_score = 8
-        elif error_rate <= 0.05:
-            error_score = 7
+        elif error_rate <= 0.05:  # 5%
+            error_score = 5
         else:
-            error_score = 6
+            error_score = 2
 
-        # Weighted average
-        return round((rps_score * 0.5 + latency_score * 0.3 + error_score * 0.2), 1)
-
-    def calculate_adaptive_scores(
-        self,
-        categories: Dict[str, float],
-        performance: Dict[str, Any], 
-        business_value: Dict[str, Any],
-        code_metrics: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """Calculate scores with adaptive approach - PRs succeed by excelling in relevant areas."""
-        scores = {}
-
-        # Performance score
-        performance_score = self.calculate_realistic_performance_score(
-            performance.get("peak_rps", 0),
-            performance.get("latency_ms", 500),
-            performance.get("error_rate", 0.02),
-        )
-        scores["performance_score"] = performance_score
-
-        # Quality score
-        test_coverage = performance.get("test_coverage", 80)
-        quality_score = min(10, test_coverage / 10)  # Convert percentage to 0-10 scale
-        scores["quality_score"] = quality_score
-
-        # Business value score  
-        roi = business_value.get("roi_year_one_percent", 0)
-        business_value_score = min(10, max(0, roi / 30))  # Scale ROI to 0-10
-        scores["business_value_score"] = business_value_score
-
-        # Innovation score
-        innovation_score = self.calculate_innovation_score("", code_metrics)
-        scores["innovation_score"] = innovation_score
-
-        # Calculate overall score using adaptive weights
-        pr_type = self.determine_pr_type(categories)
-        weights = self.get_adaptive_weights(pr_type)
-        
-        overall_score = sum(
-            scores[score_type] * weight
-            for score_type, weight in weights.items()
-            if score_type in scores
-        )
-        scores["overall_score"] = round(overall_score, 1)
-
-        # Store metadata
-        scores["pr_type"] = pr_type
-        scores["scoring_weights"] = weights
-
-        return scores
-
-    def calculate_innovation_score(self, pr_body: str, code_metrics: Dict) -> float:
-        """Calculate innovation score based on novelty and technical advancement."""
-        score = 5.0  # Base score
-        
-        # AI/ML keywords
-        ai_keywords = ["ai", "ml", "neural", "model", "algorithm", "learning"]
-        if any(kw in pr_body.lower() for kw in ai_keywords):
-            score += 2.0
-            
-        # Architecture patterns
-        arch_keywords = ["microservice", "serverless", "distributed", "async", "concurrent"]
-        if any(kw in pr_body.lower() for kw in arch_keywords):
-            score += 1.5
-            
-        # Performance innovations
-        perf_keywords = ["optimization", "cache", "index", "parallel", "stream"]
-        if any(kw in pr_body.lower() for kw in perf_keywords):
-            score += 1.0
-            
-        return min(10.0, score)
+        # Weighted average (RPS and latency more important than error rate)
+        return round((rps_score * 0.4 + latency_score * 0.4 + error_score * 0.2), 1)
 
     def extract_achievement_tags(self, pr_body: str) -> List[str]:
-        """Extract relevant achievement tags from PR content."""
+        """Extract achievement tags from PR body."""
         tags = []
-        
-        # Performance tags
-        if re.search(r"\d+\s*rps", pr_body, re.IGNORECASE):
-            tags.append("high-performance")
-        if re.search(r"<\d+ms", pr_body):
-            tags.append("low-latency")
-            
-        # Quality tags
-        if re.search(r"\d+%\s*coverage", pr_body, re.IGNORECASE):
-            tags.append("well-tested")
-        if "bug" in pr_body.lower() and "fix" in pr_body.lower():
-            tags.append("bug-fix")
-            
-        # Business tags
-        if re.search(r"\$\d+|%\s*improvement", pr_body):
-            tags.append("business-value")
-        if "automation" in pr_body.lower():
-            tags.append("automation")
-            
-        # Innovation tags
-        if any(kw in pr_body.lower() for kw in ["ai", "ml", "neural"]):
-            tags.append("ai-innovation")
-        if "architecture" in pr_body.lower():
-            tags.append("architectural")
-            
+
+        # Performance achievements
+        if re.search(r"\d+\.?\d*\s*RPS", pr_body, re.IGNORECASE):
+            tags.append("high_performance_implementation")
+
+        # Cost optimization
+        if re.search(r"cost.*reduction|savings", pr_body, re.IGNORECASE):
+            tags.append("cost_optimization")
+
+        # Kubernetes/DevOps
+        if re.search(r"kubernetes|k8s|helm", pr_body, re.IGNORECASE):
+            tags.append("kubernetes_deployment")
+
+        # AI/ML features
+        if re.search(r"RAG|embedding|vector|AI|ML", pr_body, re.IGNORECASE):
+            tags.append("ai_ml_feature")
+
+        # Production readiness
+        if re.search(
+            r"production.*ready|monitoring|health.*check", pr_body, re.IGNORECASE
+        ):
+            tags.append("production_ready")
+
         return tags
 
     def analyze_code_changes(self) -> Dict[str, Any]:
-        """Analyze code changes for technical metrics."""
+        """Analyze code changes in the PR."""
         try:
-            # Get PR diff information
-            result = subprocess.run(
-                ["gh", "pr", "diff", self.pr_number],
+            # Get PR diff statistics using git since gh doesn't support --stat
+            # First get the base branch
+            base_result = subprocess.run(
+                ["gh", "pr", "view", self.pr_number, "--json", "baseRefName"],
                 capture_output=True,
                 text=True,
-                timeout=30,
             )
-            
-            if result.returncode != 0:
-                return {"error": "Could not fetch PR diff"}
-                
-            diff_content = result.stdout
-            
-            # Count changes
-            lines_added = len(re.findall(r"^\+[^+]", diff_content, re.MULTILINE))
-            lines_removed = len(re.findall(r"^-[^-]", diff_content, re.MULTILINE))
-            files_changed = len(re.findall(r"^diff --git", diff_content, re.MULTILINE))
-            
-            # Analyze complexity
-            complexity_indicators = [
-                "class ", "def ", "function", "import ", "async ", "await "
-            ]
-            complexity_score = sum(
-                diff_content.lower().count(indicator) for indicator in complexity_indicators
-            )
-            
-            return {
-                "lines_added": lines_added,
-                "lines_removed": lines_removed, 
-                "files_changed": files_changed,
-                "complexity_score": complexity_score,
-                "net_lines": lines_added - lines_removed,
-            }
-            
+
+            if base_result.returncode == 0:
+                base_data = json.loads(base_result.stdout)
+                base_branch = base_data.get("baseRefName", "main")
+
+                # Use git diff --stat with the base branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", f"origin/{base_branch}"],
+                    capture_output=True,
+                    text=True,
+                )
+
+                # If origin branch doesn't exist, try without origin prefix
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", base_branch],
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    # Additional fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
+            else:
+                # Fallback to main branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", "origin/main"],
+                    capture_output=True,
+                    text=True,
+                )
+
+                # If origin/main doesn't exist, try main, then HEAD~1 as fallback
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", "main"],
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    # Final fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
+
+            if base_result.returncode == 0:
+                base_data = json.loads(base_result.stdout)
+                base_branch = base_data.get("baseRefName", "main")
+
+                # Use git diff --stat with the base branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", f"origin/{base_branch}"],
+                    capture_output=True,
+                    text=True,
+                )
+
+                # If origin branch doesn't exist, try without origin prefix
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", base_branch],
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    # Additional fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
+            else:
+                # Fallback to main branch
+                result = subprocess.run(
+                    ["git", "diff", "--stat", "origin/main"],
+                    capture_output=True,
+                    text=True,
+                )
+
+                # If origin/main doesn't exist, try main, then HEAD~1 as fallback
+                if result.returncode != 0:
+                    result = subprocess.run(
+                        ["git", "diff", "--stat", "main"],
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    # Final fallback for CI environments
+                    if result.returncode != 0:
+                        result = subprocess.run(
+                            ["git", "diff", "--stat", "HEAD~1"],
+                            capture_output=True,
+                            text=True,
+                        )
+
+            if result.returncode == 0:
+                stats_text = result.stdout
+
+                # Extract file count and line changes
+                files_match = re.search(r"(\d+)\s+files?\s+changed", stats_text)
+                insertions_match = re.search(r"(\d+)\s+insertions?\(\+\)", stats_text)
+                deletions_match = re.search(r"(\d+)\s+deletions?\(-\)", stats_text)
+
+                return {
+                    "files_changed": int(files_match.group(1)) if files_match else 0,
+                    "lines_added": int(insertions_match.group(1))
+                    if insertions_match
+                    else 0,
+                    "lines_deleted": int(deletions_match.group(1))
+                    if deletions_match
+                    else 0,
+                    "code_churn": (
+                        int(insertions_match.group(1)) if insertions_match else 0
+                    )
+                    + (int(deletions_match.group(1)) if deletions_match else 0),
+                }
+            else:
+                # Git diff failed, continue without code metrics (not critical)
+                print(f"Warning: Failed to get PR diff stats: {result.stderr}")
+                return {
+                    "files_changed": 0,
+                    "lines_added": 0,
+                    "lines_deleted": 0,
+                    "code_churn": 0,
+                }
         except Exception as e:
-            return {"error": f"Code analysis failed: {str(e)}"}
+            print(f"Error analyzing code changes: {e}")
+            return {
+                "files_changed": 0,
+                "lines_added": 0,
+                "lines_deleted": 0,
+                "code_churn": 0,
+            }
+
+    def calculate_innovation_score(self, pr_body: str, code_metrics: Dict) -> float:
+        """Calculate innovation score based on PR content."""
+        score = 5.0  # Base score
+
+        # Innovation indicators
+        innovation_keywords = [
+            "novel",
+            "innovative",
+            "breakthrough",
+            "advanced",
+            "optimization",
+            "performance",
+            "scalability",
+            "architecture",
+        ]
+
+        for keyword in innovation_keywords:
+            if re.search(keyword, pr_body, re.IGNORECASE):
+                score += 0.5
+
+        # Code complexity indicator
+        if code_metrics.get("files_changed", 0) > 20:
+            score += 1.0
+        if code_metrics.get("lines_added", 0) > 1000:
+            score += 1.0
+
+        # Cap at 10
+        return min(score, 10.0)
 
     def generate_future_impact(self, business_value: Dict, performance: Dict) -> Dict:
-        """Generate future impact projections."""
-        future_impact = {}
-        
-        # Revenue impact projection (conservative 3-year estimate)
-        annual_savings = business_value.get("risk_adjusted_savings", 0)
-        if annual_savings > 0:
-            # Assume 10% compound growth in value over 3 years
-            three_year_revenue = annual_savings * 3.31  # 1.1^3 ≈ 3.31
-            future_impact["revenue_impact_3yr"] = round(three_year_revenue)
-            
-        # Competitive advantage
-        peak_rps = performance.get("peak_rps", 0)
-        if peak_rps > 5000:
-            future_impact["competitive_advantage"] = "High performance enables new market opportunities"
-        elif peak_rps > 1000:
-            future_impact["competitive_advantage"] = "Performance improvements support growth"
-            
+        """Project future impact based on current metrics."""
+        impact = {}
+
+        # Revenue impact projection
+        if "user_experience_score" in business_value:
+            ux_score = business_value["user_experience_score"]
+            # Better UX correlates with revenue
+            impact["revenue_impact_3yr"] = round(ux_score * 500000 * 0.1, 0)
+
+        # Market positioning
+        if performance.get("peak_rps", 0) > 500:
+            impact["competitive_advantage"] = "high"
+            impact["market_differentiation"] = "performance_leader"
+
         # Technical debt reduction
-        test_coverage = performance.get("test_coverage", 0)
-        if test_coverage > 80:
-            maintenance_reduction = min(30, (test_coverage - 70) * 2)
-            future_impact["maintenance_cost_reduction_percent"] = maintenance_reduction
-            
-        return future_impact
+        if performance.get("test_coverage", 0) > 90:
+            impact["technical_debt_reduction"] = "significant"
+            impact["maintenance_cost_reduction_percent"] = 30
+
+        return impact
 
     def run_analysis(self):
-        """Run comprehensive PR analysis with adaptive scoring."""
+        """Run complete PR analysis."""
+        print(f"🔍 Analyzing PR #{self.pr_number}...")
+
+        # Get PR details
         try:
-            print(f"🔍 Analyzing PR #{self.pr_number}...")
-            
-            # Get PR data
             result = subprocess.run(
-                ["gh", "pr", "view", self.pr_number, "--json", "title,body,files"],
+                ["gh", "pr", "view", self.pr_number, "--json", "body,title,author"],
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=30,  # Add timeout to prevent hanging
             )
-            
+
             if result.returncode != 0:
-                print(f"❌ Error: Could not fetch PR #{self.pr_number}")
+                print(f"❌ Failed to fetch PR details: {result.stderr}")
                 return None
-                
-            pr_data = json.loads(result.stdout)
+
+            if not result.stdout.strip():
+                print("❌ Empty response from GitHub CLI")
+                return None
+
+            try:
+                pr_data = json.loads(result.stdout)
+            except json.JSONDecodeError as e:
+                print(f"❌ Failed to parse JSON response: {e}")
+                print(f"Response: {result.stdout[:500]}...")
+                return None
+
+            if pr_data is None:
+                print("❌ GitHub returned null data")
+                return None
+
             pr_body = pr_data.get("body", "")
-            
-            # Detect value categories (key innovation)
-            categories = self.detect_pr_value_categories(pr_data)
-            self.metrics["value_categories"] = categories
-            
-            # Determine PR type for adaptive scoring
-            pr_type = self.determine_pr_type(categories)
-            self.metrics["pr_type"] = pr_type
-            
-            print(f"📊 Detected PR Type: {pr_type}")
-            print(f"🎯 Value Categories: {', '.join(k for k,v in categories.items() if v > 0.3)}")
-            
+
+            # Fallback: if PR body is empty, try alternative fetch
+            if not pr_body:
+                print("ℹ️ PR body empty, trying alternative fetch...")
+                fallback_result = subprocess.run(
+                    ["gh", "pr", "view", self.pr_number],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                if fallback_result.returncode == 0:
+                    pr_body = fallback_result.stdout
+                    print("✅ Retrieved PR content via fallback method")
+                else:
+                    print("⚠️ No PR body available, continuing with limited analysis")
+
+            # Fallback: if PR body is empty, try alternative fetch
+            if not pr_body:
+                print("ℹ️ PR body empty, trying alternative fetch...")
+                fallback_result = subprocess.run(
+                    ["gh", "pr", "view", self.pr_number],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                if fallback_result.returncode == 0:
+                    pr_body = fallback_result.stdout
+                    print("✅ Retrieved PR content via fallback method")
+                else:
+                    print("⚠️ No PR body available, continuing with limited analysis")
+
             # Extract performance metrics
             performance = self.analyze_performance_metrics(pr_body)
             self.metrics["technical_metrics"]["performance"] = performance
-            
-            # Calculate comprehensive business value
-            business_value = self.calculate_comprehensive_business_value(performance)
+
+            # Calculate business value
+            business_value = self.calculate_business_value(performance)
             self.metrics["business_metrics"] = business_value
-            
-            # Analyze code changes
-            code_metrics = self.analyze_code_changes()
-            self.metrics["technical_metrics"]["code_changes"] = code_metrics
-            
-            # Calculate adaptive scores
-            kpis = self.calculate_adaptive_scores(categories, performance, business_value, code_metrics)
-            self.metrics["kpis"] = kpis
-            self.metrics["scoring_weights"] = kpis.get("scoring_weights", {})
-            
+
             # Extract achievement tags
             tags = self.extract_achievement_tags(pr_body)
             self.metrics["achievement_tags"] = tags
-            
+
+            # Analyze code changes
+            code_metrics = self.analyze_code_changes()
+            self.metrics["technical_metrics"]["code_metrics"] = code_metrics
+
+            # Calculate innovation score
+            innovation = self.calculate_innovation_score(pr_body, code_metrics)
+            self.metrics["technical_metrics"]["innovation_score"] = innovation
+
             # Generate future impact
-            future_impact = self.generate_future_impact(business_value, performance)
-            self.metrics["future_impact"] = future_impact
-            
+            impact = self.generate_future_impact(business_value, performance)
+            self.metrics["future_impact"] = impact
+
+            # Add warnings for unrealistic metrics
+            warnings = []
+            if business_value.get("throughput_improvement_percent", 0) > 200:
+                warnings.append("Throughput improvement >200% may be unrealistic")
+            if business_value.get("infrastructure_savings_estimate", 0) > 50000:
+                warnings.append("Infrastructure savings >$50k/year needs validation")
+            if business_value.get("roi_year_one_percent", 0) > 300:
+                warnings.append("ROI >300% is exceptional - verify calculations")
+
+            self.metrics["warnings"] = warnings
+
+            # Generate KPIs
+            self.metrics["kpis"] = {
+                "performance_score": self.calculate_realistic_performance_score(
+                    performance.get("peak_rps", 0),
+                    performance.get("latency_ms", 500),
+                    performance.get("error_rate", 0.02),
+                ),
+                "quality_score": performance.get("test_coverage", 0) / 10,
+                "business_value_score": min(
+                    10,
+                    max(
+                        0,
+                        (
+                            business_value.get("roi_year_one_percent", 0) / 30
+                        ),  # More realistic scaling
+                    ),
+                ),
+                "innovation_score": innovation,
+                "overall_score": 0,  # Will be calculated after
+            }
+
+            # Calculate overall score properly
+            self.metrics["kpis"]["overall_score"] = round(
+                (
+                    self.metrics["kpis"]["performance_score"]
+                    + self.metrics["kpis"]["quality_score"]
+                    + self.metrics["kpis"]["innovation_score"]
+                )
+                / 3,
+                1,
+            )
+
             return self.metrics
-            
+
         except Exception as e:
             print(f"❌ Error during analysis: {e}")
             return None
@@ -639,110 +621,516 @@ class HybridPRValueAnalyzer:
         """Save analysis results to file."""
         if not output_file:
             output_file = f"pr_{self.pr_number}_value_analysis.json"
-            
+
         with open(output_file, "w") as f:
             json.dump(self.metrics, f, indent=2)
-            
+
         print(f"✅ Results saved to {output_file}")
-        
-        # Also save achievement file for tracking
-        achievement_file = f".achievements/pr_{self.pr_number}_achievement.json"
-        os.makedirs(".achievements", exist_ok=True)
-        
-        achievement_data = {
-            "pr_number": self.pr_number,
-            "timestamp": self.metrics["timestamp"],
-            "overall_score": self.metrics["kpis"].get("overall_score", 0),
-            "business_value": self.metrics["business_metrics"],
-            "achievement_tags": self.metrics["achievement_tags"],
-            "pr_type": self.metrics["pr_type"],
-            "value_categories": self.metrics["value_categories"],
-            "metric_explanations": self._generate_metric_explanations_dict(),
-        }
-        
-        with open(achievement_file, "w") as f:
-            json.dump(achievement_data, f, indent=2)
-            
-        print(f"✅ Achievement data saved to {achievement_file}")
 
     def print_summary(self):
-        """Print comprehensive analysis summary."""
-        print("\n" + "=" * 80)
-        print(f"📊 PR #{self.pr_number} VALUE ANALYSIS SUMMARY")
-        print("=" * 80)
-        
-        # PR Type and Categories
-        print(f"\n🎯 PR TYPE: {self.metrics['pr_type'].upper()}")
-        categories = self.metrics.get("value_categories", {})
-        active_categories = [(k, v) for k, v in categories.items() if v > 0.3]
-        if active_categories:
-            print("📈 VALUE CATEGORIES:")
-            for category, confidence in sorted(active_categories, key=lambda x: x[1], reverse=True):
-                print(f"   • {category}: {confidence:.1%} confidence")
-        
-        # KPIs with adaptive context
-        kpis = self.metrics.get("kpis", {})
-        weights = self.metrics.get("scoring_weights", {})
-        
-        print(f"\n🏆 OVERALL SCORE: {kpis.get('overall_score', 0)}/10 {self._get_score_status(kpis.get('overall_score', 0))}")
-        
-        print("\n📊 SCORE BREAKDOWN (with adaptive weights):")
-        score_items = [
-            ("Performance", "performance_score"),
-            ("Quality", "quality_score"), 
-            ("Business Value", "business_value_score"),
-            ("Innovation", "innovation_score"),
-        ]
-        
-        for name, key in score_items:
-            score = kpis.get(key, 0)
-            weight = weights.get(key, 0.25)
-            print(f"   • {name}: {score}/10 (weight: {weight:.0%}) {self._get_score_status(score)}")
-        
-        # Business Metrics
-        business = self.metrics.get("business_metrics", {})
-        if business:
-            print(f"\n💰 BUSINESS VALUE:")
-            if "roi_year_one_percent" in business:
-                print(f"   • ROI (Year 1): {business['roi_year_one_percent']:.1f}%")
-            if "total_annual_savings" in business:
-                print(f"   • Annual Savings: ${business['total_annual_savings']:,}")
-            if "payback_period_months" in business:
-                print(f"   • Payback Period: {business['payback_period_months']} months")
-            if "confidence_level" in business:
-                print(f"   • Confidence: {business['confidence_level'].upper()}")
-        
-        # Performance Metrics
-        performance = self.metrics.get("technical_metrics", {}).get("performance", {})
-        if performance:
-            print(f"\n🚀 PERFORMANCE:")
-            if "peak_rps" in performance:
-                print(f"   • Peak RPS: {performance['peak_rps']:,}")
-            if "latency_ms" in performance:
-                print(f"   • Latency: {performance['latency_ms']}ms")
-            if "test_coverage" in performance:
-                print(f"   • Test Coverage: {performance['test_coverage']}%")
-        
-        # Achievement Tags
-        tags = self.metrics.get("achievement_tags", [])
-        if tags:
-            print(f"\n🏷️  ACHIEVEMENT TAGS: {', '.join(tags)}")
-        
-        print("\n" + "=" * 80)
+        """Print analysis summary with detailed explanations."""
+        print("\n📊 PR Value Analysis Summary")
+        print("=" * 50)
+
+        # Detailed score breakdown
+        overall_score = self.metrics["kpis"]["overall_score"]
+        performance_score = self.metrics["kpis"]["performance_score"]
+        quality_score = self.metrics["kpis"]["quality_score"]
+        business_value_score = self.metrics["kpis"]["business_value_score"]
+        innovation_score = self.metrics["kpis"]["innovation_score"]
+
+        print(
+            f"\n🎯 Overall Score: {overall_score}/10 ({self._get_score_status(overall_score)})"
+        )
+        print("=" * 30)
+
+        # Detailed breakdown with explanations
+        print(
+            f"{'✅' if innovation_score >= 6 else '❌'} Innovation: {innovation_score}/10 ({self._get_innovation_explanation(innovation_score)})"
+        )
+        print(
+            f"{'✅' if performance_score >= 6 else '❌'} Performance: {performance_score}/10 ({self._get_performance_explanation(performance_score)})"
+        )
+        print(
+            f"{'✅' if quality_score >= 6 else '❌'} Quality: {quality_score}/10 ({self._get_quality_explanation(quality_score)})"
+        )
+        print(
+            f"{'✅' if business_value_score >= 6 else '❌'} Business Value: {business_value_score}/10 ({self._get_business_explanation(business_value_score)})"
+        )
+
+        # Improvement suggestions
+        suggestions = self._generate_improvement_suggestions()
+        if suggestions:
+            print("\n💡 How to Improve Your PR Score:")
+            for suggestion in suggestions:
+                print(f"  • {suggestion}")
+
+        # Detailed score breakdown
+        overall_score = self.metrics["kpis"]["overall_score"]
+        performance_score = self.metrics["kpis"]["performance_score"]
+        quality_score = self.metrics["kpis"]["quality_score"]
+        business_value_score = self.metrics["kpis"]["business_value_score"]
+        innovation_score = self.metrics["kpis"]["innovation_score"]
+
+        print(
+            f"\n🎯 Overall Score: {overall_score}/10 ({self._get_score_status(overall_score)})"
+        )
+        print("=" * 30)
+
+        # Detailed breakdown with explanations
+        print(
+            f"{'✅' if innovation_score >= 6 else '❌'} Innovation: {innovation_score}/10 ({self._get_innovation_explanation(innovation_score)})"
+        )
+        print(
+            f"{'✅' if performance_score >= 6 else '❌'} Performance: {performance_score}/10 ({self._get_performance_explanation(performance_score)})"
+        )
+        print(
+            f"{'✅' if quality_score >= 6 else '❌'} Quality: {quality_score}/10 ({self._get_quality_explanation(quality_score)})"
+        )
+        print(
+            f"{'✅' if business_value_score >= 6 else '❌'} Business Value: {business_value_score}/10 ({self._get_business_explanation(business_value_score)})"
+        )
+
+        # Improvement suggestions
+        suggestions = self._generate_improvement_suggestions()
+        if suggestions:
+            print("\n💡 How to Improve Your PR Score:")
+            for suggestion in suggestions:
+                print(f"  • {suggestion}")
+
+        print("\n💰 Business Metrics:")
+        for key, value in self.metrics["business_metrics"].items():
+            print(f"  • {key}: {value}")
+
+        print("\n🚀 Technical Metrics:")
+        perf = self.metrics["technical_metrics"].get("performance", {})
+        for key, value in perf.items():
+            print(f"  • {key}: {value}")
+
+        print("\n🏷️  Achievement Tags:")
+        for tag in self.metrics["achievement_tags"]:
+            print(f"  • {tag}")
+
+        print("\n📈 Detailed KPIs:")
+        for key, value in self.metrics["kpis"].items():
+            print(f"  • {key}: {value}")
+
+        print("\n🔮 Future Impact:")
+        for key, value in self.metrics["future_impact"].items():
+            print(f"  • {key}: {value}")
+
+        # Add calculation explanations
+        print("\n📐 How Metrics Are Calculated:")
+        print("  • ROI = (Annual Savings / Dev Cost) × 100")
+        print("  • Infrastructure Savings = $120k × (Perf Factor - 1) / Perf Factor")
+        print("  • Overall Score = (Performance + Quality + Innovation) / 3")
+        print("  • Time Savings = Hours/Week × 50 weeks × $100/hour")
+
+        # Scoring thresholds
+        print("\n🎯 Scoring Thresholds:")
+        print("  • 8.0-10.0: Excellent (Automatic merge approval)")
+        print("  • 6.0-7.9: Good (Review recommended)")
+        print("  • 0.0-5.9: Needs improvement (Enhancement required)")
 
     def _get_score_status(self, score: float) -> str:
-        """Get status emoji for score."""
-        if score >= 8:
-            return "🌟"
-        elif score >= 6:
-            return "✅"
-        elif score >= 4:
-            return "⚠️"
+        """Get score status description."""
+        if score >= 8.0:
+            return "Excellent ⭐"
+        elif score >= 6.0:
+            return "Good ✅"
         else:
-            return "❌"
+            return "Needs Improvement ⚠️"
+
+    def _get_innovation_explanation(self, score: float) -> str:
+        """Explain innovation score."""
+        if score >= 8.0:
+            return "exceptional technical complexity and novel approach"
+        elif score >= 6.0:
+            return "good technical innovation with advanced concepts"
+        elif score >= 4.0:
+            return "moderate complexity, some innovative elements"
+        else:
+            return "basic implementation, limited technical innovation"
+
+    def _get_performance_explanation(self, score: float) -> str:
+        """Explain performance score."""
+        perf_metrics = self.metrics["technical_metrics"].get("performance", {})
+
+        if not perf_metrics or not any(perf_metrics.values()):
+            return "no measurable performance metrics detected"
+        elif score >= 8.0:
+            return "excellent performance metrics documented"
+        elif score >= 6.0:
+            return "good performance metrics provided"
+        else:
+            return "performance metrics present but could be improved"
+
+    def _get_quality_explanation(self, score: float) -> str:
+        """Explain quality score."""
+        perf_metrics = self.metrics["technical_metrics"].get("performance", {})
+        test_coverage = perf_metrics.get("test_coverage", 0)
+
+        if test_coverage == 0:
+            return "no test coverage metrics detected"
+        elif score >= 8.0:
+            return f"excellent test coverage ({test_coverage}%)"
+        elif score >= 6.0:
+            return f"good test coverage ({test_coverage}%)"
+        else:
+            return f"test coverage needs improvement ({test_coverage}%)"
+
+    def _get_business_explanation(self, score: float) -> str:
+        """Explain business value score."""
+        business_metrics = self.metrics["business_metrics"]
+
+        if not business_metrics or not any(business_metrics.values()):
+            return "no ROI/cost savings metrics detected"
+        elif score >= 8.0:
+            return "strong business value with clear ROI"
+        elif score >= 6.0:
+            return "good business value demonstrated"
+        else:
+            return "business value present but could be quantified better"
+
+    def _generate_improvement_suggestions(self) -> list:
+        """Generate specific improvement suggestions."""
+        suggestions = []
+        kpis = self.metrics["kpis"]
+        perf_metrics = self.metrics["technical_metrics"].get("performance", {})
+        business_metrics = self.metrics["business_metrics"]
+
+        if not business_metrics.get("roi_year_one_percent"):
+            suggestions.append("Calculate ROI: 'Expected ROI: 300% in first year'")
+        suggestions.append("Add business impact: 'Improves user experience by 25%'")
+        suggestions.append("Include time savings: 'Saves developers 10 hours/week'")
+        # Performance suggestions
+        if kpis["performance_score"] < 6.0:
+            if not perf_metrics.get("peak_rps"):
+                suggestions.append(
+                    "Add RPS metrics: 'Handles 500+ RPS' or 'Peak performance: 1000 RPS'"
+                )
+            if not perf_metrics.get("latency_ms"):
+                suggestions.append(
+                    "Include latency metrics: 'Response time <100ms' or 'p95 latency: 150ms'"
+                )
+            if not perf_metrics.get("success_rate"):
+                suggestions.append(
+                    "Document success rates: '99.9% success rate' or '100% uptime'"
+                )
+
+        # Quality suggestions
+        if kpis["quality_score"] < 6.0:
+            if not perf_metrics.get("test_coverage"):
+                suggestions.append(
+                    "Add test coverage: 'Test coverage: 85%' or '90% code coverage achieved'"
+                )
+                suggestions.append(
+                    "Include testing details: 'Added 50 unit tests' or 'E2E test suite expanded'"
+                )
+
+        # Business value suggestions
+        if kpis["business_value_score"] < 6.0:
+            if not business_metrics.get("infrastructure_savings_estimate"):
+                suggestions.append(
+                    "Quantify cost savings: 'Reduces infrastructure costs by $15k/year'"
+                )
+            if not business_metrics.get("roi_year_one_percent"):
+                suggestions.append("Calculate ROI: 'Expected ROI: 300% in first year'")
+            suggestions.append("Add business impact: 'Improves user experience by 25%'")
+            suggestions.append("Include time savings: 'Saves developers 10 hours/week'")
+
+        # Innovation suggestions
+        if kpis["innovation_score"] < 8.0:
+            suggestions.append(
+                "Highlight technical innovation: Use words like 'novel', 'optimization', 'breakthrough'"
+            )
+            suggestions.append(
+                "Explain architectural improvements: 'Advanced caching strategy' or 'Scalable microservices'"
+            )
+
+        return suggestions
+
+    def _generate_interview_talking_points(self, results: Dict) -> List[str]:
+        """Generate interview-ready talking points."""
+        points = []
+
+        # Performance achievements
+        if results["technical_metrics"]["performance"].get("peak_rps", 0) > 1000:
+            points.append(
+                f"Achieved {results['technical_metrics']['performance']['peak_rps']} RPS - exceeding industry standards for similar systems"
+            )
+
+        # Cost savings
+        if (
+            results["business_metrics"].get("infrastructure_savings_estimate", 0)
+            > 10000
+        ):
+            points.append(
+                f"Delivered ${results['business_metrics']['infrastructure_savings_estimate']:,} annual infrastructure savings through performance optimization"
+            )
+
+        # Quality improvements
+        if results["technical_metrics"]["performance"].get("test_coverage", 0) > 80:
+            points.append(
+                f"Implemented {results['technical_metrics']['performance']['test_coverage']}% test coverage, ensuring production reliability"
+            )
+
+        # Innovation
+        if results["kpis"]["innovation_score"] > 8:
+            points.append(
+                "Pioneered novel approach to semantic search using advanced RAG techniques"
+            )
+
+        # ROI story
+        if results["business_metrics"].get("roi_year_one_percent", 0) > 100:
+            points.append(
+                f"{results['business_metrics']['roi_year_one_percent']}% first-year ROI with {results['business_metrics'].get('payback_period_months', 'N/A')} month payback"
+            )
+
+        # Team impact
+        if results["business_metrics"].get("developer_productivity_savings", 0) > 50000:
+            points.append(
+                f"Improved team productivity by ${results['business_metrics']['developer_productivity_savings']:,}/year"
+            )
+
+        return points
+
+    def _generate_article_suggestions(self, results: Dict) -> Dict[str, List[str]]:
+        """Generate suggestions for future articles/blog posts."""
+        suggestions = {
+            "technical_deep_dives": [],
+            "business_case_studies": [],
+            "best_practices": [],
+            "lessons_learned": [],
+        }
+
+        # Technical articles
+        if results["technical_metrics"]["performance"].get("peak_rps", 0) > 1000:
+            suggestions["technical_deep_dives"].append(
+                "How We Achieved 1200+ RPS with Python and FastAPI"
+            )
+            suggestions["technical_deep_dives"].append(
+                "Optimizing Kubernetes for High-Performance Microservices"
+            )
+
+        if "ai_ml_feature" in results["achievement_tags"]:
+            suggestions["technical_deep_dives"].append(
+                "Building Production-Ready RAG Pipelines: A Complete Guide"
+            )
+            suggestions["technical_deep_dives"].append(
+                "Semantic Search at Scale: Lessons from Production"
+            )
+
+        # Business case studies
+        if results["business_metrics"].get("roi_year_one_percent", 0) > 100:
+            suggestions["business_case_studies"].append(
+                f"Case Study: {results['business_metrics']['roi_year_one_percent']}% ROI from Performance Optimization"
+            )
+
+        if results["business_metrics"].get("developer_productivity_savings", 0) > 50000:
+            suggestions["business_case_studies"].append(
+                "How Semantic Search Saved Our Team 10 Hours/Week"
+            )
+
+        # Best practices
+        if results["technical_metrics"]["performance"].get("test_coverage", 0) > 80:
+            suggestions["best_practices"].append(
+                "Achieving 87% Test Coverage in Production Microservices"
+            )
+
+        if results["technical_metrics"]["performance"].get("latency_ms", 0) < 200:
+            suggestions["best_practices"].append(
+                "Sub-200ms Response Times: Architecture and Optimization Strategies"
+            )
+
+        # Lessons learned
+        suggestions["lessons_learned"].append(
+            "From Concept to Production: Building a High-Performance RAG System"
+        )
+        suggestions["lessons_learned"].append(
+            "The Hidden Costs of Poor Performance (And How We Fixed Them)"
+        )
+
+        return suggestions
+
+    def _print_metric_explanations(self):
+        """Print comprehensive explanations for all metrics."""
+        print("\n📐 DETAILED METRIC EXPLANATIONS:")
+        print("=" * 60)
+
+        # Business Metrics Explanations
+        print("\n💰 BUSINESS METRICS:")
+        print("-" * 40)
+
+        business_metrics = self.metrics.get("business_metrics", {})
+
+        print("\n1️⃣ Throughput Improvement Percent:")
+        print(f"   Value: {business_metrics.get('throughput_improvement_percent', 0)}%")
+        print("   Formula: ((current_rps / baseline_rps) - 1) × 100%")
+        print(
+            f"   Calculation: (({self.metrics['technical_metrics']['performance'].get('peak_rps', 0)} / 500) - 1) × 100%"
+        )
+        print("   Meaning: How much faster the system processes requests vs baseline")
+        print("   Baseline: 500 RPS (typical microservice performance)")
+
+        print("\n2️⃣ Infrastructure Savings Estimate:")
+        print(
+            f"   Value: ${business_metrics.get('infrastructure_savings_estimate', 0):,}"
+        )
+        print("   Formula: servers_reduced × $12k/year + bandwidth_savings")
+        print("   Calculation: Based on reduced server needs from performance gains")
+        print("   Meaning: Annual cost reduction from needing fewer servers")
+
+        print("\n3️⃣ Servers Reduced:")
+        print(f"   Value: {business_metrics.get('servers_reduced', 0)}")
+        print("   Formula: floor((current_rps - baseline_rps) / baseline_rps)")
+        print("   Meaning: Number of servers eliminated due to performance gains")
+
+        print("\n4️⃣ Developer Productivity Savings:")
+        print(
+            f"   Value: ${business_metrics.get('developer_productivity_savings', 0):,}"
+        )
+        print("   Formula: hours_saved × team_size × $150/hour")
+        print(
+            f"   Hours Saved: {business_metrics.get('productivity_hours_saved', 0)} hours/year"
+        )
+        print("   Meaning: Cost savings from developers working more efficiently")
+
+        print("\n5️⃣ Quality Improvement Savings:")
+        print(f"   Value: ${business_metrics.get('quality_improvement_savings', 0):,}")
+        print("   Formula: bugs_prevented × $5k/bug (avg cost to fix in production)")
+        print(
+            f"   Bugs Prevented: {business_metrics.get('bugs_prevented_annually', 0)}"
+        )
+        print("   Meaning: Cost avoided by catching bugs before production")
+
+        print("\n6️⃣ Total Annual Savings:")
+        print(f"   Value: ${business_metrics.get('total_annual_savings', 0):,}")
+        print("   Formula: infrastructure + productivity + quality savings")
+        print("   Meaning: Total projected annual cost reduction")
+
+        print("\n7️⃣ Risk Adjusted Savings:")
+        print(f"   Value: ${business_metrics.get('risk_adjusted_savings', 0):,}")
+        print("   Formula: total_savings × confidence_factor")
+        print(f"   Confidence: {business_metrics.get('confidence_level', 'medium')}")
+        print("   Meaning: Conservative estimate accounting for uncertainty")
+
+        print("\n8️⃣ Total Investment:")
+        print(f"   Value: ${business_metrics.get('total_investment', 0):,}")
+        print("   Formula: dev_hours × $150/hour + infrastructure_cost")
+        print("   Meaning: Total cost to implement this PR")
+
+        print("\n9️⃣ ROI Year One Percent:")
+        print(f"   Value: {business_metrics.get('roi_year_one_percent', 0)}%")
+        print("   Formula: ((annual_savings - investment) / investment) × 100%")
+        print("   Meaning: Return on investment in the first year")
+        print("   Note: >100% means positive ROI within first year")
+
+        print("\n🔟 Payback Period:")
+        print(f"   Value: {business_metrics.get('payback_period_months', 0)} months")
+        print("   Formula: investment / (annual_savings / 12)")
+        print("   Meaning: Time to recover the initial investment")
+
+        print("\n✋ User Experience Score:")
+        print(f"   Value: {business_metrics.get('user_experience_score', 0)}/10")
+        print("   Formula: Based on response latency")
+        print("   - <100ms = 10 (Exceptional)")
+        print("   - <200ms = 9 (Excellent)")
+        print("   - <500ms = 7 (Good)")
+        print("   - >500ms = 5 (Needs improvement)")
+
+        # Performance Metrics Explanations
+        print("\n🚀 PERFORMANCE METRICS:")
+        print("-" * 40)
+
+        perf = self.metrics["technical_metrics"].get("performance", {})
+
+        print("\n1️⃣ Peak RPS (Requests Per Second):")
+        print(f"   Value: {perf.get('peak_rps', 0)}")
+        print("   Meaning: Maximum requests the system can handle per second")
+        print("   Industry Standards:")
+        print("   - <100 RPS: Low traffic")
+        print("   - 100-500 RPS: Medium traffic")
+        print("   - 500-1000 RPS: High traffic")
+        print("   - >1000 RPS: Very high traffic")
+
+        print("\n2️⃣ Latency (Response Time):")
+        print(f"   Value: {perf.get('latency_ms', 0)}ms")
+        print("   Meaning: Average time to process a request")
+        print("   User Perception:")
+        print("   - <100ms: Feels instant")
+        print("   - 100-300ms: Fast")
+        print("   - 300-1000ms: Acceptable")
+        print("   - >1000ms: Slow")
+
+        print("\n3️⃣ Test Coverage:")
+        print(f"   Value: {perf.get('test_coverage', 0)}%")
+        print("   Meaning: Percentage of code covered by tests")
+        print("   Quality Standards:")
+        print("   - >80%: Excellent")
+        print("   - 60-80%: Good")
+        print("   - 40-60%: Fair")
+        print("   - <40%: Needs improvement")
+
+        # KPI Score Explanations
+        print("\n🎯 KEY PERFORMANCE INDICATORS:")
+        print("-" * 40)
+
+        kpis = self.metrics.get("kpis", {})
+
+        print("\n1️⃣ Performance Score:")
+        print(f"   Value: {kpis.get('performance_score', 0)}/10")
+        print("   Formula: Logarithmic scale based on RPS")
+        print("   - 10/10: >10,000 RPS (Enterprise scale)")
+        print("   - 9/10: >5,000 RPS (Large scale)")
+        print("   - 8/10: >2,000 RPS (High performance)")
+        print("   - 7/10: >1,000 RPS (Good performance)")
+        print("   - 6/10: >500 RPS (Acceptable)")
+        print("   - 5/10: >200 RPS (Basic)")
+
+        print("\n2️⃣ Quality Score:")
+        print(f"   Value: {kpis.get('quality_score', 0)}/10")
+        print("   Formula: test_coverage / 10")
+        print("   Meaning: Code quality based on test coverage")
+
+        print("\n3️⃣ Business Value Score:")
+        print(f"   Value: {kpis.get('business_value_score', 0)}/10")
+        print("   Formula: min(10, roi_percent / 30)")
+        print("   Meaning: Financial impact relative to investment")
+        print("   - 10/10: ROI >300%")
+        print("   - 8/10: ROI >240%")
+        print("   - 6/10: ROI >180%")
+
+        print("\n4️⃣ Innovation Score:")
+        print(f"   Value: {kpis.get('innovation_score', 0)}/10")
+        print("   Based on:")
+        print("   - New patterns/architectures introduced")
+        print("   - AI/ML features implemented")
+        print("   - Novel solutions to complex problems")
+        print("   - Industry best practices adopted")
+
+        print("\n5️⃣ Overall Score:")
+        print(f"   Value: {kpis.get('overall_score', 0)}/10")
+        print("   Formula: weighted average of all scores")
+        print("   - Performance: 30% weight")
+        print("   - Quality: 25% weight")
+        print("   - Business Value: 25% weight")
+        print("   - Innovation: 20% weight")
+
+        # Confidence Level Explanation
+        print("\n🎯 CONFIDENCE LEVELS:")
+        print("-" * 40)
+        confidence = business_metrics.get("confidence_level", "medium")
+        print(f"\nCurrent Confidence: {confidence}")
+        print("\nConfidence Factors:")
+        print("- High (0.9x): Clear metrics, proven patterns")
+        print("- Medium (0.8x): Reasonable estimates, some assumptions")
+        print("- Low (0.7x): Many assumptions, unproven benefits")
+
+        print("\n" + "=" * 60)
 
     def _generate_metric_explanations_dict(self) -> Dict[str, Dict[str, Any]]:
-        """Generate comprehensive metric explanations."""
+        """Generate metric explanations as a dictionary for storage."""
         explanations = {
             "business_metrics": {
                 "throughput_improvement_percent": {
@@ -753,121 +1141,686 @@ class HybridPRValueAnalyzer:
                 "infrastructure_savings_estimate": {
                     "formula": "servers_reduced × $12k/year + bandwidth_savings",
                     "meaning": "Annual cost reduction from needing fewer servers",
+                    "calculation": "Based on reduced server needs from performance gains",
+                },
+                "servers_reduced": {
+                    "formula": "floor((current_rps - baseline_rps) / baseline_rps)",
+                    "meaning": "Number of servers eliminated due to performance gains",
                 },
                 "developer_productivity_savings": {
-                    "formula": "hours_saved × $150/hour",
+                    "formula": "hours_saved × team_size × $150/hour",
                     "meaning": "Cost savings from developers working more efficiently",
+                    "hourly_rate": "$150/hour (industry standard)",
                 },
                 "quality_improvement_savings": {
                     "formula": "bugs_prevented × $5k/bug",
                     "meaning": "Cost avoided by catching bugs before production",
+                    "bug_cost": "$5k average cost to fix bug in production",
+                },
+                "total_annual_savings": {
+                    "formula": "infrastructure + productivity + quality savings",
+                    "meaning": "Total projected annual cost reduction",
+                },
+                "risk_adjusted_savings": {
+                    "formula": "total_savings × confidence_factor",
+                    "meaning": "Conservative estimate accounting for uncertainty",
+                    "confidence_factors": {"high": 0.9, "medium": 0.8, "low": 0.7},
+                },
+                "total_investment": {
+                    "formula": "dev_hours × $150/hour + infrastructure_cost",
+                    "meaning": "Total cost to implement this PR",
                 },
                 "roi_year_one_percent": {
                     "formula": "((annual_savings - investment) / investment) × 100%",
                     "meaning": "Return on investment in the first year",
+                    "interpretation": ">100% means positive ROI within first year",
+                },
+                "payback_period_months": {
+                    "formula": "investment / (annual_savings / 12)",
+                    "meaning": "Time to recover the initial investment",
                 },
                 "user_experience_score": {
+                    "formula": "Based on response latency",
                     "scale": {
                         "10": "<100ms (Exceptional)",
-                        "9": "<200ms (Excellent)", 
+                        "9": "<200ms (Excellent)",
                         "7": "<500ms (Good)",
                         "5": ">500ms (Needs improvement)",
                     },
                 },
             },
-            "adaptive_scoring": {
-                "pr_type_detection": {
-                    "method": "Analyze title, body, and files to determine primary value category",
-                    "categories": ["performance", "quality", "business", "innovation", "infrastructure"]
+            "performance_metrics": {
+                "peak_rps": {
+                    "meaning": "Maximum requests the system can handle per second",
+                    "industry_standards": {
+                        "low": "<100 RPS",
+                        "medium": "100-500 RPS",
+                        "high": "500-1000 RPS",
+                        "very_high": ">1000 RPS",
+                    },
                 },
-                "adaptive_weights": {
-                    "performance_pr": {"performance": "50%", "quality": "20%", "business": "20%", "innovation": "10%"},
-                    "quality_pr": {"quality": "60%", "performance": "10%", "business": "20%", "innovation": "10%"},
-                    "business_pr": {"business": "60%", "performance": "20%", "quality": "10%", "innovation": "10%"},
+                "latency_ms": {
+                    "meaning": "Average time to process a request",
+                    "user_perception": {
+                        "instant": "<100ms",
+                        "fast": "100-300ms",
+                        "acceptable": "300-1000ms",
+                        "slow": ">1000ms",
+                    },
                 },
-                "fairness_principle": "PRs can succeed by excelling in their relevant areas, not all areas"
-            }
+                "test_coverage": {
+                    "meaning": "Percentage of code covered by tests",
+                    "quality_standards": {
+                        "excellent": ">80%",
+                        "good": "60-80%",
+                        "fair": "40-60%",
+                        "poor": "<40%",
+                    },
+                },
+            },
+            "kpi_scores": {
+                "performance_score": {
+                    "formula": "Logarithmic scale based on RPS",
+                    "scale": {
+                        "10": ">10,000 RPS (Enterprise scale)",
+                        "9": ">5,000 RPS (Large scale)",
+                        "8": ">2,000 RPS (High performance)",
+                        "7": ">1,000 RPS (Good performance)",
+                        "6": ">500 RPS (Acceptable)",
+                        "5": ">200 RPS (Basic)",
+                    },
+                },
+                "quality_score": {
+                    "formula": "test_coverage / 10",
+                    "meaning": "Code quality based on test coverage",
+                },
+                "business_value_score": {
+                    "formula": "min(10, roi_percent / 30)",
+                    "meaning": "Financial impact relative to investment",
+                    "scale": {"10": "ROI >300%", "8": "ROI >240%", "6": "ROI >180%"},
+                },
+                "innovation_score": {
+                    "criteria": [
+                        "New patterns/architectures introduced",
+                        "AI/ML features implemented",
+                        "Novel solutions to complex problems",
+                        "Industry best practices adopted",
+                    ]
+                },
+                "overall_score": {
+                    "formula": "Weighted average of all scores",
+                    "weights": {
+                        "performance": "30%",
+                        "quality": "25%",
+                        "business_value": "25%",
+                        "innovation": "20%",
+                    },
+                },
+            },
         }
         return explanations
 
-    def generate_portfolio_summary(self) -> str:
-        """Generate portfolio-ready project summary for career use."""
-        business = self.metrics.get("business_metrics", {})
-        performance = self.metrics.get("technical_metrics", {}).get("performance", {})
-        pr_type = self.metrics.get("pr_type", "general")
-        
-        # Customize summary based on PR type
-        if pr_type == "performance":
-            title = "High-Performance System Optimization"
-            focus = "performance engineering and scalability"
-        elif pr_type == "quality":
-            title = "Code Quality and Testing Enhancement" 
-            focus = "software quality assurance and maintainability"
-        elif pr_type == "business":
-            title = "Business Value Delivery Project"
-            focus = "ROI-driven development and cost optimization"
-        else:
-            title = "Full-Stack Technical Implementation"
-            focus = "comprehensive system improvements"
-            
-        roi = business.get("roi_year_one_percent", 0)
-        annual_savings = business.get("total_annual_savings", 0)
-        peak_rps = performance.get("peak_rps", 0)
-        
-        summary = f"""**{title}**
+    def _generate_portfolio_summary(self, results: Dict) -> str:
+        """Generate a portfolio-ready project summary."""
+        perf = results["technical_metrics"]["performance"]
+        business = results["business_metrics"]
 
-Led the development and implementation of a {focus} solution that delivered measurable business impact and technical excellence.
+        summary = f"""**High-Performance RAG Pipeline Implementation**
+
+Led the development of a production-ready RAG (Retrieval-Augmented Generation) pipeline that revolutionized our team's code discovery and development workflow.
 
 **Key Achievements:**
-"""
-        
-        if peak_rps > 1000:
-            summary += f"• Achieved {peak_rps:,} RPS throughput with optimized performance architecture\n"
-        if annual_savings > 10000:
-            summary += f"• Generated ${annual_savings:,} in projected annual savings through efficiency improvements\n"
-        if roi > 100:
-            summary += f"• Delivered {roi:.1f}% ROI in first year with strategic technical investments\n"
-        
-        summary += f"""
-**Technical Impact:**
-• Implemented {pr_type} improvements using modern engineering practices
-• Ensured production reliability with comprehensive testing and monitoring
-• Designed scalable solutions following industry best practices
+• Performance: {perf.get("peak_rps", 0)} RPS with {perf.get("latency_ms", "N/A")}ms latency
+• Scale: Handles {results["technical_metrics"]["code_metrics"].get("files_changed", 0)} files across the codebase
+• Quality: {perf.get("test_coverage", 0)}% test coverage with comprehensive integration tests
+• Business Impact: ${business.get("infrastructure_savings_estimate", 0):,} annual savings, {business.get("roi_year_one_percent", 0)}% ROI
 
-**Business Value:**
-• Quantified financial impact with detailed ROI analysis
-• Reduced operational costs through performance optimizations  
-• Enhanced user experience with improved system responsiveness
+**Technologies:** Python, FastAPI, Kubernetes, PostgreSQL, Qdrant, OpenAI API, Docker
 
-This project demonstrates my ability to bridge technical excellence with business value, delivering solutions that are both technically sound and financially beneficial.
-"""
-        
+**Innovation:** Implemented novel embedding techniques for semantic code search, reducing developer search time by 60% and debugging time by 40%. This project demonstrates expertise in AI/ML integration, distributed systems, and performance optimization."""
+
         return summary
 
+    def _generate_interview_talking_points(self, results: Dict) -> List[str]:
+        """Generate interview-ready talking points."""
+        points = []
+
+        # Performance achievements
+        if results["technical_metrics"]["performance"].get("peak_rps", 0) > 1000:
+            points.append(
+                f"Achieved {results['technical_metrics']['performance']['peak_rps']} RPS - exceeding industry standards for similar systems"
+            )
+
+        # Cost savings
+        if (
+            results["business_metrics"].get("infrastructure_savings_estimate", 0)
+            > 10000
+        ):
+            points.append(
+                f"Delivered ${results['business_metrics']['infrastructure_savings_estimate']:,} annual infrastructure savings through performance optimization"
+            )
+
+        # Quality improvements
+        if results["technical_metrics"]["performance"].get("test_coverage", 0) > 80:
+            points.append(
+                f"Implemented {results['technical_metrics']['performance']['test_coverage']}% test coverage, ensuring production reliability"
+            )
+
+        # Innovation
+        if results["kpis"]["innovation_score"] > 8:
+            points.append(
+                "Pioneered novel approach to semantic search using advanced RAG techniques"
+            )
+
+        # ROI story
+        if results["business_metrics"].get("roi_year_one_percent", 0) > 100:
+            points.append(
+                f"{results['business_metrics']['roi_year_one_percent']}% first-year ROI with {results['business_metrics'].get('payback_period_months', 'N/A')} month payback"
+            )
+
+        # Team impact
+        if results["business_metrics"].get("developer_productivity_savings", 0) > 50000:
+            points.append(
+                f"Improved team productivity by ${results['business_metrics']['developer_productivity_savings']:,}/year"
+            )
+
+        return points
+
+    def _generate_article_suggestions(self, results: Dict) -> Dict[str, List[str]]:
+        """Generate suggestions for future articles/blog posts."""
+        suggestions = {
+            "technical_deep_dives": [],
+            "business_case_studies": [],
+            "best_practices": [],
+            "lessons_learned": [],
+        }
+
+        # Technical articles
+        if results["technical_metrics"]["performance"].get("peak_rps", 0) > 1000:
+            suggestions["technical_deep_dives"].append(
+                "How We Achieved 1200+ RPS with Python and FastAPI"
+            )
+            suggestions["technical_deep_dives"].append(
+                "Optimizing Kubernetes for High-Performance Microservices"
+            )
+
+        if "ai_ml_feature" in results["achievement_tags"]:
+            suggestions["technical_deep_dives"].append(
+                "Building Production-Ready RAG Pipelines: A Complete Guide"
+            )
+            suggestions["technical_deep_dives"].append(
+                "Semantic Search at Scale: Lessons from Production"
+            )
+
+        # Business case studies
+        if results["business_metrics"].get("roi_year_one_percent", 0) > 100:
+            suggestions["business_case_studies"].append(
+                f"Case Study: {results['business_metrics']['roi_year_one_percent']}% ROI from Performance Optimization"
+            )
+
+        if results["business_metrics"].get("developer_productivity_savings", 0) > 50000:
+            suggestions["business_case_studies"].append(
+                "How Semantic Search Saved Our Team 10 Hours/Week"
+            )
+
+        # Best practices
+        if results["technical_metrics"]["performance"].get("test_coverage", 0) > 80:
+            suggestions["best_practices"].append(
+                "Achieving 87% Test Coverage in Production Microservices"
+            )
+
+        if results["technical_metrics"]["performance"].get("latency_ms", 0) < 200:
+            suggestions["best_practices"].append(
+                "Sub-200ms Response Times: Architecture and Optimization Strategies"
+            )
+
+        # Lessons learned
+        suggestions["lessons_learned"].append(
+            "From Concept to Production: Building a High-Performance RAG System"
+        )
+        suggestions["lessons_learned"].append(
+            "The Hidden Costs of Poor Performance (And How We Fixed Them)"
+        )
+
+        return suggestions
+
+    def _print_metric_explanations(self):
+        """Print comprehensive explanations for all metrics."""
+        print("\n📐 DETAILED METRIC EXPLANATIONS:")
+        print("=" * 60)
+
+        # Business Metrics Explanations
+        print("\n💰 BUSINESS METRICS:")
+        print("-" * 40)
+
+        business_metrics = self.metrics.get("business_metrics", {})
+
+        print("\n1️⃣ Throughput Improvement Percent:")
+        print(f"   Value: {business_metrics.get('throughput_improvement_percent', 0)}%")
+        print("   Formula: ((current_rps / baseline_rps) - 1) × 100%")
+        print(
+            f"   Calculation: (({self.metrics['technical_metrics']['performance'].get('peak_rps', 0)} / 500) - 1) × 100%"
+        )
+        print("   Meaning: How much faster the system processes requests vs baseline")
+        print("   Baseline: 500 RPS (typical microservice performance)")
+
+        print("\n2️⃣ Infrastructure Savings Estimate:")
+        print(
+            f"   Value: ${business_metrics.get('infrastructure_savings_estimate', 0):,}"
+        )
+        print("   Formula: servers_reduced × $12k/year + bandwidth_savings")
+        print("   Calculation: Based on reduced server needs from performance gains")
+        print("   Meaning: Annual cost reduction from needing fewer servers")
+
+        print("\n3️⃣ Servers Reduced:")
+        print(f"   Value: {business_metrics.get('servers_reduced', 0)}")
+        print("   Formula: floor((current_rps - baseline_rps) / baseline_rps)")
+        print("   Meaning: Number of servers eliminated due to performance gains")
+
+        print("\n4️⃣ Developer Productivity Savings:")
+        print(
+            f"   Value: ${business_metrics.get('developer_productivity_savings', 0):,}"
+        )
+        print("   Formula: hours_saved × team_size × $150/hour")
+        print(
+            f"   Hours Saved: {business_metrics.get('productivity_hours_saved', 0)} hours/year"
+        )
+        print("   Meaning: Cost savings from developers working more efficiently")
+
+        print("\n5️⃣ Quality Improvement Savings:")
+        print(f"   Value: ${business_metrics.get('quality_improvement_savings', 0):,}")
+        print("   Formula: bugs_prevented × $5k/bug (avg cost to fix in production)")
+        print(
+            f"   Bugs Prevented: {business_metrics.get('bugs_prevented_annually', 0)}"
+        )
+        print("   Meaning: Cost avoided by catching bugs before production")
+
+        print("\n6️⃣ Total Annual Savings:")
+        print(f"   Value: ${business_metrics.get('total_annual_savings', 0):,}")
+        print("   Formula: infrastructure + productivity + quality savings")
+        print("   Meaning: Total projected annual cost reduction")
+
+        print("\n7️⃣ Risk Adjusted Savings:")
+        print(f"   Value: ${business_metrics.get('risk_adjusted_savings', 0):,}")
+        print("   Formula: total_savings × confidence_factor")
+        print(f"   Confidence: {business_metrics.get('confidence_level', 'medium')}")
+        print("   Meaning: Conservative estimate accounting for uncertainty")
+
+        print("\n8️⃣ Total Investment:")
+        print(f"   Value: ${business_metrics.get('total_investment', 0):,}")
+        print("   Formula: dev_hours × $150/hour + infrastructure_cost")
+        print("   Meaning: Total cost to implement this PR")
+
+        print("\n9️⃣ ROI Year One Percent:")
+        print(f"   Value: {business_metrics.get('roi_year_one_percent', 0)}%")
+        print("   Formula: ((annual_savings - investment) / investment) × 100%")
+        print("   Meaning: Return on investment in the first year")
+        print("   Note: >100% means positive ROI within first year")
+
+        print("\n🔟 Payback Period:")
+        print(f"   Value: {business_metrics.get('payback_period_months', 0)} months")
+        print("   Formula: investment / (annual_savings / 12)")
+        print("   Meaning: Time to recover the initial investment")
+
+        print("\n✋ User Experience Score:")
+        print(f"   Value: {business_metrics.get('user_experience_score', 0)}/10")
+        print("   Formula: Based on response latency")
+        print("   - <100ms = 10 (Exceptional)")
+        print("   - <200ms = 9 (Excellent)")
+        print("   - <500ms = 7 (Good)")
+        print("   - >500ms = 5 (Needs improvement)")
+
+        # Performance Metrics Explanations
+        print("\n🚀 PERFORMANCE METRICS:")
+        print("-" * 40)
+
+        perf = self.metrics["technical_metrics"].get("performance", {})
+
+        print("\n1️⃣ Peak RPS (Requests Per Second):")
+        print(f"   Value: {perf.get('peak_rps', 0)}")
+        print("   Meaning: Maximum requests the system can handle per second")
+        print("   Industry Standards:")
+        print("   - <100 RPS: Low traffic")
+        print("   - 100-500 RPS: Medium traffic")
+        print("   - 500-1000 RPS: High traffic")
+        print("   - >1000 RPS: Very high traffic")
+
+        print("\n2️⃣ Latency (Response Time):")
+        print(f"   Value: {perf.get('latency_ms', 0)}ms")
+        print("   Meaning: Average time to process a request")
+        print("   User Perception:")
+        print("   - <100ms: Feels instant")
+        print("   - 100-300ms: Fast")
+        print("   - 300-1000ms: Acceptable")
+        print("   - >1000ms: Slow")
+
+        print("\n3️⃣ Test Coverage:")
+        print(f"   Value: {perf.get('test_coverage', 0)}%")
+        print("   Meaning: Percentage of code covered by tests")
+        print("   Quality Standards:")
+        print("   - >80%: Excellent")
+        print("   - 60-80%: Good")
+        print("   - 40-60%: Fair")
+        print("   - <40%: Needs improvement")
+
+        # KPI Score Explanations
+        print("\n🎯 KEY PERFORMANCE INDICATORS:")
+        print("-" * 40)
+
+        kpis = self.metrics.get("kpis", {})
+
+        print("\n1️⃣ Performance Score:")
+        print(f"   Value: {kpis.get('performance_score', 0)}/10")
+        print("   Formula: Logarithmic scale based on RPS")
+        print("   - 10/10: >10,000 RPS (Enterprise scale)")
+        print("   - 9/10: >5,000 RPS (Large scale)")
+        print("   - 8/10: >2,000 RPS (High performance)")
+        print("   - 7/10: >1,000 RPS (Good performance)")
+        print("   - 6/10: >500 RPS (Acceptable)")
+        print("   - 5/10: >200 RPS (Basic)")
+
+        print("\n2️⃣ Quality Score:")
+        print(f"   Value: {kpis.get('quality_score', 0)}/10")
+        print("   Formula: test_coverage / 10")
+        print("   Meaning: Code quality based on test coverage")
+
+        print("\n3️⃣ Business Value Score:")
+        print(f"   Value: {kpis.get('business_value_score', 0)}/10")
+        print("   Formula: min(10, roi_percent / 30)")
+        print("   Meaning: Financial impact relative to investment")
+        print("   - 10/10: ROI >300%")
+        print("   - 8/10: ROI >240%")
+        print("   - 6/10: ROI >180%")
+
+        print("\n4️⃣ Innovation Score:")
+        print(f"   Value: {kpis.get('innovation_score', 0)}/10")
+        print("   Based on:")
+        print("   - New patterns/architectures introduced")
+        print("   - AI/ML features implemented")
+        print("   - Novel solutions to complex problems")
+        print("   - Industry best practices adopted")
+
+        print("\n5️⃣ Overall Score:")
+        print(f"   Value: {kpis.get('overall_score', 0)}/10")
+        print("   Formula: weighted average of all scores")
+        print("   - Performance: 30% weight")
+        print("   - Quality: 25% weight")
+        print("   - Business Value: 25% weight")
+        print("   - Innovation: 20% weight")
+
+        # Confidence Level Explanation
+        print("\n🎯 CONFIDENCE LEVELS:")
+        print("-" * 40)
+        confidence = business_metrics.get("confidence_level", "medium")
+        print(f"\nCurrent Confidence: {confidence}")
+        print("\nConfidence Factors:")
+        print("- High (0.9x): Clear metrics, proven patterns")
+        print("- Medium (0.8x): Reasonable estimates, some assumptions")
+        print("- Low (0.7x): Many assumptions, unproven benefits")
+
+        print("\n" + "=" * 60)
+
+    def _generate_metric_explanations_dict(self) -> Dict[str, Dict[str, Any]]:
+        """Generate metric explanations as a dictionary for storage."""
+        explanations = {
+            "business_metrics": {
+                "throughput_improvement_percent": {
+                    "formula": "((current_rps / baseline_rps) - 1) × 100%",
+                    "meaning": "How much faster the system processes requests vs baseline",
+                    "baseline": "500 RPS (typical microservice performance)",
+                },
+                "infrastructure_savings_estimate": {
+                    "formula": "servers_reduced × $12k/year + bandwidth_savings",
+                    "meaning": "Annual cost reduction from needing fewer servers",
+                    "calculation": "Based on reduced server needs from performance gains",
+                },
+                "servers_reduced": {
+                    "formula": "floor((current_rps - baseline_rps) / baseline_rps)",
+                    "meaning": "Number of servers eliminated due to performance gains",
+                },
+                "developer_productivity_savings": {
+                    "formula": "hours_saved × team_size × $150/hour",
+                    "meaning": "Cost savings from developers working more efficiently",
+                    "hourly_rate": "$150/hour (industry standard)",
+                },
+                "quality_improvement_savings": {
+                    "formula": "bugs_prevented × $5k/bug",
+                    "meaning": "Cost avoided by catching bugs before production",
+                    "bug_cost": "$5k average cost to fix bug in production",
+                },
+                "total_annual_savings": {
+                    "formula": "infrastructure + productivity + quality savings",
+                    "meaning": "Total projected annual cost reduction",
+                },
+                "risk_adjusted_savings": {
+                    "formula": "total_savings × confidence_factor",
+                    "meaning": "Conservative estimate accounting for uncertainty",
+                    "confidence_factors": {"high": 0.9, "medium": 0.8, "low": 0.7},
+                },
+                "total_investment": {
+                    "formula": "dev_hours × $150/hour + infrastructure_cost",
+                    "meaning": "Total cost to implement this PR",
+                },
+                "roi_year_one_percent": {
+                    "formula": "((annual_savings - investment) / investment) × 100%",
+                    "meaning": "Return on investment in the first year",
+                    "interpretation": ">100% means positive ROI within first year",
+                },
+                "payback_period_months": {
+                    "formula": "investment / (annual_savings / 12)",
+                    "meaning": "Time to recover the initial investment",
+                },
+                "user_experience_score": {
+                    "formula": "Based on response latency",
+                    "scale": {
+                        "10": "<100ms (Exceptional)",
+                        "9": "<200ms (Excellent)",
+                        "7": "<500ms (Good)",
+                        "5": ">500ms (Needs improvement)",
+                    },
+                },
+            },
+            "performance_metrics": {
+                "peak_rps": {
+                    "meaning": "Maximum requests the system can handle per second",
+                    "industry_standards": {
+                        "low": "<100 RPS",
+                        "medium": "100-500 RPS",
+                        "high": "500-1000 RPS",
+                        "very_high": ">1000 RPS",
+                    },
+                },
+                "latency_ms": {
+                    "meaning": "Average time to process a request",
+                    "user_perception": {
+                        "instant": "<100ms",
+                        "fast": "100-300ms",
+                        "acceptable": "300-1000ms",
+                        "slow": ">1000ms",
+                    },
+                },
+                "test_coverage": {
+                    "meaning": "Percentage of code covered by tests",
+                    "quality_standards": {
+                        "excellent": ">80%",
+                        "good": "60-80%",
+                        "fair": "40-60%",
+                        "poor": "<40%",
+                    },
+                },
+            },
+            "kpi_scores": {
+                "performance_score": {
+                    "formula": "Logarithmic scale based on RPS",
+                    "scale": {
+                        "10": ">10,000 RPS (Enterprise scale)",
+                        "9": ">5,000 RPS (Large scale)",
+                        "8": ">2,000 RPS (High performance)",
+                        "7": ">1,000 RPS (Good performance)",
+                        "6": ">500 RPS (Acceptable)",
+                        "5": ">200 RPS (Basic)",
+                    },
+                },
+                "quality_score": {
+                    "formula": "test_coverage / 10",
+                    "meaning": "Code quality based on test coverage",
+                },
+                "business_value_score": {
+                    "formula": "min(10, roi_percent / 30)",
+                    "meaning": "Financial impact relative to investment",
+                    "scale": {"10": "ROI >300%", "8": "ROI >240%", "6": "ROI >180%"},
+                },
+                "innovation_score": {
+                    "criteria": [
+                        "New patterns/architectures introduced",
+                        "AI/ML features implemented",
+                        "Novel solutions to complex problems",
+                        "Industry best practices adopted",
+                    ]
+                },
+                "overall_score": {
+                    "formula": "Weighted average of all scores",
+                    "weights": {
+                        "performance": "30%",
+                        "quality": "25%",
+                        "business_value": "25%",
+                        "innovation": "20%",
+                    },
+                },
+            },
+        }
+        return explanations
+
+    def _generate_portfolio_summary(self, results: Dict) -> str:
+        """Generate a portfolio-ready project summary."""
+        perf = results["technical_metrics"]["performance"]
+        business = results["business_metrics"]
+
+        summary = f"""**High-Performance RAG Pipeline Implementation**
+
+Led the development of a production-ready RAG (Retrieval-Augmented Generation) pipeline that revolutionized our team's code discovery and development workflow.
+
+**Key Achievements:**
+• Performance: {perf.get("peak_rps", 0)} RPS with {perf.get("latency_ms", "N/A")}ms latency
+• Scale: Handles {results["technical_metrics"]["code_metrics"].get("files_changed", 0)} files across the codebase
+• Quality: {perf.get("test_coverage", 0)}% test coverage with comprehensive integration tests
+• Business Impact: ${business.get("infrastructure_savings_estimate", 0):,} annual savings, {business.get("roi_year_one_percent", 0)}% ROI
+
+**Technologies:** Python, FastAPI, Kubernetes, PostgreSQL, Qdrant, OpenAI API, Docker
+
+**Innovation:** Implemented novel embedding techniques for semantic code search, reducing developer search time by 60% and debugging time by 40%. This project demonstrates expertise in AI/ML integration, distributed systems, and performance optimization."""
+
+        return summary
+
+
 def main():
-    if len(sys.argv) != 2:
+    """Main function to run PR value analysis."""
+    if len(sys.argv) < 2:
         print("Usage: python pr-value-analyzer.py <PR_NUMBER>")
         sys.exit(1)
-        
+
     pr_number = sys.argv[1]
-    analyzer = HybridPRValueAnalyzer(pr_number)
-    
+
+    # Create analyzer
+    analyzer = PRValueAnalyzer(pr_number)
+
     # Run analysis
     results = analyzer.run_analysis()
-    if not results:
+
+    if results:
+        # Print summary
+        analyzer.print_summary()
+
+        # Save results
+        analyzer.save_results()
+
+        # Also save to achievement collector format with AI insights
+        achievement_data = {
+            "pr_number": pr_number,
+            "timestamp": results["timestamp"],
+            "tags": results["achievement_tags"],
+            "metrics": {
+                **results["business_metrics"],
+                **results["technical_metrics"]["performance"],
+                "innovation_score": results["technical_metrics"]["innovation_score"],
+            },
+            "kpis": results["kpis"],
+            "ai_insights": {
+                "improvement_suggestions": analyzer._generate_improvement_suggestions(),
+                "score_explanations": {
+                    "innovation": analyzer._get_innovation_explanation(
+                        results["kpis"]["innovation_score"]
+                    ),
+                    "performance": analyzer._get_performance_explanation(
+                        results["kpis"]["performance_score"]
+                    ),
+                    "quality": analyzer._get_quality_explanation(
+                        results["kpis"]["quality_score"]
+                    ),
+                    "business": analyzer._get_business_explanation(
+                        results["kpis"]["business_value_score"]
+                    ),
+                },
+                "interview_talking_points": analyzer._generate_interview_talking_points(
+                    results
+                ),
+                "article_suggestions": analyzer._generate_article_suggestions(results),
+                "portfolio_summary": analyzer._generate_portfolio_summary(results),
+            },
+            "calculation_methodology": {
+                "roi_formula": "ROI = (Annual Savings - Total Investment) / Total Investment × 100",
+                "infrastructure_formula": "Savings = Servers_Reduced × $12k/year + Bandwidth_Savings",
+                "productivity_formula": "Savings = Hours_Saved × Team_Size × $150/hour",
+                "confidence_level": results["business_metrics"].get(
+                    "confidence_level", "medium"
+                ),
+                "assumptions": {
+                    "developer_rate": "$150/hour",
+                    "server_cost": "$12k/year",
+                    "baseline_rps": 500,
+                    "baseline_latency": 800,
+                },
+            },
+            "metric_explanations": analyzer._generate_metric_explanations_dict(),
+            "future_impact": results.get("future_impact", {}),
+            "warnings": results.get("warnings", []),
+            "integration_ready": True,
+            "schema_version": "3.1",  # Updated version for metric explanations
+        }
+
+        achievement_file = f".achievements/pr_{pr_number}_achievement.json"
+        os.makedirs(".achievements", exist_ok=True)
+
+        with open(achievement_file, "w") as f:
+            json.dump(achievement_data, f, indent=2)
+
+        print(f"\n✅ Achievement data saved to {achievement_file}")
+
+        # Notify about achievement collector integration
+        if results["kpis"]["overall_score"] >= 6:
+            print("\n🎯 This PR qualifies for Achievement Collector!")
+            print("   Run the following to create the achievement:")
+            print(
+                f"   curl -X POST http://localhost:8000/pr-analysis/analyze/{pr_number}"
+            )
+
+        # Return overall score for CI/CD integration
+        overall_score = results["kpis"]["overall_score"]
+        print(f"\n🎯 Overall PR Score: {overall_score}/10")
+
+        # For CI, always exit 0 (success) since analysis completed successfully
+        # Score is informational only - let other CI checks determine pass/fail
+        if overall_score >= 8:
+            print("🌟 Excellent PR! Outstanding value delivered.")
+        elif overall_score >= 6:
+            print("✅ Good PR with solid value.")
+        else:
+            print("⚠️ PR has room for improvement, but analysis successful.")
+
+        sys.exit(0)  # Always successful - we completed the analysis
+    else:
         sys.exit(1)
-        
-    # Save results
-    analyzer.save_results()
-    
-    # Print summary
-    analyzer.print_summary()
-    
-    # Generate portfolio summary
-    portfolio_summary = analyzer.generate_portfolio_summary()
-    print(f"\n📋 PORTFOLIO SUMMARY:")
-    print("-" * 40)
-    print(portfolio_summary)
+
 
 if __name__ == "__main__":
     main()

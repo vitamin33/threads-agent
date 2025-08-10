@@ -1,0 +1,52 @@
+id: feature-25-2-viral-engine-integration
+epic_id: epic-25-content-scheduler-service-integration
+title: "Viral Engine Service Integration"
+description: |
+  Integrate Content Scheduler with Viral Engine for real-time content optimization,
+  pattern extraction, and engagement prediction. Enable automated quality scoring
+  and viral pattern application.
+
+priority: high
+estimated_hours: 80
+
+acceptance_criteria:
+  - Real-time pattern extraction from scheduled content
+  - Engagement prediction before publishing
+  - Quality gate integration (min 60% quality score)
+  - Viral hook optimization
+  - Emotion trajectory mapping
+  - A/B testing framework for patterns
+
+technical_tasks:
+  - task-25-2-1-viral-engine-client
+  - task-25-2-2-pattern-extraction-events
+  - task-25-2-3-quality-scoring-integration
+  - task-25-2-4-hook-optimization-api
+  - task-25-2-5-emotion-trajectory-events
+  - task-25-2-6-ab-testing-framework
+
+integration_points:
+  - POST /extract-patterns endpoint
+  - POST /analyze/emotion-trajectory endpoint
+  - GET /templates/emotion endpoint
+  - Celery task queue for async processing
+
+event_contracts:
+  ContentQualityCheckRequested:
+    - content_id: string
+    - content_text: string
+    - platform: string
+    
+  ContentQualityScored:
+    - content_id: string
+    - quality_score: float
+    - engagement_prediction: float
+    - recommended_improvements: array
+
+testing_requirements:
+  - Mock Viral Engine for unit tests
+  - Integration tests with real service
+  - Performance benchmarks
+  - Quality score validation
+
+created_at: "2025-01-07"

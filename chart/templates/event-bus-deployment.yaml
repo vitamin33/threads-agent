@@ -1,0 +1,54 @@
+{{- if .Values.eventBus.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "threads.fullname" . }}-event-bus
+  labels:
+    {{- include "threads.labels" . | nindent 4 }}
+    app.kubernetes.io/component: event-bus
+spec:
+  replicas: {{ .Values.eventBus.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done']
+      - name: wait-for-rabbitmq
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done']
+      containers:
+      - name: event-bus
+        image: {{ .Values.eventBus.image.repository }}:{{ .Values.eventBus.image.tag }}
+        imagePullPolicy: {{ .Values.eventBus.image.pullPolicy }}
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: RABBITMQ_URL
+          value: {{ .Values.rabbitmq.url | quote }}
+        - name: DATABASE_URL
+          value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.eventBus.database.name }}"
+        - name: LOG_LEVEL
+          value: {{ .Values.eventBus.logLevel | default "INFO" | quote }}
+        resources:
+          {{- toYaml .Values.eventBus.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: {{ .Values.eventBus.livenessProbe.initialDelaySeconds | default 30 }}
+          periodSeconds: {{ .Values.eventBus.livenessProbe.periodSeconds | default 10 }}
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: {{ .Values.eventBus.readinessProbe.initialDelaySeconds | default 20 }}
+          periodSeconds: {{ .Values.eventBus.readinessProbe.periodSeconds | default 5 }}
+{{- end }}
