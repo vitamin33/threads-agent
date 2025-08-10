@@ -1,4 +1,4 @@
-{{- if .Values.monitoring.postgres.enabled }}
+{{- if and .Values.monitoring .Values.monitoring.postgres .Values.monitoring.postgres.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
