@@ -48,7 +48,7 @@ spec:
       - name: run-migrations
         image: {{ .Values.revenue.image.repository }}:{{ .Values.revenue.image.tag }}
         imagePullPolicy: {{ .Values.revenue.image.pullPolicy }}
-        command: ['alembic', '-c', 'services/revenue/db/alembic.ini', '-x', 'sqlalchemy.url=postgresql://postgres:pass@postgres:5432/threads_agent', 'upgrade', 'head']
+        command: ['alembic', '-c', 'services/revenue/db/alembic.ini', '-x', 'sqlalchemy.url=postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}', 'upgrade', 'head']
         env:
         - name: DATABASE_URL
           value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"

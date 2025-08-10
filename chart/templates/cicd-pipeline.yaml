@@ -66,7 +66,7 @@ spec:
         - name: RABBITMQ_URL
           value: {{ .Values.rabbitmq.url }}
         - name: POSTGRES_DSN
-          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+          value: "postgresql+psycopg2://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
         - name: REDIS_URL
           value: "redis://redis:6379/2"  # Use separate DB for CI/CD cache
         - name: MLFLOW_TRACKING_URI

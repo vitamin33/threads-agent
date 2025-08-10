@@ -284,6 +284,8 @@ eventBus:
   enabled: true
   image:
     tag: "final"
+  database:
+    name: "threads_agent"  # Use same database as other services
 
 # Revenue service for monetization
 revenue:

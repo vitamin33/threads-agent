@@ -134,7 +134,7 @@ spec:
         - name: THREADS_BASE_URL
           value: "http://{{ .Values.threadsService.name }}:{{ .Values.threadsService.port }}"
         - name: POSTGRES_DSN
-          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+          value: "postgresql+psycopg2://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
         - name: CICD_SIDECAR_ENABLED
           value: "true"
         - name: CICD_SIDECAR_URL
@@ -174,7 +174,7 @@ spec:
         - name: COMPONENT_MODE
           value: "cicd_sidecar"
         - name: POSTGRES_DSN
-          value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+          value: "postgresql+psycopg2://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
         - name: REDIS_URL
           value: "redis://redis:6379/2"
         - name: MLFLOW_TRACKING_URI

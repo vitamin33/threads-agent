@@ -23,7 +23,7 @@ spec:
           imagePullPolicy: {{ .Values.performanceMonitor.image.pullPolicy | default "IfNotPresent" }}
           env:
             - name: DATABASE_URL
-              value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+              value: "postgresql+psycopg2://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
             - name: RABBITMQ_URL
               value: {{ .Values.rabbitmq.url }}
             - name: CELERY_BROKER_URL
