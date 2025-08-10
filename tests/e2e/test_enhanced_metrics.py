@@ -117,14 +117,14 @@ def test_system_health_metrics() -> None:
     # Verify system health metrics - check if they exist at all first
     # The metrics might not always include all components immediately after startup
     health_components = ["api", "database", "queue"]
-    
+
     # Just verify that at least one health metric exists rather than all of them
     health_metric_found = False
     for component in health_components:
         if f'system_health_status{{component="{component}"' in metrics_text:
             health_metric_found = True
             break
-    
+
     # If no specific health metrics found, at least check that the metric type exists
     if not health_metric_found:
         # Just check that the system_health_status metric is defined (even if no values yet)
