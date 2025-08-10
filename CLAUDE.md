@@ -189,6 +189,16 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
   - Before every push 'just check' command should be fully successful
 - When working on a Linear task, create a git branch starting with the task number (e.g., for task CRA-331, branch name should be 'cra-331-title-of-task')
 
+### Configuration Management (CRITICAL)
+**Centralized config for all services - prevents deployment failures:**
+- **Database**: Use `services/common/database_config.py` or Helm helpers
+- **ML/AI**: Use `services/common/ml_config.py` for model configs
+- **Helm**: Use `{{ include "threads.postgres.dsn" . }}` for DB strings
+- **Env vars**: `DATABASE_URL` (standard) or `POSTGRES_DSN` (SQLAlchemy)
+- **Defaults**: `postgres:pass@postgres:5432/threads_agent`
+- **CI Fix**: Wrap DB imports in try/except for resilience
+- **Docs**: See `docs/DATABASE_CONFIGURATION.md` for full guide
+
 ### Auto-Commit System (Working State Protection)
 Keep your code in a known-good state with automatic checkpoints:
 

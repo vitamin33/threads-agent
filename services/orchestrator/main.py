@@ -18,39 +18,68 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
 # Configure debug logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 logger.info("🚀 Starting orchestrator service...")
+logger.info(f"Python version: {os.sys.version}")
+logger.info(f"Environment: CI={os.getenv('CI', 'false')}, GITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS', 'false')}")
 
 # Production optimizations
 from services.orchestrator.rate_limiter import SimpleRateLimiter
 
 # ── shared helpers ────────────────────────────────────────────────────────────
-logger.info("📊 Importing metrics...")
-from services.common.metrics import (
-    maybe_start_metrics_server,
-    record_http_request,
-    record_post_generation,
-    update_service_uptime,
-    update_system_health,
-)
+try:
+    logger.info("📊 Importing metrics...")
+    from services.common.metrics import (
+        maybe_start_metrics_server,
+        record_http_request,
+        record_post_generation,
+        update_service_uptime,
+        update_system_health,
+    )
+except Exception as e:
+    logger.error(f"❌ Failed to import metrics: {e}")
+    raise
 
-logger.info("🤖 Importing AI metrics...")
-from services.common.ai_metrics import ai_metrics
-from services.common.ai_safety import ai_security
-from services.common.alerts import ai_alerts
+try:
+    logger.info("🤖 Importing AI metrics...")
+    from services.common.ai_metrics import ai_metrics
+    from services.common.ai_safety import ai_security
+    from services.common.alerts import ai_alerts
+except Exception as e:
+    logger.error(f"❌ Failed to import AI metrics: {e}")
+    raise
 
-logger.info("🔍 Importing search...")
-from services.orchestrator.search_endpoints import search_router
+try:
+    logger.info("🔍 Importing search...")
+    from services.orchestrator.search_endpoints import search_router
+except Exception as e:
+    logger.error(f"❌ Failed to import search endpoints: {e}")
+    raise
 
-logger.info("🔢 Importing vector...")
-from services.orchestrator.vector import ensure_posts_collection
+try:
+    logger.info("🔢 Importing vector...")
+    from services.orchestrator.vector import ensure_posts_collection
+except Exception as e:
+    logger.error(f"❌ Failed to import vector: {e}")
+    raise
 
-logger.info("💬 Importing comment monitor...")
-from services.orchestrator.comment_monitor import CommentMonitor
+try:
+    logger.info("💬 Importing comment monitor...")
+    from services.orchestrator.comment_monitor import CommentMonitor
+except Exception as e:
+    logger.error(f"❌ Failed to import comment monitor: {e}")
+    raise
 
-logger.info("📈 Importing viral metrics...")
-from services.orchestrator.viral_metrics_endpoints import viral_metrics_router
+try:
+    logger.info("📈 Importing viral metrics...")
+    from services.orchestrator.viral_metrics_endpoints import viral_metrics_router
+except Exception as e:
+    logger.error(f"❌ Failed to import viral metrics: {e}")
+    raise
 
 # ── constants & wiring ────────────────────────────────────────────────────────
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
