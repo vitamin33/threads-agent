@@ -34,8 +34,8 @@ postgres:
   storage: 1Gi                     # PVC size; template uses .Values.postgres.storage
   auth:
     username: "postgres"
-    postgresPassword: "postgres"   # override in production
-    database: "threads"
+    postgresPassword: "pass"       # override in production
+    database: "threads_agent"      # Default database name matching services
 
 minio:
   enabled: false                   # turn ON in dev values
