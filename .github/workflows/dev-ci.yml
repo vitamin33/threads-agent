@@ -328,10 +328,12 @@ jobs:
           } &
           MONITOR_PID=$!
           
-          # Delete postgres StatefulSet if it exists (in case of volumeClaimTemplate changes)
-          echo "Cleaning up any existing postgres StatefulSet..."
+          # Delete postgres resources if they exist (in case of spec changes)
+          echo "Cleaning up any existing postgres resources..."
           kubectl delete statefulset postgres --ignore-not-found=true
+          kubectl delete service postgres --ignore-not-found=true
           kubectl delete pvc -l app=postgres --ignore-not-found=true
+          kubectl delete pvc pgdata-postgres-0 postgres-storage-postgres-0 --ignore-not-found=true
           
           # Retry helm install up to 3 times for CI reliability
           HELM_SUCCESS=false
