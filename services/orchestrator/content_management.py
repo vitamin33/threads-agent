@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 from enum import Enum
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import create_engine, text, func
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import os
 

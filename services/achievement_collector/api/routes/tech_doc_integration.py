@@ -92,11 +92,7 @@ async def get_recent_highlights(
             and_(
                 AchievementModel.completed_at >= cutoff_date,
                 AchievementModel.impact_score >= min_impact_score,
-<<<<<<< HEAD
                 AchievementModel.portfolio_ready == True,
-=======
-                AchievementModel.portfolio_ready,
->>>>>>> origin/main
             )
         )
         .order_by(desc(AchievementModel.impact_score))
@@ -121,11 +117,7 @@ async def get_company_targeted_achievements(
     Filters by category and searches for company-relevant keywords
     in descriptions and technical details.
     """
-<<<<<<< HEAD
     query = db.query(AchievementModel).filter(AchievementModel.portfolio_ready == True)
-=======
-    query = db.query(AchievementModel).filter(AchievementModel.portfolio_ready)
->>>>>>> origin/main
 
     # Filter by categories if provided
     if categories:
@@ -209,11 +201,7 @@ async def filter_achievements(
 
     # Apply filters
     if filters.portfolio_ready_only:
-<<<<<<< HEAD
         query = query.filter(AchievementModel.portfolio_ready == True)
-=======
-        query = query.filter(AchievementModel.portfolio_ready)
->>>>>>> origin/main
 
     if filters.categories:
         query = query.filter(AchievementModel.category.in_(filters.categories))
@@ -276,11 +264,7 @@ async def get_content_ready_achievements(
         )
         .filter(
             and_(
-<<<<<<< HEAD
                 AchievementModel.portfolio_ready == True,
-=======
-                AchievementModel.portfolio_ready,
->>>>>>> origin/main
                 AchievementModel.impact_score >= 70.0,
             )
         )
@@ -353,13 +337,9 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
     """
     # Total portfolio-ready achievements
     total_ready = (
-<<<<<<< HEAD
         db.query(AchievementModel)
         .filter(AchievementModel.portfolio_ready == True)
         .count()
-=======
-        db.query(AchievementModel).filter(AchievementModel.portfolio_ready).count()
->>>>>>> origin/main
     )
 
     # High-impact achievements (80+)
@@ -367,11 +347,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
         db.query(AchievementModel)
         .filter(
             and_(
-<<<<<<< HEAD
                 AchievementModel.portfolio_ready == True,
-=======
-                AchievementModel.portfolio_ready,
->>>>>>> origin/main
                 AchievementModel.impact_score >= 80.0,
             )
         )
@@ -384,11 +360,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
         db.query(AchievementModel)
         .filter(
             and_(
-<<<<<<< HEAD
                 AchievementModel.portfolio_ready == True,
-=======
-                AchievementModel.portfolio_ready,
->>>>>>> origin/main
                 AchievementModel.completed_at >= recent_cutoff,
             )
         )
@@ -397,13 +369,9 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
 
     # Unprocessed achievements - simple approach without JSON queries
     total_portfolio_ready = (
-<<<<<<< HEAD
         db.query(AchievementModel)
         .filter(AchievementModel.portfolio_ready == True)
         .count()
-=======
-        db.query(AchievementModel).filter(AchievementModel.portfolio_ready).count()
->>>>>>> origin/main
     )
 
     # For now, assume most are unprocessed since this is a new feature
@@ -416,11 +384,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
         db.query(
             AchievementModel.category, func.count(AchievementModel.id).label("count")
         )
-<<<<<<< HEAD
         .filter(AchievementModel.portfolio_ready == True)
-=======
-        .filter(AchievementModel.portfolio_ready)
->>>>>>> origin/main
         .group_by(AchievementModel.category)
         .all()
     )

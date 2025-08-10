@@ -7,7 +7,7 @@ import requests
 import json
 import time
 import threading
-from typing import Optional, Dict, Any, Callable
+from typing import Dict, Any, Callable
 from datetime import datetime
 import sseclient
 

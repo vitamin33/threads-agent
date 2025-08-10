@@ -24,7 +24,7 @@ class ValuePropositionHandler(BaseStateHandler):
         primary_pain = pain_points[0] if pain_points else "efficiency"
 
         if analysis["ready_to_buy"]:
-            message = f"Awesome! Let's get you started. Takes just 5 min. Here's the link: [signup]. Questions before we begin?"
+            message = "Awesome! Let's get you started. Takes just 5 min. Here's the link: [signup]. Questions before we begin?"
             suggested_state = "closing_attempt"
             confidence = 0.95
         elif analysis["wants_proof"]:

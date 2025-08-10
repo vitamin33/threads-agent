@@ -160,7 +160,7 @@ class PriceNegotiationHandler(BaseStateHandler):
         responses = [
             f"I get it, {params['user_name']}! Let's break it down: $3/day to save 2hrs/day. Still feel expensive?",
             "Think of it this way: One new customer pays for 6 months. How many customers could this bring you?",
-            f"Fair reaction! What if we started with Starter + my personal success guarantee? Low risk, high reward?",
+            "Fair reaction! What if we started with Starter + my personal success guarantee? Low risk, high reward?",
         ]
 
         # Rotate through responses based on conversation

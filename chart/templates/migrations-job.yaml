@@ -16,38 +16,40 @@ spec:
 
       # 1️⃣  Wait until the super-user works and create database
       initContainers:
-      - name: wait-pg-and-create-db
-        image: bitnami/postgresql:16
+      - name: wait-for-postgres
+        image: postgres:16-alpine
         env:
-        - name: POSTGRES_PASSWORD
+        - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
               name: threads-postgresql
               key: POSTGRES_PASSWORD
-        command: 
-          - /bin/sh
-          - -c
+        command: ["/bin/sh", "-c"]
+        args:
           - |
-            echo '⏳ waiting for Postgres super-user …'
-            for i in $(seq 1 60); do
-              PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -c 'select 1' >/dev/null 2>&1 && break
+            echo "Waiting for PostgreSQL server to be ready..."
+            # First wait for postgres server to accept connections
+            until psql -h postgres -U postgres -c "SELECT 1" >/dev/null 2>&1; do
+              echo "  PostgreSQL is not ready yet, waiting..."
               sleep 2
             done
-            if [ $i -eq 60 ]; then 
-              echo '💥 postgres still locked'
-              exit 1
-            fi
-            echo '✅ Postgres is ready'
-            echo 'Checking if threads_agent database exists...'
-            if ! PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'threads_agent'" | grep -q 1; then
-              echo 'Creating threads_agent database...'
-              PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -c 'CREATE DATABASE threads_agent;'
-            else
-              echo 'threads_agent database already exists'
-            fi
-            echo 'Verifying database creation...'
-            PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgres -U postgres -lqt | cut -d '|' -f 1 | grep -qw threads_agent || exit 1
-            echo '✅ Database ready'
+            echo "PostgreSQL server is ready!"
+            
+            # Now wait for the database to be created (postgres:16-alpine creates it on startup)
+            echo "Waiting for database 'threads_agent' to be created..."
+            for i in $(seq 1 30); do
+              if psql -h postgres -U postgres -lqt | cut -d \| -f 1 | grep -qw threads_agent; then
+                echo "Database 'threads_agent' found!"
+                break
+              fi
+              echo "  Attempt $i/30 - Database not ready yet, waiting..."
+              sleep 2
+            done
+            
+            # Final verification
+            echo "Verifying database connection..."
+            psql -h postgres -U postgres -d threads_agent -c "SELECT 1" >/dev/null || exit 1
+            echo "✓ Database 'threads_agent' is ready for migrations!"
 
       # 2️⃣  Run Alembic migrations
       containers:

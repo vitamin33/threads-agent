@@ -12,13 +12,11 @@ Key Features:
 - Quality gates and engagement prediction
 """
 
-import asyncio
 from datetime import datetime, timedelta, time
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from enum import Enum
 import structlog
 from pydantic import BaseModel, Field
-import random
 
 from ..clients.achievement_client import AchievementClient
 from .professional_content_engine import (

@@ -10,13 +10,13 @@ import pytest
 import time
 import psutil
 import threading
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from contextlib import contextmanager
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 @dataclass

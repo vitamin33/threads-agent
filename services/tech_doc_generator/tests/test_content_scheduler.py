@@ -7,7 +7,7 @@ achievement_collector and viral_engine for AI job search content.
 
 import pytest
 from datetime import datetime, timedelta, time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 import asyncio
 
 from app.services.content_scheduler import (

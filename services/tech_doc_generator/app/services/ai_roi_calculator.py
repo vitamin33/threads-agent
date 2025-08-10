@@ -11,10 +11,9 @@ Features:
 - Lead generation for job opportunities
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
+from datetime import datetime
+from typing import Dict, List, Optional
+from dataclasses import dataclass
 from enum import Enum
 import structlog
 
