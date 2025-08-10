@@ -24,11 +24,15 @@ def select_top_variants(variants: List[Dict[str, Any]], top_k: int = 10) -> List
     for variant in variants:
         impressions = variant["performance"]["impressions"]
         successes = variant["performance"]["successes"]
+        
+        # Ensure successes don't exceed impressions (data integrity check)
+        if successes > impressions:
+            successes = impressions
 
         # Beta distribution parameters
         # Prior: alpha=1, beta=1 (uniform)
         alpha = successes + 1
-        beta = impressions - successes + 1
+        beta = max(1, impressions - successes + 1)  # Ensure beta is at least 1
 
         # Sample from Beta distribution
         score = np.random.beta(alpha, beta)

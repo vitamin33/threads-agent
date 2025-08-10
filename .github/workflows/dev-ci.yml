@@ -722,7 +722,7 @@ jobs:
           echo "🧪 Running tests for: $TEST_PATHS"
           # Skip problematic k8s resource tests that have Mock issues
           pytest $PYTEST_ARGS $TEST_PATHS --maxfail=3 \
-            --ignore=tests/e2e/test_comment_monitor_k8s_resources.py  # Mock iteration issues
+            --ignore=tests/e2e/test_comment_monitor_k8s_resources.py  # Mock iteration issues - CI quick fix
 
           # ➌ tidy up port-forwards if started
           if [ "$RUN_E2E" = "true" ]; then

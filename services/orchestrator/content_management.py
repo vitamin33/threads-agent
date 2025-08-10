@@ -99,24 +99,48 @@ async def get_content_posts(
     try:
         with SessionLocal() as db:
             # Base query - get posts with extended info
-            query = text("""
-                SELECT 
-                    p.id,
-                    p.persona_id,
-                    p.hook,
-                    p.body,
-                    CONCAT(p.hook, E'\n\n', p.body) as full_content,
-                    COALESCE(p.quality_score::text, 'null')::text as quality_score,
-                    p.tokens_used,
-                    p.ts as created_at,
-                    'draft' as status,  -- Default status for now
-                    ARRAY['dev.to', 'linkedin'] as platforms,  -- Default platforms
-                    null as scheduled_at,
-                    null as published_at
-                FROM posts p
-                ORDER BY p.ts DESC
-                LIMIT :limit OFFSET :offset
-            """)
+            # Use database-agnostic query
+            import os
+            if 'sqlite' in os.environ.get('DATABASE_URL', '').lower():
+                # SQLite compatible query
+                query = text("""
+                    SELECT 
+                        p.id,
+                        p.persona_id,
+                        p.hook,
+                        p.body,
+                        p.hook || CHAR(10) || CHAR(10) || p.body as full_content,
+                        COALESCE(CAST(p.quality_score AS TEXT), 'null') as quality_score,
+                        p.tokens_used,
+                        p.ts as created_at,
+                        'draft' as status,
+                        '["dev.to", "linkedin"]' as platforms,  -- JSON string for SQLite
+                        null as scheduled_at,
+                        null as published_at
+                    FROM posts p
+                    ORDER BY p.ts DESC
+                    LIMIT :limit OFFSET :offset
+                """)
+            else:
+                # PostgreSQL query
+                query = text("""
+                    SELECT 
+                        p.id,
+                        p.persona_id,
+                        p.hook,
+                        p.body,
+                        CONCAT(p.hook, E'\n\n', p.body) as full_content,
+                        COALESCE(p.quality_score::text, 'null')::text as quality_score,
+                        p.tokens_used,
+                        p.ts as created_at,
+                        'draft' as status,
+                        ARRAY['dev.to', 'linkedin'] as platforms,
+                        null as scheduled_at,
+                        null as published_at
+                    FROM posts p
+                    ORDER BY p.ts DESC
+                    LIMIT :limit OFFSET :offset
+                """)
 
             result = db.execute(query, {"limit": limit, "offset": offset})
 

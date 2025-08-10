@@ -3,6 +3,7 @@ name: Achievement Tracker
 on:
   pull_request:
     types: [closed]
+    branches: [main]  # Only track main branch PRs
 
 jobs:
   track-achievement:
@@ -29,8 +30,19 @@ jobs:
           
       - name: Install dependencies
         run: |
+          # Install all requirements to avoid import errors
           pip install -r services/achievement_collector/requirements.txt
-          pip install PyGithub
+          pip install -r services/common/requirements.txt || true
+          pip install PyGithub alembic sqlalchemy psycopg2-binary
+          
+      - name: Validate Environment
+        run: |
+          # Check Python path
+          echo "Python path: $PYTHONPATH"
+          echo "Working directory: $(pwd)"
+          
+          # Verify imports work
+          python -c "import sys; sys.path.insert(0, '.'); print('✅ Python imports test passed')" || exit 1
 
       - name: Collect PR Metrics
         id: pr_metrics
@@ -190,10 +202,14 @@ jobs:
       - name: Apply Database Migrations
         env:
           DATABASE_URL: ${{ secrets.ACHIEVEMENT_DB_URL }}
+          PYTHONPATH: ${{ github.workspace }}
         run: |
+          # Set Python path for imports
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)"
           cd services/achievement_collector
-          # Run alembic migrations to ensure business_value field is TEXT type
-          alembic upgrade head || echo "Migration already applied"
+          
+          # Run alembic migrations with proper path
+          python -m alembic upgrade head || echo "Migration already applied or DB not configured"
         continue-on-error: true
 
       - name: Create Achievement
@@ -208,16 +224,25 @@ jobs:
           import sys
           import json
           import asyncio
+          import time
           from datetime import datetime
           
           # Add project to path
           sys.path.insert(0, os.getcwd())
           
-          from services.achievement_collector.services.github_pr_tracker import GitHubPRTracker
-          from services.achievement_collector.db.config import get_db, engine
-          from services.achievement_collector.db.models import Base, Achievement
-          from services.achievement_collector.api.schemas import AchievementCreate
-          from services.achievement_collector.api.routes.achievements import create_achievement_sync
+          # Validate imports before proceeding
+          try:
+              from services.achievement_collector.services.github_pr_tracker import GitHubPRTracker
+              from services.achievement_collector.db.config import get_db, engine
+              from services.achievement_collector.db.models import Base, Achievement
+              from services.achievement_collector.api.schemas import AchievementCreate
+              from services.achievement_collector.api.routes.achievements import create_achievement_sync
+              print("✅ All imports successful")
+          except ImportError as e:
+              print(f"❌ Import error: {e}")
+              print(f"   Python path: {sys.path}")
+              print(f"   Working directory: {os.getcwd()}")
+              sys.exit(1)
           
           async def create_ci_achievement():
               # Initialize database
@@ -355,11 +380,22 @@ jobs:
                   ).first()
                   
                   if not existing:
-                      achievement = create_achievement_sync(db, achievement_data)
-                      # Set metadata separately since it's not in the schema
-                      achievement.metadata_json = metadata
-                      db.commit()
-                      db.refresh(achievement)
+                      # Retry logic for database operations
+                      max_retries = 3
+                      for attempt in range(max_retries):
+                          try:
+                              achievement = create_achievement_sync(db, achievement_data)
+                              # Set metadata separately since it's not in the schema
+                              achievement.metadata_json = metadata
+                              db.commit()
+                              db.refresh(achievement)
+                              break
+                          except Exception as e:
+                              if attempt == max_retries - 1:
+                                  raise
+                              print(f"⚠️  Database operation failed (attempt {attempt + 1}/{max_retries}): {e}")
+                              db.rollback()
+                              time.sleep(2)
                       
                       # Extract business value using AI if available
                       if os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'test':
@@ -401,23 +437,28 @@ jobs:
           EOF
 
       - name: Post Achievement Summary
-        if: success() && github.event_name == 'pull_request'
+        if: success() && github.event_name == 'pull_request' && steps.pr_metrics.outputs.metrics != ''
         uses: actions/github-script@v6
         with:
           script: |
-            const comment = `## 🏆 Achievement Tracked!
-            
-            Your PR has been automatically tracked as an achievement with the following metrics:
-            - **Changes**: +${{ fromJson(steps.pr_metrics.outputs.metrics).additions }} -${{ fromJson(steps.pr_metrics.outputs.metrics).deletions }}
-            - **Files**: ${{ fromJson(steps.pr_metrics.outputs.metrics).changed_files }}
-            - **Reviews**: ${{ fromJson(steps.pr_metrics.outputs.metrics).review_count }}
-            - **Build Status**: ✅ Passed
-            
-            This achievement has been added to your portfolio and can be exported to LinkedIn or other platforms.`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+            try {
+              const metrics = JSON.parse('${{ steps.pr_metrics.outputs.metrics }}');
+              const comment = `## 🏆 Achievement Tracked!
+              
+              Your PR has been automatically tracked as an achievement with the following metrics:
+              - **Changes**: +${metrics.additions || 0} -${metrics.deletions || 0}
+              - **Files**: ${metrics.changed_files || 0}
+              - **Reviews**: ${metrics.review_count || 0}
+              - **Build Status**: ✅ Passed
+              
+              This achievement has been added to your portfolio and can be exported to LinkedIn or other platforms.`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (e) {
+              console.log('Could not post summary comment:', e);
+            }

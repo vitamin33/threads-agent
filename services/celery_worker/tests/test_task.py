@@ -29,6 +29,9 @@ def test_post_task() -> None:
     assert sent_payload["task_type"] == "create_post"
     assert "task_id" in sent_payload and sent_payload["task_id"]
 
-    # 3️⃣ HTTP response is still the simple queue-ack
+    # 3️⃣ HTTP response includes status and task_id
     assert res.status_code == 200
-    assert res.json() == {"status": "queued"}
+    response_data = res.json()
+    assert response_data["status"] == "queued"
+    assert "task_id" in response_data
+    assert response_data["task_id"] == sent_payload["task_id"]

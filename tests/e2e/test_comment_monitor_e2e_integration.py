@@ -18,11 +18,6 @@ import json
 
 from services.orchestrator.comment_monitor import CommentMonitor
 
-# Skip these mock-based tests in CI - they're flaky and not true e2e tests
-pytestmark = pytest.mark.skip(
-    reason="Mock-based tests are flaky in CI - use real e2e tests instead"
-)
-
 
 @dataclass
 class E2EPerformanceMetrics:
@@ -537,7 +532,7 @@ class TestCommentMonitorE2EIntegration:
 
         return E2ECommentMonitor(comprehensive_test_environment)
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_small_scale_e2e_performance(self, e2e_comment_monitor):
         """
         Test end-to-end performance with small-scale workload.
@@ -614,7 +609,7 @@ class TestCommentMonitorE2EIntegration:
             f"{metrics.avg_processing_time_ms:.1f}ms avg, {metrics.error_rate_percent:.1f}% errors"
         )
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_medium_scale_e2e_performance(self, e2e_comment_monitor):
         """
         Test end-to-end performance with medium-scale workload.
@@ -697,7 +692,7 @@ class TestCommentMonitorE2EIntegration:
             f"{metrics.cache_hit_ratio:.1%} cache hits, {metrics.memory_efficiency_mb_per_comment:.3f}MB/comment"
         )
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_large_scale_e2e_performance(self, e2e_comment_monitor):
         """
         Test end-to-end performance with large-scale workload.
@@ -790,7 +785,7 @@ class TestCommentMonitorE2EIntegration:
             f"{metrics.p95_processing_time_ms:.1f}ms P95, {len(successful_results)}/{len(test_posts)} success"
         )
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_comprehensive_e2e_optimization_validation(self, e2e_comment_monitor):
         """
         Comprehensive test validating all optimization features.
@@ -889,7 +884,7 @@ class TestCommentMonitorE2EIntegration:
             f"cache={caching_result['cache_hit_ratio']:.1%}, queue={batch_processing_result['queue_success_rate']:.1%}"
         )
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_production_readiness_validation(self, e2e_comment_monitor):
         """
         Production readiness validation with realistic workload patterns.
@@ -1019,7 +1014,7 @@ class TestCommentMonitorE2EIntegration:
             f"Production readiness: {avg_success_rate:.1%} success rate, {avg_throughput:.1f} req/s avg throughput"
         )
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_e2e_performance_regression_detection(self, e2e_comment_monitor):
         """
         Performance regression detection test.
@@ -1131,7 +1126,7 @@ class TestCommentMonitorE2EIntegration:
             f"Error rate: {performance_improvement['error_rate_improvement']:+.1%}"
         )
 
-    @pytest.mark.skip(reason="Flaky mock-based test - not suitable for CI")
+    @pytest.mark.e2e
     def test_end_to_end_system_health_monitoring(self, e2e_comment_monitor):
         """
         End-to-end system health monitoring test.

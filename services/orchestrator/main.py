@@ -31,6 +31,7 @@ from services.common.alerts import ai_alerts
 from services.orchestrator.search_endpoints import search_router
 from services.orchestrator.vector import ensure_posts_collection
 from services.orchestrator.comment_monitor import CommentMonitor
+from services.orchestrator.viral_metrics_endpoints import viral_metrics_router
 
 # ── constants & wiring ────────────────────────────────────────────────────────
 BROKER_URL = os.getenv("RABBITMQ_URL", "amqp://user:pass@rabbitmq:5672//")
@@ -44,6 +45,7 @@ logger = logging.getLogger(__name__)
 
 # Include routers
 app.include_router(search_router)
+app.include_router(viral_metrics_router)
 
 # Include content management router
 try:

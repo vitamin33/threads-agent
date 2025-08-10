@@ -155,8 +155,16 @@ class TestCommentMonitorDatabaseConnectionPooling:
                             "SELECT * FROM comments WHERE comment_id = ?"
                         )
                         return None  # No existing comment found
+                    
+                    def all():
+                        # Simulate bulk lookup for _deduplicate_comments
+                        self.connection.execute_query(
+                            "SELECT comment_id FROM comments WHERE comment_id IN (...)"
+                        )
+                        return []  # No existing comments found
 
                     filter_result_mock.first = first
+                    filter_result_mock.all = all
                     return filter_result_mock
 
                 result_mock.filter = filter_mock
@@ -167,11 +175,23 @@ class TestCommentMonitorDatabaseConnectionPooling:
                 if not self.connection:
                     self.connection = self.pool.get_connection()
                 self.connection.execute_query("INSERT INTO comments ...")
+            
+            def bulk_save_objects(self, objects):
+                """Mock bulk save method."""
+                if not self.connection:
+                    self.connection = self.pool.get_connection()
+                # Simulate bulk insert
+                self.connection.execute_query(f"INSERT INTO comments ... ({len(objects)} rows)")
 
             def commit(self):
                 """Mock commit method."""
                 if self.connection:
                     self.connection.execute_query("COMMIT")
+            
+            def rollback(self):
+                """Mock rollback method."""
+                if self.connection:
+                    self.connection.execute_query("ROLLBACK")
 
             def close(self):
                 """Close session and return connection to pool."""
@@ -286,7 +306,8 @@ class TestCommentMonitorDatabaseConnectionPooling:
         Validates that the system recovers gracefully when connection pool is exhausted.
         """
         # Configure smaller pool for easier exhaustion testing
-        small_pool = self.mock_connection_pool(max_connections=5, min_connections=2)
+        # Create a new pool directly from the class
+        small_pool = mock_connection_pool.__class__(max_connections=5, min_connections=2)
 
         def create_session_with_small_pool():
             class SmallPoolSession:
@@ -298,16 +319,40 @@ class TestCommentMonitorDatabaseConnectionPooling:
                     if not self.connection:
                         self.connection = small_pool.get_connection()
                     self.query_count += 1
-                    return Mock(
-                        filter=Mock(return_value=Mock(first=Mock(return_value=None)))
-                    )
+                    
+                    # Create a proper mock that supports chaining
+                    query_mock = Mock()
+                    filter_mock = Mock()
+                    all_mock = Mock(return_value=[])  # Return empty list for .all()
+                    first_mock = Mock(return_value=None)  # Return None for .first()
+                    
+                    filter_mock.all = all_mock
+                    filter_mock.first = first_mock
+                    query_mock.filter = Mock(return_value=filter_mock)
+                    
+                    return query_mock
 
                 def add(self, obj):
                     if not self.connection:
                         self.connection = small_pool.get_connection()
+                        
+                def bulk_save_objects(self, objects):
+                    if not self.connection:
+                        self.connection = small_pool.get_connection()
+                    # Simulate bulk insert
+                    if self.connection:
+                        self.connection.execute_query(f"INSERT INTO comments ... ({len(objects)} rows)")
 
                 def commit(self):
                     pass
+                    
+                def rollback(self):
+                    pass
+                    
+                def merge(self, obj):
+                    # Simulate merge operation
+                    if not self.connection:
+                        self.connection = small_pool.get_connection()
 
                 def close(self):
                     if self.connection:
