@@ -46,6 +46,9 @@ def get_real_metrics():
         # Try to get achievements for additional stats
         achievements = api_client.get_achievements(days=30)
 
+        # Get achievement stats
+        achievement_stats = api_client.get_achievement_stats()
+
         # Calculate real metrics
         if achievements:
             # Calculate success rate from recent achievements
@@ -74,6 +77,18 @@ def get_real_metrics():
             success_rate = metrics.get("success_rate", 99.9)
             avg_processing_time = 45
 
+        # Count today's achievements
+        today_count = 0
+        if achievements:
+            today = datetime.now().strftime("%Y-%m-%d")
+            today_count = len(
+                [
+                    a
+                    for a in achievements
+                    if "created_at" in a and a["created_at"].startswith(today)
+                ]
+            )
+
         return {
             "api_latency": metrics.get("api_latency_ms", 45),
             "success_rate": success_rate,
@@ -82,6 +97,9 @@ def get_real_metrics():
             "total_services": metrics.get("services_health", {}).get("total", 5),
             "avg_processing_time": avg_processing_time,
             "active_tasks": metrics.get("active_tasks", 3),
+            "completed_today": metrics.get("completed_today", today_count),
+            "total_value": achievement_stats.get("total_value_generated", 0),
+            "total_achievements": achievement_stats.get("total_achievements", 0),
             "completed_today": metrics.get(
                 "completed_today",
                 len(
@@ -109,6 +127,8 @@ def get_real_metrics():
             "avg_processing_time": 45,
             "active_tasks": 3,
             "completed_today": 0,
+            "total_value": 0,
+            "total_achievements": 0,
         }
 
 

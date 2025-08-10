@@ -63,6 +63,15 @@ try:
 except ImportError as e:
     logger.warning(f"Content management router not available: {e}")
 
+# Include scheduling management router (Phase 1 of Epic 14)
+try:
+    from services.orchestrator.scheduling_router import router as scheduling_router
+
+    app.include_router(scheduling_router)
+    logger.info("Scheduling Management API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"Scheduling management router not available: {e}")
+
 # Include performance monitor API if enabled
 try:
     from services.performance_monitor.api import router as performance_router

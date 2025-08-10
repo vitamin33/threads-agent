@@ -1,0 +1,130 @@
+id: epic-25-content-scheduler-service-integration
+title: "Content Scheduler Service Integration Architecture"
+description: |
+  Comprehensive service integration layer that connects the Content Scheduler Pipeline
+  with all existing threads-agent microservices. This epic implements an event-driven
+  architecture that enables intelligent content generation, automated quality optimization,
+  and real-time performance tracking across the entire content lifecycle.
+  
+  Key Integration Points:
+  - Viral Engine: Pattern optimization and quality scoring
+  - Achievement Collector: Content sourcing and performance tracking
+  - Pattern Analyzer: Fatigue detection and freshness scoring
+  - RAG Pipeline: Contextual content enhancement
+  - Persona Runtime: Multi-persona content generation
+  - Tech Doc Generator: Documentation and reporting
+  
+  This integration transforms Content Scheduler from a standalone tool into the
+  central hub of an AI-powered content ecosystem.
+
+status: planned
+priority: critical
+estimated_hours: 480
+estimated_story_points: 120
+
+business_value:
+  engagement_impact: "40% improvement through AI-optimized content generation"
+  cost_savings: "$100,000 annually through full automation"
+  time_efficiency: "95% reduction in content creation time"
+  revenue_potential: "$200,000 additional MRR from premium features"
+
+kpi_targets:
+  posts_engagement_rate: 10.0  # Target 10%+ engagement with AI optimization
+  cost_per_follow_dollars: 0.005  # Reduce to $0.005/follow
+  revenue_projection_monthly: 40000  # Target $40k MRR
+  ai_content_quality_score: 0.95  # 95% quality score average
+  service_integration_uptime: 0.999  # 99.9% uptime
+
+features:
+  - feature-25-1-event-driven-architecture
+  - feature-25-2-viral-engine-integration
+  - feature-25-3-achievement-collector-integration
+  - feature-25-4-pattern-analyzer-integration
+  - feature-25-5-rag-pipeline-integration
+  - feature-25-6-unified-gateway-api
+  - feature-25-7-monitoring-observability
+  - feature-25-8-circuit-breaker-patterns
+
+dependencies:
+  - epic-14-content-scheduler-pipeline
+  - viral_engine service (existing)
+  - achievement_collector service (existing)
+  - pattern_analyzer service (existing)
+  - rag_pipeline service (existing)
+  - persona_runtime service (existing)
+  - tech_doc_generator service (existing)
+  - celery infrastructure (existing)
+  - rabbitmq message broker (existing)
+
+technical_architecture:
+  pattern: "Event-Driven Microservices"
+  message_broker: "RabbitMQ"
+  event_store: "PostgreSQL + Redis"
+  api_gateway: "FastAPI + GraphQL"
+  service_mesh: "Istio (future)"
+  monitoring: "Prometheus + Grafana + Jaeger"
+  
+event_flows:
+  content_generation:
+    - "ContentScheduler -> PublishEvent"
+    - "AchievementCollector -> SelectBestContent"
+    - "ViralEngine -> OptimizeContent"
+    - "PatternAnalyzer -> CheckFreshness"
+    - "PersonaRuntime -> GenerateVariations"
+    - "ContentScheduler -> SchedulePublishing"
+    
+  quality_optimization:
+    - "ContentItem -> QualityCheckEvent"
+    - "ViralEngine -> AnalyzePatterns"
+    - "PatternAnalyzer -> DetectFatigue"
+    - "RAGPipeline -> EnhanceContext"
+    - "ContentScheduler -> UpdateQualityScore"
+    
+  performance_tracking:
+    - "PublishedContent -> MetricsEvent"
+    - "AchievementCollector -> UpdateStats"
+    - "ViralEngine -> LearnPatterns"
+    - "TechDocGenerator -> CreateReports"
+
+integration_phases:
+  phase_1:
+    name: "Foundation & Event Bus"
+    duration: "2 weeks"
+    features: ["event-driven-architecture", "unified-gateway-api"]
+    
+  phase_2:
+    name: "Core Service Integration"
+    duration: "3 weeks"
+    features: ["viral-engine-integration", "achievement-collector-integration"]
+    
+  phase_3:
+    name: "Advanced AI Features"
+    duration: "3 weeks"
+    features: ["pattern-analyzer-integration", "rag-pipeline-integration"]
+    
+  phase_4:
+    name: "Production Hardening"
+    duration: "2 weeks"
+    features: ["monitoring-observability", "circuit-breaker-patterns"]
+
+success_metrics:
+  - "Content quality score > 90%"
+  - "Service latency < 200ms p99"
+  - "Event processing throughput > 1000/sec"
+  - "Zero data loss in event stream"
+  - "Auto-recovery from service failures"
+
+risks:
+  - "Complex distributed system debugging"
+  - "Event ordering and consistency challenges"
+  - "Service version compatibility"
+  - "Performance overhead of integration"
+
+mitigation_strategies:
+  - "Comprehensive distributed tracing"
+  - "Event sourcing for audit trail"
+  - "API versioning strategy"
+  - "Performance testing and optimization"
+
+created_at: "2025-01-07"
+updated_at: "2025-01-07"

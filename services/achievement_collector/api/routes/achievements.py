@@ -289,14 +289,37 @@ async def get_achievement_stats(
     db: Session = Depends(get_db),
 ):
     """Get achievement statistics"""
+    import json
+    import re
 
+    # Get basic stats (without business_value sum)
     stats = db.query(
         func.count(AchievementModel.id).label("total_achievements"),
-        func.sum(AchievementModel.business_value).label("total_value"),
         func.sum(AchievementModel.time_saved_hours).label("total_time_saved"),
         func.avg(AchievementModel.impact_score).label("avg_impact_score"),
         func.avg(AchievementModel.complexity_score).label("avg_complexity_score"),
     ).first()
+
+    # Calculate business value sum manually since it's stored as text
+    all_achievements = db.query(AchievementModel).all()
+    total_business_value = 0.0
+
+    for achievement in all_achievements:
+        if achievement.business_value:
+            try:
+                # Handle different formats
+                value_str = achievement.business_value
+
+                # If it's a number string
+                if isinstance(value_str, str):
+                    # Remove currency symbols and commas
+                    cleaned = re.sub(r"[^\d.-]", "", value_str)
+                    if cleaned:
+                        total_business_value += float(cleaned)
+
+            except (ValueError, json.JSONDecodeError):
+                # Skip invalid values
+                continue
 
     category_stats = (
         db.query(
@@ -309,7 +332,7 @@ async def get_achievement_stats(
 
     return {
         "total_achievements": stats.total_achievements or 0,
-        "total_value_generated": float(stats.total_value or 0),
+        "total_value_generated": total_business_value,
         "total_time_saved_hours": float(stats.total_time_saved or 0),
         "average_impact_score": float(stats.avg_impact_score or 0),
         "average_complexity_score": float(stats.avg_complexity_score or 0),

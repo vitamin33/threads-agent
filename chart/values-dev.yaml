@@ -117,7 +117,9 @@ rabbitmq:
 postgres:
   enabled: true
   auth:
+    username: postgres
     postgresPassword: pass
+    database: threads_agent            # Must match what's expected by migrations
   storage: 1Gi                         # pvc size used in pvc.yaml / template
 
 qdrant:
@@ -276,6 +278,14 @@ mlflow:
     monitoring:
       serviceMonitor:
         enabled: false  # Disable ServiceMonitor (requires Prometheus Operator)
+
+# Event Bus for event-driven architecture
+eventBus:
+  enabled: true
+  image:
+    tag: "final"
+  database:
+    name: "threads_agent"  # Use same database as other services
 
 # Revenue service for monetization
 revenue:

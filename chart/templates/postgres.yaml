@@ -43,16 +43,25 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: threads-postgresql, key: POSTGRES_PASSWORD } }
             - name: POSTGRES_DB
-              value: threads_agent  # Automatically create the database
+              value: {{ .Values.postgres.auth.database | default "threads_agent" }}  # Automatically create the database
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           resources:
+            {{- if .Values.postgres.resources }}
             requests:
-              memory: "{{ .Values.postgres.resources.requests.memory | default "64Mi" }}"
-              cpu: "{{ .Values.postgres.resources.requests.cpu | default "25m" }}"
+              memory: {{ .Values.postgres.resources.requests.memory | default "64Mi" }}
+              cpu: {{ .Values.postgres.resources.requests.cpu | default "25m" }}
             limits:
-              memory: "{{ .Values.postgres.resources.limits.memory | default "128Mi" }}"
-              cpu: "{{ .Values.postgres.resources.limits.cpu | default "100m" }}"
+              memory: {{ .Values.postgres.resources.limits.memory | default "128Mi" }}
+              cpu: {{ .Values.postgres.resources.limits.cpu | default "100m" }}
+            {{- else }}
+            requests:
+              memory: "64Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+            {{- end }}
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data

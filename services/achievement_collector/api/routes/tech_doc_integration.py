@@ -92,6 +92,7 @@ async def get_recent_highlights(
             and_(
                 AchievementModel.completed_at >= cutoff_date,
                 AchievementModel.impact_score >= min_impact_score,
+                AchievementModel.portfolio_ready,
                 AchievementModel.portfolio_ready == True,
             )
         )
@@ -201,6 +202,7 @@ async def filter_achievements(
 
     # Apply filters
     if filters.portfolio_ready_only:
+        query = query.filter(AchievementModel.portfolio_ready)
         query = query.filter(AchievementModel.portfolio_ready == True)
 
     if filters.categories:
@@ -266,6 +268,7 @@ async def get_content_ready_achievements(
             and_(
                 AchievementModel.portfolio_ready == True,
                 AchievementModel.impact_score >= 70.0,
+                AchievementModel.portfolio_ready,
             )
         )
         .order_by(desc(AchievementModel.completed_at))
@@ -349,6 +352,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
             and_(
                 AchievementModel.portfolio_ready == True,
                 AchievementModel.impact_score >= 80.0,
+                AchievementModel.portfolio_ready,
             )
         )
         .count()
@@ -362,6 +366,7 @@ async def get_content_opportunities(db: Session = Depends(get_db)):
             and_(
                 AchievementModel.portfolio_ready == True,
                 AchievementModel.completed_at >= recent_cutoff,
+                AchievementModel.portfolio_ready,
             )
         )
         .count()

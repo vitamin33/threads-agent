@@ -95,15 +95,15 @@ images:
 	set -euo pipefail
 	echo "🔨 Building Docker images..."
 	
-	# Build all service images in parallel
-	docker build -t orchestrator:local services/orchestrator &
-	docker build -t celery-worker:local services/celery_worker &
-	docker build -t persona-runtime:local services/persona_runtime &
-	docker build -t fake-threads:local services/fake_threads &
-	docker build -t viral-engine:local services/viral_engine &
-	docker build -t viral-pattern-engine:local services/viral_pattern_engine &
+	# Build all service images in parallel (using repo root context)
+	docker build -t orchestrator:local -f services/orchestrator/Dockerfile . &
+	docker build -t celery-worker:local -f services/celery_worker/Dockerfile . &
+	docker build -t persona-runtime:local -f services/persona_runtime/Dockerfile . &
+	docker build -t fake-threads:local -f services/fake_threads/Dockerfile . &
+	docker build -t viral-engine:local -f services/viral_engine/Dockerfile . &
+	docker build -t viral-pattern-engine:local -f services/viral_pattern_engine/Dockerfile . &
 	docker build -t achievement-collector:local -f services/achievement_collector/Dockerfile . &
-	docker build -t rag-pipeline:local services/rag_pipeline &
+	docker build -t rag-pipeline:local -f services/rag_pipeline/Dockerfile . &
 	
 	# Wait for all builds to complete
 	wait

@@ -30,5 +30,5 @@ EXPOSE 8085 9095
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8085/health || exit 1
 
-# Run both API server and Celery worker
-CMD ["sh", "-c", "uvicorn services.performance_monitor.api:app --host 0.0.0.0 --port 8085 & celery -A services.performance_monitor.tasks worker -l info"]
+# Run API server only for now
+CMD ["uvicorn", "services.performance_monitor.api:app", "--host", "0.0.0.0", "--port", "8085"]

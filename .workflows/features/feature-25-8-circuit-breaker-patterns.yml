@@ -1,0 +1,73 @@
+id: feature-25-8-circuit-breaker-patterns
+epic_id: epic-25-content-scheduler-service-integration
+title: "Circuit Breaker and Resilience Patterns"
+description: |
+  Implement circuit breakers, retry mechanisms, and fallback strategies to ensure
+  system resilience. Enable graceful degradation when services are unavailable
+  and automatic recovery when they return.
+
+priority: critical
+estimated_hours: 60
+
+acceptance_criteria:
+  - Circuit breakers for all service calls
+  - Intelligent retry with backoff
+  - Fallback mechanisms for each service
+  - Health check integration
+  - Automatic recovery detection
+  - Bulkhead isolation patterns
+
+technical_tasks:
+  - task-25-8-1-circuit-breaker-impl
+  - task-25-8-2-retry-mechanisms
+  - task-25-8-3-fallback-strategies
+  - task-25-8-4-health-checks
+  - task-25-8-5-recovery-detection
+  - task-25-8-6-bulkhead-patterns
+
+circuit_breaker_config:
+  viral_engine:
+    failure_threshold: 5
+    timeout: 30s
+    fallback: "basic_quality_scoring"
+    
+  achievement_collector:
+    failure_threshold: 3
+    timeout: 45s
+    fallback: "cached_achievements"
+    
+  pattern_analyzer:
+    failure_threshold: 5
+    timeout: 20s
+    fallback: "skip_fatigue_check"
+
+retry_strategies:
+  - Exponential backoff: 1s, 2s, 4s, 8s
+  - Max retries: 3
+  - Jitter: ±25%
+  - Circuit breaker integration
+
+fallback_behaviors:
+  viral_engine_down:
+    - Use cached quality scores
+    - Apply basic rule-based scoring
+    - Log for manual review
+    
+  achievement_collector_down:
+    - Use last known achievements
+    - Generate generic content
+    - Schedule for later retry
+    
+  pattern_analyzer_down:
+    - Skip fatigue detection
+    - Apply conservative patterns
+    - Flag for manual review
+
+monitoring_integration:
+  - Circuit breaker state changes
+  - Retry attempt metrics
+  - Fallback activation counts
+  - Recovery time tracking
+  - Service dependency health
+
+created_at: "2025-01-07"

@@ -85,7 +85,7 @@ spec:
                 name: mlflow-performance-config
           env:
             - name: DATABASE_URL
-              value: "postgresql+psycopg2://postgres:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/postgres"
+              value: "postgresql+psycopg2://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.postgresPassword }}@postgres:5432/{{ .Values.postgres.auth.database }}"
             - name: MLFLOW_TRACKING_URI
               value: "{{ .Values.mlflow.trackingUri | default "http://mlflow:5000" }}"
             - name: MLFLOW_REGISTRY_URI
