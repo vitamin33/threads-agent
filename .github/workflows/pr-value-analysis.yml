@@ -1,8 +1,6 @@
 name: PR Value Analysis
 
 on:
-  pull_request:
-    types: [opened, edited]
   pull_request_target:
     types: [closed]
     branches: [main]
@@ -24,6 +22,8 @@ concurrency:
 
 jobs:
   analyze-pr-value:
+    # Only run when PR is merged or manually triggered
+    if: (github.event_name == 'workflow_dispatch') || (github.event_name == 'pull_request_target' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,20 +92,8 @@ jobs:
           pr_${{ steps.pr_number.outputs.pr_number }}_value_analysis.json
           .achievements/pr_${{ steps.pr_number.outputs.pr_number }}_achievement.json
     
-    - name: Delete Previous Analysis Comments
-      if: steps.check_existing.outputs.found_existing != 'true' && github.event_name == 'pull_request'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        # Delete any previous analysis comments from this bot
-        PR_NUM=${{ steps.pr_number.outputs.pr_number }}
-        gh pr view $PR_NUM --json comments -q '.comments[] | select(.author.login == "github-actions[bot]") | select(.body | contains("Automated PR Value Analysis")) | .id' | while read -r comment_id; do
-          echo "Deleting old analysis comment: $comment_id"
-          gh api -X DELETE "/repos/${{ github.repository }}/issues/comments/$comment_id"
-        done
-    
     - name: Comment PR with Value Summary
-      if: steps.check_existing.outputs.found_existing != 'true' && (github.event_name == 'pull_request' || (github.event_name == 'pull_request_target' && github.event.pull_request.merged == true))
+      if: steps.check_existing.outputs.found_existing != 'true' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request_target' && github.event.pull_request.merged == true))
       uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}

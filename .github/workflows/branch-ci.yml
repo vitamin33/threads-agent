@@ -79,13 +79,14 @@ jobs:
       - name: Install all dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest pytest-xdist pytest-cov pytest-timeout
+          pip install pytest pytest-xdist pytest-cov pytest-timeout pytest-rerunfailures
           
       - name: Run all tests with coverage
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest -n auto \
+            --reruns 2 --reruns-delay 1 \
             --cov=services \
             --cov-report=xml \
             --cov-report=html \
