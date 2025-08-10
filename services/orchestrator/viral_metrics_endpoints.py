@@ -4,13 +4,21 @@ from __future__ import annotations
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+import logging
 
-from services.viral_engine.viral_coefficient_calculator import (
-    ViralCoefficientCalculator,
-)
+logger = logging.getLogger(__name__)
 
-# Global calculator instance for tracking stats across requests
-_calculator = ViralCoefficientCalculator()
+try:
+    from services.viral_engine.viral_coefficient_calculator import (
+        ViralCoefficientCalculator,
+    )
+    # Global calculator instance for tracking stats across requests
+    _calculator = ViralCoefficientCalculator()
+    VIRAL_ENGINE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Viral engine not available: {e}")
+    _calculator = None
+    VIRAL_ENGINE_AVAILABLE = False
 
 viral_metrics_router = APIRouter(prefix="/viral-metrics", tags=["viral-metrics"])
 

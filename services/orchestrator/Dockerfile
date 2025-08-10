@@ -16,7 +16,6 @@ RUN pip install --no-cache-dir -r services/common/requirements.txt
 # 2️⃣ copy the service code
 COPY services/common ./services/common
 COPY services/orchestrator ./services/orchestrator
-COPY services/celery_worker ./services/celery_worker
 
 EXPOSE 8080
 CMD ["uvicorn", "services.orchestrator.main:app", "--host", "0.0.0.0", "--port", "8080"]
