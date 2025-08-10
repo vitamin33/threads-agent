@@ -437,28 +437,38 @@ jobs:
           EOF
 
       - name: Post Achievement Summary
-        if: success() && github.event_name == 'pull_request' && steps.pr_metrics.outputs.metrics != ''
+        if: success() && github.event_name == 'pull_request'
         uses: actions/github-script@v6
         with:
           script: |
             try {
-              const metrics = JSON.parse('${{ steps.pr_metrics.outputs.metrics }}');
+              // Get PR data directly from context instead of relying on output parsing
+              const pr = context.payload.pull_request;
+              
+              if (!pr) {
+                console.log('No PR data available in context');
+                return;
+              }
+              
               const comment = `## 🏆 Achievement Tracked!
               
               Your PR has been automatically tracked as an achievement with the following metrics:
-              - **Changes**: +${metrics.additions || 0} -${metrics.deletions || 0}
-              - **Files**: ${metrics.changed_files || 0}
-              - **Reviews**: ${metrics.review_count || 0}
+              - **Changes**: +${pr.additions || 0} -${pr.deletions || 0}
+              - **Files**: ${pr.changed_files || 0}
+              - **Reviews**: ${pr.review_comments || 0}
               - **Build Status**: ✅ Passed
               
               This achievement has been added to your portfolio and can be exported to LinkedIn or other platforms.`;
               
-              github.rest.issues.createComment({
+              await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: comment
               });
+              
+              console.log('Successfully posted achievement summary comment');
             } catch (e) {
-              console.log('Could not post summary comment:', e);
+              console.error('Could not post summary comment:', e);
+              console.error('Error details:', e.message);
             }

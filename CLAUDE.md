@@ -181,13 +181,20 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
 
 ## Development Best Practices
 
-### Git Workflow
-- Branch: `task-{epic-id}-{title}`
+### Git Workflow & Branch Strategy
+**Branch Naming → CI Optimization**:
+| Branch | Purpose | CI Tests | Time |
+|--------|---------|----------|------|
+| `main` | Production | Full coverage + e2e | 20m |
+| `release/*` | Releases | Multi-Python stability | 15m |
+| `hotfix/*` | Urgent fixes | Smoke tests only | 5m |
+| `feature/*` `feat/*` | Features | Impact analysis | 5-10m |
+| `fix/*` `bugfix/*` | Bug fixes | Regression + retries | 10m |
+| `CRA-XXX-*` | Linear tasks | Standard tests | 10m |
+
 - Protection: PR + CI required
 - Automation: `just ship` handles all
-- **Pre-Push Checklist**:
-  - Before every push 'just check' command should be fully successful
-- When working on a Linear task, create a git branch starting with the task number (e.g., for task CRA-331, branch name should be 'cra-331-title-of-task')
+- **Pre-Push**: Run `just check` before push
 
 ### Configuration Management (CRITICAL)
 **Centralized config for all services - prevents deployment failures:**

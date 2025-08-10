@@ -1,0 +1,124 @@
+name: Fast CI - Python Only
+
+on:
+  pull_request:
+    paths:
+      - '**/*.py'
+      - 'requirements*.txt'
+      - 'pytest.ini'
+      - 'pyproject.toml'
+      - '!**/Dockerfile'
+      - '!chart/**'
+      - '!scripts/**.sh'
+
+concurrency:
+  group: fast-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-impact-analysis:
+    runs-on: ubuntu-latest
+    outputs:
+      test-paths: ${{ steps.analyze.outputs.tests }}
+      should-run: ${{ steps.analyze.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Analyze test impact
+        id: analyze
+        run: |
+          # Run test impact analysis
+          TESTS=$(python scripts/test-impact-analysis.py --format pytest --base-branch origin/${{ github.base_ref }})
+          
+          if [ "$TESTS" = "ALL_TESTS" ]; then
+            echo "tests=pytest -n auto" >> $GITHUB_OUTPUT
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          elif [ "$TESTS" = "NO_TESTS" ] || [ -z "$TESTS" ]; then
+            echo "tests=" >> $GITHUB_OUTPUT
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "tests=$TESTS" >> $GITHUB_OUTPUT
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "Test command: $TESTS"
+
+  fast-python-tests:
+    needs: test-impact-analysis
+    if: needs.test-impact-analysis.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Cache test results
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pytest_cache
+            .coverage
+            htmlcov
+          key: test-cache-${{ github.sha }}
+          restore-keys: |
+            test-cache-
+            
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-xdist pytest-cov pytest-timeout pytest-rerunfailures
+          
+          # Install service dependencies based on changed files
+          for req in $(find . -name "requirements*.txt" -not -path "./.venv/*"); do
+            pip install -r "$req" || true
+          done
+          
+      - name: Run targeted tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          OPENAI_MOCK: "1"
+          DATABASE_URL: "sqlite:///:memory:"
+        run: |
+          # Run only the affected tests
+          ${{ needs.test-impact-analysis.outputs.test-paths }} \
+            --timeout=30 \
+            --reruns=2 \
+            --reruns-delay=1 \
+            -v
+            
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            .coverage
+            coverage.xml
+            htmlcov/
+
+  skip-notice:
+    needs: test-impact-analysis
+    if: needs.test-impact-analysis.outputs.should-run == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: No tests needed
+        run: |
+          echo "✅ No tests needed for these changes"
+          echo "Changed files don't require test execution"
