@@ -181,7 +181,11 @@ jobs:
             IMAGE_NAME="ghcr.io/${{ github.repository }}/${svc}:${IMAGE_TAG}"
             LOCAL_NAME="${svc//_/-}:local"
 
-            if [ "$FORCE_BUILD" = "true" ]; then
+            # Always rebuild orchestrator since we have migration fixes
+            if [ "$svc" = "orchestrator" ]; then
+              echo "🔨 Building $svc (contains migration fixes)..."
+              docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
+            elif [ "$FORCE_BUILD" = "true" ]; then
               echo "🔨 Force building $svc..."
               docker build -f services/${svc}/Dockerfile -t "$LOCAL_NAME" .
             else
@@ -197,7 +201,7 @@ jobs:
           done
 
           # Always pull these third-party images
-          docker pull bitnami/postgresql:16
+          docker pull postgres:16-alpine
           docker pull rabbitmq:3.13-management-alpine
           docker pull qdrant/qdrant:v1.9.4
           
@@ -217,7 +221,7 @@ jobs:
             docker.io/library/celery-worker:local \
             docker.io/library/persona-runtime:local \
             docker.io/library/fake-threads:local \
-            bitnami/postgresql:16 \
+            postgres:16-alpine \
             rabbitmq:3.13-management-alpine \
             qdrant/qdrant:v1.9.4 \
             -c dev || {
