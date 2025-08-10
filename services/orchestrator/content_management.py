@@ -18,12 +18,26 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Database setup
+# Database setup - lazy initialization to avoid startup failures
 POSTGRES_DSN = os.getenv(
     "POSTGRES_DSN", "postgresql://postgres:pass@postgres:5432/postgres"
 )
-engine = create_engine(POSTGRES_DSN)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Lazy initialization of database connection
+_engine = None
+_SessionLocal = None
+
+def get_engine():
+    global _engine
+    if _engine is None:
+        _engine = create_engine(POSTGRES_DSN)
+    return _engine
+
+def get_session():
+    global _SessionLocal
+    if _SessionLocal is None:
+        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    return _SessionLocal()
 
 router = APIRouter(prefix="/content", tags=["content"])
 
@@ -97,7 +111,7 @@ async def get_content_posts(
 ):
     """Get list of generated content posts with filters"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             # Base query - get posts with extended info
             # Use database-agnostic query
             import os
@@ -184,7 +198,7 @@ async def get_content_posts(
 async def get_content_post(post_id: int):
     """Get specific content post by ID"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             query = text("""
                 SELECT 
                     p.id,
@@ -237,7 +251,7 @@ async def get_content_post(post_id: int):
 async def update_content_post(post_id: int, update: ContentUpdate):
     """Update content post (edit, change status, schedule, etc.)"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             # Build dynamic update query
             set_clauses = []
             params = {"post_id": post_id}
@@ -369,7 +383,7 @@ async def adapt_content_for_platforms(post_id: int, platforms: List[Platform]):
 async def get_content_stats():
     """Get content generation statistics"""
     try:
-        with SessionLocal() as db:
+        with get_session() as db:
             # Get basic stats
             stats_query = text("""
                 SELECT 
