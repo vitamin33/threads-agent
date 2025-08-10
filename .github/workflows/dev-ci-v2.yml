@@ -1,0 +1,394 @@
+# .github/workflows/dev-ci-v2.yml
+# Simplified and reliable CI workflow
+name: dev-ci-v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: CI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      # 1. Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # 2. Set up k3d cluster
+      - name: Create k3d cluster
+        uses: AbsaOSS/k3d-action@v2
+        with:
+          cluster-name: ci
+          args: >-
+            --agents 1
+            --registry-create ci-registry:0.0.0.0:5111
+
+      # 3. Build essential images only
+      - name: Build Docker images
+        run: |
+          echo "🔨 Building essential services..."
+          
+          # Build only core services needed for tests
+          docker build -f services/orchestrator/Dockerfile -t orchestrator:ci .
+          docker build -f services/celery_worker/Dockerfile -t celery-worker:ci .
+          docker build -f services/persona_runtime/Dockerfile -t persona-runtime:ci .
+          docker build -f services/fake_threads/Dockerfile -t fake-threads:ci .
+          
+          echo "✅ Images built successfully"
+
+      # 4. Import images to k3d
+      - name: Import images to k3d
+        run: |
+          echo "📦 Importing images to k3d..."
+          
+          # Import built images
+          k3d image import \
+            orchestrator:ci \
+            celery-worker:ci \
+            persona-runtime:ci \
+            fake-threads:ci \
+            -c ci
+          
+          # Pull and import third-party images
+          docker pull postgres:16-alpine
+          docker pull rabbitmq:3.13-management-alpine
+          docker pull qdrant/qdrant:v1.9.4
+          
+          k3d image import \
+            postgres:16-alpine \
+            rabbitmq:3.13-management-alpine \
+            qdrant/qdrant:v1.9.4 \
+            -c ci
+          
+          echo "✅ Images imported"
+
+      # 5. Deploy PostgreSQL first and wait
+      - name: Deploy PostgreSQL
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: threads-postgresql
+          stringData:
+            POSTGRES_PASSWORD: postgres
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: postgres
+          spec:
+            ports:
+            - port: 5432
+            selector:
+              app: postgres
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: postgres
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: postgres
+            template:
+              metadata:
+                labels:
+                  app: postgres
+              spec:
+                containers:
+                - name: postgres
+                  image: postgres:16-alpine
+                  env:
+                  - name: POSTGRES_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: threads-postgresql
+                        key: POSTGRES_PASSWORD
+                  - name: POSTGRES_DB
+                    value: threads_agent
+                  ports:
+                  - containerPort: 5432
+          EOF
+          
+          echo "⏳ Waiting for PostgreSQL..."
+          kubectl wait --for=condition=available --timeout=60s deployment/postgres
+          sleep 5  # Extra time for database initialization
+
+      # 6. Run migrations
+      - name: Run database migrations
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: migrations
+          spec:
+            backoffLimit: 2
+            template:
+              spec:
+                restartPolicy: Never
+                initContainers:
+                - name: wait-for-db
+                  image: postgres:16-alpine
+                  env:
+                  - name: PGPASSWORD
+                    value: postgres
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      echo "Waiting for database..."
+                      until psql -h postgres -U postgres -d threads_agent -c "SELECT 1" >/dev/null 2>&1; do
+                        echo "Database not ready, waiting..."
+                        sleep 2
+                      done
+                      echo "Database is ready!"
+                containers:
+                - name: migrate
+                  image: orchestrator:ci
+                  imagePullPolicy: Never
+                  env:
+                  - name: POSTGRES_PASSWORD
+                    value: postgres
+                  - name: POSTGRES_DSN
+                    value: "postgresql+psycopg2://postgres:postgres@postgres:5432/threads_agent"
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      echo "Running migrations..."
+                      cd /app/services/orchestrator
+                      alembic -c db/alembic.ini upgrade head
+                      echo "Migrations complete!"
+          EOF
+          
+          echo "⏳ Waiting for migrations to complete..."
+          kubectl wait --for=condition=complete --timeout=120s job/migrations || {
+            echo "Migration logs:"
+            kubectl logs job/migrations --all-containers
+            exit 1
+          }
+          
+          echo "✅ Migrations completed successfully"
+
+      # 7. Deploy other services
+      - name: Deploy services
+        run: |
+          # Create OpenAI secret
+          kubectl create secret generic openai-secret \
+            --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY:-test}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Deploy RabbitMQ
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: rabbitmq
+          spec:
+            ports:
+            - port: 5672
+              name: amqp
+            - port: 15672
+              name: management
+            selector:
+              app: rabbitmq
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: rabbitmq
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: rabbitmq
+            template:
+              metadata:
+                labels:
+                  app: rabbitmq
+              spec:
+                containers:
+                - name: rabbitmq
+                  image: rabbitmq:3.13-management-alpine
+                  ports:
+                  - containerPort: 5672
+                  - containerPort: 15672
+          EOF
+          
+          # Deploy Qdrant
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: qdrant
+          spec:
+            ports:
+            - port: 6333
+            selector:
+              app: qdrant
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: qdrant
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: qdrant
+            template:
+              metadata:
+                labels:
+                  app: qdrant
+              spec:
+                containers:
+                - name: qdrant
+                  image: qdrant/qdrant:v1.9.4
+                  ports:
+                  - containerPort: 6333
+          EOF
+          
+          # Deploy application services
+          for service in orchestrator celery-worker persona-runtime fake-threads; do
+            SERVICE_NAME=${service//-/_}
+            cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ${service}
+          spec:
+            ports:
+            - port: $([ "$service" = "fake-threads" ] && echo 9009 || echo 8080)
+            selector:
+              app: ${service}
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ${service}
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: ${service}
+            template:
+              metadata:
+                labels:
+                  app: ${service}
+              spec:
+                containers:
+                - name: ${service}
+                  image: ${service}:ci
+                  imagePullPolicy: Never
+                  env:
+                  - name: OPENAI_API_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: openai-secret
+                        key: OPENAI_API_KEY
+                  - name: OPENAI_MOCK
+                    value: "1"
+                  - name: DATABASE_URL
+                    value: "postgresql://postgres:postgres@postgres:5432/threads_agent"
+                  - name: RABBITMQ_URL
+                    value: "amqp://guest:guest@rabbitmq:5672/"
+                  - name: QDRANT_URL
+                    value: "http://qdrant:6333"
+                  ports:
+                  - containerPort: $([ "$service" = "fake-threads" ] && echo 9009 || echo 8080)
+          EOF
+          done
+
+      # 8. Wait for all services
+      - name: Wait for services
+        run: |
+          echo "⏳ Waiting for all services to be ready..."
+          
+          kubectl wait --for=condition=available --timeout=120s deployment/rabbitmq
+          kubectl wait --for=condition=available --timeout=120s deployment/qdrant
+          kubectl wait --for=condition=available --timeout=120s deployment/orchestrator
+          kubectl wait --for=condition=available --timeout=120s deployment/celery-worker
+          kubectl wait --for=condition=available --timeout=120s deployment/persona-runtime
+          kubectl wait --for=condition=available --timeout=120s deployment/fake-threads
+          
+          echo "✅ All services ready"
+          kubectl get pods
+
+      # 9. Run tests
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-timeout
+
+      - name: Run smoke tests
+        run: |
+          # Set up port forwards
+          kubectl port-forward svc/orchestrator 8080:8080 &
+          kubectl port-forward svc/fake-threads 9009:9009 &
+          sleep 5
+          
+          # Run basic smoke tests
+          cat <<'EOF' > /tmp/test_smoke.py
+          import requests
+          import time
+          
+          def test_orchestrator_health():
+              """Test orchestrator health endpoint"""
+              response = requests.get("http://localhost:8080/health")
+              assert response.status_code == 200
+              print("✅ Orchestrator health check passed")
+          
+          def test_fake_threads_health():
+              """Test fake-threads health endpoint"""
+              response = requests.get("http://localhost:9009/health")
+              assert response.status_code == 200
+              print("✅ Fake-threads health check passed")
+          
+          if __name__ == "__main__":
+              test_orchestrator_health()
+              test_fake_threads_health()
+              print("✅ All smoke tests passed!")
+          EOF
+          
+          pip install requests
+          python /tmp/test_smoke.py
+
+      # 10. Cleanup on failure
+      - name: Debug on failure
+        if: failure()
+        run: |
+          echo "❌ CI Failed - Gathering diagnostics..."
+          kubectl get pods -o wide
+          kubectl get events --sort-by='.lastTimestamp' | tail -20
+          
+          # Get logs from failed pods
+          kubectl get pods --no-headers | grep -v "Running" | while read pod_line; do
+            POD=$(echo $pod_line | awk '{print $1}')
+            echo "Logs for $POD:"
+            kubectl logs $POD --tail=50 || true
+          done

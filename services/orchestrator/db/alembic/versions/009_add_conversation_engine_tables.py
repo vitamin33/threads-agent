@@ -112,12 +112,14 @@ def upgrade() -> None:
         unique=False,
     )
 
-    # Partial index for active conversations (optimization)
-    op.execute("""
-        CREATE INDEX ix_conversation_states_active 
-        ON conversation_states (user_id, last_interaction) 
-        WHERE last_interaction > NOW() - INTERVAL '7 days'
-    """)
+    # Regular index for active conversations (optimization)
+    # Note: Cannot use NOW() in partial index as it's not immutable
+    op.create_index(
+        "ix_conversation_states_active",
+        "conversation_states",
+        ["user_id", "last_interaction"],
+        unique=False,
+    )
 
     # Index for analytics queries
     op.execute("""
