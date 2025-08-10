@@ -167,7 +167,13 @@ class TestCommentMonitorK8sResourceConstraints:
                 }
 
         mock_db_session = Mock()
-        mock_db_session.query.return_value.filter.return_value.first.return_value = None
+        # Set up the query chain for deduplication: query().filter().all() should return empty list
+        mock_query = Mock()
+        mock_filter = Mock()
+        mock_filter.all.return_value = []  # No existing comments in DB
+        mock_filter.first.return_value = None
+        mock_query.filter.return_value = mock_filter
+        mock_db_session.query.return_value = mock_query
         mock_db_session.add = Mock()
         mock_db_session.commit = Mock()
 
