@@ -4,10 +4,7 @@ TDD approach - testing ML-specific metrics collection for autoscaling
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta
-import asyncio
-from typing import List, Dict, Any
+from unittest.mock import Mock, patch
 
 # These imports will fail initially (TDD)
 from services.ml_autoscaling.metrics.ml_metrics_collector import (
@@ -16,7 +13,6 @@ from services.ml_autoscaling.metrics.ml_metrics_collector import (
     InferenceMetrics,
     TrainingMetrics,
     GPUMetrics,
-    MetricType,
 )
 
 
@@ -34,7 +30,9 @@ class TestMLMetricsCollector:
     @pytest.fixture
     def mock_prometheus_client(self):
         """Mock Prometheus client"""
-        with patch('services.ml_autoscaling.metrics.ml_metrics_collector.PrometheusClient') as mock:
+        with patch(
+            "services.ml_autoscaling.metrics.ml_metrics_collector.PrometheusClient"
+        ) as mock:
             client = Mock()
             mock.return_value = client
             yield client
@@ -44,15 +42,15 @@ class TestMLMetricsCollector:
         """Test collecting inference-specific metrics"""
         # Arrange
         mock_prometheus_client.query.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
+            "status": "success",
+            "data": {
+                "result": [
                     {
-                        'metric': {'job': 'vllm-service'},
-                        'value': [1234567890, '0.250']  # 250ms latency
+                        "metric": {"job": "vllm-service"},
+                        "value": [1234567890, "0.250"],  # 250ms latency
                     }
                 ]
-            }
+            },
         }
 
         # Act
@@ -72,19 +70,19 @@ class TestMLMetricsCollector:
         """Test collecting training job metrics"""
         # Arrange
         mock_prometheus_client.query_range.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
+            "status": "success",
+            "data": {
+                "result": [
                     {
-                        'metric': {'job': 'training', 'model': 'engagement_predictor'},
-                        'values': [
-                            [1234567890, '0.92'],  # Loss value
-                            [1234567900, '0.85'],
-                            [1234567910, '0.78'],
-                        ]
+                        "metric": {"job": "training", "model": "engagement_predictor"},
+                        "values": [
+                            [1234567890, "0.92"],  # Loss value
+                            [1234567900, "0.85"],
+                            [1234567910, "0.78"],
+                        ],
                     }
                 ]
-            }
+            },
         }
 
         # Act
@@ -103,19 +101,19 @@ class TestMLMetricsCollector:
         """Test collecting GPU utilization metrics"""
         # Arrange
         mock_prometheus_client.query.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
+            "status": "success",
+            "data": {
+                "result": [
                     {
-                        'metric': {'gpu': '0', 'node': 'gpu-node-1'},
-                        'value': [1234567890, '85.5']
+                        "metric": {"gpu": "0", "node": "gpu-node-1"},
+                        "value": [1234567890, "85.5"],
                     },
                     {
-                        'metric': {'gpu': '1', 'node': 'gpu-node-1'},
-                        'value': [1234567890, '92.3']
-                    }
+                        "metric": {"gpu": "1", "node": "gpu-node-1"},
+                        "value": [1234567890, "92.3"],
+                    },
                 ]
-            }
+            },
         }
 
         # Act
@@ -133,15 +131,10 @@ class TestMLMetricsCollector:
         """Test calculating queue depth for Celery workers"""
         # Arrange
         mock_prometheus_client.query.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
-                    {
-                        'metric': {'queue': 'celery'},
-                        'value': [1234567890, '42']
-                    }
-                ]
-            }
+            "status": "success",
+            "data": {
+                "result": [{"metric": {"queue": "celery"}, "value": [1234567890, "42"]}]
+            },
         }
 
         # Act
@@ -165,7 +158,7 @@ class TestMLMetricsCollector:
             error_rate=0.02,
             tokens_per_second=5000,
         )
-        
+
         gpu_metrics = GPUMetrics(
             avg_utilization=85,
             max_utilization=95,
@@ -191,15 +184,15 @@ class TestMLMetricsCollector:
         """Test metrics for batch processing workloads"""
         # Arrange
         mock_prometheus_client.query.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
+            "status": "success",
+            "data": {
+                "result": [
                     {
-                        'metric': {'job': 'batch-processor'},
-                        'value': [1234567890, '1500']  # Items in batch queue
+                        "metric": {"job": "batch-processor"},
+                        "value": [1234567890, "1500"],  # Items in batch queue
                     }
                 ]
-            }
+            },
         }
 
         # Act
@@ -214,17 +207,19 @@ class TestMLMetricsCollector:
         """Test model serving endpoint metrics"""
         # Arrange
         mock_responses = {
-            'model_inference_requests_total': 10000,
-            'model_inference_errors_total': 50,
-            'model_cache_hits_total': 8000,
-            'model_cache_misses_total': 2000,
+            "model_inference_requests_total": 10000,
+            "model_inference_errors_total": 50,
+            "model_cache_hits_total": 8000,
+            "model_cache_misses_total": 2000,
         }
-        
+
         mock_prometheus_client.query.side_effect = lambda q: {
-            'status': 'success',
-            'data': {
-                'result': [{'value': [1234567890, str(mock_responses.get(q.split('{')[0], 0))]}]
-            }
+            "status": "success",
+            "data": {
+                "result": [
+                    {"value": [1234567890, str(mock_responses.get(q.split("{")[0], 0))]}
+                ]
+            },
         }
 
         # Act
@@ -240,17 +235,17 @@ class TestMLMetricsCollector:
         """Test collecting cost-related metrics for optimization"""
         # Arrange
         mock_prometheus_client.query_range.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
+            "status": "success",
+            "data": {
+                "result": [
                     {
-                        'metric': {'instance_type': 'g4dn.xlarge'},
-                        'values': [
-                            [1234567890, '0.526'],  # Cost per hour
-                        ]
+                        "metric": {"instance_type": "g4dn.xlarge"},
+                        "values": [
+                            [1234567890, "0.526"],  # Cost per hour
+                        ],
                     }
                 ]
-            }
+            },
         }
 
         # Act
@@ -272,17 +267,14 @@ class TestMLMetricsCollector:
             [1234567890 + i * 300, str(10 + i % 20)]  # Cyclical pattern
             for i in range(288)  # 24 hours of 5-minute samples
         ]
-        
+
         mock_prometheus_client.query_range.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
-                    {
-                        'metric': {'job': 'orchestrator'},
-                        'values': historical_values
-                    }
+            "status": "success",
+            "data": {
+                "result": [
+                    {"metric": {"job": "orchestrator"}, "values": historical_values}
                 ]
-            }
+            },
         }
 
         # Act
@@ -298,18 +290,20 @@ class TestMLMetricsCollector:
         assert predictive_metrics.pattern_detected in ["cyclical", "trending", "stable"]
 
     @pytest.mark.asyncio
-    async def test_aggregated_ml_workload_metrics(self, collector, mock_prometheus_client):
+    async def test_aggregated_ml_workload_metrics(
+        self, collector, mock_prometheus_client
+    ):
         """Test aggregating all ML workload metrics"""
         # Arrange
         mock_prometheus_client.query.side_effect = [
             # Inference metrics
-            {'status': 'success', 'data': {'result': [{'value': [1234567890, '100']}]}},
+            {"status": "success", "data": {"result": [{"value": [1234567890, "100"]}]}},
             # Training metrics
-            {'status': 'success', 'data': {'result': [{'value': [1234567890, '2']}]}},
+            {"status": "success", "data": {"result": [{"value": [1234567890, "2"]}]}},
             # GPU metrics
-            {'status': 'success', 'data': {'result': [{'value': [1234567890, '75']}]}},
+            {"status": "success", "data": {"result": [{"value": [1234567890, "75"]}]}},
             # Queue depth
-            {'status': 'success', 'data': {'result': [{'value': [1234567890, '50']}]}},
+            {"status": "success", "data": {"result": [{"value": [1234567890, "50"]}]}},
         ]
 
         # Act
@@ -326,7 +320,7 @@ class TestMLMetricsCollector:
         """Test metrics caching to avoid excessive Prometheus queries"""
         # Arrange
         collector.cache_ttl_seconds = 60
-        
+
         # Act
         cached_value = collector.get_cached_metric("test_metric")
         collector.set_cached_metric("test_metric", 42, ttl=60)
@@ -342,19 +336,19 @@ class TestMLMetricsCollector:
         # Arrange
         # Mock sudden spike in latency
         mock_prometheus_client.query_range.return_value = {
-            'status': 'success',
-            'data': {
-                'result': [
+            "status": "success",
+            "data": {
+                "result": [
                     {
-                        'metric': {'job': 'vllm-service'},
-                        'values': [
-                            [1234567890, '100'],  # Normal
-                            [1234567900, '105'],
-                            [1234567910, '500'],  # Spike!
-                        ]
+                        "metric": {"job": "vllm-service"},
+                        "values": [
+                            [1234567890, "100"],  # Normal
+                            [1234567900, "105"],
+                            [1234567910, "500"],  # Spike!
+                        ],
                     }
                 ]
-            }
+            },
         }
 
         # Act

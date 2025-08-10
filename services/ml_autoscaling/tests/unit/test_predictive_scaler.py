@@ -4,16 +4,12 @@ TDD approach - testing predictive scaling based on historical patterns
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
 import numpy as np
-from typing import List, Dict, Any
 
 from services.ml_autoscaling.scaler.predictive_scaler import (
     PredictiveScaler,
     PredictionResult,
-    HistoricalPattern,
-    WorkloadForecast,
     SeasonalityType,
     TrendType,
     ScalingPolicy,
@@ -42,29 +38,29 @@ class TestPredictiveScaler:
         # Create a synthetic pattern: daily cycle + weekly trend
         hours = 168  # 1 week
         data_points = []
-        
+
         for i in range(hours * 12):  # 5-minute intervals
-            ts = datetime.now() - timedelta(hours=hours-i/12)
+            ts = datetime.now() - timedelta(hours=hours - i / 12)
             hour_of_day = ts.hour
             day_of_week = ts.weekday()
-            
+
             # Daily pattern: peak at noon, low at night
             daily_component = 50 + 30 * np.sin((hour_of_day - 6) * np.pi / 12)
-            
+
             # Weekly pattern: higher on weekdays
             weekly_component = 10 if day_of_week < 5 else -10
-            
+
             # Add some noise
             noise = np.random.normal(0, 5)
-            
+
             value = max(0, daily_component + weekly_component + noise)
-            
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "request_rate"}
-            ))
-        
+
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "request_rate"}
+                )
+            )
+
         return data_points
 
     @pytest.mark.asyncio
@@ -74,13 +70,13 @@ class TestPredictiveScaler:
         result = await scaler.predict_scaling_needs(
             historical_metrics=sample_time_series,
             current_replicas=3,
-            forecast_horizon_minutes=30
+            forecast_horizon_minutes=30,
         )
 
         # Assert
         daily_pattern = next(
             (p for p in result.detected_patterns if p.pattern_type == "daily_cycle"),
-            None
+            None,
         )
         assert daily_pattern is not None
         assert daily_pattern.confidence > 0.7
@@ -94,8 +90,8 @@ class TestPredictiveScaler:
         # Create strong weekly pattern
         data_points = []
         for i in range(28 * 24):  # Hourly for 4 weeks
-            ts = datetime.now() - timedelta(days=28-i/24)
-            
+            ts = datetime.now() - timedelta(days=28 - i / 24)
+
             # High on Monday-Wednesday, low on weekends
             if ts.weekday() in [0, 1, 2]:  # Mon-Wed
                 value = 100 + np.random.normal(0, 10)
@@ -103,24 +99,24 @@ class TestPredictiveScaler:
                 value = 30 + np.random.normal(0, 5)
             else:
                 value = 60 + np.random.normal(0, 8)
-            
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "weekly_metric"}
-            ))
+
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "weekly_metric"}
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
             historical_metrics=data_points,
             current_replicas=3,
-            forecast_horizon_minutes=30
+            forecast_horizon_minutes=30,
         )
 
         # Assert
         weekly_pattern = next(
             (p for p in result.detected_patterns if p.pattern_type == "weekly_cycle"),
-            None
+            None,
         )
         assert weekly_pattern is not None
         assert weekly_pattern.periodicity == 168  # 7 days in hours
@@ -152,13 +148,15 @@ class TestPredictiveScaler:
         data_points = []
         # Create increasing load pattern
         for i in range(30):
-            ts = datetime.now() - timedelta(minutes=30-i)
+            ts = datetime.now() - timedelta(minutes=30 - i)
             value = 100 + i * 10  # Increasing from 100 to 400
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "increasing_load"}
-            ))
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts,
+                    value=value,
+                    metadata={"metric_name": "increasing_load"},
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -178,14 +176,14 @@ class TestPredictiveScaler:
         # Arrange
         data_points = []
         values = [50] * 25 + [200, 250, 300, 280, 260]  # Sudden spike
-        
+
         for i, value in enumerate(values):
-            ts = datetime.now() - timedelta(minutes=30-i)
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "spike_metric"}
-            ))
+            ts = datetime.now() - timedelta(minutes=30 - i)
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "spike_metric"}
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -197,8 +195,12 @@ class TestPredictiveScaler:
         # Assert
         # Anomaly should be detected
         anomaly_pattern = next(
-            (p for p in result.detected_patterns if p.pattern_type == "anomaly_detected"),
-            None
+            (
+                p
+                for p in result.detected_patterns
+                if p.pattern_type == "anomaly_detected"
+            ),
+            None,
         )
         assert anomaly_pattern is not None
         # Should recommend scaling up
@@ -212,7 +214,7 @@ class TestPredictiveScaler:
         data_points = []
         for day in range(30):
             for hour in range(24):
-                ts = datetime.now() - timedelta(days=30-day, hours=23-hour)
+                ts = datetime.now() - timedelta(days=30 - day, hours=23 - hour)
                 # Create strong daily pattern instead of monthly
                 # Higher during business hours (9-17)
                 if 9 <= ts.hour < 17:
@@ -222,12 +224,14 @@ class TestPredictiveScaler:
                     value = 30 + np.random.normal(0, 5)
                 else:
                     value = 80 + np.random.normal(0, 8)
-                
-                data_points.append(MetricDataPoint(
-                    timestamp=ts,
-                    value=value,
-                    metadata={"metric_name": "seasonal_metric"}
-                ))
+
+                data_points.append(
+                    MetricDataPoint(
+                        timestamp=ts,
+                        value=value,
+                        metadata={"metric_name": "seasonal_metric"},
+                    )
+                )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -241,7 +245,7 @@ class TestPredictiveScaler:
         # Should have detected daily pattern with seasonality
         daily_pattern = next(
             (p for p in result.detected_patterns if p.pattern_type == "daily_cycle"),
-            None
+            None,
         )
         assert daily_pattern is not None
         assert daily_pattern.seasonality == SeasonalityType.DAILY
@@ -251,20 +255,22 @@ class TestPredictiveScaler:
         """Test predictions that account for anomalies"""
         # Arrange
         data_points = []
-        
+
         # Normal pattern with one anomaly
         for i in range(48 * 12):
-            ts = datetime.now() - timedelta(hours=48-i/12)
+            ts = datetime.now() - timedelta(hours=48 - i / 12)
             if i == 200:  # Insert anomaly
                 value = 500
             else:
                 value = 50 + np.random.normal(0, 5)
-            
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "anomaly_metric"}
-            ))
+
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts,
+                    value=value,
+                    metadata={"metric_name": "anomaly_metric"},
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -276,8 +282,12 @@ class TestPredictiveScaler:
         # Assert
         # Should detect anomaly
         anomaly_pattern = next(
-            (p for p in result.detected_patterns if p.pattern_type == "anomaly_detected"),
-            None
+            (
+                p
+                for p in result.detected_patterns
+                if p.pattern_type == "anomaly_detected"
+            ),
+            None,
         )
         assert anomaly_pattern is not None
         # Prediction should be reasonable (not influenced by spike)
@@ -289,23 +299,25 @@ class TestPredictiveScaler:
         """Test scaling predictions aware of business hours"""
         # Arrange
         data_points = []
-        
+
         # Create pattern with business hours
         for day in range(14):  # 2 weeks
             for hour in range(24):
-                ts = datetime.now() - timedelta(days=14-day, hours=23-hour)
+                ts = datetime.now() - timedelta(days=14 - day, hours=23 - hour)
                 # Higher during business hours (9-17), weekdays only
                 if ts.weekday() < 5 and 9 <= ts.hour < 17:
                     value = 100 + np.random.normal(0, 10)
                 else:
                     value = 30 + np.random.normal(0, 5)
-                
-                data_points.append(MetricDataPoint(
-                    timestamp=ts,
-                    value=value,
-                    metadata={"metric_name": "business_hours"}
-                ))
-        
+
+                data_points.append(
+                    MetricDataPoint(
+                        timestamp=ts,
+                        value=value,
+                        metadata={"metric_name": "business_hours"},
+                    )
+                )
+
         # Act
         result = await scaler.predict_scaling_needs(
             historical_metrics=data_points,
@@ -317,7 +329,7 @@ class TestPredictiveScaler:
         # Should detect daily pattern
         daily_pattern = next(
             (p for p in result.detected_patterns if p.pattern_type == "daily_cycle"),
-            None
+            None,
         )
         assert daily_pattern is not None
         # Forecasts during business hours should have higher load
@@ -332,17 +344,17 @@ class TestPredictiveScaler:
         """Test predictions that optimize for cost"""
         # Arrange
         scaler.policy.max_replicas = 10  # Cost constraint
-        
+
         data_points = []
         # Create high load pattern
         for i in range(60):
-            ts = datetime.now() - timedelta(minutes=60-i)
+            ts = datetime.now() - timedelta(minutes=60 - i)
             value = 500 + i * 10  # Very high increasing load
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "high_load"}
-            ))
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "high_load"}
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -364,14 +376,14 @@ class TestPredictiveScaler:
         # Create very stable pattern for high confidence
         data_points = []
         for i in range(168):  # 1 week of hourly data
-            ts = datetime.now() - timedelta(hours=168-i)
+            ts = datetime.now() - timedelta(hours=168 - i)
             # Very stable pattern
             value = 50 + 0.1 * np.random.normal(0, 1)
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "stable"}
-            ))
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "stable"}
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -391,14 +403,14 @@ class TestPredictiveScaler:
         data_points = []
         # Create pattern that will need scaling soon
         for i in range(60):
-            ts = datetime.now() - timedelta(minutes=60-i)
+            ts = datetime.now() - timedelta(minutes=60 - i)
             # Increasing load that will need scaling
             value = 50 + i * 2
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "increasing"}
-            ))
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "increasing"}
+                )
+            )
 
         # Act
         result = await scaler.predict_scaling_needs(
@@ -406,7 +418,7 @@ class TestPredictiveScaler:
             current_replicas=3,
             forecast_horizon_minutes=30,
         )
-        
+
         should_scale = await scaler.should_scale_proactively(result)
 
         # Assert
@@ -422,14 +434,14 @@ class TestPredictiveScaler:
         data_points = []
         # Create decreasing load pattern
         for i in range(30):
-            ts = datetime.now() - timedelta(minutes=30-i)
+            ts = datetime.now() - timedelta(minutes=30 - i)
             value = 200 - i * 5  # Decreasing from 200 to 50
-            data_points.append(MetricDataPoint(
-                timestamp=ts,
-                value=value,
-                metadata={"metric_name": "decreasing"}
-            ))
-        
+            data_points.append(
+                MetricDataPoint(
+                    timestamp=ts, value=value, metadata={"metric_name": "decreasing"}
+                )
+            )
+
         # Simulate recent scale up
         scaler.last_prediction_time = datetime.now() - timedelta(minutes=5)
 
@@ -443,8 +455,7 @@ class TestPredictiveScaler:
         # Assert
         # Should detect decreasing trend
         trend_pattern = next(
-            (p for p in result.detected_patterns if p.pattern_type == "trend"),
-            None
+            (p for p in result.detected_patterns if p.pattern_type == "trend"), None
         )
         assert trend_pattern is not None
         assert trend_pattern.trend == TrendType.DECREASING
@@ -460,13 +471,13 @@ class TestPredictiveScaler:
             current_replicas=3,
             forecast_horizon_minutes=30,
         )
-        
+
         cached_forecasts = scaler.get_cached_forecast()
 
         # Assert
         assert len(cached_forecasts) > 0
         assert cached_forecasts == result.forecasts
-        
+
         # Clear cache
         scaler.clear_cache()
         assert len(scaler.get_cached_forecast()) == 0

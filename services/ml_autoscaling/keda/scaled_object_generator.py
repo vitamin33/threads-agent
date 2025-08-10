@@ -4,13 +4,14 @@ Implements intelligent autoscaling configurations for ML infrastructure
 """
 
 import yaml
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Any, List, Optional
 
 
 class TriggerType(Enum):
     """Supported KEDA trigger types"""
+
     RABBITMQ = "rabbitmq"
     PROMETHEUS = "prometheus"
     CPU = "cpu"
@@ -21,6 +22,7 @@ class TriggerType(Enum):
 
 class MetricType(Enum):
     """Metric types for scaling decisions"""
+
     UTILIZATION = "Utilization"
     AVERAGE_VALUE = "AverageValue"
     VALUE = "Value"
@@ -29,6 +31,7 @@ class MetricType(Enum):
 @dataclass
 class ScalingTarget:
     """Target resource for scaling"""
+
     name: str
     kind: str = "Deployment"
     min_replicas: int = 1
@@ -39,7 +42,9 @@ class ScalingTarget:
         if self.min_replicas < 0:
             raise ValueError("min_replicas must be non-negative")
         if self.max_replicas < self.min_replicas:
-            raise ValueError("max_replicas must be greater than or equal to min_replicas")
+            raise ValueError(
+                "max_replicas must be greater than or equal to min_replicas"
+            )
         if self.min_replicas > self.max_replicas:
             raise ValueError("min_replicas cannot be greater than max_replicas")
 
@@ -47,6 +52,7 @@ class ScalingTarget:
 @dataclass
 class ScalingTrigger:
     """Scaling trigger configuration"""
+
     type: TriggerType
     metadata: Dict[str, Any]
     name: Optional[str] = None
@@ -57,7 +63,7 @@ class ScalingTrigger:
 class KEDAScaledObjectGenerator:
     """
     Generator for KEDA ScaledObjects optimized for ML workloads
-    
+
     This class creates KEDA configurations that enable:
     - Queue-based scaling for Celery workers
     - Latency-based scaling for inference services
@@ -84,7 +90,7 @@ class KEDAScaledObjectGenerator:
     ) -> Dict[str, Any]:
         """
         Create a KEDA ScaledObject configuration
-        
+
         Args:
             name: Name of the ScaledObject
             namespace: Kubernetes namespace
@@ -95,7 +101,7 @@ class KEDAScaledObjectGenerator:
             idle_replica_count: Replicas when idle (for scale-to-zero)
             scaling_behavior: Advanced scaling behavior
             pod_template_annotations: Annotations for pods (e.g., GPU)
-        
+
         Returns:
             Dict representing the ScaledObject YAML
         """
@@ -112,7 +118,7 @@ class KEDAScaledObjectGenerator:
                 "labels": {
                     "app.kubernetes.io/managed-by": "keda",
                     "ml-autoscaling/enabled": "true",
-                }
+                },
             },
             "spec": {
                 "scaleTargetRef": {
@@ -123,7 +129,7 @@ class KEDAScaledObjectGenerator:
                 "maxReplicaCount": target.max_replicas,
                 "pollingInterval": polling_interval,
                 "cooldownPeriod": cooldown_period,
-            }
+            },
         }
 
         # Add idle replica count if specified (for scale-to-zero)
@@ -138,9 +144,7 @@ class KEDAScaledObjectGenerator:
 
         # Add advanced scaling behavior
         if scaling_behavior:
-            scaled_object["spec"]["advanced"] = {
-                "behavior": scaling_behavior
-            }
+            scaled_object["spec"]["advanced"] = {"behavior": scaling_behavior}
 
         # Add pod template annotations (for GPU nodes, spot instances, etc.)
         if pod_template_annotations:
@@ -163,22 +167,23 @@ class KEDAScaledObjectGenerator:
 
         return trigger_config
 
-    def validate_trigger(self, trigger: ScalingTrigger, required_fields: List[str]) -> None:
+    def validate_trigger(
+        self, trigger: ScalingTrigger, required_fields: List[str]
+    ) -> None:
         """
         Validate that a trigger has required fields
-        
+
         Args:
             trigger: Trigger to validate
             required_fields: List of required metadata fields
-        
+
         Raises:
             ValueError: If required fields are missing
         """
         missing_fields = [
-            field for field in required_fields 
-            if field not in trigger.metadata
+            field for field in required_fields if field not in trigger.metadata
         ]
-        
+
         if missing_fields:
             raise ValueError(
                 f"Missing required fields for {trigger.type.value} trigger: {missing_fields}"
@@ -195,7 +200,7 @@ class KEDAScaledObjectGenerator:
     ) -> Dict[str, Any]:
         """
         Create a specialized ScaledObject for Celery workers
-        
+
         Combines queue depth and task latency for optimal scaling
         """
         target = ScalingTarget(
@@ -213,7 +218,7 @@ class KEDAScaledObjectGenerator:
                     "queueName": "celery",
                     "queueLength": str(queue_threshold),
                     "hostFromEnv": "RABBITMQ_URL",
-                }
+                },
             ),
             # Scale based on task processing latency
             ScalingTrigger(
@@ -223,7 +228,7 @@ class KEDAScaledObjectGenerator:
                     "metricName": "celery_task_duration_seconds",
                     "threshold": str(latency_threshold),
                     "query": "avg(rate(celery_task_duration_seconds[5m]))",
-                }
+                },
             ),
         ]
 
@@ -264,7 +269,7 @@ class KEDAScaledObjectGenerator:
     ) -> Dict[str, Any]:
         """
         Create a GPU-aware ScaledObject for vLLM service
-        
+
         Optimizes for:
         - Scale-to-zero to save GPU costs
         - Latency-based scaling for user experience
@@ -285,8 +290,8 @@ class KEDAScaledObjectGenerator:
                     "serverAddress": "http://prometheus:9090",
                     "metricName": "vllm_inference_latency_p95",
                     "threshold": str(latency_threshold_ms),
-                    "query": f"histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
-                }
+                    "query": "histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
+                },
             ),
             # Scale based on request rate
             ScalingTrigger(
@@ -296,7 +301,7 @@ class KEDAScaledObjectGenerator:
                     "metricName": "vllm_requests_per_second",
                     "threshold": "10",
                     "query": "rate(vllm_requests_total[1m])",
-                }
+                },
             ),
         ]
 
@@ -309,8 +314,8 @@ class KEDAScaledObjectGenerator:
                         "serverAddress": "http://prometheus:9090",
                         "metricName": "gpu_utilization_percent",
                         "threshold": str(gpu_utilization_threshold),
-                        "query": f"avg(gpu_utilization_percent{{job='vllm-service'}})",
-                    }
+                        "query": "avg(gpu_utilization_percent{job='vllm-service'})",
+                    },
                 )
             )
 
@@ -337,7 +342,7 @@ class KEDAScaledObjectGenerator:
     ) -> Dict[str, Any]:
         """
         Create a ScaledObject for ML training jobs
-        
+
         Uses cron-based scaling for scheduled training
         """
         target = ScalingTarget(
@@ -356,7 +361,7 @@ class KEDAScaledObjectGenerator:
                     "metricName": "ml_training_jobs_pending",
                     "threshold": "1",
                     "query": "ml_training_jobs_pending",
-                }
+                },
             ),
             # Schedule-based scaling for nightly training
             ScalingTrigger(
@@ -364,9 +369,9 @@ class KEDAScaledObjectGenerator:
                 metadata={
                     "timezone": "UTC",
                     "start": "0 2 * * *",  # 2 AM UTC
-                    "end": "0 6 * * *",    # 6 AM UTC
+                    "end": "0 6 * * *",  # 6 AM UTC
                     "desiredReplicas": "5",
-                }
+                },
             ),
         ]
 
@@ -385,5 +390,5 @@ class KEDAScaledObjectGenerator:
 
     def save_to_file(self, scaled_object: Dict[str, Any], filepath: str) -> None:
         """Save ScaledObject to YAML file"""
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             yaml.dump(scaled_object, f, default_flow_style=False, sort_keys=False)

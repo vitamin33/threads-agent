@@ -231,6 +231,19 @@ check: lint
 	
 	echo "✅ All quality checks passed - all green!"
 
+# CI Testing Commands
+ci-check:
+	@echo "⚡ Quick CI validation before push"
+	@./scripts/quick-ci-check.sh
+
+ci-test-local:
+	@echo "🧪 Full local CI simulation"
+	@./scripts/test-ci-locally.sh
+
+ci-test-force:
+	@echo "🧪 Full local CI simulation (force build all images)"
+	@./scripts/test-ci-locally.sh true
+
 ship message:
 	#!/usr/bin/env bash
 	set -euo pipefail

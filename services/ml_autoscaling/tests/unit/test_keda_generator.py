@@ -4,9 +4,7 @@ Following TDD approach - tests written before implementation
 """
 
 import pytest
-from unittest.mock import Mock, patch
 import yaml
-from typing import Dict, Any
 
 # This import will fail initially (TDD) - we'll implement it next
 from services.ml_autoscaling.keda.scaled_object_generator import (
@@ -60,7 +58,7 @@ class TestKEDAScaledObjectGenerator:
                 "queueName": "celery",
                 "queueLength": "5",
                 "hostFromEnv": "RABBITMQ_URL",
-            }
+            },
         )
 
         # Act
@@ -89,7 +87,7 @@ class TestKEDAScaledObjectGenerator:
                 "metricName": "vllm_inference_latency_p95",
                 "threshold": "500",
                 "query": "histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m]))",
-            }
+            },
         )
 
         # Act
@@ -110,24 +108,23 @@ class TestKEDAScaledObjectGenerator:
         """Test combining multiple triggers for advanced scaling"""
         # Arrange
         target = ScalingTarget("ml-worker", "Deployment", 2, 15)
-        
+
         queue_trigger = ScalingTrigger(
             type=TriggerType.RABBITMQ,
-            metadata={"queueName": "ml-tasks", "queueLength": "10"}
+            metadata={"queueName": "ml-tasks", "queueLength": "10"},
         )
-        
+
         latency_trigger = ScalingTrigger(
             type=TriggerType.PROMETHEUS,
             metadata={
                 "serverAddress": "http://prometheus:9090",
                 "metricName": "ml_inference_latency",
                 "threshold": "1000",
-            }
+            },
         )
-        
+
         cpu_trigger = ScalingTrigger(
-            type=TriggerType.CPU,
-            metadata={"type": "Utilization", "value": "70"}
+            type=TriggerType.CPU, metadata={"type": "Utilization", "value": "70"}
         )
 
         # Act
@@ -154,14 +151,14 @@ class TestKEDAScaledObjectGenerator:
             min_replicas=0,  # Scale to zero
             max_replicas=4,
         )
-        
+
         trigger = ScalingTrigger(
             type=TriggerType.PROMETHEUS,
             metadata={
                 "serverAddress": "http://prometheus:9090",
                 "metricName": "gpu_inference_requests",
                 "threshold": "1",  # Scale up from zero when any request
-            }
+            },
         )
 
         # Act
@@ -183,7 +180,7 @@ class TestKEDAScaledObjectGenerator:
         """Test advanced scaling behavior configuration"""
         # Arrange
         target = ScalingTarget("orchestrator", "Deployment", 3, 20)
-        
+
         behavior = {
             "scaleUp": {
                 "stabilizationWindowSeconds": 30,
@@ -213,7 +210,7 @@ class TestKEDAScaledObjectGenerator:
         scale_up = scaled_object["spec"]["advanced"]["behavior"]["scaleUp"]
         assert scale_up["stabilizationWindowSeconds"] == 30
         assert len(scale_up["policies"]) == 2
-        
+
         scale_down = scaled_object["spec"]["advanced"]["behavior"]["scaleDown"]
         assert scale_down["stabilizationWindowSeconds"] == 300
 
@@ -226,7 +223,7 @@ class TestKEDAScaledObjectGenerator:
             min_replicas=0,
             max_replicas=4,
         )
-        
+
         gpu_trigger = ScalingTrigger(
             type=TriggerType.PROMETHEUS,
             metadata={
@@ -234,7 +231,7 @@ class TestKEDAScaledObjectGenerator:
                 "metricName": "gpu_utilization_percent",
                 "threshold": "80",
                 "query": "avg(gpu_utilization_percent{job='vllm-service'})",
-            }
+            },
         )
 
         # Act
@@ -251,20 +248,23 @@ class TestKEDAScaledObjectGenerator:
 
         # Assert
         assert scaled_object["spec"]["triggers"][0]["metadata"]["threshold"] == "80"
-        assert "gpu_utilization_percent" in scaled_object["spec"]["triggers"][0]["metadata"]["query"]
+        assert (
+            "gpu_utilization_percent"
+            in scaled_object["spec"]["triggers"][0]["metadata"]["query"]
+        )
 
     def test_cost_optimized_scaling(self, generator):
         """Test cost-optimized scaling with spot instance preferences"""
         # Arrange
         target = ScalingTarget("ml-training", "Job", 1, 10)
-        
+
         cost_trigger = ScalingTrigger(
             type=TriggerType.EXTERNAL,
             metadata={
                 "scalerAddress": "cost-optimizer:8080",
                 "metricName": "spot_instance_availability",
                 "threshold": "0.7",  # Scale when spot price < 70% of on-demand
-            }
+            },
         )
 
         # Act
@@ -281,7 +281,10 @@ class TestKEDAScaledObjectGenerator:
 
         # Assert
         assert scaled_object["spec"]["triggers"][0]["type"] == "external"
-        assert "spot_instance_availability" in scaled_object["spec"]["triggers"][0]["metadata"]["metricName"]
+        assert (
+            "spot_instance_availability"
+            in scaled_object["spec"]["triggers"][0]["metadata"]["metricName"]
+        )
 
     def test_yaml_generation(self, generator):
         """Test generating valid YAML output"""
@@ -305,7 +308,10 @@ class TestKEDAScaledObjectGenerator:
     def test_validation_errors(self, generator):
         """Test validation of invalid configurations"""
         # Act & Assert
-        with pytest.raises(ValueError, match="max_replicas must be greater than or equal to min_replicas"):
+        with pytest.raises(
+            ValueError,
+            match="max_replicas must be greater than or equal to min_replicas",
+        ):
             invalid_target = ScalingTarget(
                 name="invalid",
                 kind="Deployment",
@@ -313,21 +319,24 @@ class TestKEDAScaledObjectGenerator:
                 max_replicas=5,
             )
 
-    @pytest.mark.parametrize("trigger_type,expected_fields", [
-        (TriggerType.RABBITMQ, ["queueName", "queueLength"]),
-        (TriggerType.PROMETHEUS, ["serverAddress", "metricName", "threshold"]),
-        (TriggerType.CPU, ["type", "value"]),
-        (TriggerType.MEMORY, ["type", "value"]),
-    ])
+    @pytest.mark.parametrize(
+        "trigger_type,expected_fields",
+        [
+            (TriggerType.RABBITMQ, ["queueName", "queueLength"]),
+            (TriggerType.PROMETHEUS, ["serverAddress", "metricName", "threshold"]),
+            (TriggerType.CPU, ["type", "value"]),
+            (TriggerType.MEMORY, ["type", "value"]),
+        ],
+    )
     def test_trigger_validation(self, generator, trigger_type, expected_fields):
         """Test validation of trigger configurations"""
         # Arrange
         target = ScalingTarget("test", "Deployment", 1, 5)
-        
+
         # Invalid trigger with missing required fields
         invalid_trigger = ScalingTrigger(
             type=trigger_type,
-            metadata={}  # Empty metadata
+            metadata={},  # Empty metadata
         )
 
         # Act & Assert
