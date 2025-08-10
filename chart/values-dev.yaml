@@ -119,6 +119,7 @@ postgres:
   auth:
     username: postgres
     postgresPassword: pass
+    database: threads_agent            # Must match what's expected by migrations
   storage: 1Gi                         # pvc size used in pvc.yaml / template
 
 qdrant:
