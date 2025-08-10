@@ -6,17 +6,13 @@ Integrates with achievement_collector and viral_engine for optimized content.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from pydantic import BaseModel, Field
 import structlog
 
 from ..services.content_scheduler import (
-    ContentScheduler,
-    WeeklyContentPlan,
-    ContentScheduleEntry,
-    ScheduleFrequency,
     get_content_scheduler,
 )
 from ..services.achievement_content_generator import Platform, ContentType

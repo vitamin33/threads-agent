@@ -1,10 +1,9 @@
 # /services/orchestrator/tests/test_comment_monitor_integration.py
 import pytest
 import httpx
-from unittest.mock import Mock, patch
-from typing import Dict, Any
+from unittest.mock import Mock
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 class TestCommentMonitorIntegration:

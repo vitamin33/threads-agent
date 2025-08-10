@@ -7,13 +7,12 @@ import time
 import asyncio
 import os
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import redis
 import httpx
 
 from services.conversation_engine.state_machine import (
-    ConversationStateMachine,
     ConversationState,
 )
 from services.conversation_engine.memory import (

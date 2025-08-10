@@ -8,17 +8,13 @@ circuit breakers, and system resilience under various failure scenarios.
 
 import pytest
 import time
-import threading
-from unittest.mock import Mock, patch, side_effect
-from typing import List, Dict, Any, Optional, Callable
+from unittest.mock import Mock
+from typing import List, Dict, Any, Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from contextlib import contextmanager
-import httpx
 import psycopg2
-from celery.exceptions import Retry, WorkerLostError
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 @dataclass
@@ -216,7 +212,7 @@ class TestCommentMonitorErrorHandling:
                     return self._retry_with_backoff(
                         deduplication_operation, max_retries=3
                     )
-                except Exception as e:
+                except Exception:
                     # Fallback: basic deduplication without DB lookup
                     self.fallback_activations += 1
                     unique_comments = []

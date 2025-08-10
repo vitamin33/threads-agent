@@ -5,14 +5,10 @@ Overview Page - Real-time system overview and metrics
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import httpx
-import asyncio
 import json
-import time
 import re
-from typing import Dict, Any, List
 
 st.set_page_config(page_title="Overview - Threads Agent", page_icon="📊", layout="wide")
 
@@ -102,7 +98,7 @@ def get_real_metrics():
                 else 0,
             ),
         }
-    except Exception as e:
+    except Exception:
         # Return defaults if API fails
         return {
             "api_latency": 45,

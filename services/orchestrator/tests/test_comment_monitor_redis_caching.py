@@ -8,14 +8,11 @@ and cache invalidation strategies under various load scenarios.
 
 import pytest
 import time
-import json
-import hashlib
 import threading
-from unittest.mock import Mock, patch
-from typing import List, Dict, Any, Optional, Set
+from unittest.mock import Mock
+from typing import List, Dict, Any, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from contextlib import contextmanager
 
 from services.orchestrator.comment_monitor import CommentMonitor, Comment
 

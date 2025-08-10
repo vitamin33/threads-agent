@@ -4,9 +4,6 @@ End-to-End Test for CRA-235 Comment Monitoring Implementation
 """
 
 import httpx
-import time
-import json
-from datetime import datetime
 
 
 def test_comment_monitoring_e2e():
@@ -48,7 +45,7 @@ def test_comment_monitoring_e2e():
             print(f"   ❌ Error creating comment: {e}")
 
     # 2. Verify comments were created
-    print(f"\n2️⃣ Verifying comments...")
+    print("\n2️⃣ Verifying comments...")
     try:
         response = httpx.get(f"{fake_threads_url}/posts/{post_id}/comments", timeout=5)
         if response.status_code == 200:
@@ -60,14 +57,14 @@ def test_comment_monitoring_e2e():
         print(f"   ❌ Error fetching comments: {e}")
 
     # 3. Test orchestrator comment monitoring endpoints
-    print(f"\n3️⃣ Testing orchestrator endpoints...")
+    print("\n3️⃣ Testing orchestrator endpoints...")
     orchestrator_url = "http://localhost:8081"
 
     # Test health check
     try:
         response = httpx.get(f"{orchestrator_url}/health", timeout=5)
         if response.status_code == 200:
-            print(f"   ✅ Orchestrator health check: OK")
+            print("   ✅ Orchestrator health check: OK")
         else:
             print(f"   ❌ Orchestrator health check failed: {response.status_code}")
     except Exception as e:
@@ -95,7 +92,7 @@ def test_comment_monitoring_e2e():
             f"{orchestrator_url}/comment-monitoring/process/{post_id}", timeout=5
         )
         if response.status_code == 202:
-            print(f"   ✅ Comment processing started (async)")
+            print("   ✅ Comment processing started (async)")
         else:
             print(f"   ❌ Failed to process comments: {response.status_code}")
             print(f"      Response: {response.text}")

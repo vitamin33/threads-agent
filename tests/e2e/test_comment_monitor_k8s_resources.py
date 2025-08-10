@@ -8,18 +8,12 @@ resource scaling, and pod resource management in Kubernetes environments.
 
 import pytest
 import time
-import asyncio
-import threading
-from unittest.mock import Mock, patch, AsyncMock
-from typing import List, Dict, Any, Optional
+from unittest.mock import Mock
+from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from contextlib import contextmanager
-import psutil
-import subprocess
-import json
 
-from services.orchestrator.comment_monitor import CommentMonitor, Comment
+from services.orchestrator.comment_monitor import CommentMonitor
 
 
 @dataclass
@@ -150,7 +144,7 @@ class TestCommentMonitorK8sResourceConstraints:
 
                     # Call original deduplication
                     return self._deduplicate_comments(comments)
-                except Exception as e:
+                except Exception:
                     self.error_count += 1
                     raise
 
@@ -173,7 +167,13 @@ class TestCommentMonitorK8sResourceConstraints:
                 }
 
         mock_db_session = Mock()
-        mock_db_session.query.return_value.filter.return_value.first.return_value = None
+        # Set up the query chain for deduplication: query().filter().all() should return empty list
+        mock_query = Mock()
+        mock_filter = Mock()
+        mock_filter.all.return_value = []  # No existing comments in DB
+        mock_filter.first.return_value = None
+        mock_query.filter.return_value = mock_filter
+        mock_db_session.query.return_value = mock_query
         mock_db_session.add = Mock()
         mock_db_session.commit = Mock()
 
@@ -309,7 +309,7 @@ class TestCommentMonitorK8sResourceConstraints:
                 )
                 processing_time = time.time() - start_time
                 success = True
-            except Exception as e:
+            except Exception:
                 processing_time = time.time() - start_time
                 success = False
                 unique_comments = []

@@ -10,7 +10,6 @@ This script will:
 
 import asyncio
 import httpx
-from datetime import datetime
 
 
 async def test_with_real_article():
@@ -56,16 +55,16 @@ async def test_with_real_article():
                 impact_score = 60.0
                 if real_article_data["reading_time_minutes"] >= 10:
                     impact_score += 10.0
-                    print(f"   ✅ Long-form content bonus: +10.0")
+                    print("   ✅ Long-form content bonus: +10.0")
 
                 ai_tags = ["ai", "machine-learning", "python", "devops"]
                 if any(tag in ai_tags for tag in real_article_data["tags"]):
                     impact_score += 10.0
-                    print(f"   ✅ AI/Tech relevance bonus: +10.0")
+                    print("   ✅ AI/Tech relevance bonus: +10.0")
 
                 if len(real_article_data["tags"]) >= 4:
                     impact_score += 5.0
-                    print(f"   ✅ Good tagging bonus: +5.0")
+                    print("   ✅ Good tagging bonus: +5.0")
 
                 print(f"   📊 Final Impact Score: {impact_score}/100")
 
@@ -77,7 +76,7 @@ async def test_with_real_article():
                     for indicator in tech_indicators
                 ):
                     complexity_score += 15.0
-                    print(f"   ✅ Technical depth bonus: +15.0")
+                    print("   ✅ Technical depth bonus: +15.0")
 
                 print(f"   🧩 Final Complexity Score: {complexity_score}/100")
 

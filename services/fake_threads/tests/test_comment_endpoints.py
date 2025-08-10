@@ -1,5 +1,4 @@
 # /services/fake_threads/tests/test_comment_endpoints.py
-import pytest
 from fastapi.testclient import TestClient
 
 from services.fake_threads.main import app
