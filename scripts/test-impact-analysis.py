@@ -151,10 +151,15 @@ class TestImpactAnalyzer:
         if not test_paths:
             return ''
             
-        # Filter out non-existent paths
+        # Filter out non-existent paths and non-test files
         existing_paths = []
         for path in test_paths:
-            if Path(path).exists():
+            p = Path(path)
+            # Skip non-Python files and config files
+            if path.endswith('.ini') or path.endswith('.sh') or path.endswith('.skip'):
+                continue
+            # Only include Python test files or test directories
+            if p.exists() and (p.is_dir() or (path.endswith('.py') and ('test' in path or 'spec' in path))):
                 existing_paths.append(path)
                 
         if not existing_paths:
