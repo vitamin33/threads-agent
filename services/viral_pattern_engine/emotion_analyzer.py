@@ -60,15 +60,29 @@ class EmotionAnalyzer:
 
     def _analyze_with_models(self, text: str) -> Dict[str, Any]:
         """Analyze emotions using BERT and VADER models."""
-        # Get BERT emotion scores
-        bert_results = self.bert_classifier(text)[0]
+        # Truncate text to max 512 tokens for BERT (roughly 2000 chars)
+        MAX_BERT_CHARS = 2000
+        truncated_text = text[:MAX_BERT_CHARS] if len(text) > MAX_BERT_CHARS else text
+        
+        try:
+            # Get BERT emotion scores
+            bert_results = self.bert_classifier(truncated_text)[0]
+            # Convert BERT results to our 8-emotion format
+            bert_emotions = self._convert_bert_to_8_emotions(bert_results)
+        except Exception as e:
+            # Fallback to keyword analysis if BERT fails
+            print(f"BERT model failed: {e}, falling back to keywords")
+            return self._analyze_with_keywords(text)
 
-        # Convert BERT results to our 8-emotion format
-        bert_emotions = self._convert_bert_to_8_emotions(bert_results)
-
-        # Get VADER sentiment scores
-        vader_scores = self.vader_analyzer.polarity_scores(text)
-        vader_emotions = self._convert_vader_to_emotions(vader_scores)
+        try:
+            # Get VADER sentiment scores
+            vader_scores = self.vader_analyzer.polarity_scores(text)
+            vader_emotions = self._convert_vader_to_emotions(vader_scores)
+        except Exception as e:
+            # Use BERT results only if VADER fails
+            print(f"VADER model failed: {e}, using BERT only")
+            vader_emotions = bert_emotions
+            vader_scores = None  # Set to None when VADER fails
 
         # Ensemble the results
         final_emotions = self._ensemble_emotions(bert_emotions, vader_emotions)
@@ -163,7 +177,7 @@ class EmotionAnalyzer:
         if any(
             word in text_lower for word in ["expect", "hope", "anticipate", "future"]
         ):
-            emotions["anticipation"] = 0.6
+            emotions["anticipation"] = 0.8  # Increased priority for anticipation keywords
 
         # Find dominant emotion
         dominant_emotion = max(emotions, key=emotions.get)
@@ -251,12 +265,15 @@ class EmotionAnalyzer:
         # Get highest BERT confidence
         bert_confidence = max([r["score"] for r in bert_results])
 
-        # VADER confidence based on compound score magnitude
-        vader_confidence = min(1.0, abs(vader_scores["compound"]) + 0.3)
-
-        # Average the confidences
-        overall_confidence = (
-            bert_confidence * self.bert_weight + vader_confidence * self.vader_weight
-        )
+        if vader_scores is not None:
+            # VADER confidence based on compound score magnitude
+            vader_confidence = min(1.0, abs(vader_scores["compound"]) + 0.3)
+            # Average the confidences
+            overall_confidence = (
+                bert_confidence * self.bert_weight + vader_confidence * self.vader_weight
+            )
+        else:
+            # Only BERT confidence when VADER fails
+            overall_confidence = bert_confidence
 
         return round(overall_confidence, 3)

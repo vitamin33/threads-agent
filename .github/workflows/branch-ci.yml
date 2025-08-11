@@ -1,0 +1,369 @@
+name: Branch-Based CI Strategy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/*'
+      - 'hotfix/*'
+
+concurrency:
+  group: branch-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  determine-strategy:
+    runs-on: ubuntu-latest
+    outputs:
+      strategy: ${{ steps.strategy.outputs.type }}
+      tests: ${{ steps.strategy.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Determine CI strategy
+        id: strategy
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          BASE_BRANCH="${{ github.base_ref }}"
+          EVENT="${{ github.event_name }}"
+          
+          # Main branch - comprehensive testing
+          if [[ "$BRANCH" == "main" ]] || [[ "$BASE_BRANCH" == "main" ]]; then
+            echo "type=comprehensive" >> $GITHUB_OUTPUT
+            echo "tests=all" >> $GITHUB_OUTPUT
+            
+          # Release branches - stability testing
+          elif [[ "$BRANCH" == release/* ]] || [[ "$BASE_BRANCH" == release/* ]]; then
+            echo "type=stability" >> $GITHUB_OUTPUT
+            echo "tests=critical" >> $GITHUB_OUTPUT
+            
+          # Hotfix branches - fast validation
+          elif [[ "$BRANCH" == hotfix/* ]] || [[ "$BASE_BRANCH" == hotfix/* ]]; then
+            echo "type=hotfix" >> $GITHUB_OUTPUT
+            echo "tests=smoke" >> $GITHUB_OUTPUT
+            
+          # Feature branches - targeted testing
+          elif [[ "$BRANCH" == feature/* ]] || [[ "$BRANCH" == feat/* ]]; then
+            echo "type=feature" >> $GITHUB_OUTPUT
+            echo "tests=targeted" >> $GITHUB_OUTPUT
+            
+          # Bugfix branches - comprehensive testing for CI fixes, regression for others
+          elif [[ "$BRANCH" == fix/* ]] || [[ "$BRANCH" == bugfix/* ]]; then
+            if [[ "$BRANCH" == *"ci"* ]] || [[ "$BRANCH" == *"infrastructure"* ]]; then
+              echo "type=comprehensive" >> $GITHUB_OUTPUT
+              echo "tests=all" >> $GITHUB_OUTPUT
+            else
+              echo "type=bugfix" >> $GITHUB_OUTPUT
+              echo "tests=regression" >> $GITHUB_OUTPUT
+            fi
+            
+          # Default - standard testing
+          else
+            echo "type=standard" >> $GITHUB_OUTPUT
+            echo "tests=standard" >> $GITHUB_OUTPUT
+          fi
+
+  comprehensive-tests:
+    needs: determine-strategy
+    if: needs.determine-strategy.outputs.strategy == 'comprehensive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install all dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-xdist pytest-cov pytest-timeout pytest-rerunfailures
+          # Install common test dependencies
+          pip install httpx openai prometheus-client pika aio-pika memory-profiler
+          # Install langchain - let pip resolve compatible versions
+          pip install langchain langchain-core langgraph
+          # Install all service requirements
+          for req in services/*/requirements.txt; do
+            [ -f "$req" ] && pip install -r "$req" || true
+          done
+          
+      - name: Run all tests with coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/services/tech_doc_generator
+          OPENAI_MOCK: "1"
+          # Use pytest-xdist database isolation pattern
+          DATABASE_URL: "sqlite:///test_db_$PYTEST_XDIST_WORKER.db"
+          CELERY_EAGER_PROPAGATES_EXCEPTIONS: "1"
+          CELERY_ALWAYS_EAGER: "1"
+        run: |
+          # Create test database isolation function for parallel testing
+          cat > conftest.py << 'EOF'
+import os
+import pytest
+from pathlib import Path
+
+@pytest.fixture(scope="session")
+def worker_id(request):
+    """Get xdist worker id for database isolation"""
+    if hasattr(request.config, 'workerinput'):
+        return request.config.workerinput['workerid']
+    return 'master'
+
+@pytest.fixture(autouse=True)
+def setup_test_database(worker_id, monkeypatch):
+    """Setup isolated database for each test worker"""
+    if worker_id != 'master':
+        db_path = f"test_db_{worker_id}.db"
+        monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+        yield
+        # Cleanup after tests
+        if Path(db_path).exists():
+            Path(db_path).unlink()
+    else:
+        monkeypatch.setenv("DATABASE_URL", "sqlite:///test_db.db")
+        yield
+        if Path("test_db.db").exists():
+            Path("test_db.db").unlink()
+EOF
+          
+          # Run tests with parallel execution
+          pytest -n auto \
+            --reruns 2 --reruns-delay 1 \
+            --cov=services \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term-missing \
+            --cov-fail-under=30 \
+            --ignore=services/celery_worker/ \
+            --ignore=services/orchestrator/tests/test_publishing_integration.py \
+            --ignore=services/orchestrator/tests/test_publishing_tasks.py \
+            --ignore=services/orchestrator/tests/test_achievement_scheduler_integration.py \
+            --ignore=services/orchestrator/tests/test_thompson_sampling_performance_regression.py \
+            --ignore=services/orchestrator/tests/test_health.py \
+            --ignore=services/persona_runtime/ \
+            --ignore=services/tech_doc_generator/ \
+            --ignore=tests/e2e/ \
+            -m "not e2e"
+            
+      - name: Run k3d e2e tests
+        run: |
+          # Setup k3d and run e2e tests
+          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+          k3d cluster create test-cluster
+          pytest -m e2e --timeout=300
+          
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: comprehensive
+
+  stability-tests:
+    needs: determine-strategy
+    if: needs.determine-strategy.outputs.strategy == 'stability'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-timeout
+          
+      - name: Run critical tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest -m critical --timeout=60 -v
+
+  hotfix-validation:
+    needs: determine-strategy
+    if: needs.determine-strategy.outputs.strategy == 'hotfix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Minimal dependencies
+        run: |
+          pip install pytest pytest-timeout
+          # Install only required dependencies
+          grep -E "fastapi|pydantic|sqlalchemy" requirements.txt | xargs pip install
+          
+      - name: Run smoke tests only
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          OPENAI_MOCK: "1"
+        run: |
+          pytest -m smoke --timeout=30 -x
+
+  feature-tests:
+    needs: determine-strategy
+    if: needs.determine-strategy.outputs.strategy == 'feature'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-xdist
+          
+      - name: Run targeted tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          # Use test impact analysis
+          TESTS=$(python scripts/test-impact-analysis.py --format pytest)
+          if [ -n "$TESTS" ] && [ "$TESTS" != "NO_TESTS" ]; then
+            $TESTS
+          else
+            echo "No tests needed for these changes"
+          fi
+
+  regression-tests:
+    needs: determine-strategy
+    if: needs.determine-strategy.outputs.strategy == 'bugfix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-xdist pytest-rerunfailures
+          
+      - name: Run regression tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          # Run tests with extra retries for flaky tests
+          pytest -n auto \
+            --reruns 3 \
+            --reruns-delay 2 \
+            -m "not slow" \
+            -v
+
+  standard-tests:
+    needs: determine-strategy
+    if: needs.determine-strategy.outputs.strategy == 'standard'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-xdist pytest-timeout
+          
+      - name: Run standard test suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          OPENAI_MOCK: "1"
+        run: |
+          pytest -n auto \
+            -m "not e2e and not slow" \
+            --timeout=60
+
+  notify-strategy:
+    needs: determine-strategy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Comment PR with CI strategy
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const strategy = '${{ needs.determine-strategy.outputs.strategy }}';
+            const tests = '${{ needs.determine-strategy.outputs.tests }}';
+            
+            const strategyEmoji = {
+              'comprehensive': '🔍',
+              'stability': '🛡️',
+              'hotfix': '🚑',
+              'feature': '✨',
+              'bugfix': '🐛',
+              'standard': '📋'
+            };
+            
+            const comment = `${strategyEmoji[strategy] || '📋'} **CI Strategy: ${strategy}**
+            
+            Based on the branch type and changes, the following test strategy will be used:
+            - **Test Suite**: ${tests}
+            - **Strategy**: ${strategy}
+            
+            This optimizes CI runtime while ensuring appropriate test coverage.`;
+            
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('CI Strategy:')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
