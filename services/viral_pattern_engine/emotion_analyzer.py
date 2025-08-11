@@ -82,6 +82,7 @@ class EmotionAnalyzer:
             # Use BERT results only if VADER fails
             print(f"VADER model failed: {e}, using BERT only")
             vader_emotions = bert_emotions
+            vader_scores = None  # Set to None when VADER fails
 
         # Ensemble the results
         final_emotions = self._ensemble_emotions(bert_emotions, vader_emotions)
@@ -264,12 +265,15 @@ class EmotionAnalyzer:
         # Get highest BERT confidence
         bert_confidence = max([r["score"] for r in bert_results])
 
-        # VADER confidence based on compound score magnitude
-        vader_confidence = min(1.0, abs(vader_scores["compound"]) + 0.3)
-
-        # Average the confidences
-        overall_confidence = (
-            bert_confidence * self.bert_weight + vader_confidence * self.vader_weight
-        )
+        if vader_scores is not None:
+            # VADER confidence based on compound score magnitude
+            vader_confidence = min(1.0, abs(vader_scores["compound"]) + 0.3)
+            # Average the confidences
+            overall_confidence = (
+                bert_confidence * self.bert_weight + vader_confidence * self.vader_weight
+            )
+        else:
+            # Only BERT confidence when VADER fails
+            overall_confidence = bert_confidence
 
         return round(overall_confidence, 3)
