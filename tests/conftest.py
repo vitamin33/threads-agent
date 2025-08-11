@@ -16,12 +16,17 @@ os.environ["LANGSMITH_API_KEY"] = ""
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
-# Skip emotion tests in CI - they're performance-sensitive and flaky
+# Skip only truly performance-sensitive tests in CI
 def pytest_collection_modifyitems(config, items):
-    """Skip emotion tests in CI environment."""
+    """Skip performance-sensitive tests in CI environment."""
     if os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true":
         skip_ci = pytest.mark.skip(reason="Skipped in CI - performance-sensitive test")
         for item in items:
-            # Skip all emotion-related tests in CI
-            if "emotion" in item.nodeid.lower():
+            # Only skip specific performance/concurrency tests that are timing-sensitive
+            if any(x in item.nodeid.lower() for x in [
+                "test_concurrent_emotion_analysis_100_threads",
+                "test_scalability_stress_test", 
+                "test_memory_usage_under_load",
+                "test_resource_contention_handling"
+            ]):
                 item.add_marker(skip_ci)

@@ -60,15 +60,28 @@ class EmotionAnalyzer:
 
     def _analyze_with_models(self, text: str) -> Dict[str, Any]:
         """Analyze emotions using BERT and VADER models."""
-        # Get BERT emotion scores
-        bert_results = self.bert_classifier(text)[0]
+        # Truncate text to max 512 tokens for BERT (roughly 2000 chars)
+        MAX_BERT_CHARS = 2000
+        truncated_text = text[:MAX_BERT_CHARS] if len(text) > MAX_BERT_CHARS else text
+        
+        try:
+            # Get BERT emotion scores
+            bert_results = self.bert_classifier(truncated_text)[0]
+            # Convert BERT results to our 8-emotion format
+            bert_emotions = self._convert_bert_to_8_emotions(bert_results)
+        except Exception as e:
+            # Fallback to keyword analysis if BERT fails
+            print(f"BERT model failed: {e}, falling back to keywords")
+            return self._analyze_with_keywords(text)
 
-        # Convert BERT results to our 8-emotion format
-        bert_emotions = self._convert_bert_to_8_emotions(bert_results)
-
-        # Get VADER sentiment scores
-        vader_scores = self.vader_analyzer.polarity_scores(text)
-        vader_emotions = self._convert_vader_to_emotions(vader_scores)
+        try:
+            # Get VADER sentiment scores
+            vader_scores = self.vader_analyzer.polarity_scores(text)
+            vader_emotions = self._convert_vader_to_emotions(vader_scores)
+        except Exception as e:
+            # Use BERT results only if VADER fails
+            print(f"VADER model failed: {e}, using BERT only")
+            vader_emotions = bert_emotions
 
         # Ensemble the results
         final_emotions = self._ensemble_emotions(bert_emotions, vader_emotions)
