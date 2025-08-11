@@ -553,20 +553,8 @@ monitoring:
       repository: prom/prometheus
   postgres:
     enabled: false                    # turn ON to monitor PostgreSQL
-      tag: "v2.47.0"
-    persistence:
-      enabled: false
-      size: 2Gi
-      storageClass: ""
-    resources:
-      limits:
-        cpu: 200m
-        memory: 256Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
-    # AI monitoring configuration
-    aiMonitoring:
+  # AI monitoring configuration
+  aiMonitoring:
       enabled: true
       rulesFile: /etc/prometheus/rules/ai-rules.yml
       scrapeInterval: 30s

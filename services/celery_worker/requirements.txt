@@ -1,9 +1,9 @@
 # services/celery_worker/requirements.txt
-celery==5.4.*
-httpx==0.28.*
+celery>=5.4.0,<5.5.0
+httpx>=0.28.0,<0.29.0
 openai>=1.14
 redis>=5.0
 tenacity>=8.2
-psycopg2-binary==2.9.*
+psycopg2-binary>=2.9.0,<3.0.0
 qdrant-client>=1.14,<2.0
 sseclient-py==1.8.0

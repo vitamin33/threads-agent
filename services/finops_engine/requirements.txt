@@ -3,7 +3,7 @@
 # Intelligent Anomaly Detection & Multi-Channel Alerting (CRA-241)
 
 # Core dependencies
-psycopg2-binary==2.9.*
+psycopg2-binary>=2.9.0,<3.0.0
 numpy>=1.24.0
 aiohttp>=3.9.0
 pydantic>=2.6.0.0
