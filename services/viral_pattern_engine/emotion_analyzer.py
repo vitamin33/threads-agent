@@ -176,7 +176,7 @@ class EmotionAnalyzer:
         if any(
             word in text_lower for word in ["expect", "hope", "anticipate", "future"]
         ):
-            emotions["anticipation"] = 0.6
+            emotions["anticipation"] = 0.8  # Increased priority for anticipation keywords
 
         # Find dominant emotion
         dominant_emotion = max(emotions, key=emotions.get)
