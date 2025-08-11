@@ -87,8 +87,8 @@ jobs:
           pip install pytest pytest-xdist pytest-cov pytest-timeout pytest-rerunfailures
           # Install common test dependencies
           pip install httpx openai prometheus-client pika aio-pika memory-profiler
-          # Install specific versions to avoid compatibility issues
-          pip install langchain==0.1.0 langchain-core==0.1.0 langgraph==0.0.26
+          # Install langchain - let pip resolve compatible versions
+          pip install langchain langchain-core langgraph
           # Install all service requirements
           for req in services/*/requirements.txt; do
             [ -f "$req" ] && pip install -r "$req" || true
@@ -98,13 +98,43 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/services/tech_doc_generator
           OPENAI_MOCK: "1"
-          DATABASE_URL: "sqlite:///:memory:"
+          # Use pytest-xdist database isolation pattern
+          DATABASE_URL: "sqlite:///test_db_$PYTEST_XDIST_WORKER.db"
           CELERY_EAGER_PROPAGATES_EXCEPTIONS: "1"
           CELERY_ALWAYS_EAGER: "1"
-          DISABLE_DB_INIT: "1"
         run: |
-          # Skip problematic tests that cause RecursionError or import issues
-          pytest \
+          # Create test database isolation function for parallel testing
+          cat > conftest.py << 'EOF'
+import os
+import pytest
+from pathlib import Path
+
+@pytest.fixture(scope="session")
+def worker_id(request):
+    """Get xdist worker id for database isolation"""
+    if hasattr(request.config, 'workerinput'):
+        return request.config.workerinput['workerid']
+    return 'master'
+
+@pytest.fixture(autouse=True)
+def setup_test_database(worker_id, monkeypatch):
+    """Setup isolated database for each test worker"""
+    if worker_id != 'master':
+        db_path = f"test_db_{worker_id}.db"
+        monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+        yield
+        # Cleanup after tests
+        if Path(db_path).exists():
+            Path(db_path).unlink()
+    else:
+        monkeypatch.setenv("DATABASE_URL", "sqlite:///test_db.db")
+        yield
+        if Path("test_db.db").exists():
+            Path("test_db.db").unlink()
+EOF
+          
+          # Run tests with parallel execution
+          pytest -n auto \
             --reruns 2 --reruns-delay 1 \
             --cov=services \
             --cov-report=xml \
