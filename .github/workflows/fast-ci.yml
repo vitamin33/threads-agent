@@ -29,21 +29,38 @@ jobs:
       - name: Analyze test impact
         id: analyze
         run: |
-          # Run test impact analysis
-          TESTS=$(python scripts/test-impact-analysis.py --format pytest --base-branch origin/${{ github.base_ref }} 2>/dev/null || echo "NO_TESTS")
+          # For CI/workflow changes, just run standard unit tests
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | head -20)
+          echo "Changed files: $CHANGED_FILES"
           
-          if [ "$TESTS" = "ALL_TESTS" ]; then
-            echo "test-paths=pytest -n auto -m 'not e2e'" >> $GITHUB_OUTPUT
+          # Check if only CI/docs files changed
+          CI_ONLY=true
+          for file in $CHANGED_FILES; do
+            if [[ ! "$file" =~ ^(.github/|docs/|.*\.md$|.*\.yml$|.*\.yaml$) ]]; then
+              CI_ONLY=false
+              break
+            fi
+          done
+          
+          if [ "$CI_ONLY" = "true" ]; then
+            echo "Only CI/docs files changed, running minimal tests"
+            echo "test-paths=pytest -m 'not e2e' tests/unit/ --maxfail=5" >> $GITHUB_OUTPUT
             echo "should_run=true" >> $GITHUB_OUTPUT
-          elif [ "$TESTS" = "NO_TESTS" ] || [ -z "$TESTS" ]; then
-            echo "test-paths=" >> $GITHUB_OUTPUT
-            echo "should_run=false" >> $GITHUB_OUTPUT
           else
-            echo "test-paths=$TESTS" >> $GITHUB_OUTPUT
-            echo "should_run=true" >> $GITHUB_OUTPUT
+            # Run test impact analysis for code changes
+            TESTS=$(python scripts/test-impact-analysis.py --format pytest --base-branch origin/${{ github.base_ref }} 2>/dev/null || echo "NO_TESTS")
+            
+            if [ "$TESTS" = "ALL_TESTS" ]; then
+              echo "test-paths=pytest -n auto -m 'not e2e'" >> $GITHUB_OUTPUT
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            elif [ "$TESTS" = "NO_TESTS" ] || [ -z "$TESTS" ]; then
+              echo "test-paths=" >> $GITHUB_OUTPUT
+              echo "should_run=false" >> $GITHUB_OUTPUT
+            else
+              echo "test-paths=$TESTS" >> $GITHUB_OUTPUT
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            fi
           fi
-          
-          echo "Test command: $TESTS"
 
   fast-python-tests:
     needs: test-impact-analysis

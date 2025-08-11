@@ -58,9 +58,15 @@ class TestImpactAnalyzer:
         """Determine which tests should run for a given file change"""
         tests_to_run = set()
         
+        # Skip the test-impact-analysis script itself
+        if 'test-impact-analysis.py' in filepath:
+            return tests_to_run
+            
         # Check if it's a test file itself
         if 'test' in filepath or 'spec' in filepath:
-            tests_to_run.add(filepath)
+            # Only add if it's actually a test file, not a script
+            if filepath.startswith('tests/') or '/tests/' in filepath or '/test_' in filepath:
+                tests_to_run.add(filepath)
             return tests_to_run
         
         # Check critical paths
