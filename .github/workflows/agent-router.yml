@@ -1,16 +1,19 @@
 name: Agent CI Router
 
-# This workflow routes agent PRs to optimized CI paths
-# while reusing existing workflows for non-agent branches
+# This workflow provides optimized CI for agent-specific branches
+# Agent branches skip comprehensive tests and run only agent-relevant checks
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'services/**'
+      - '.github/workflows/**'
+      - 'chart/**'
   push:
     branches:
-      - 'feat/a[1-4]/*'
+      - 'feat/a[1-4]/**'
+      - 'wt-a[1-4]-*/**'
 
 jobs:
   # ============================================
@@ -21,31 +24,34 @@ jobs:
     outputs:
       is_agent: ${{ steps.detect.outputs.is_agent }}
       agent_id: ${{ steps.detect.outputs.agent_id }}
-      should_skip_comprehensive: ${{ steps.detect.outputs.should_skip_comprehensive }}
+      agent_services: ${{ steps.detect.outputs.agent_services }}
     steps:
       - name: Detect agent from branch
         id: detect
         run: |
           BRANCH="${{ github.head_ref || github.ref_name }}"
           
-          # Check if this is an agent branch
-          if [[ "$BRANCH" =~ feat/a([1-4])/ ]]; then
-            AGENT_NUM="${BASH_REMATCH[1]}"
+          # Check if this is an agent branch (feat/a1, wt-a1, etc)
+          if [[ "$BRANCH" =~ (feat/a|wt-a)([1-4]) ]]; then
+            AGENT_NUM="${BASH_REMATCH[2]}"
             echo "is_agent=true" >> $GITHUB_OUTPUT
             echo "agent_id=a${AGENT_NUM}" >> $GITHUB_OUTPUT
-            echo "should_skip_comprehensive=true" >> $GITHUB_OUTPUT
             
-            echo "🤖 Detected Agent A${AGENT_NUM} PR"
+            # Define services for each agent
+            case "${AGENT_NUM}" in
+              1) SERVICES='["orchestrator", "common"]' ;;
+              2) SERVICES='["rag_pipeline", "vllm_service"]' ;;
+              3) SERVICES='["achievement_collector", "tech_doc_generator"]' ;;
+              4) SERVICES='["revenue", "finops_engine"]' ;;
+            esac
             
-            # Set environment variable for other workflows to check
-            echo "AGENT_PR=true" >> $GITHUB_ENV
-            echo "AGENT_ID=a${AGENT_NUM}" >> $GITHUB_ENV
+            echo "agent_services=${SERVICES}" >> $GITHUB_OUTPUT
+            echo "🤖 Agent A${AGENT_NUM} detected - will test: ${SERVICES}"
           else
             echo "is_agent=false" >> $GITHUB_OUTPUT
             echo "agent_id=none" >> $GITHUB_OUTPUT
-            echo "should_skip_comprehensive=false" >> $GITHUB_OUTPUT
-            
-            echo "📋 Standard PR (not from agent)"
+            echo "agent_services=[]" >> $GITHUB_OUTPUT
+            echo "📋 Not an agent PR - running standard CI"
           fi
       
       - name: Check for skip labels
