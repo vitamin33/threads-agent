@@ -106,7 +106,7 @@ jobs:
           pip install -r requirements.txt || true
           
           # Install common test dependencies that are often missing
-          pip install httpx openai prometheus-client pika aio-pika || true
+          pip install httpx openai prometheus-client pika aio-pika fakeredis || true
           
           # Install service dependencies based on changed files
           for req in $(find services -name "requirements*.txt" 2>/dev/null); do
