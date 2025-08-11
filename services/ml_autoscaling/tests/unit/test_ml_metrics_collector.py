@@ -174,7 +174,7 @@ class TestMLMetricsCollector:
         )
 
         # Assert
-        assert recommendation.should_scale == True
+        assert recommendation.should_scale
         assert recommendation.direction == "up"
         assert recommendation.target_replicas == 4  # Double due to high latency
         assert "High P95 latency" in recommendation.reason
@@ -358,7 +358,7 @@ class TestMLMetricsCollector:
         )
 
         # Assert
-        assert anomaly.detected == True
+        assert anomaly.detected
         assert anomaly.severity in ["low", "medium", "high"]
         assert "spike" in anomaly.description.lower()
 

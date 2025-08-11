@@ -77,7 +77,6 @@ class TestCommentMonitor:
         """
         Test: Comments should be deduplicated by comment ID using bulk query.
         """
-        post_id = "post_123"
         duplicate_comments = [
             {
                 "id": "comment_1",

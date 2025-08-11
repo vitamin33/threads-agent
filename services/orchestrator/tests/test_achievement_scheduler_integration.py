@@ -472,7 +472,7 @@ class TestAchievementContentSchedulingWorkflow:
         schedule_response = client.post("/api/v1/schedules", json=schedule_request)
         assert schedule_response.status_code == 201
 
-        schedule_id = schedule_response.json()["id"]
+        schedule_response.json()["id"]
 
         # Step 3: Verify content has achievement metadata
         content_detail_response = client.get(f"/api/v1/content/{content_id}")

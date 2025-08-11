@@ -428,7 +428,7 @@ class TestCommentMonitorK8sResourceConstraints:
 
         # Analyze concurrent performance under constraints
         successful_workers = [r for r in results if r["success"]]
-        failed_workers = [r for r in results if not r["success"]]
+        [r for r in results if not r["success"]]
 
         final_resource_metrics = mock_k8s_resource_monitor.get_current_metrics()
 
@@ -527,9 +527,7 @@ class TestCommentMonitorK8sResourceConstraints:
 
             # Collect metrics
             resource_metrics = mock_k8s_resource_monitor.get_current_metrics()
-            performance_metrics = (
-                resource_constrained_comment_monitor.get_performance_metrics()
-            )
+            (resource_constrained_comment_monitor.get_performance_metrics())
 
             scaling_results.append(
                 {

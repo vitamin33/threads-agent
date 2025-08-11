@@ -93,7 +93,7 @@ async def get_recent_highlights(
                 AchievementModel.completed_at >= cutoff_date,
                 AchievementModel.impact_score >= min_impact_score,
                 AchievementModel.portfolio_ready,
-                AchievementModel.portfolio_ready == True,
+                AchievementModel.portfolio_ready,
             )
         )
         .order_by(desc(AchievementModel.impact_score))
@@ -118,7 +118,7 @@ async def get_company_targeted_achievements(
     Filters by category and searches for company-relevant keywords
     in descriptions and technical details.
     """
-    query = db.query(AchievementModel).filter(AchievementModel.portfolio_ready == True)
+    query = db.query(AchievementModel).filter(AchievementModel.portfolio_ready)
 
     # Filter by categories if provided
     if categories:
@@ -202,7 +202,7 @@ async def filter_achievements(
 
     # Apply filters
     if filters.portfolio_ready_only:
-        query = query.filter(AchievementModel.portfolio_ready == True)
+        query = query.filter(AchievementModel.portfolio_ready)
 
     if filters.categories:
         query = query.filter(AchievementModel.category.in_(filters.categories))

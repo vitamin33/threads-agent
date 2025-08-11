@@ -5,7 +5,7 @@
 # FastAPI and async
 fastapi==0.111.*
 uvicorn==0.30.*
-pydantic==2.6.4
+pydantic>=2.7.0,<3.0.0
 
 # Monitoring and metrics
 prometheus-client==0.19.0

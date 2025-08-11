@@ -153,7 +153,7 @@ class EventSubscriber:
         asyncio.set_event_loop(loop)
 
         try:
-            result = loop.run_until_complete(
+            loop.run_until_complete(
                 self._process_message(channel, method, properties, body)
             )
         finally:

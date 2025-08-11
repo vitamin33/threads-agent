@@ -371,7 +371,7 @@ class TestCommentMonitorChaosEngineering:
             # Small delay between batches
             time.sleep(0.5)
 
-        experiment_duration = time.time() - start_time
+        time.time() - start_time
 
         # Wait for recovery
         recovery_start = time.time()
@@ -438,7 +438,7 @@ class TestCommentMonitorChaosEngineering:
         )
 
         # Inject network partition
-        partition_id = chaos_infrastructure_simulator.inject_network_partition(
+        chaos_infrastructure_simulator.inject_network_partition(
             ["database", "celery"], experiment.duration_seconds
         )
 
@@ -498,7 +498,7 @@ class TestCommentMonitorChaosEngineering:
 
             batch_results = [future.result() for future in as_completed(futures)]
 
-        experiment_duration = time.time() - start_time
+        time.time() - start_time
 
         # Analyze network partition experiment
         chaos_metrics = chaos_comment_monitor.get_chaos_metrics()
@@ -624,7 +624,7 @@ class TestCommentMonitorChaosEngineering:
                     }
                 )
 
-        exhaustion_duration = time.time() - exhaustion_start
+        time.time() - exhaustion_start
 
         # Analyze resource exhaustion experiment
         chaos_metrics = chaos_comment_monitor.get_chaos_metrics()
@@ -743,11 +743,11 @@ class TestCommentMonitorChaosEngineering:
                     {"batch_id": i // batch_size, "success": False, "error": str(e)}
                 )
 
-        corruption_duration = time.time() - corruption_start
+        time.time() - corruption_start
 
         # Analyze data corruption experiment
         chaos_metrics = chaos_comment_monitor.get_chaos_metrics()
-        successful_batches = [r for r in corruption_results if r["success"]]
+        [r for r in corruption_results if r["success"]]
 
         # Data corruption assertions
         corruption_impact = (
@@ -873,7 +873,7 @@ class TestCommentMonitorChaosEngineering:
 
             combined_results = [future.result() for future in as_completed(futures)]
 
-        combined_duration = time.time() - combined_start
+        time.time() - combined_start
 
         # Analyze combined chaos experiment
         chaos_metrics = chaos_comment_monitor.get_chaos_metrics()

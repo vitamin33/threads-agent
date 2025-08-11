@@ -166,7 +166,7 @@ class TestViralEngineIntegration:
         # Should return viral engine results
         result = response.json()
         assert result["quality_score"] == 0.85
-        assert result["passes_quality_gate"] == True  # 0.85 > 0.6
+        assert result["passes_quality_gate"]  # 0.85 > 0.6
 
     def test_quality_scored_event_updates_content_status(self, db_session: Session):
         """
@@ -219,7 +219,7 @@ class TestViralEngineIntegration:
         app.dependency_overrides.clear()
 
         # Check the result
-        assert result == True  # Function should return True for success
+        assert result  # Function should return True for success
 
         # Refresh the session and check that content was updated
         db_session.refresh(
@@ -232,8 +232,8 @@ class TestViralEngineIntegration:
         # Should update metadata with quality info
         assert updated_content.content_metadata is not None
         assert updated_content.content_metadata.get("quality_score") == 0.45
-        assert updated_content.content_metadata.get("passes_quality_gate") == False
-        assert updated_content.content_metadata.get("viral_engine_processed") == True
+        assert not updated_content.content_metadata.get("passes_quality_gate")
+        assert updated_content.content_metadata.get("viral_engine_processed")
 
         # Should not auto-publish low quality content
         assert updated_content.status != "published"

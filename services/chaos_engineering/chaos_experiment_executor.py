@@ -175,7 +175,7 @@ class ChaosExperimentExecutor:
 
             # Perform health check
             actions_performed.append("health_check")
-            final_health = await self._check_system_health()
+            await self._check_system_health()
 
             execution_time = time.time() - start_time
 

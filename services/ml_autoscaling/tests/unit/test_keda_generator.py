@@ -312,7 +312,7 @@ class TestKEDAScaledObjectGenerator:
             ValueError,
             match="max_replicas must be greater than or equal to min_replicas",
         ):
-            invalid_target = ScalingTarget(
+            ScalingTarget(
                 name="invalid",
                 kind="Deployment",
                 min_replicas=10,  # Min > Max
@@ -331,7 +331,7 @@ class TestKEDAScaledObjectGenerator:
     def test_trigger_validation(self, generator, trigger_type, expected_fields):
         """Test validation of trigger configurations"""
         # Arrange
-        target = ScalingTarget("test", "Deployment", 1, 5)
+        ScalingTarget("test", "Deployment", 1, 5)
 
         # Invalid trigger with missing required fields
         invalid_trigger = ScalingTrigger(

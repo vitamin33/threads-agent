@@ -230,7 +230,7 @@ class HistoricalPRIntegrator:
 
         # Get total portfolio value
         total_value = (
-            self.db.query(Achievement).filter(Achievement.metrics != None).all()
+            self.db.query(Achievement).filter(Achievement.metrics is not None).all()
         )
 
         portfolio_sum = sum(

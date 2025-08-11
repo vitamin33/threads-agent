@@ -38,12 +38,6 @@ class TestEventLoopOptimization:
 
         with patch("asyncio.new_event_loop", side_effect=track_event_loop_creation):
             # Simulate message processing
-            test_event_data = {
-                "event_id": "test-123",
-                "event_type": "test_event",
-                "timestamp": "2024-01-01T00:00:00Z",
-                "payload": {"key": "value"},
-            }
 
             # Mock channel and method objects
             mock_channel = Mock()

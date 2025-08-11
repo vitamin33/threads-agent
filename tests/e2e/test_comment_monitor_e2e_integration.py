@@ -584,7 +584,7 @@ class TestCommentMonitorE2EIntegration:
 
             results = [future.result() for future in as_completed(futures)]
 
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         # Analyze small-scale performance
         metrics = e2e_comment_monitor.get_e2e_performance_metrics()
@@ -661,7 +661,7 @@ class TestCommentMonitorE2EIntegration:
 
             results = [future.result() for future in as_completed(futures)]
 
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         # Analyze medium-scale performance
         metrics = e2e_comment_monitor.get_e2e_performance_metrics()
@@ -752,7 +752,7 @@ class TestCommentMonitorE2EIntegration:
                 except Exception as e:
                     results.append({"status": "error", "error": str(e)})
 
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         # Analyze large-scale performance
         metrics = e2e_comment_monitor.get_e2e_performance_metrics()
@@ -1044,7 +1044,7 @@ class TestCommentMonitorE2EIntegration:
             )
             baseline_results.append(result)
 
-        baseline_duration = time.time() - baseline_start
+        time.time() - baseline_start
         baseline_metrics = e2e_comment_monitor.get_e2e_performance_metrics()
 
         # Establish baseline thresholds
@@ -1076,7 +1076,7 @@ class TestCommentMonitorE2EIntegration:
             )
             regression_results.append(result)
 
-        regression_duration = time.time() - regression_start
+        time.time() - regression_start
         regression_metrics = e2e_comment_monitor.get_e2e_performance_metrics()
 
         # Regression detection assertions

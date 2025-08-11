@@ -46,18 +46,6 @@ class TestAchievementEventContracts:
         # This test will FAIL because AchievementContentRequested doesn't exist yet
         # Following TDD: Write the test that describes the expected behavior
 
-        expected_fields = {
-            "content_id": int,
-            "author_id": str,
-            "content_type": str,
-            "target_platform": str,
-            "company_context": str,
-            "achievement_filters": dict,
-            "max_achievements": int,
-            "priority_threshold": float,
-            "requested_at": datetime,
-        }
-
         # Create event payload
         payload = {
             "content_id": 123,
@@ -90,7 +78,7 @@ class TestAchievementEventContracts:
         """Test AchievementContentGenerated event has required fields."""
         # This test will FAIL because AchievementContentGenerated doesn't exist yet
 
-        expected_fields = {
+        {
             "content_id": int,
             "achievement_ids": List[int],
             "generated_content": dict,

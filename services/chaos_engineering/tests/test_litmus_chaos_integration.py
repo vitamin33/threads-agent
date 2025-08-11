@@ -101,36 +101,6 @@ class TestLitmusChaosManager:
             },
         }
 
-        expected_chaos_engine = {
-            "apiVersion": "litmuschaos.io/v1alpha1",
-            "kind": "ChaosEngine",
-            "metadata": {"name": "network-partition-test", "namespace": "litmus"},
-            "spec": {
-                "appinfo": {
-                    "appns": "default",
-                    "applabel": "app=celery-worker",
-                    "appkind": "deployment",
-                },
-                "experiments": [
-                    {
-                        "name": "pod-network-partition",
-                        "spec": {
-                            "components": {
-                                "env": [
-                                    {"name": "TOTAL_CHAOS_DURATION", "value": "60s"},
-                                    {"name": "NETWORK_INTERFACE", "value": "eth0"},
-                                    {
-                                        "name": "DESTINATION_IPS",
-                                        "value": "10.0.0.1,10.0.0.2",
-                                    },
-                                ]
-                            }
-                        },
-                    }
-                ],
-            },
-        }
-
         # Act
         await litmus_manager.create_chaos_experiment(
             ExperimentType.NETWORK_PARTITION, experiment_spec

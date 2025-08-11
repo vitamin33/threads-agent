@@ -118,7 +118,7 @@ class vLLMModelManager:
             raise RuntimeError("Model not loaded")
 
         self.request_count += 1
-        start_time = time.time()
+        time.time()
 
         # Convert messages to prompt
         prompt = self._messages_to_prompt(messages)

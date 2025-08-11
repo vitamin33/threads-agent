@@ -398,9 +398,7 @@ class TestCommentMonitorDatabaseConnectionPooling:
                 for worker_id in range(8)
             ]
 
-            exhaustion_results = [
-                future.result() for future in as_completed(exhaustion_futures)
-            ]
+            [future.result() for future in as_completed(exhaustion_futures)]
 
         # Verify pool was exhausted
         initial_metrics = small_pool.get_metrics()
@@ -450,7 +448,7 @@ class TestCommentMonitorDatabaseConnectionPooling:
             ]
 
         # Verify recovery
-        final_metrics = small_pool.get_metrics()
+        small_pool.get_metrics()
 
         assert len(recovery_results) == 4, "All recovery workers should complete"
         assert all(r["processed"] > 0 for r in recovery_results), (
@@ -593,7 +591,7 @@ class TestCommentMonitorCeleryBatchProcessing:
         comment_monitor._queue_comments_for_analysis(comments, "batch_test_post")
         individual_queue_time = time.time() - start_time
 
-        individual_metrics = mock_celery_client_with_batching.get_metrics()
+        mock_celery_client_with_batching.get_metrics()
 
         # Reset for batch test
         mock_celery_client_with_batching.queued_tasks.clear()

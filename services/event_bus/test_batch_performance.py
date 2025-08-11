@@ -109,7 +109,7 @@ async def test_high_throughput():
 
             url = "http://localhost:8000/events/batch"
             async with session.post(url, json={"events": batch_events}) as response:
-                result = await response.json()
+                await response.json()
 
         total_time = time.time() - start_time
         print(f"Sent {total_events} events in {total_time:.2f}s")

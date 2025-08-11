@@ -424,7 +424,7 @@ class TestPredictiveScaler:
         # Assert
         # With increasing load and high confidence, should scale proactively
         if result.confidence > scaler.policy.prediction_confidence_threshold:
-            assert should_scale == True
+            assert should_scale
             assert result.scale_up_at is not None
 
     @pytest.mark.asyncio

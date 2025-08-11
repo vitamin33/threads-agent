@@ -63,7 +63,7 @@ class AchievementIntegration:
         selected_theme, theme_achievements = self._select_best_theme(grouped)
 
         # Create article prompt
-        prompt = self._create_article_prompt(selected_theme, theme_achievements)
+        self._create_article_prompt(selected_theme, theme_achievements)
 
         # Generate content
         article = await self.content_generator.generate_article(

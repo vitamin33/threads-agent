@@ -133,9 +133,7 @@ class TestAsyncRabbitMQOptimization:
         """
         manager = RabbitMQConnectionManager("amqp://localhost")
 
-        with patch(
-            "aio_pika.connect_robust", new_callable=AsyncMock
-        ) as mock_async_connect:
+        with patch("aio_pika.connect_robust", new_callable=AsyncMock):
             with patch("pika.BlockingConnection") as mock_blocking_connect:
                 # Try to connect using async method
                 try:
@@ -208,7 +206,7 @@ class TestAsyncRabbitMQOptimization:
         manager = RabbitMQConnectionManager("amqp://localhost")
 
         # Mock to simulate the async vs blocking behavior difference
-        with patch("aio_pika.connect_robust", new_callable=AsyncMock) as mock_async:
+        with patch("aio_pika.connect_robust", new_callable=AsyncMock):
             with patch("pika.BlockingConnection") as mock_blocking:
                 # Simulate concurrent operations
                 async def concurrent_connect():
@@ -219,7 +217,7 @@ class TestAsyncRabbitMQOptimization:
 
                 # Run multiple concurrent operations
                 tasks = [concurrent_connect() for _ in range(5)]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
+                await asyncio.gather(*tasks, return_exceptions=True)
 
                 # The important thing: we attempted async operations
                 # No blocking operations should have been used

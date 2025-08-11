@@ -127,7 +127,7 @@ class AIMetricsTracker:
             error: Whether the inference resulted in an error
             service: Service name making the request
         """
-        timestamp = datetime.utcnow()
+        datetime.utcnow()
         self.total_requests += 1
 
         # Emit Prometheus metrics

@@ -370,7 +370,7 @@ class TestCommentMonitorMemoryUsage:
 
         # Memory assertions for large content
         peak_memory = memory_profiler.get_peak_memory()
-        memory_growth = memory_profiler.get_memory_growth()
+        memory_profiler.get_memory_growth()
 
         # Should handle large content efficiently
         total_content_size_mb = (
@@ -521,7 +521,7 @@ class TestCommentMonitorRateLimiting:
                 request_times.append(time.time() - start_time)
 
         # Analyze rate limiting behavior
-        successful_requests = sum(1 for r in results if r.get("status") == "success")
+        sum(1 for r in results if r.get("status") == "success")
         error_requests = sum(1 for r in results if r.get("status") == "error")
 
         # Verify rate limiting was triggered

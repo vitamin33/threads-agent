@@ -184,5 +184,5 @@ class TestStateHandlers:
         )
 
         assert analysis["sentiment"] == "positive"
-        assert analysis["shows_interest"] == True
+        assert analysis["shows_interest"]
         assert "pricing" in analysis["keywords_found"]

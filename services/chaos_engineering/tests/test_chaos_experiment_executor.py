@@ -117,7 +117,7 @@ class TestChaosExperimentExecutor:
         }
 
         # Act
-        result = await executor.execute_experiment(experiment_config)
+        await executor.execute_experiment(experiment_config)
 
         # Assert
         assert mock_prometheus_client.inc.called

@@ -205,7 +205,7 @@ def create_realtime_dashboard_section():
 
     with col1:
         st.markdown("#### 📊 Live Metrics")
-        metrics_container = st.container()
+        st.container()
 
         # Register metrics for updates
         metric1 = st.empty()

@@ -131,7 +131,7 @@ class TestThompsonSamplingWithFatigue:
                 # For direct instantiation in pattern recording
                 mock_session_local.return_value = mock_session
 
-                selected = selector.select_top_variants_with_fatigue_detection(
+                selector.select_top_variants_with_fatigue_detection(
                     sample_variants[:2], persona_id="test_persona", top_k=2
                 )
 

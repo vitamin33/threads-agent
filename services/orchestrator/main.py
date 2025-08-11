@@ -375,7 +375,7 @@ async def business_metrics() -> dict[str, Any]:
         }
 
         # Check for alerts based on current metrics
-        new_alerts = ai_alerts.check_and_alert(metrics_data)
+        ai_alerts.check_and_alert(metrics_data)
 
         status = 200
         return metrics_data

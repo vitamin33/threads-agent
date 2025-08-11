@@ -289,7 +289,7 @@ async def get_devto_analytics(tracking_id: str, db: Session = Depends(get_db)):
 
         from app.services.devto_collector import DevToMetricsCollector
 
-        collector = DevToMetricsCollector()
+        DevToMetricsCollector()
 
         # For demo purposes, you would store the article URL in the database
         # Here we'll need to pass the article URL somehow

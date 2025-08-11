@@ -176,4 +176,4 @@ jobs:
           
       - name: Dry run install
         run: |
-          helm install threads-agent ./chart --dry-run --debug
+          helm install threads-agent ./chart --dry-run=client --debug

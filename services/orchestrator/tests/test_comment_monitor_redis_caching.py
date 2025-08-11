@@ -404,7 +404,7 @@ class TestCommentMonitorRedisCaching:
 
         # Accuracy metrics
         total_unique_ids = len(set(c["id"] for c in all_comments))
-        expected_unique_after_dedup = total_unique_ids - len(duplicate_comments)
+        total_unique_ids - len(duplicate_comments)
 
         accuracy_difference = abs(len(cached_ids) - len(non_cached_ids)) / max(
             len(cached_ids), len(non_cached_ids), 1
@@ -506,10 +506,8 @@ class TestCommentMonitorRedisCaching:
             all_processed_ids.update(result["unique_ids"])
 
         # Verify no duplicate processing of shared comments
-        shared_processed_ids = all_processed_ids.intersection(set(shared_comment_ids))
-        expected_shared_processed = len(
-            set(shared_comment_ids)
-        )  # Should be unique across all batches
+        all_processed_ids.intersection(set(shared_comment_ids))
+        len(set(shared_comment_ids))  # Should be unique across all batches
 
         # Cache consistency assertions
         assert cache_metrics.cache_hits > 0, (
@@ -518,7 +516,7 @@ class TestCommentMonitorRedisCaching:
         assert cache_metrics.cache_sets > 0, "Should have cached new results"
 
         # Performance under concurrency
-        total_comments = sum(len(batch) for batch in comment_batches)
+        sum(len(batch) for batch in comment_batches)
         total_processed = sum(r["processed_count"] for r in results)
         concurrent_throughput = total_processed / total_time
 
@@ -566,9 +564,7 @@ class TestCommentMonitorRedisCaching:
 
             # Process batch
             start_time = time.time()
-            unique_comments = cached_comment_monitor._deduplicate_comments_with_cache(
-                batch
-            )
+            cached_comment_monitor._deduplicate_comments_with_cache(batch)
             processing_time = time.time() - start_time
 
             # Take memory snapshot
@@ -638,9 +634,7 @@ class TestCommentMonitorRedisCaching:
         ]
 
         # First processing: populate cache
-        first_result = cached_comment_monitor._deduplicate_comments_with_cache(
-            initial_comments
-        )
+        cached_comment_monitor._deduplicate_comments_with_cache(initial_comments)
         initial_cache_metrics = mock_redis_client.get_metrics()
 
         assert initial_cache_metrics.cache_sets > 0, "Should have populated cache"
@@ -666,9 +660,7 @@ class TestCommentMonitorRedisCaching:
         cached_comment_monitor._invalidate_comment_cache(changed_comment_ids)
 
         # Process changed comments
-        second_result = cached_comment_monitor._deduplicate_comments_with_cache(
-            changed_comments
-        )
+        cached_comment_monitor._deduplicate_comments_with_cache(changed_comments)
         post_invalidation_metrics = mock_redis_client.get_metrics()
 
         # Invalidation effectiveness assertions
@@ -677,7 +669,7 @@ class TestCommentMonitorRedisCaching:
         )
 
         # Verify cache consistency after invalidation
-        overlapping_ids = set(c["id"] for c in initial_comments).intersection(
+        set(c["id"] for c in initial_comments).intersection(
             set(c["id"] for c in changed_comments)
         )
 
@@ -749,7 +741,7 @@ class TestCommentMonitorRedisCaching:
 
         # Test initial caching
         test_comment_id = "ttl_test_comment_1"
-        initial_result = ttl_monitor._check_comment_cached(test_comment_id)
+        ttl_monitor._check_comment_cached(test_comment_id)
 
         # Verify cache entry exists
         cache_key = f"ttl_test:{test_comment_id}"
@@ -781,7 +773,7 @@ class TestCommentMonitorRedisCaching:
             )
 
             # Verify cache hits
-            second_check = ttl_monitor._check_comment_cached(test_comment_id)
+            ttl_monitor._check_comment_cached(test_comment_id)
             post_check_metrics = mock_redis_client.get_metrics()
             assert post_check_metrics.cache_hits > 0, (
                 "Should have cache hits for non-expired entries"

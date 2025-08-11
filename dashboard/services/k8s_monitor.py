@@ -149,7 +149,6 @@ class K8sServiceMonitor:
                 if lines and lines[0]:
                     # Parse metrics from all nodes
                     total_cpu_millicores = 0
-                    total_memory_mb = 0
                     memory_percent_sum = 0
 
                     for line in lines:

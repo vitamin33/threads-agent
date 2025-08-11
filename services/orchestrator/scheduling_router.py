@@ -1004,7 +1004,7 @@ async def schedule_achievement_digest(
         # Generate digest content
         generator = AchievementContentGenerator()
         digest_config = request_data.get("digest_config", {})
-        content_config = request_data.get("content_config", {})
+        request_data.get("content_config", {})
 
         # Mock recent achievements for minimal implementation
         recent_achievements = [

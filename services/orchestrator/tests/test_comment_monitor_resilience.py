@@ -398,7 +398,7 @@ class TestCommentMonitorErrorHandling:
         resilient_comment_monitor._queue_comments_with_resilience(
             test_comments, "celery_failure_post"
         )
-        processing_time = time.time() - start_time
+        time.time() - start_time
 
         # Analyze queue failure handling
         metrics = resilient_comment_monitor.get_resilience_metrics()
@@ -506,7 +506,7 @@ class TestCommentMonitorErrorHandling:
 
             results = [future.result() for future in as_completed(futures)]
 
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         # Analyze concurrent failure handling
         successful_batches = [r for r in results if r["success"]]
@@ -596,7 +596,7 @@ class TestCommentMonitorErrorHandling:
             system_crashed = False
         except Exception as e:
             system_crashed = True
-            crash_error = str(e)
+            str(e)
 
         processing_time = time.time() - start_time
         metrics = resilient_comment_monitor.get_resilience_metrics()
@@ -710,7 +710,7 @@ class TestCommentMonitorErrorHandling:
             )
         except Exception as e:
             processing_successful = False
-            processing_error = str(e)
+            str(e)
 
         processing_time = time.time() - start_time
         metrics = resilient_comment_monitor.get_resilience_metrics()
