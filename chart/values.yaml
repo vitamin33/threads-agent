@@ -551,6 +551,8 @@ monitoring:
     url: http://prometheus:9090
     image:
       repository: prom/prometheus
+  postgres:
+    enabled: false                    # turn ON to monitor PostgreSQL
       tag: "v2.47.0"
     persistence:
       enabled: false

@@ -22,13 +22,13 @@ jobs:
       matrix:
         service:
           - orchestrator
-          - celery-worker
-          - persona-runtime
-          - viral-engine
-          - fake-threads
-          - threads-adaptor
-          - achievement-collector
-          - performance-monitor
+          - celery_worker
+          - persona_runtime
+          - viral_engine
+          - fake_threads
+          - threads_adaptor
+          - achievement_collector
+          - performance_monitor
           
     steps:
       - uses: actions/checkout@v4

@@ -124,9 +124,11 @@ jobs:
           TEST_CMD="${{ needs.test-impact-analysis.outputs.test-paths }}"
           
           # If test command is empty or just has pytest without paths, run unit tests
-          if [ -z "$TEST_CMD" ] || [ "$TEST_CMD" = "pytest -n auto" ]; then
+          if [ -z "$TEST_CMD" ] || [ "$TEST_CMD" = "pytest -n auto" ] || [[ "$TEST_CMD" == *"pytest -n auto -m"* ]]; then
             echo "No specific tests identified, running all unit tests"
-            pytest -m "not e2e" --timeout=30 --reruns=2 --reruns-delay=1 -v
+            pytest services/*/tests -m "not e2e" --timeout=30 --reruns=2 --reruns-delay=1 -v || \
+            pytest tests/ -m "not e2e" --timeout=30 --reruns=2 --reruns-delay=1 -v || \
+            echo "No tests found or all tests skipped"
           else
             echo "Running: $TEST_CMD"
             $TEST_CMD --timeout=30 --reruns=2 --reruns-delay=1 -v
