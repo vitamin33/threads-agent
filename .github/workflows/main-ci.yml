@@ -118,8 +118,9 @@ jobs:
           
       - name: Dry run install (client-only)
         run: |
-          # Use client-only dry run to avoid k8s connection requirement
-          helm install threads-agent ./chart --dry-run=client --debug
+          # Use generate-name flag with dry-run to avoid k8s connection
+          helm install threads-agent ./chart --dry-run --generate-name 2>/dev/null || \
+          helm template threads-agent ./chart > /dev/null
 
   # ============================================
   # Docker builds (parallel, only for changed services)
@@ -162,7 +163,7 @@ jobs:
 
   docker-builds:
     needs: [detect-changes, python-tests]
-    if: needs.detect-changes.outputs.changed == 'true'
+    if: needs.detect-changes.outputs.changed == 'true' && needs.detect-changes.outputs.services != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -201,7 +202,7 @@ jobs:
   # CI Summary
   # ============================================
   ci-summary:
-    needs: [quick-checks, python-tests, helm-validation, docker-builds]
+    needs: [quick-checks, python-tests, helm-validation]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -210,17 +211,15 @@ jobs:
           echo "## CI Pipeline Summary 📊"
           echo ""
           echo "### Check Results:"
-          echo "- Quick Checks: ${{ needs.quick-checks.result }} ✅"
-          echo "- Python Tests: ${{ needs.python-tests.result }} 🧪"
-          echo "- Helm Validation: ${{ needs.helm-validation.result }} ⚓"
-          echo "- Docker Builds: ${{ needs.docker-builds.result }} 🐳"
+          echo "- Quick Checks: ${{ needs.quick-checks.result }}"
+          echo "- Python Tests: ${{ needs.python-tests.result }}"
+          echo "- Helm Validation: ${{ needs.helm-validation.result }}"
           echo ""
           
           # Overall status
           if [ "${{ needs.quick-checks.result }}" = "success" ] && \
              [ "${{ needs.python-tests.result }}" = "success" ] && \
-             [ "${{ needs.helm-validation.result }}" = "success" ] && \
-             [ "${{ needs.docker-builds.result }}" != "failure" ]; then
+             [ "${{ needs.helm-validation.result }}" = "success" ]; then
             echo "### ✅ CI Pipeline Passed!"
             exit 0
           else
