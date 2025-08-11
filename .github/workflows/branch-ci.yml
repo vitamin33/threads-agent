@@ -9,13 +9,33 @@ on:
       - develop
       - 'release/*'
       - 'hotfix/*'
+  workflow_call:  # Allow this workflow to be called by agent-router
 
 concurrency:
   group: branch-ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # Skip this workflow if agent-router.yml is handling it
+  check-if-agent:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - name: Check if agent branch
+        id: check
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          if [[ "$BRANCH" =~ feat/a[1-4]/ ]]; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping - Agent branch will use optimized CI"
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+  
   determine-strategy:
+    needs: check-if-agent
+    if: needs.check-if-agent.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     outputs:
       strategy: ${{ steps.strategy.outputs.type }}

@@ -305,7 +305,9 @@ class TestThompsonSamplingPerformanceRegression:
         degradation = (batch_times[-1] - batch_times[0]) / batch_times[0]
         assert degradation < 0.2, f"Performance degraded by {degradation * 100:.1f}%"
 
-    @pytest.mark.skip(reason="Flaky performance test - threading performance inconsistent")
+    @pytest.mark.skip(
+        reason="Flaky performance test - threading performance inconsistent"
+    )
     def test_concurrent_performance_scaling(self, performance_test_variants):
         """Test performance scaling with concurrent requests."""
         from concurrent.futures import ThreadPoolExecutor

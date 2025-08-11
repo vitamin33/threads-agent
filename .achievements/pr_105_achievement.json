@@ -1,0 +1,99 @@
+{
+  "pr_number": "105",
+  "timestamp": "2025-08-10T16:22:20.207831",
+  "overall_score": 5.8,
+  "business_value": {
+    "productivity_hours_saved": 0,
+    "developer_productivity_savings": 0,
+    "bugs_prevented_annually": 0,
+    "quality_improvement_savings": 0,
+    "total_annual_savings": 0,
+    "risk_adjusted_savings": 0,
+    "confidence_level": "medium",
+    "total_investment": 3600,
+    "roi_year_one_percent": -100.0,
+    "roi_three_year_percent": -100.0,
+    "user_experience_score": 9
+  },
+  "achievement_tags": [
+    "ai-innovation"
+  ],
+  "pr_type": "quality",
+  "value_categories": {
+    "performance": 0.3,
+    "business": 0.0,
+    "quality": 1.0,
+    "documentation": 0.6,
+    "infrastructure": 0.0,
+    "security": 0.0,
+    "user_experience": 0.0,
+    "technical_debt": 0.0,
+    "innovation": 0.25
+  },
+  "metric_explanations": {
+    "business_metrics": {
+      "throughput_improvement_percent": {
+        "formula": "((current_rps / baseline_rps) - 1) \u00d7 100%",
+        "meaning": "How much faster the system processes requests vs baseline",
+        "baseline": "500 RPS (typical microservice performance)"
+      },
+      "infrastructure_savings_estimate": {
+        "formula": "servers_reduced \u00d7 $12k/year + bandwidth_savings",
+        "meaning": "Annual cost reduction from needing fewer servers"
+      },
+      "developer_productivity_savings": {
+        "formula": "hours_saved \u00d7 $150/hour",
+        "meaning": "Cost savings from developers working more efficiently"
+      },
+      "quality_improvement_savings": {
+        "formula": "bugs_prevented \u00d7 $5k/bug",
+        "meaning": "Cost avoided by catching bugs before production"
+      },
+      "roi_year_one_percent": {
+        "formula": "((annual_savings - investment) / investment) \u00d7 100%",
+        "meaning": "Return on investment in the first year"
+      },
+      "user_experience_score": {
+        "scale": {
+          "10": "<100ms (Exceptional)",
+          "9": "<200ms (Excellent)",
+          "7": "<500ms (Good)",
+          "5": ">500ms (Needs improvement)"
+        }
+      }
+    },
+    "adaptive_scoring": {
+      "pr_type_detection": {
+        "method": "Analyze title, body, and files to determine primary value category",
+        "categories": [
+          "performance",
+          "quality",
+          "business",
+          "innovation",
+          "infrastructure"
+        ]
+      },
+      "adaptive_weights": {
+        "performance_pr": {
+          "performance": "50%",
+          "quality": "20%",
+          "business": "20%",
+          "innovation": "10%"
+        },
+        "quality_pr": {
+          "quality": "60%",
+          "performance": "10%",
+          "business": "20%",
+          "innovation": "10%"
+        },
+        "business_pr": {
+          "business": "60%",
+          "performance": "20%",
+          "quality": "10%",
+          "innovation": "10%"
+        }
+      },
+      "fairness_principle": "PRs can succeed by excelling in their relevant areas, not all areas"
+    }
+  }
+}

@@ -14,7 +14,9 @@ pytestmark = pytest.mark.e2e
 # Port forwards are now handled by conftest.py k8s_port_forwards fixture
 
 
-@pytest.mark.skip(reason="CI infrastructure issue: simplified cluster for CI - services not fully deployed")  
+@pytest.mark.skip(
+    reason="CI infrastructure issue: simplified cluster for CI - services not fully deployed"
+)
 def test_post_task_end_to_end() -> None:
     """Full flow: POST /task → Celery → fake-threads /published."""
     payload = {"persona_id": "ai-jesus", "task_type": "create_post"}
@@ -42,7 +44,9 @@ def test_post_task_end_to_end() -> None:
     pytest.fail("ai-jesus post never appeared in 40s window")
 
 
-@pytest.mark.skip(reason="CI infrastructure issue: simplified cluster for CI - services not fully deployed")
+@pytest.mark.skip(
+    reason="CI infrastructure issue: simplified cluster for CI - services not fully deployed"
+)
 def test_draft_post_happy_path() -> None:
     """
     End-to-end test for draft post generation happy path.

@@ -1,0 +1,31 @@
+# Base requirements for all services
+# Standardized versions after dependency analysis
+
+# Core Web Framework
+fastapi==0.111.*
+uvicorn[standard]==0.30.*
+
+# Database
+sqlalchemy==2.0.29
+psycopg2-binary==2.9.*
+alembic==1.13.1
+
+# Serialization
+pydantic==2.6.4
+pydantic-settings==2.1.0
+
+# Async
+httpx==0.28.*
+aiofiles==23.2.*
+
+# Monitoring
+prometheus-client==0.22.1
+
+# Testing (dev only)
+pytest==8.0.*
+pytest-asyncio==0.21.*
+pytest-cov==4.1.*
+
+# Utilities
+python-dotenv==1.0.*
+tenacity==8.2.*

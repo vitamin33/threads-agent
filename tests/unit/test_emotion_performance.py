@@ -369,7 +369,9 @@ class TestEmotionPerformance:
         )
         # With improved error handling, peak detection may vary
         assert len(peaks_valleys["peak_indices"]) >= 0  # May or may not detect peaks
-        assert len(peaks_valleys["valley_indices"]) >= 0  # May or may not detect valleys
+        assert (
+            len(peaks_valleys["valley_indices"]) >= 0
+        )  # May or may not detect valleys
 
         # Verify peaks are higher intensity than valleys
         if peaks_valleys["peaks"] and peaks_valleys["valleys"]:

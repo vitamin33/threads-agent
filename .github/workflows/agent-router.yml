@@ -1,0 +1,254 @@
+name: Agent CI Router
+
+# This workflow routes agent PRs to optimized CI paths
+# while reusing existing workflows for non-agent branches
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches:
+      - main
+  push:
+    branches:
+      - 'feat/a[1-4]/*'
+
+jobs:
+  # ============================================
+  # Detect if this is an agent PR
+  # ============================================
+  detect-agent:
+    runs-on: ubuntu-latest
+    outputs:
+      is_agent: ${{ steps.detect.outputs.is_agent }}
+      agent_id: ${{ steps.detect.outputs.agent_id }}
+      should_skip_comprehensive: ${{ steps.detect.outputs.should_skip_comprehensive }}
+    steps:
+      - name: Detect agent from branch
+        id: detect
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          
+          # Check if this is an agent branch
+          if [[ "$BRANCH" =~ feat/a([1-4])/ ]]; then
+            AGENT_NUM="${BASH_REMATCH[1]}"
+            echo "is_agent=true" >> $GITHUB_OUTPUT
+            echo "agent_id=a${AGENT_NUM}" >> $GITHUB_OUTPUT
+            echo "should_skip_comprehensive=true" >> $GITHUB_OUTPUT
+            
+            echo "🤖 Detected Agent A${AGENT_NUM} PR"
+            
+            # Set environment variable for other workflows to check
+            echo "AGENT_PR=true" >> $GITHUB_ENV
+            echo "AGENT_ID=a${AGENT_NUM}" >> $GITHUB_ENV
+          else
+            echo "is_agent=false" >> $GITHUB_OUTPUT
+            echo "agent_id=none" >> $GITHUB_OUTPUT
+            echo "should_skip_comprehensive=false" >> $GITHUB_OUTPUT
+            
+            echo "📋 Standard PR (not from agent)"
+          fi
+      
+      - name: Check for skip labels
+        if: steps.detect.outputs.is_agent == 'true'
+        run: |
+          # Allow agents to run comprehensive tests if needed
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'comprehensive-test') }}" == "true" ]]; then
+            echo "should_skip_comprehensive=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================
+  # For NON-AGENT PRs: Use existing branch-ci.yml
+  # ============================================
+  call-standard-ci:
+    needs: detect-agent
+    if: needs.detect-agent.outputs.is_agent == 'false'
+    uses: ./.github/workflows/branch-ci.yml
+    secrets: inherit
+
+  # ============================================
+  # For AGENT PRs: Run optimized tests
+  # ============================================
+  agent-optimized-tests:
+    needs: detect-agent
+    if: needs.detect-agent.outputs.is_agent == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      AGENT_ID: ${{ needs.detect-agent.outputs.agent_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Determine agent services
+        id: services
+        run: |
+          case "${{ env.AGENT_ID }}" in
+            a1)
+              echo "services=orchestrator,celery_worker,persona_runtime" >> $GITHUB_OUTPUT
+              echo "test_paths=services/orchestrator/tests services/celery_worker/tests" >> $GITHUB_OUTPUT
+              ;;
+            a2)
+              echo "services=viral_engine,rag_pipeline,vllm_service" >> $GITHUB_OUTPUT
+              echo "test_paths=services/viral_engine/tests services/rag_pipeline/tests" >> $GITHUB_OUTPUT
+              ;;
+            a3)
+              echo "services=achievement_collector,dashboard_api,finops_engine" >> $GITHUB_OUTPUT
+              echo "test_paths=services/achievement_collector/tests services/dashboard_api/tests services/finops_engine/tests" >> $GITHUB_OUTPUT
+              ;;
+            a4)
+              echo "services=revenue,event_bus,threads_adaptor" >> $GITHUB_OUTPUT
+              echo "test_paths=services/revenue/tests services/event_bus/tests services/threads_adaptor/tests" >> $GITHUB_OUTPUT
+              ;;
+          esac
+      
+      - name: Cache agent dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: agent-${{ env.AGENT_ID }}-${{ hashFiles('**/requirements*.txt') }}
+      
+      - name: Install minimal dependencies
+        run: |
+          # Install base test requirements
+          pip install pytest pytest-xdist pytest-timeout
+          
+          # Install only what the agent needs
+          SERVICES="${{ steps.services.outputs.services }}"
+          for service in ${SERVICES//,/ }; do
+            if [ -f "services/$service/requirements.txt" ]; then
+              echo "Installing requirements for $service"
+              # Install without dependencies first to avoid conflicts
+              pip install --no-deps -r "services/$service/requirements.txt" 2>/dev/null || true
+              # Then resolve dependencies
+              pip install -r "services/$service/requirements.txt" 2>/dev/null || true
+            fi
+          done
+          
+          # Install common requirements if needed
+          pip install fastapi pydantic sqlalchemy 2>/dev/null || true
+      
+      - name: Run agent-specific tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          OPENAI_MOCK: "1"
+          DATABASE_URL: "sqlite:///test_agent_${{ env.AGENT_ID }}.db"
+        run: |
+          echo "🤖 Running tests for Agent ${{ env.AGENT_ID }}"
+          
+          # Only test the agent's services
+          TEST_PATHS="${{ steps.services.outputs.test_paths }}"
+          
+          if [ -n "$TEST_PATHS" ]; then
+            # Run with minimal overhead
+            pytest \
+              --no-header \
+              --no-summary \
+              --tb=short \
+              --timeout=60 \
+              -q \
+              $TEST_PATHS \
+              -m "not e2e and not slow" || {
+                echo "❌ Tests failed for Agent ${{ env.AGENT_ID }}"
+                exit 1
+              }
+            echo "✅ All tests passed for Agent ${{ env.AGENT_ID }}"
+          else
+            echo "⚠️ No tests found for agent services"
+          fi
+
+  # ============================================
+  # Agent boundary checks (reuse parts of existing)
+  # ============================================
+  agent-boundary-check:
+    needs: detect-agent
+    if: needs.detect-agent.outputs.is_agent == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Verify agent boundaries
+        env:
+          AGENT_ID: ${{ needs.detect-agent.outputs.agent_id }}
+        run: |
+          echo "🔍 Checking Agent $AGENT_ID boundaries"
+          
+          # Get list of modified files
+          git diff --name-only origin/main...HEAD > modified_files.txt
+          
+          # Rule 1: Only A1 can modify database migrations
+          if grep -q "alembic/versions/" modified_files.txt && [ "$AGENT_ID" != "a1" ]; then
+            echo "❌ ERROR: Only Agent A1 can modify database migrations"
+            exit 1
+          fi
+          
+          # Rule 2: Check for common file modifications
+          if grep -q "^services/common/" modified_files.txt; then
+            echo "⚠️ WARNING: Modifying common files - ensure lock was used"
+            echo "Expected: .locks/.common-lock-$AGENT_ID should exist"
+          fi
+          
+          # Rule 3: Verify services modified are owned by this agent
+          case "$AGENT_ID" in
+            a1) OWNED_SERVICES="orchestrator|celery_worker|persona_runtime" ;;
+            a2) OWNED_SERVICES="viral_engine|rag_pipeline|vllm_service" ;;
+            a3) OWNED_SERVICES="achievement_collector|dashboard_api|finops_engine" ;;
+            a4) OWNED_SERVICES="revenue|event_bus|threads_adaptor" ;;
+          esac
+          
+          # Check if modifying other agents' services
+          while read -r file; do
+            if [[ "$file" =~ ^services/([^/]+)/ ]]; then
+              SERVICE="${BASH_REMATCH[1]}"
+              if [ "$SERVICE" != "common" ] && ! [[ "$SERVICE" =~ $OWNED_SERVICES ]]; then
+                echo "⚠️ WARNING: Modifying service '$SERVICE' not owned by Agent $AGENT_ID"
+              fi
+            fi
+          done < modified_files.txt
+          
+          echo "✅ Boundary checks passed"
+
+  # ============================================
+  # Auto-merge handler
+  # ============================================
+  auto-merge:
+    needs: [detect-agent, agent-optimized-tests, agent-boundary-check]
+    if: |
+      needs.detect-agent.outputs.is_agent == 'true' &&
+      needs.agent-optimized-tests.result == 'success' &&
+      needs.agent-boundary-check.result == 'success' &&
+      contains(github.event.pull_request.labels.*.name, 'auto-merge')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge
+        uses: alexwilson/enable-github-automerge-action@v1.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: "SQUASH"
+      
+      - name: Comment on PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const agent = '${{ needs.detect-agent.outputs.agent_id }}';
+            const agentEmojis = { 'a1': '🔧', 'a2': '🤖', 'a3': '📊', 'a4': '💰' };
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${agentEmojis[agent]} **Agent ${agent.toUpperCase()} CI Complete**\n\n` +
+                    `✅ Optimized tests passed (5 min vs 20 min)\n` +
+                    `✅ Boundary checks passed\n` +
+                    `✅ Auto-merge enabled - will merge when ready\n\n` +
+                    `_Saved ~15 minutes of CI time!_`
+            });

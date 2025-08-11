@@ -14,7 +14,9 @@ pytestmark = pytest.mark.e2e
 # Port forwards are now handled by conftest.py k8s_port_forwards fixture
 
 
-@pytest.mark.skip(reason="CI infrastructure issue: simplified cluster for CI - services not fully deployed")
+@pytest.mark.skip(
+    reason="CI infrastructure issue: simplified cluster for CI - services not fully deployed"
+)
 def test_business_metrics_collection() -> None:
     """Test that business metrics are properly collected during content generation."""
     # 1️⃣ Trigger content generation

@@ -1,5 +1,5 @@
 # services/conversation_engine/requirements.txt
-fastapi==0.111.*
+fastapi==0.111.**
 uvicorn[standard]==0.30.*
 psycopg2-binary==2.9.*
 

@@ -12,10 +12,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 from services.orchestrator.db import Base
+
 # Import all models to ensure they're registered with Base.metadata
 from services.orchestrator.db.models import (
-    VariantPerformance, Post, Task, EmotionTrajectory, 
-    EmotionSegment, EmotionTransition, EmotionTemplate, EmotionPerformance
+    VariantPerformance,
 )
 from services.orchestrator.thompson_sampling import (
     select_top_variants,
@@ -56,17 +56,21 @@ class TestThompsonSamplingConcurrent:
             impressions = np.random.randint(0, 1000)
             # Ensure successes <= impressions
             max_successes = min(impressions, 100)
-            successes = np.random.randint(0, max_successes + 1) if impressions > 0 else 0
-            
-            variants.append({
-                "variant_id": f"v_{i}",
-                "dimensions": {"hook_style": f"style_{i % 5}"},
-                "performance": {
-                    "impressions": impressions,
-                    "successes": successes,
-                },
-                "sample_content": f"Content for variant {i}",
-            })
+            successes = (
+                np.random.randint(0, max_successes + 1) if impressions > 0 else 0
+            )
+
+            variants.append(
+                {
+                    "variant_id": f"v_{i}",
+                    "dimensions": {"hook_style": f"style_{i % 5}"},
+                    "performance": {
+                        "impressions": impressions,
+                        "successes": successes,
+                    },
+                    "sample_content": f"Content for variant {i}",
+                }
+            )
         return variants
 
     def test_concurrent_variant_selection(self, test_variants):

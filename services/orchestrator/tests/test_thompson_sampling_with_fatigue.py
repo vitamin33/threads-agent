@@ -15,7 +15,7 @@ class TestThompsonSamplingWithFatigue:
     @pytest.fixture
     def selector(self):
         """Create selector instance with mocked pattern service."""
-        with patch('services.orchestrator.thompson_sampling_with_fatigue.SessionLocal'):
+        with patch("services.orchestrator.thompson_sampling_with_fatigue.SessionLocal"):
             selector = ThompsonSamplingWithFatigue()
             # Mock the pattern service to avoid database calls
             selector.pattern_service = MagicMock()
@@ -55,18 +55,22 @@ class TestThompsonSamplingWithFatigue:
     def test_select_variants_with_fresh_content(self, selector, sample_variants):
         """Test selection when all content is fresh."""
         # Mock the pattern extractor
-        with patch.object(selector.pattern_extractor, 'extract_pattern') as mock_extract:
+        with patch.object(
+            selector.pattern_extractor, "extract_pattern"
+        ) as mock_extract:
             mock_extract.side_effect = lambda x: f"pattern_{x[:10]}"
-            
+
             # Mock the database session and query
             mock_session = MagicMock()
             mock_query = MagicMock()
             mock_query.filter.return_value.group_by.return_value.all.return_value = []
             mock_session.query.return_value = mock_query
-            
-            with patch('services.orchestrator.thompson_sampling_with_fatigue.SessionLocal') as mock_session_local:
+
+            with patch(
+                "services.orchestrator.thompson_sampling_with_fatigue.SessionLocal"
+            ) as mock_session_local:
                 mock_session_local.return_value.__enter__.return_value = mock_session
-                
+
                 selected = selector.select_top_variants_with_fatigue_detection(
                     sample_variants, persona_id="test_persona", top_k=3
                 )
@@ -77,9 +81,11 @@ class TestThompsonSamplingWithFatigue:
     def test_select_variants_with_fatigued_patterns(self, selector, sample_variants):
         """Test selection with some fatigued patterns."""
         # Mock the pattern extractor
-        with patch.object(selector.pattern_extractor, 'extract_pattern') as mock_extract:
+        with patch.object(
+            selector.pattern_extractor, "extract_pattern"
+        ) as mock_extract:
             mock_extract.side_effect = lambda x: f"pattern_{x[:10]}"
-            
+
             # Mock the database session and query to return high usage for some patterns
             mock_session = MagicMock()
             mock_query = MagicMock()
@@ -88,10 +94,12 @@ class TestThompsonSamplingWithFatigue:
                 ("pattern_Check out ", 5),  # High usage = fatigued
             ]
             mock_session.query.return_value = mock_query
-            
-            with patch('services.orchestrator.thompson_sampling_with_fatigue.SessionLocal') as mock_session_local:
+
+            with patch(
+                "services.orchestrator.thompson_sampling_with_fatigue.SessionLocal"
+            ) as mock_session_local:
                 mock_session_local.return_value.__enter__.return_value = mock_session
-                
+
                 selected = selector.select_top_variants_with_fatigue_detection(
                     sample_variants, persona_id="test_persona", top_k=3
                 )
@@ -104,21 +112,25 @@ class TestThompsonSamplingWithFatigue:
     def test_pattern_usage_recording(self, selector, sample_variants):
         """Test that pattern usage is recorded."""
         # Mock the pattern extractor
-        with patch.object(selector.pattern_extractor, 'extract_pattern') as mock_extract:
+        with patch.object(
+            selector.pattern_extractor, "extract_pattern"
+        ) as mock_extract:
             mock_extract.side_effect = lambda x: f"pattern_{x[:10]}"
-            
+
             # Mock the database session for both context manager and direct instantiation
             mock_session = MagicMock()
             mock_query = MagicMock()
             mock_query.filter.return_value.group_by.return_value.all.return_value = []
             mock_session.query.return_value = mock_query
-            
-            with patch('services.orchestrator.thompson_sampling_with_fatigue.SessionLocal') as mock_session_local:
+
+            with patch(
+                "services.orchestrator.thompson_sampling_with_fatigue.SessionLocal"
+            ) as mock_session_local:
                 # For context manager usage in fatigue calculation
                 mock_session_local.return_value.__enter__.return_value = mock_session
                 # For direct instantiation in pattern recording
                 mock_session_local.return_value = mock_session
-                
+
                 selected = selector.select_top_variants_with_fatigue_detection(
                     sample_variants[:2], persona_id="test_persona", top_k=2
                 )
@@ -131,42 +143,49 @@ class TestThompsonSamplingWithFatigue:
     def test_fatigue_weight_influence(self, selector, sample_variants):
         """Test that fatigue weight properly influences selection."""
         # Mock the pattern extractor
-        with patch.object(selector.pattern_extractor, 'extract_pattern') as mock_extract:
+        with patch.object(
+            selector.pattern_extractor, "extract_pattern"
+        ) as mock_extract:
             mock_extract.side_effect = lambda x: f"pattern_{x[:10]}"
-            
+
             # Mock the database session and query
             mock_session = MagicMock()
             mock_query = MagicMock()
-            
-            with patch('services.orchestrator.thompson_sampling_with_fatigue.SessionLocal') as mock_session_local:
+
+            with patch(
+                "services.orchestrator.thompson_sampling_with_fatigue.SessionLocal"
+            ) as mock_session_local:
                 mock_session_local.return_value.__enter__.return_value = mock_session
-                
+
                 # Test with no fatigue weight
                 selector.fatigue_weight = 0.0
                 mock_query.filter.return_value.group_by.return_value.all.return_value = [
                     ("pattern_Check out ", 5),  # High usage
                 ]
                 mock_session.query.return_value = mock_query
-                
+
                 _ = selector.select_top_variants_with_fatigue_detection(
                     sample_variants, persona_id="test_persona", top_k=3
                 )
 
                 # Test with high fatigue weight
                 selector.fatigue_weight = 0.9
+
                 # Simulate different usage counts for different patterns
                 def pattern_usage_side_effect(*args, **kwargs):
                     # Return different results based on the query
                     return mock_query
-                
+
                 mock_session.query.side_effect = pattern_usage_side_effect
                 mock_query.filter.return_value.group_by.return_value.all.return_value = [
                     ("pattern_Check out ", 5),  # High usage for "Check out"
                     ("pattern_Revolution", 0),  # No usage for "Revolutionary"
                 ]
-                
-                selected_high_weight = selector.select_top_variants_with_fatigue_detection(
-                    sample_variants, persona_id="test_persona", top_k=3
+
+                selected_high_weight = (
+                    selector.select_top_variants_with_fatigue_detection(
+                        sample_variants, persona_id="test_persona", top_k=3
+                    )
                 )
 
                 # With high fatigue weight, fresher patterns should be strongly preferred
@@ -204,12 +223,17 @@ class TestThompsonSamplingWithFatigue:
 
     def test_convenience_function(self, sample_variants):
         """Test the convenience function."""
-        with patch('services.orchestrator.thompson_sampling_with_fatigue.ThompsonSamplingWithFatigue') as mock_selector_class:
+        with patch(
+            "services.orchestrator.thompson_sampling_with_fatigue.ThompsonSamplingWithFatigue"
+        ) as mock_selector_class:
             # Create a mock instance
             mock_selector = MagicMock()
-            mock_selector.select_top_variants_with_fatigue_detection.return_value = ["v1", "v2"]
+            mock_selector.select_top_variants_with_fatigue_detection.return_value = [
+                "v1",
+                "v2",
+            ]
             mock_selector_class.return_value = mock_selector
-            
+
             selected = select_variants_with_fatigue_detection(
                 sample_variants, persona_id="test_persona", top_k=2
             )
@@ -255,20 +279,23 @@ class TestThompsonSamplingWithFatigue:
     def test_error_handling_in_pattern_recording(self, selector, sample_variants):
         """Test graceful handling of database errors."""
         # Mock the pattern extractor
-        with patch.object(selector.pattern_extractor, 'extract_pattern') as mock_extract:
+        with patch.object(
+            selector.pattern_extractor, "extract_pattern"
+        ) as mock_extract:
             mock_extract.side_effect = lambda x: f"pattern_{x[:10]}"
-            
+
             # First mock for the pattern fatigue calculation - this should work
             mock_session_good = MagicMock()
             mock_query = MagicMock()
             mock_query.filter.return_value.group_by.return_value.all.return_value = []
             mock_session_good.query.return_value = mock_query
-            
+
             # Second mock for the pattern recording - this should fail
             mock_session_bad = MagicMock()
             mock_session_bad.bulk_insert_mappings.side_effect = Exception("DB Error")
-            
+
             call_count = 0
+
             def session_factory():
                 nonlocal call_count
                 call_count += 1
@@ -276,10 +303,12 @@ class TestThompsonSamplingWithFatigue:
                     return mock_session_good
                 else:  # For pattern recording
                     return mock_session_bad
-            
-            with patch('services.orchestrator.thompson_sampling_with_fatigue.SessionLocal') as mock_session_local:
+
+            with patch(
+                "services.orchestrator.thompson_sampling_with_fatigue.SessionLocal"
+            ) as mock_session_local:
                 mock_session_local.side_effect = session_factory
-                
+
                 # Should not raise, just log error
                 selected = selector.select_top_variants_with_fatigue_detection(
                     sample_variants, persona_id="test_persona", top_k=2

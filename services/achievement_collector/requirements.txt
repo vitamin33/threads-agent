@@ -1,13 +1,13 @@
 # Achievement Collector Service Requirements
 
 # Core
-fastapi==0.111.*
+fastapi==0.111.**
 uvicorn[standard]==0.30.*
-pydantic==2.8.*
+pydantic==2.6.4*
 pydantic-settings==2.3.*
 
 # Database
-sqlalchemy==2.0.*
+sqlalchemy==2.0.29*
 alembic==1.13.*
 psycopg2-binary==2.9.*
 

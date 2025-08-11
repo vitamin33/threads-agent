@@ -19,13 +19,14 @@ from pydantic import BaseModel
 
 # Configure debug logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 logger.info("🚀 Starting orchestrator service...")
 logger.info(f"Python version: {os.sys.version}")
-logger.info(f"Environment: CI={os.getenv('CI', 'false')}, GITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS', 'false')}")
+logger.info(
+    f"Environment: CI={os.getenv('CI', 'false')}, GITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS', 'false')}"
+)
 
 # Production optimizations
 from services.orchestrator.rate_limiter import SimpleRateLimiter
@@ -95,7 +96,9 @@ try:
     logger.info("✅ Celery connection established")
 except Exception as e:
     logger.warning(f"⚠️ Celery connection failed (will retry on first use): {e}")
-    celery_app = Celery("orchestrator", broker=BROKER_URL)  # Create anyway for decorators
+    celery_app = Celery(
+        "orchestrator", broker=BROKER_URL
+    )  # Create anyway for decorators
 
 maybe_start_metrics_server()  # Prom-client HTTP at :9090
 
@@ -226,8 +229,6 @@ def run_persona(cfg: dict[str, Any], user_input: str) -> None:
     )
 
 
-
-
 @app.get("/health/ready")
 async def readiness_check() -> dict[str, Any]:
     """
@@ -244,6 +245,7 @@ async def readiness_check() -> dict[str, Any]:
     try:
         # Simple check - try to import and use the session
         from services.orchestrator.db import get_db_session
+
         # Try to get a session - this will fail if DB is not available
         db_gen = get_db_session()
         db = next(db_gen)

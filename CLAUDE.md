@@ -65,6 +65,11 @@ services/
 ```bash
 git clone git@github.com:threads-agent-stack/threads-agent.git
 cd threads-agent
+
+# For parallel development with 4 Claude Code instances:
+./setup-4-agents.sh  # Creates 4 isolated worktrees
+
+# For regular development:
 just dev-start  # Starts everything!
 ```
 
@@ -181,19 +186,32 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
 
 ## Development Best Practices
 
-### Git Workflow & Branch Strategy
-**Branch Naming → CI Optimization**:
-| Branch | Purpose | CI Tests | Time |
-|--------|---------|----------|------|
-| `main` | Production | Full coverage + e2e | 20m |
-| `release/*` | Releases | Multi-Python stability | 15m |
-| `hotfix/*` | Urgent fixes | Smoke tests only | 5m |
-| `feature/*` `feat/*` | Features | Impact analysis | 5-10m |
-| `fix/*` `bugfix/*` | Bug fixes | Regression + retries | 10m |
-| `CRA-XXX-*` | Linear tasks | Standard tests | 10m |
+### Git Workflow & Branch Strategy (Solo Dev + 4 AI Agents)
 
-- Protection: PR + CI required
-- Automation: `just ship` handles all
+**Branch Naming for Parallel Development**:
+```
+<type>/<area>/<feature>__<agent>
+Examples:
+- feat/mlops/mlflow-slo-gates__a1
+- feat/genai/vllm-optimize__a2
+- fix/achieve/portfolio-bug__a3
+- perf/revenue/ab-testing__a4
+```
+
+**Worktree Setup (4 Parallel Claude Sessions)**:
+```bash
+# Each agent works in separate worktree
+wt-a1-mlflow-slo    → Agent 1 (MLOps/SLO)
+wt-a2-vllm-cost     → Agent 2 (GenAI/RAG)
+wt-a3-portfolio     → Agent 3 (Achievement)
+wt-a4-ab-testing    → Agent 4 (Revenue/AB)
+```
+
+**Solo Dev Optimizations**:
+- No PR reviews required (auto-merge on green CI)
+- Direct push to branches
+- Shared Docker services (use DB_SCHEMA for isolation)
+- Light coordination via .common-lock files
 - **Pre-Push**: Run `just check` before push
 
 ### Configuration Management (CRITICAL)
@@ -311,6 +329,92 @@ just token-batch     # Batch processing (80% savings)
 1. Smart Caching (60-70% savings)
 2. Batch Processing (30-40% savings)
 3. Template Generation (40-50% savings)
+
+## 🚀 Parallel AI Agent Development (4 Claude Code Instances)
+
+### Quick Setup
+```bash
+# One command to set up 4 parallel development environments
+./setup-4-agents.sh
+```
+
+This creates 4 isolated worktrees with no conflicts:
+- **No port conflicts** - Each agent has 100-port range
+- **No database conflicts** - Separate schemas per agent
+- **No file conflicts** - Local config files never committed
+- **No merge conflicts** - Agent-specific files in .gitignore
+
+### Your 4 Parallel Agents
+
+```bash
+Agent A1 (MLOps)     → ../wt-a1-mlops     → orchestrator, celery_worker, persona_runtime
+Agent A2 (GenAI)     → ../wt-a2-genai     → viral_engine, rag_pipeline, vllm_service
+Agent A3 (Analytics) → ../wt-a3-analytics → achievement_collector, dashboard_api, finops
+Agent A4 (Platform)  → ../wt-a4-platform  → revenue, event_bus, threads_adaptor
+```
+
+### Working in Your Worktree
+
+1. **Navigate to your worktree**:
+```bash
+cd ../wt-a1-mlops  # or a2-genai, a3-analytics, a4-platform
+```
+
+2. **Activate environment**:
+```bash
+source .venv/bin/activate
+source .agent.env  # Sets AGENT_ID, ports, schema
+```
+
+3. **Check your identity**:
+```bash
+echo $AGENT_ID      # Shows a1, a2, a3, or a4
+cat AGENT_FOCUS.md  # Your responsibilities (local file)
+```
+
+### Coordination Rules
+
+#### Modifying Common Files
+```bash
+# Check if locked
+ls .locks/
+
+# Lock for your agent
+touch .locks/.common-lock-$AGENT_ID
+
+# Make changes to /services/common/*
+
+# Unlock when done
+rm .locks/.common-lock-$AGENT_ID
+```
+
+#### Database Changes
+- Only A1 modifies schema (owns Alembic)
+- Others submit migration requests
+
+#### Creating PRs
+```bash
+# Your branch naming: feat/<agent_id>/<feature>
+git checkout -b feat/a1/mlflow-integration
+
+# Commit and push
+git add .
+git commit -m "feat: mlflow integration"
+git push origin feat/a1/mlflow-integration
+
+# Create PR with agent tag
+gh pr create --title "[A1] MLflow integration" --label "auto-merge"
+```
+
+### Important: Local Files Never Commit
+
+These files are LOCAL ONLY (in .gitignore):
+- `AGENT_FOCUS.md` - Your responsibilities
+- `.agent.env` - Your configuration
+- `*.local` - Any local notes
+- `.locks/` - Coordination locks
+
+This prevents merge conflicts between agents!
 
 ## AI Guidelines
 

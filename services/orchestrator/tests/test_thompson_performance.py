@@ -141,7 +141,9 @@ class TestThompsonSamplingPerformance:
         # For large sets, heap-based selection should be much faster
         assert time_opt < time_orig * 0.5  # At least 2x faster
 
-    @pytest.mark.skip(reason="Flaky performance test - memory usage comparisons inconsistent")
+    @pytest.mark.skip(
+        reason="Flaky performance test - memory usage comparisons inconsistent"
+    )
     def test_memory_usage_comparison(self, mock_variants_large):
         """Test memory efficiency of cache implementation."""
         import sys

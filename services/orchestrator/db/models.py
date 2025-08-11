@@ -19,7 +19,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import event
 import json
-import os
 import re
 
 from . import Base
@@ -28,27 +27,28 @@ from . import Base
 # Database compatibility layer for ARRAY type
 class ArrayType(TypeDecorator):
     """Custom type that uses ARRAY for PostgreSQL and JSON for SQLite."""
+
     impl = Text
     cache_ok = True
-    
+
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(postgresql.ARRAY(String))
         else:
             return dialect.type_descriptor(JSON)
-    
+
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
-        if dialect.name != 'postgresql':
+        if dialect.name != "postgresql":
             # For SQLite, convert list to JSON string
             return json.dumps(value) if isinstance(value, list) else value
         return value
-    
+
     def process_result_value(self, value, dialect):
         if value is None:
             return None
-        if dialect.name != 'postgresql' and isinstance(value, str):
+        if dialect.name != "postgresql" and isinstance(value, str):
             # For SQLite, parse JSON string back to list
             try:
                 return json.loads(value)

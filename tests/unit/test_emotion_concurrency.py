@@ -389,7 +389,9 @@ class TestEmotionConcurrency:
         assert len(successful) >= 47, (
             f"Expected at least 47 successful analyses, got {len(successful)}"
         )
-        assert len(failed) <= 3, f"Expected at most 3 failed analyses, got {len(failed)}"
+        assert len(failed) <= 3, (
+            f"Expected at most 3 failed analyses, got {len(failed)}"
+        )
         assert len(errors) == 3, "Should have 3 recorded errors"
 
         # Verify successful analyses are unaffected

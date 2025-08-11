@@ -13,7 +13,7 @@ import time
 # Skip this entire test module in CI if psutil is not available
 pytestmark = pytest.mark.skipif(
     os.getenv("CI") == "true" and os.getenv("GITHUB_ACTIONS") == "true",
-    reason="Skipping comment monitor e2e tests in CI due to psutil dependency"
+    reason="Skipping comment monitor e2e tests in CI due to psutil dependency",
 )
 from unittest.mock import Mock
 from typing import Dict, Any
@@ -362,6 +362,7 @@ class TestCommentMonitorE2EIntegration:
                         # Simplified memory monitoring
                         try:
                             import psutil
+
                             process = psutil.Process()
                             return process.memory_info().rss / 1024 / 1024  # MB
                         except ImportError:

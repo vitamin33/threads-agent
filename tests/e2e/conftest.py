@@ -60,7 +60,7 @@ def k8s_port_forwards() -> Iterator[None]:
     pf_fake_threads = _port_forward("fake-threads", THREADS_PORT, 9009)
     pf_qdrant = _port_forward("qdrant", QDRANT_PORT, 6333)
     pf_postgres = _port_forward("postgres-0", POSTGRES_PORT, 5432)
-    
+
     # Give port forwards time to establish
     time.sleep(2)
 

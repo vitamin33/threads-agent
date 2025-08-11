@@ -63,7 +63,7 @@ class EmotionAnalyzer:
         # Truncate text to max 512 tokens for BERT (roughly 2000 chars)
         MAX_BERT_CHARS = 2000
         truncated_text = text[:MAX_BERT_CHARS] if len(text) > MAX_BERT_CHARS else text
-        
+
         try:
             # Get BERT emotion scores
             bert_results = self.bert_classifier(truncated_text)[0]
@@ -177,7 +177,9 @@ class EmotionAnalyzer:
         if any(
             word in text_lower for word in ["expect", "hope", "anticipate", "future"]
         ):
-            emotions["anticipation"] = 0.8  # Increased priority for anticipation keywords
+            emotions["anticipation"] = (
+                0.8  # Increased priority for anticipation keywords
+            )
 
         # Find dominant emotion
         dominant_emotion = max(emotions, key=emotions.get)
@@ -270,7 +272,8 @@ class EmotionAnalyzer:
             vader_confidence = min(1.0, abs(vader_scores["compound"]) + 0.3)
             # Average the confidences
             overall_confidence = (
-                bert_confidence * self.bert_weight + vader_confidence * self.vader_weight
+                bert_confidence * self.bert_weight
+                + vader_confidence * self.vader_weight
             )
         else:
             # Only BERT confidence when VADER fails

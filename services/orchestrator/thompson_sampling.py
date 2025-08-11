@@ -24,7 +24,7 @@ def select_top_variants(variants: List[Dict[str, Any]], top_k: int = 10) -> List
     for variant in variants:
         impressions = variant["performance"]["impressions"]
         successes = variant["performance"]["successes"]
-        
+
         # Ensure successes don't exceed impressions (data integrity check)
         if successes > impressions:
             successes = impressions

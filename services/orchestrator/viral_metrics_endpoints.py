@@ -12,6 +12,7 @@ try:
     from services.viral_engine.viral_coefficient_calculator import (
         ViralCoefficientCalculator,
     )
+
     # Global calculator instance for tracking stats across requests
     _calculator = ViralCoefficientCalculator()
     VIRAL_ENGINE_AVAILABLE = True

@@ -12,9 +12,9 @@ USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
 
 # Check if we're in test mode
 _in_test = (
-    "pytest" in os.environ.get("_", "") or 
-    os.environ.get("PYTEST_CURRENT_TEST") is not None or
-    "test" in os.environ.get("DATABASE_URL", "").lower()
+    "pytest" in os.environ.get("_", "")
+    or os.environ.get("PYTEST_CURRENT_TEST") is not None
+    or "test" in os.environ.get("DATABASE_URL", "").lower()
 )
 
 if USE_SQLITE:
@@ -57,7 +57,7 @@ else:
             echo=os.getenv("SQL_ECHO", "false").lower() == "true",
             connect_args=connect_args,
         )
-    except Exception as e:
+    except Exception:
         # If connection fails, create a non-connecting engine for import safety
         engine = create_engine(
             "sqlite:///:memory:",

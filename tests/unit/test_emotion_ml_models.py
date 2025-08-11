@@ -244,7 +244,7 @@ class TestEmotionMLModels:
         # Force models_loaded to False to simulate loading failure
         analyzer = EmotionAnalyzer()
         analyzer.models_loaded = False
-        
+
         result = analyzer.analyze_emotions("Test content")
         assert result["model_info"]["bert_model"] == "keyword-fallback"
 
@@ -253,7 +253,7 @@ class TestEmotionMLModels:
         # Force models_loaded to False to simulate loading failure
         analyzer = EmotionAnalyzer()
         analyzer.models_loaded = False
-        
+
         # Should fall back to keyword analysis
         result = analyzer.analyze_emotions("Test content")
         assert result["model_info"]["vader_sentiment"] == "keyword-fallback"

@@ -19,6 +19,7 @@ def get_engine() -> Any:
     # Use centralized configuration
     try:
         from services.common.database_config import get_postgres_dsn
+
         pg_dsn = get_postgres_dsn()
     except ImportError:
         # Fallback to environment variable or default
