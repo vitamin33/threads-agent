@@ -64,6 +64,9 @@ class TestImpactAnalyzer:
             
         # Check if it's a test file itself
         if 'test' in filepath or 'spec' in filepath:
+            # Skip conftest files - they're configuration, not tests
+            if 'conftest' in filepath:
+                return tests_to_run
             # Only add if it's actually a test file, not a script
             if filepath.startswith('tests/') or '/tests/' in filepath or '/test_' in filepath:
                 tests_to_run.add(filepath)
@@ -163,6 +166,9 @@ class TestImpactAnalyzer:
             p = Path(path)
             # Skip non-Python files and config files
             if path.endswith('.ini') or path.endswith('.sh') or path.endswith('.skip'):
+                continue
+            # Skip conftest files - they're configuration, not tests
+            if 'conftest' in path:
                 continue
             # Only include Python test files or test directories
             if p.exists() and (p.is_dir() or (path.endswith('.py') and ('test' in path or 'spec' in path))):
