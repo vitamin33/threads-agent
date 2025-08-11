@@ -171,6 +171,7 @@ class TestEmotionConcurrency:
             assert len(trajectory["emotion_progression"]) == 4  # 4 segments per content
             assert "emotional_variance" in trajectory
 
+    @pytest.mark.asyncio
     async def test_async_concurrent_processing(
         self, emotion_analyzer, test_content_pool
     ):
