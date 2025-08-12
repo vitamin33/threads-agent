@@ -87,8 +87,8 @@ morning_ai_routine() {
     # 4. Learning System Analysis
     if [[ -f "$SCRIPT_DIR/learning-system.sh" ]]; then
         echo -e "\n${BLUE}[4/10]${NC} Learning from patterns..."
-        "$SCRIPT_DIR/learning-system.sh" analyze-patterns
-        "$SCRIPT_DIR/learning-system.sh" get-suggestions --agent "$AGENT_ID"
+        "$SCRIPT_DIR/learning-system.sh" analyze
+        "$SCRIPT_DIR/learning-system.sh" suggest
     fi
     
     # 5. Business Intelligence
@@ -259,7 +259,7 @@ ai_assist_mode() {
                     "$SCRIPT_DIR/ai-dev-enhancements.sh" review
                 ;;
             learn)
-                "$SCRIPT_DIR/learning-system.sh" analyze-patterns
+                "$SCRIPT_DIR/learning-system.sh" analyze
                 ;;
             metrics)
                 "$SCRIPT_DIR/business-intelligence.sh" show-metrics
