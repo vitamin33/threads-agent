@@ -213,9 +213,28 @@ ai-coordinate MESSAGE:
 # Job Search & Portfolio Commands (AI_JOB_STRATEGY.md)
 # ═══════════════════════════════════════════════════════
 
+# AI-powered AGENT_FOCUS.md management
+focus-plan:
+    @./scripts/ai-focus-manager.sh plan
+
+focus-update:
+    @./scripts/ai-focus-manager.sh update
+
+focus-complete TASK:
+    @./scripts/ai-focus-manager.sh complete "{{TASK}}"
+
+focus-status:
+    @./scripts/ai-focus-manager.sh status
+
+focus-sync:
+    @./scripts/ai-focus-manager.sh sync
+
+focus:
+    @./scripts/ai-focus-manager.sh interactive
+
 # Collect REAL metrics from running services
 real-metrics:
-    @./scripts/collect-real-metrics.sh all
+    @./scripts/collect-real-metrics-v2.sh all
 
 # Generate portfolio artifact
 portfolio TYPE="suggest":

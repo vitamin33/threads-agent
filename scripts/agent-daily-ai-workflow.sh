@@ -50,15 +50,30 @@ morning_ai_routine() {
         "$SCRIPT_DIR/workflow-automation.sh" orchestrate --agent "$AGENT_ID"
     fi
     
-    # 3. AI Epic Planning with Job Strategy Focus
-    if [[ -f "$SCRIPT_DIR/ai-epic-planner.sh" ]]; then
-        echo -e "\n${BLUE}[3/10]${NC} Getting AI task recommendations (MLOps/Platform focus)..."
-        # Always consider job strategy in planning
-        JOB_CONTEXT="Focus on MLOps artifacts: MLflow tracking, SLO-gated CI, vLLM optimization, 
-        drift detection, A/B testing, cost metrics, AWS/K8s deployment, observability.
-        Reference: AI_JOB_STRATEGY.md - build proof pack items."
+    # 3. AI Epic Planning with Job Strategy Focus + AGENT_FOCUS.md
+    if [[ -f "$SCRIPT_DIR/ai-focus-manager.sh" ]]; then
+        echo -e "\n${BLUE}[3/10]${NC} AI Task Planning (aligned with AI_JOB_STRATEGY.md)..."
         
-        # Check for new requirements
+        # Update AGENT_FOCUS.md with real progress
+        "$SCRIPT_DIR/ai-focus-manager.sh" update
+        
+        # Generate new tasks based on job strategy
+        "$SCRIPT_DIR/ai-focus-manager.sh" plan
+        
+        # Show current status
+        "$SCRIPT_DIR/ai-focus-manager.sh" status
+        
+        # Weekly job strategy sync
+        if [[ $(date +%u) -eq 1 ]]; then  # Monday
+            echo -e "${YELLOW}📋 Weekly Job Strategy Sync:${NC}"
+            "$SCRIPT_DIR/ai-focus-manager.sh" sync
+            check_job_progress
+        fi
+    elif [[ -f "$SCRIPT_DIR/ai-epic-planner.sh" ]]; then
+        # Fallback to old system
+        echo -e "\n${BLUE}[3/10]${NC} Getting AI task recommendations..."
+        JOB_CONTEXT="Focus on MLOps artifacts per AI_JOB_STRATEGY.md"
+        
         if [[ -f "$PROJECT_ROOT/.requirements/pending.txt" ]]; then
             while IFS= read -r req; do
                 "$SCRIPT_DIR/ai-epic-planner.sh" plan "$req" \
@@ -66,12 +81,6 @@ morning_ai_routine() {
                     --services "$AGENT_SERVICES" \
                     --context "$JOB_CONTEXT"
             done < "$PROJECT_ROOT/.requirements/pending.txt"
-        fi
-        
-        # Weekly job strategy check
-        if [[ $(date +%u) -eq 1 ]]; then  # Monday
-            echo -e "${YELLOW}📋 Weekly Job Strategy Check:${NC}"
-            check_job_progress
         fi
     fi
     

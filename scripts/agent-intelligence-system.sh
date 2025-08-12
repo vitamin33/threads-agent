@@ -71,7 +71,10 @@ JOB STRATEGY PRIORITY (from AI_JOB_STRATEGY.md):
 - Portfolio focus: $PORTFOLIO_FOCUS
 
 Agent-Specific Goals:
-$(cat AGENT_TASKS.md 2>/dev/null | head -20 || echo "See AGENT_TASKS.md")"
+$(cat AGENT_FOCUS.md 2>/dev/null | grep -A 20 "## 📋 Current Sprint" || echo "See AGENT_FOCUS.md")
+
+Job Strategy Alignment (AI_JOB_STRATEGY.md):
+$(grep -A 5 "$JOB_TARGETS" "$PROJECT_ROOT/AI_JOB_STRATEGY.md" 2>/dev/null | head -10)"
     
     # Call the existing AI planner
     if [[ -f "$SCRIPT_DIR/workflow-automation.sh" ]]; then
