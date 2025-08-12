@@ -468,8 +468,9 @@ This ensures Claude understands:
 ### Important: Local Files Never Commit
 
 These files are LOCAL ONLY (in .gitignore):
-- `AGENT_FOCUS.md` - Your responsibilities
-- `.agent.env` - Your configuration
+- `AGENT_FOCUS.md` - Your complete planning document (identity, tasks, progress)
+- `.agent.env` - Your runtime configuration
+- `.ai-context.json` - AI planning context
 - `*.local` - Any local notes
 - `.locks/` - Coordination locks
 

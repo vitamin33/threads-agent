@@ -42,83 +42,81 @@ export JOB_PRIORITY="MLflow lifecycle, SLO-gated CI, Performance monitoring"
 export PORTFOLIO_FOCUS="mlflow_registry.png slo_gate_demo.mp4 grafana_dashboard.png"
 EOF
     
-    # Create AGENT_FOCUS.md for development planning
+    # Create AGENT_FOCUS.md - Single source of truth for this agent
     cat > "$WORKTREE_DIR/AGENT_FOCUS.md" << 'EOF'
-# Agent A1 - MLOps/Orchestrator Focus
+# Agent A1 - MLOps/Orchestrator
 
-## Core Mission
-Build production-grade MLOps platform with automated model lifecycle management.
+## 🎯 Identity & Mission
+**Role**: MLOps/Platform Engineer  
+**Mission**: Build production-grade MLOps platform with automated model lifecycle  
+**Job Targets**: MLOps Engineer ($160-180k), Platform Engineer ($170-190k), SRE ($160-180k)
 
-## Development Focus Areas
-1. **MLflow Integration** (Priority 1)
-   - Model registry with versioning
-   - Automated training pipelines
-   - Model promotion workflows
-   
-2. **SLO-Gated CI/CD** (Priority 1)
-   - P95 latency < 500ms gates
-   - Error rate < 1% checks
-   - Automated rollback triggers
-   
-3. **Monitoring & Observability** (Priority 2)
-   - Grafana dashboards
-   - Prometheus metrics
-   - Alert configuration
+## 📂 Service Ownership
+```yaml
+OWNS:
+  - orchestrator      # Main coordination service
+  - celery_worker     # Background task processing
+  - persona_runtime   # Model serving endpoint
 
-## Services to Modify
-- ✅ orchestrator (main service)
-- ✅ celery_worker (background tasks)
-- ✅ persona_runtime (model serving)
-- ❌ IGNORE: rag_pipeline, achievement_collector, revenue
-
-## Portfolio Artifacts to Generate
-- [ ] MLflow registry screenshot with 2+ models
-- [ ] SLO gate demo video (2 min Loom)
-- [ ] Grafana dashboard showing drift detection
-- [ ] One-pager: "MLOps Architecture Decision"
-
-## Job Application Focus
-Target Roles: MLOps Engineer, Platform Engineer, SRE
-Key Technologies: MLflow, Kubernetes, Prometheus, Python
-Proof Points: Automated deployments, <1min rollback, 99.9% uptime
-
-## AI Planning Keywords
-When using AI planning, emphasize: MLflow, SLO, monitoring, latency, reliability, automation, rollback, observability
-
-## Weekly Sprint Goals
-Week 1: MLflow setup + first model registered
-Week 2: SLO gates implemented and tested
-Week 3: Monitoring dashboards complete
-Week 4: Portfolio artifacts + job applications
-EOF
-    
-    # Create agent-specific task file
-    cat > "$WORKTREE_DIR/AGENT_TASKS.md" << 'EOF'
-# Agent A1 - MLOps/Orchestrator Tasks
-
-## Primary Responsibilities
-- [ ] Set up MLflow tracking and model registry
-- [ ] Implement SLO-gated CI/CD pipeline
-- [ ] Create performance monitoring dashboards
-- [ ] Optimize orchestrator service latency
-
-## Portfolio Artifacts to Generate
-1. **MLflow Registry Screenshot** - Show 2+ model versions
-2. **SLO Gate Demo Video** - Catch and block bad deployment
-3. **Grafana Dashboard** - P95 latency, error rate, throughput
-
-## Weekly Goals (for job applications)
-- Deploy 2 models to MLflow registry
-- Achieve <500ms p95 latency
-- Create automated rollback system
-- Document deployment patterns
-
-## Commands
-```bash
-just mlflow-train        # Train and track model
-just slo-check          # Check real SLO metrics
-just grafana            # Open monitoring dashboard
+IGNORES:
+  - rag_pipeline      # (A2's responsibility)
+  - achievement_collector # (A3's responsibility)
+  - revenue           # (A4's responsibility)
 ```
+
+## 🎨 AI Context (for planning/development)
+**Keywords**: MLflow, SLO, monitoring, Grafana, Prometheus, latency, reliability, rollback  
+**Focus**: Production stability, automated deployments, observability  
+**Constraints**: Only modify assigned services, ignore others completely
+
+## 📋 Current Sprint (Week of DATE)
+
+### Today's Focus
+- [ ] Initialize MLflow with SQLite backend
+- [ ] Create first model training script
+- [ ] Set up Prometheus metrics endpoint
+
+### This Week
+- [ ] Deploy MLflow server with UI
+- [ ] Register 2 model versions
+- [ ] Create SLO configuration (p95 < 500ms)
+- [ ] Generate Grafana dashboard
+
+### Backlog
+- [ ] Implement automated rollback
+- [ ] Add drift detection
+- [ ] Create alerting rules
+- [ ] Record Loom demo
+
+## 🏆 Portfolio Checklist
+- [ ] MLflow registry screenshot (2+ models)
+- [ ] SLO gate demo video (2 min Loom)
+- [ ] Grafana dashboard (latency/errors/drift)
+- [ ] One-pager: "MLOps Architecture at Scale"
+- [ ] GitHub repo with CI/CD pipeline
+
+## 📊 Progress Tracking
+```
+Models Registered: 0/2
+SLO Gates Active: No
+P95 Latency: N/A (target <500ms)
+Portfolio Items: 0/5
+Job Applications: 0/10
+```
+
+## 🚀 Quick Commands
+```bash
+just mlflow-train       # Train with MLflow tracking
+just slo-check         # Check REAL SLO metrics
+just real-metrics      # Validate all metrics are real
+just portfolio mlflow-screenshot
+```
+
+## 📝 Notes & Learnings
+(Add discoveries, blockers, insights here)
+
+---
+Last Updated: $(date)
 EOF
     
     # Create AI planning context

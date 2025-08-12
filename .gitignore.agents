@@ -7,9 +7,7 @@
 # Agent configuration files (unique per worktree)
 .agent.env
 .ai-context.json
-AGENT_TASKS.md
 AGENT_FOCUS.md
-AGENT_DEVELOPMENT_GUIDE.md
 AGENT_*.md
 AGENT_*.local
 .agent-*
