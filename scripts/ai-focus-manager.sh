@@ -143,8 +143,12 @@ update_progress() {
     update_portfolio_checklist
     
     # Add timestamp
-    sed -i '' "s/Last Updated:.*/Last Updated: $(date)/" AGENT_FOCUS.md 2>/dev/null || \
-        echo "---" >> AGENT_FOCUS.md && echo "Last Updated: $(date)" >> AGENT_FOCUS.md
+    if grep -q "Last Updated:" AGENT_FOCUS.md 2>/dev/null; then
+        sed -i '' "s/Last Updated:.*/Last Updated: $(date)/" AGENT_FOCUS.md 2>/dev/null
+    else
+        echo "---" >> AGENT_FOCUS.md
+        echo "Last Updated: $(date)" >> AGENT_FOCUS.md
+    fi
 }
 
 # ═══════════════════════════════════════════════════════
@@ -346,9 +350,21 @@ update_metric() {
     local metric_name="$1"
     local new_value="$2"
     
+    # Escape forward slashes in metric name for sed
+    local escaped_name=$(echo "$metric_name" | sed 's/\//\\\//g')
+    
     # Update in the Progress Tracking section
-    sed -i '' "s/$metric_name:.*/$metric_name: $new_value/" AGENT_FOCUS.md 2>/dev/null || \
-        echo "$metric_name: $new_value" >> AGENT_FOCUS.md
+    if grep -q "$metric_name:" AGENT_FOCUS.md 2>/dev/null; then
+        sed -i '' "s|$escaped_name:.*|$metric_name: $new_value|" AGENT_FOCUS.md 2>/dev/null
+    else
+        # Add to Progress Tracking section if it exists
+        if grep -q "## 📊 Progress Tracking" AGENT_FOCUS.md 2>/dev/null; then
+            sed -i '' "/## 📊 Progress Tracking/a\\
+$metric_name: $new_value" AGENT_FOCUS.md 2>/dev/null
+        else
+            echo "$metric_name: $new_value" >> AGENT_FOCUS.md
+        fi
+    fi
 }
 
 update_portfolio_checklist() {
