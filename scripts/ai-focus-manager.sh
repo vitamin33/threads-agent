@@ -70,7 +70,7 @@ plan_next_tasks() {
         a4)
             ai_prompt="As Agent A4 (Platform), based on AI_JOB_STRATEGY.md priorities:
             - Need: A/B testing framework with statistical significance
-            - Need: Revenue tracking ($20k MRR goal)
+            - Need: Revenue tracking (\$20k MRR goal)
             - Need: FinOps cost optimization (30% reduction)
             Current progress: $current_focus
             
@@ -82,7 +82,7 @@ plan_next_tasks() {
     
     # Call AI planner if available
     if [[ -f "$SCRIPT_DIR/ai-epic-planner.sh" ]] && [[ -n "${OPENAI_API_KEY:-}" ]]; then
-        echo "$ai_prompt" | "$SCRIPT_DIR/ai-epic-planner.sh" plan --context-stdin
+        "$SCRIPT_DIR/ai-epic-planner.sh" "Generate 5 next tasks for Agent $AGENT_ID" "$ai_prompt"
     else
         # Fallback to template-based planning
         generate_template_tasks
@@ -391,10 +391,18 @@ case "${1:-help}" in
         plan_next_tasks
         ;;
     update)
-        update_progress "${2:-}"
+        if [[ $# -ge 2 ]]; then
+            update_progress "$2"
+        else
+            update_progress ""
+        fi
         ;;
     complete)
-        mark_task_complete "${2:-}"
+        if [[ $# -ge 2 ]]; then
+            mark_task_complete "$2"
+        else
+            mark_task_complete ""
+        fi
         ;;
     status)
         show_current_status

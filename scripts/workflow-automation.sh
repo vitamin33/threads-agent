@@ -1011,9 +1011,9 @@ display_orchestration_suggestions() {
     awk '/^recommendations:/{p=1} p' "$plan_file" | tail -n +2 | while IFS= read -r line; do
         if [[ "$line" =~ priority:[[:space:]]*\"(.*)\" ]]; then
             echo
-            echo "  🎯 $(echo "$line" | sed 's/.*priority: *"\([^"]*\)".*/\1/')"
+            echo "  🎯 $(echo "$line" | sed 's/.*priority: *//; s/"//g')"
         elif [[ "$line" =~ action:[[:space:]]*\"(.*)\" ]]; then
-            echo "     → $(echo "$line" | sed 's/.*action: *"\([^"]*\)".*/\1/')"
+            echo "     → $(echo "$line" | sed 's/.*action: *//; s/"//g')"
         elif [[ "$line" =~ -[[:space:]]+(.*) ]] && [[ ! "$line" =~ priority: ]]; then
             echo "        • $(echo "$line" | sed 's/.*- *\(.*\)/\1/')"
         fi
@@ -1077,8 +1077,8 @@ create_local_tasks_from_epic() {
     log_info "Creating local tasks from epic breakdown..."
     
     # Get epic details
-    local epic_name=$(awk '/^name:/ {gsub(/^name: *"|"$/, ""); print}' "$epic_file")
-    local epic_description=$(awk '/^description:/ {gsub(/^description: *"|"$/, ""); print}' "$epic_file")
+    local epic_name=$(awk '/^name:/ {sub(/^name: */, ""); gsub(/\042/, ""); print}' "$epic_file")
+    local epic_description=$(awk '/^description:/ {sub(/^description: */, ""); gsub(/\042/, ""); print}' "$epic_file")
     
     # Create local project tracking
     local tasks_dir="$WORKFLOW_DIR/tasks"
@@ -1093,33 +1093,37 @@ created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
 features: []
 tasks: []
 EOF
-
-Return only the project ID after creation."
     
-    local project_id=""
-    if command -v claude >/dev/null 2>&1; then
-        project_id=$(echo "$project_creation_prompt" | claude 2>/dev/null | grep -o '[a-f0-9-]\{36\}' | head -1 || echo "")
-    fi
+    # Note: Project creation via Claude AI is currently disabled
+    # local project_id=""
+    # if command -v claude >/dev/null 2>&1; then
+    #     project_id=$(echo "$project_creation_prompt" | claude 2>/dev/null | grep -o '[a-f0-9-]\{36\}' | head -1 || echo "")
+    # fi
     
-    # Extract features from epic file
-    awk '/^features:$/,/^[^[:space:]]/ {
-        if (/^  - id:/) {
-            gsub(/^  - id: *"|"$/, ""); 
-            print "FEATURE_ID:" $0
-        }
-        if (/^    name:/) {
-            gsub(/^    name: *"|"$/, ""); 
-            print "FEATURE_NAME:" $0
-        }
-        if (/^    effort:/) {
-            gsub(/^    effort: *"|"$/, ""); 
-            print "FEATURE_EFFORT:" $0
-        }
-        if (/^    priority:/) {
-            gsub(/^    priority: *"|"$/, ""); 
-            print "FEATURE_PRIORITY:" $0
-        }
-    }' "$epic_file" | {
+    # Extract features from epic file  
+    sed -n '/^features:$/,/^[^[:space:]]/p' "$epic_file" | while IFS= read -r line; do
+        if [[ "$line" =~ ^[[:space:]]+-[[:space:]]id:[[:space:]]* ]]; then
+            id="${line#*id:}"
+            id="${id// /}"
+            id="${id//\"/}"
+            echo "FEATURE_ID:$id"
+        elif [[ "$line" =~ ^[[:space:]]+name:[[:space:]]* ]]; then
+            name="${line#*name:}"
+            name="${name// /}"
+            name="${name//\"/}"
+            echo "FEATURE_NAME:$name"
+        elif [[ "$line" =~ ^[[:space:]]+effort:[[:space:]]* ]]; then
+            effort="${line#*effort:}"
+            effort="${effort// /}"
+            effort="${effort//\"/}"
+            echo "FEATURE_EFFORT:$effort"
+        elif [[ "$line" =~ ^[[:space:]]+priority:[[:space:]]* ]]; then
+            priority="${line#*priority:}"
+            priority="${priority// /}"
+            priority="${priority//\"/}"
+            echo "FEATURE_PRIORITY:$priority"
+        fi
+    done | {
         local current_feature_id=""
         local current_feature_name=""
         local current_effort=""
@@ -1186,12 +1190,12 @@ create_local_task() {
     local libs=""
     
     # Parse feature file for details
-    description=$(awk '/^description:/ {gsub(/^description: *"|"$/, ""); print}' "$feature_file")
+    description=$(awk '/^description:/ {sub(/^description: */, ""); gsub(/\042/, ""); print}' "$feature_file")
     
     # Extract checklist items
     checklist=$(awk '/checklist:$/,/^[^[:space:]]/ {
         if (/^[[:space:]]*-[[:space:]]*".*"/) {
-            gsub(/^[[:space:]]*-[[:space:]]*"|"$/, "");
+            gsub(/^[[:space:]]*-[[:space:]]*/, ""); gsub(/\042/, "");
             print "- " $0
         }
     }' "$feature_file")
@@ -1199,7 +1203,7 @@ create_local_task() {
     # Extract file paths
     files=$(awk '/files:$/,/^[^[:space:]]/ {
         if (/^[[:space:]]*-[[:space:]]*".*"/) {
-            gsub(/^[[:space:]]*-[[:space:]]*"|"$/, "");
+            gsub(/^[[:space:]]*-[[:space:]]*/, ""); gsub(/\042/, "");
             print "- " $0
         }
     }' "$feature_file")
@@ -1207,7 +1211,7 @@ create_local_task() {
     # Extract libraries
     libs=$(awk '/libs:$/,/^[^[:space:]]/ {
         if (/^[[:space:]]*-[[:space:]]*".*"/) {
-            gsub(/^[[:space:]]*-[[:space:]]*"|"$/, "");
+            gsub(/^[[:space:]]*-[[:space:]]*/, ""); gsub(/\042/, "");
             print "- " $0
         }
     }' "$feature_file")
