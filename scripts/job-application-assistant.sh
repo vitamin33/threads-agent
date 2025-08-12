@@ -5,14 +5,8 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Target roles from AI_JOB_STRATEGY.md
-declare -A target_roles=(
-    ["MLOps Engineer"]="160-180k"
-    ["Platform Engineer"]="170-190k"
-    ["GenAI Engineer"]="170-190k"
-    ["AI Platform Engineer"]="180-220k"
-    ["Senior MLOps Engineer"]="180-200k"
-    ["LLM Specialist"]="170-190k"
-)
+TARGET_ROLES="MLOps Engineer,Platform Engineer,GenAI Engineer,AI Platform Engineer,Senior MLOps Engineer,LLM Specialist"
+TARGET_SALARIES="160-180k,170-190k,170-190k,180-220k,180-200k,170-190k"
 
 check_daily_applications() {
     local today_count=$(find .job-tracker -name "*.json" -mtime -1 | wc -l)

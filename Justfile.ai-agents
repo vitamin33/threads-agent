@@ -288,20 +288,18 @@ loom-script TYPE="mlflow":
 linkedin-post:
     @echo "📝 LinkedIn Post Template:"
     @echo "════════════════════════════"
-    @cat << 'EOF'
-Just shipped SLO-gated CI for LLM deployments
-
-- Blocks deployments if p95 > 500ms
-- Auto-rollback on error rate > 1%
-- Saves 40% on token costs with vLLM
-
-The key insight: Treat model deployments like production services.
-Set SLOs, measure continuously, fail fast.
-
-Detailed writeup: [link to portfolio]
-
-#MLOps #LLMOps #GenAI #PlatformEngineering
-EOF
+    @echo "Just shipped SLO-gated CI for LLM deployments"
+    @echo ""
+    @echo "  * Blocks deployments if p95 exceeds 500ms"
+    @echo "  * Auto-rollback on error rate exceeds 1%"
+    @echo "  * Saves 40% on token costs with vLLM"
+    @echo ""
+    @echo "The key insight: Treat model deployments like production services."
+    @echo "Set SLOs, measure continuously, fail fast."
+    @echo ""
+    @echo "Detailed writeup: [link to portfolio]"
+    @echo ""
+    @echo "#MLOps #LLMOps #GenAI #PlatformEngineering"
 
 # ═══════════════════════════════════════════════════════
 # MLOps-Specific Commands (Job Strategy Focus)
@@ -346,7 +344,7 @@ ab-results:
 # ═══════════════════════════════════════════════════════
 
 # Shortcuts
-aip REQUIREMENT: ai-plan REQUIREMENT
+aip REQUIREMENT: (ai-plan REQUIREMENT)
 aic: ai-commit
 aipr: ai-pr
 aid: ai-dashboard
@@ -359,7 +357,7 @@ m: ai-morning
 # Job search shortcuts
 job: job-review
 pp: proof-pack
-pa TYPE: portfolio TYPE
+pa TYPE: (portfolio TYPE)
 
 # Evening wrap-up with AI and job tracking
 ai-evening:

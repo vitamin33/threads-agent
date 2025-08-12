@@ -164,7 +164,7 @@ request-review AGENTS:
 # ═══════════════════════════════════════════════════════
 
 # Shortcuts
-ac MESSAGE: agent-commit MESSAGE
+ac MESSAGE: (agent-commit MESSAGE)
 ap: agent-push
 apr: agent-pr
 at: agent-tasks

@@ -295,12 +295,12 @@ show_current_status() {
     # Show portfolio progress
     echo ""
     echo "Portfolio Checklist:"
-    grep "- \[.\] .*" AGENT_FOCUS.md | grep -E "(screenshot|video|demo|report)" | head -5
+    grep -E "^- \[.\]" AGENT_FOCUS.md | grep -E "(screenshot|video|demo|report)" | head -5 || true
     
     # Show metrics
     echo ""
     echo "Metrics:"
-    sed -n '/## 📊 Progress Tracking/,/```/p' AGENT_FOCUS.md | grep -v "```" | tail -n +2
+    sed -n '/## 📊 Progress Tracking/,/^```$/p' AGENT_FOCUS.md | grep -v '^```$' | tail -n +2
 }
 
 # ═══════════════════════════════════════════════════════
