@@ -13,8 +13,8 @@ EPICS_DIR="$WORKFLOW_DIR/epics"
 FEATURES_DIR="$WORKFLOW_DIR/features"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
-# Source common utilities
-source "$SCRIPT_DIR/workflow-automation.sh" 2>/dev/null || true
+# Source common utilities (optional)
+# source "$SCRIPT_DIR/workflow-automation.sh" 2>/dev/null || true
 
 # Colors
 RED='\033[0;31m'
@@ -339,8 +339,9 @@ ai_plan_epic() {
 
     # Check if OpenAI API key is available
     if [[ -z "${OPENAI_API_KEY:-}" ]]; then
-        log_error "OPENAI_API_KEY not set. Please export OPENAI_API_KEY=your-key"
-        return 1
+        log_error "OPENAI_API_KEY not set. Using fallback template generation..."
+        create_fallback_epic "$requirement"
+        return $?
     fi
 
     # Check for required tools
@@ -379,7 +380,9 @@ ai_plan_epic() {
 
     if [[ -z "$response" ]] || [[ "$response" == "null" ]]; then
         log_error "Failed to get response from OpenAI"
-        return 1
+        log_info "Using fallback template generation..."
+        create_fallback_epic "$requirement"
+        return $?
     fi
 
     # Process the AI response
@@ -400,6 +403,135 @@ ai_plan_epic() {
         log_error "Failed to create epic from AI response"
         return 1
     fi
+}
+
+# Fallback epic creation when OpenAI is not available
+create_fallback_epic() {
+    local requirement="$1"
+    
+    log_info "Creating fallback epic template for: $requirement"
+    
+    # Create directories
+    mkdir -p "$EPICS_DIR" "$FEATURES_DIR"
+    
+    # Generate epic ID
+    local epic_id="epic_$(date +%s)"
+    local epic_name=$(echo "$requirement" | cut -c1-60)
+    
+    # Create a template epic based on the requirement
+    cat > "$EPICS_DIR/${epic_id}.yaml" << EOF
+id: "$epic_id"
+name: "$epic_name"
+description: "$requirement"
+complexity: "medium"
+created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+status: "planning"
+lifecycle_stage: "inception"
+ai_generated: false
+template_generated: true
+
+# Epic Analysis
+estimated_effort: "4-6 weeks"
+risk_level: "medium"
+business_value: "High impact on portfolio and job applications"
+technical_approach: |
+  1. Research and architecture design
+  2. Core implementation and testing
+  3. Documentation and portfolio preparation
+  4. Deployment and monitoring setup
+
+# Features (template-based)
+features:
+  - feat_${epic_id}_001: "Architecture and design"
+  - feat_${epic_id}_002: "Core implementation"
+  - feat_${epic_id}_003: "Testing and validation"
+  - feat_${epic_id}_004: "Documentation and portfolio"
+
+# Milestones
+milestones:
+  - name: "Architecture Complete"
+    target_date: "$(date -v+1w +%Y-%m-%d 2>/dev/null || date -d '+1 week' +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)"
+    criteria:
+      - "Technical design documented"
+      - "Dependencies identified"
+      - "Risk assessment complete"
+  
+  - name: "MVP Implementation"
+    target_date: "$(date -v+3w +%Y-%m-%d 2>/dev/null || date -d '+3 weeks' +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)"
+    criteria:
+      - "Core functionality working"
+      - "Basic tests passing"
+      - "Integration points tested"
+  
+  - name: "Portfolio Ready"
+    target_date: "$(date -v+5w +%Y-%m-%d 2>/dev/null || date -d '+5 weeks' +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)"
+    criteria:
+      - "Documentation complete"
+      - "Demo artifacts created"
+      - "Performance benchmarks ready"
+
+# Success Metrics
+metrics:
+  - name: "Implementation Quality"
+    target: "90%+ test coverage"
+    measurement: "Automated test reports"
+  - name: "Performance"
+    target: "Sub-500ms response times"
+    measurement: "Load testing results"
+  - name: "Portfolio Impact"
+    target: "Compelling demo artifacts"
+    measurement: "GitHub stars, documentation quality"
+EOF
+
+    log_success "Template epic created: $epic_id"
+    
+    # Create basic feature templates
+    for i in 001 002 003 004; do
+        local feature_names=("Architecture and design" "Core implementation" "Testing and validation" "Documentation and portfolio")
+        local idx=$((10#$i - 1))
+        
+        cat > "$FEATURES_DIR/feat_${epic_id}_${i}.yaml" << EOF
+id: "feat_${epic_id}_${i}"
+epic_id: "$epic_id"
+name: "${feature_names[$idx]}"
+description: "Template feature for ${feature_names[$idx]}"
+complexity: "medium"
+estimated_effort: "1-2 weeks"
+priority: "medium"
+status: "pending"
+created: "$(date +%Y-%m-%dT%H:%M:%S%z)"
+
+# Implementation notes
+technical_notes: |
+  This is a template feature. Please update with specific requirements.
+  
+# Acceptance criteria
+acceptance_criteria:
+  - "Feature requirements defined"
+  - "Implementation complete"
+  - "Tests passing"
+  - "Documentation updated"
+
+# Tasks (to be generated)
+tasks: []
+EOF
+    done
+    
+    echo
+    echo "📋 Template Epic Created Successfully!"
+    echo "   Epic: $epic_id"
+    echo "   Location: $EPICS_DIR/${epic_id}.yaml"
+    echo
+    echo "📁 Features created:"
+    echo "   $(ls $FEATURES_DIR/feat_${epic_id}_*.yaml | wc -l) template features"
+    echo
+    echo "🔧 Next Steps:"
+    echo "   1. Edit the epic YAML file to add specific requirements"
+    echo "   2. Update feature descriptions based on your needs"
+    echo "   3. Use 'just ai-plan' with OpenAI API key for detailed planning"
+    echo
+    
+    return 0
 }
 
 # Show help

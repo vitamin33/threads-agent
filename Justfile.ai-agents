@@ -23,9 +23,7 @@ ai-assist:
 
 # Generate AI task plan from requirement
 ai-plan REQUIREMENT:
-    @./scripts/ai-epic-planner.sh plan "{{REQUIREMENT}}" \
-        --agent "${AGENT_ID}" \
-        --services "${AGENT_SERVICES}"
+    @./scripts/ai-epic-planner.sh "{{REQUIREMENT}}"
 
 # Use workflow automation for complex orchestration
 ai-orchestrate:
@@ -120,7 +118,7 @@ ai-ci-fix:
 
 # AI-powered commit with intelligent message
 ai-commit:
-    @./scripts/agent-intelligence-system.sh commit
+    @./scripts/ai-smart-commit.sh
 
 # Create PR with AI-generated description
 ai-pr:
