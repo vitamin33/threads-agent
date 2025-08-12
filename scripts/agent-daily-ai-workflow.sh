@@ -182,7 +182,7 @@ show_ai_dashboard() {
     echo "  just ai-review              - Get AI code review"
     echo "  just learn                  - Learn from patterns"
     echo "  just mlops-artifact         - Generate MLOps proof artifact"
-    echo "  just job-apply              - Track job application"
+    echo "  just job-apply <company> <role> - Track job application"
     echo "  just proof-pack             - Generate proof pack items"
     
     echo "═══════════════════════════════════════════════════════"
@@ -219,16 +219,16 @@ suggest_next_actions() {
     # Service-specific suggestions
     case "$AGENT_ID" in
         a1)
-            echo "  • Check performance metrics with 'just mlops-metrics'"
+            echo "  • Check performance metrics with 'just real-metrics'"
             ;;
         a2)
-            echo "  • Analyze token usage with 'just token-optimize'"
+            echo "  • Analyze token usage with 'just ai-token-optimize'"
             ;;
         a3)
-            echo "  • Update portfolio with 'just update-achievements'"
+            echo "  • Generate documentation with 'just ai-docs'"
             ;;
         a4)
-            echo "  • Check revenue metrics with 'just revenue-report'"
+            echo "  • Check A/B test results with 'just ab-results'"
             ;;
     esac
 }
