@@ -31,7 +31,7 @@ morning_ai_routine() {
     echo "═══════════════════════════════════════════════════════"
     echo "🌅 AI-Powered Morning Routine for Agent $AGENT_ID"
     echo "📅 $(date '+%A, %B %d, %Y')"
-    echo "🎯 PRIMARY GOAL: Land $160-220k Remote AI Role"
+    echo "🎯 PRIMARY GOAL: Land \$160-220k Remote AI Role"
     echo "═══════════════════════════════════════════════════════"
     
     # 1. Update and prepare branch
