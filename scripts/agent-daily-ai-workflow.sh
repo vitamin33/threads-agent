@@ -87,8 +87,8 @@ morning_ai_routine() {
     # 4. Learning System Analysis
     if [[ -f "$SCRIPT_DIR/learning-system.sh" ]]; then
         echo -e "\n${BLUE}[4/10]${NC} Learning from patterns..."
-        "$SCRIPT_DIR/learning-system.sh" analyze
-        "$SCRIPT_DIR/learning-system.sh" suggest
+        "$SCRIPT_DIR/learning-system.sh" analyze 2>/dev/null || echo "  📊 No learning data yet"
+        "$SCRIPT_DIR/learning-system.sh" suggest 2>/dev/null || true
     fi
     
     # 5. Business Intelligence
@@ -108,9 +108,7 @@ morning_ai_routine() {
     # 7. Quality Gates Check
     if [[ -f "$SCRIPT_DIR/quality-gates.sh" ]]; then
         echo -e "\n${BLUE}[7/10]${NC} Checking quality gates..."
-        "$SCRIPT_DIR/quality-gates.sh" check \
-            --services "$AGENT_SERVICES" \
-            --agent "$AGENT_ID" 2>/dev/null || \
+        "$SCRIPT_DIR/quality-gates.sh" pre-commit 2>/dev/null || \
             echo "  ✅ Quality gates not configured yet"
     fi
     
@@ -137,7 +135,8 @@ morning_ai_routine() {
         echo -e "\n${BLUE}[10/10]${NC} Fetching Linear tasks..."
         python3 "$SCRIPT_DIR/linear_epic_status.py" \
             --labels "$FOCUS_AREAS" \
-            --agent "$AGENT_ID"
+            --agent "$AGENT_ID" 2>/dev/null || \
+            echo "  📋 Linear integration not configured"
     fi
     
     # Final Summary
