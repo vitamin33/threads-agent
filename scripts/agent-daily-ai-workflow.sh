@@ -108,10 +108,7 @@ morning_ai_routine() {
     # 7. Quality Gates Check
     if [[ -f "$SCRIPT_DIR/quality-gates.sh" ]]; then
         echo -e "\n${BLUE}[7/10]${NC} Checking quality gates..."
-        "$SCRIPT_DIR/quality-gates.sh" check \
-            --services "$AGENT_SERVICES" \
-            --agent "$AGENT_ID" 2>/dev/null || \
-            echo "  ✅ Quality gates not configured yet" 2>/dev/null || \
+        "$SCRIPT_DIR/quality-gates.sh" pre-commit 2>/dev/null || \
             echo "  ✅ Quality gates not configured yet"
     fi
     
