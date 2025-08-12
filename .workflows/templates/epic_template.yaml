@@ -1,0 +1,23 @@
+name: "{epic_name}"
+description: "{epic_description}"
+type: "epic"
+priority: "high"
+target_date: "{target_date}"
+success_metrics:
+  - metric: "completion_rate"
+    target: "100%"
+  - metric: "quality_score"
+    target: "90%"
+
+breakdown_strategy:
+  max_feature_size: "large"
+  parallel_features: 3
+  dependency_management: "automatic"
+
+features: []
+milestones: []
+
+automation:
+  tracking: "linear"
+  reporting: "weekly"
+  notifications: ["slack", "email"]
