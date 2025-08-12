@@ -78,6 +78,27 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Agent coordination and locks
+.locks/
+.agent-coordination.log
+.agent-coordination.md
+.common-lock-*
+BLOCKERS.md
+
+# Agent-specific metrics and tracking
+.metrics/
+.job-tracker/
+.portfolio/data/
+.portfolio/proof-pack/
+real_cost_analysis.md
+cost_latency_table_real.md
+
+# Agent worktree configs (should never be committed)
+wt-a*/.agent.env
+wt-a*/.ai-context.json
+wt-a*/AGENT_TASKS.md
+wt-a*/AGENT_FOCUS.md
+
 # IPython
 profile_default/
 ipython_config.py
@@ -269,7 +290,11 @@ test_report_*.md
 AGENT_FOCUS.md
 AGENT_*.md
 AGENT_*.local
+AGENT_TASKS.md
+AGENT_DEVELOPMENT_GUIDE.md
 .agent-*
+.agent.env
+.ai-context.json
 TODO.local
 NOTES.local
 *.local
@@ -288,8 +313,6 @@ wt-*/.venv/
 .DS_Store
 
 # Agent-specific local files (never commit these)
-AGENT_FOCUS.md
-.agent.env
 .agent-config.local
 TODO.local
 NOTES.local
