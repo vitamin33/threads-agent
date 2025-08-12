@@ -1,0 +1,184 @@
+# Agent-specific commands for parallel development
+
+# Load agent environment if available
+AGENT_ID := env_var_or_default("AGENT_ID", "unknown")
+AGENT_SERVICES := env_var_or_default("AGENT_SERVICES", "")
+PORT_OFFSET := env_var_or_default("PORT_OFFSET", "0")
+
+# ═══════════════════════════════════════════════════════
+# Agent Task Management
+# ═══════════════════════════════════════════════════════
+
+# Check tasks assigned to this agent
+agent-tasks:
+    @echo "📋 Tasks for Agent {{AGENT_ID}}:"
+    @echo "================================"
+    @if [ -f ./scripts/check-agent-tasks.sh ]; then \
+        ./scripts/check-agent-tasks.sh; \
+    else \
+        echo "Linear integration not configured"; \
+    fi
+
+# Show agent's work for today
+agent-progress:
+    @echo "📊 Today's Progress for Agent {{AGENT_ID}}:"
+    @git log --oneline --since="6am" --author="$(git config user.name)" 2>/dev/null || echo "No commits yet today"
+
+# ═══════════════════════════════════════════════════════
+# Agent Development Commands
+# ═══════════════════════════════════════════════════════
+
+# Test only agent's services
+test-agent:
+    @echo "🧪 Testing Agent {{AGENT_ID}} services..."
+    @for service in {{AGENT_SERVICES}}; do \
+        if [ -d "services/$$service/tests" ]; then \
+            echo "Testing $$service..."; \
+            pytest services/$$service/tests -v --tb=short || true; \
+        fi; \
+    done
+
+# Build Docker images for agent's services
+build-agent:
+    @echo "🐳 Building images for Agent {{AGENT_ID}}..."
+    @for service in {{AGENT_SERVICES}}; do \
+        if [ -f "services/$$service/Dockerfile" ]; then \
+            echo "Building $$service..."; \
+            docker build -t $$service:agent-{{AGENT_ID}} services/$$service; \
+        fi; \
+    done
+
+# Lint agent's code
+lint-agent:
+    @echo "🧹 Linting Agent {{AGENT_ID}} code..."
+    @for service in {{AGENT_SERVICES}}; do \
+        echo "Checking $$service..."; \
+        ruff check services/$$service --fix || true; \
+        black services/$$service || true; \
+    done
+
+# ═══════════════════════════════════════════════════════
+# Agent Git Commands
+# ═══════════════════════════════════════════════════════
+
+# Commit with agent prefix
+agent-commit MESSAGE:
+    @git add -A
+    @git commit -m "[{{AGENT_ID}}] {{MESSAGE}}"
+    @echo "✅ Committed with Agent {{AGENT_ID}} prefix"
+
+# Create PR with agent labels
+agent-pr:
+    @echo "📤 Creating PR for Agent {{AGENT_ID}}..."
+    @BRANCH=$(git branch --show-current); \
+    gh pr create \
+        --title "[{{AGENT_ID}}] $$(git log -1 --pretty=%s)" \
+        --body "## Agent {{AGENT_ID}} Changes\n\n$$(git log main..HEAD --oneline)" \
+        --label "agent-{{AGENT_ID}}" \
+        --label "auto-merge" || \
+    echo "PR might already exist, check: gh pr view"
+
+# Push current branch
+agent-push:
+    @git push -u origin $(git branch --show-current)
+    @echo "✅ Pushed Agent {{AGENT_ID}} branch"
+
+# ═══════════════════════════════════════════════════════
+# Conflict Management
+# ═══════════════════════════════════════════════════════
+
+# Check for file locks from other agents
+check-conflicts:
+    @echo "🔍 Checking for conflicts..."
+    @if ls ../.common-lock-* 2>/dev/null | grep -v "{{AGENT_ID}}"; then \
+        echo "⚠️  Other agents have locks:"; \
+        ls ../.common-lock-* 2>/dev/null | grep -v "{{AGENT_ID}}" | sed 's/.*lock-/  - /'; \
+    else \
+        echo "✅ No conflicts found"; \
+    fi
+
+# Lock a file for exclusive editing
+lock-file FILE:
+    @touch ../.common-lock-{{AGENT_ID}}-$(echo {{FILE}} | tr '/' '_')
+    @echo "🔒 Locked {{FILE}} for Agent {{AGENT_ID}}"
+
+# Release a file lock
+unlock-file FILE:
+    @rm -f ../.common-lock-{{AGENT_ID}}-$(echo {{FILE}} | tr '/' '_')
+    @echo "🔓 Unlocked {{FILE}}"
+
+# Show all active locks
+show-locks:
+    @echo "🔐 Active file locks:"
+    @ls ../.common-lock-* 2>/dev/null | sed 's/.*lock-//' | sed 's/_/\//g' || echo "None"
+
+# ═══════════════════════════════════════════════════════
+# Agent Services Management
+# ═══════════════════════════════════════════════════════
+
+# Start only agent's services locally
+dev-agent:
+    @echo "🚀 Starting Agent {{AGENT_ID}} services..."
+    @docker-compose up -d postgres redis rabbitmq
+    @for service in {{AGENT_SERVICES}}; do \
+        echo "Starting $$service on port offset {{PORT_OFFSET}}..."; \
+        cd services/$$service && \
+        PORT=$$(( 8080 + {{PORT_OFFSET}} )) uvicorn main:app --reload --port $$PORT & \
+    done
+
+# Stop agent's services
+stop-agent:
+    @echo "🛑 Stopping Agent {{AGENT_ID}} services..."
+    @pkill -f "port.*{{PORT_OFFSET}}" || true
+
+# ═══════════════════════════════════════════════════════
+# Team Coordination
+# ═══════════════════════════════════════════════════════
+
+# Show status of all agents
+team-status:
+    @echo "👥 Team Status:"
+    @for i in 1 2 3 4; do \
+        if [ -d "../wt-a$$i-"* ]; then \
+            BRANCH=$$(cd ../wt-a$$i-* && git branch --show-current 2>/dev/null); \
+            COMMITS=$$(cd ../wt-a$$i-* && git log main..HEAD --oneline 2>/dev/null | wc -l); \
+            echo "  Agent A$$i: $$BRANCH ($$COMMITS commits ahead)"; \
+        fi; \
+    done
+
+# Request review from other agents
+request-review AGENTS:
+    @echo "📝 Requesting review from agents: {{AGENTS}}"
+    @PR_URL=$$(gh pr view --json url -q .url); \
+    if [ -n "$$PR_URL" ]; then \
+        for agent in {{AGENTS}}; do \
+            gh pr comment $$PR_URL --body "@agent-$$agent Please review this PR"; \
+        done; \
+        echo "✅ Review requested"; \
+    else \
+        echo "❌ No PR found. Create one first with: just agent-pr"; \
+    fi
+
+# ═══════════════════════════════════════════════════════
+# Quick Aliases
+# ═══════════════════════════════════════════════════════
+
+# Shortcuts
+ac MESSAGE: agent-commit MESSAGE
+ap: agent-push
+apr: agent-pr
+at: agent-tasks
+cc: check-conflicts
+
+# Morning routine - update and prepare for work
+morning:
+    @./scripts/daily-agent-setup.sh
+
+# Evening routine - commit and push today's work
+evening:
+    @echo "🌙 Wrapping up Agent {{AGENT_ID}}'s day..."
+    @git add -A
+    @git commit -m "[{{AGENT_ID}}] EOD: $(date +%Y-%m-%d)" || echo "Nothing to commit"
+    @git push -u origin $(git branch --show-current) || echo "Already pushed"
+    @just agent-progress
+    @echo "✅ Day complete! Great work Agent {{AGENT_ID}}!"
