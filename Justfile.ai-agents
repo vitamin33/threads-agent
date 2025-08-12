@@ -289,7 +289,7 @@ linkedin-post:
     @echo "📝 LinkedIn Post Template:"
     @echo "════════════════════════════"
     @cat << 'EOF'
-Just shipped: SLO-gated CI for LLM deployments!
+Just shipped SLO-gated CI for LLM deployments
 
 - Blocks deployments if p95 > 500ms
 - Auto-rollback on error rate > 1%
