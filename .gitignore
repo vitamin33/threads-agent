@@ -291,7 +291,6 @@ AGENT_FOCUS.md
 AGENT_*.md
 AGENT_*.local
 AGENT_TASKS.md
-AGENT_DEVELOPMENT_GUIDE.md
 .agent-*
 .agent.env
 .ai-context.json

@@ -42,6 +42,56 @@ export JOB_PRIORITY="MLflow lifecycle, SLO-gated CI, Performance monitoring"
 export PORTFOLIO_FOCUS="mlflow_registry.png slo_gate_demo.mp4 grafana_dashboard.png"
 EOF
     
+    # Create AGENT_FOCUS.md for development planning
+    cat > "$WORKTREE_DIR/AGENT_FOCUS.md" << 'EOF'
+# Agent A1 - MLOps/Orchestrator Focus
+
+## Core Mission
+Build production-grade MLOps platform with automated model lifecycle management.
+
+## Development Focus Areas
+1. **MLflow Integration** (Priority 1)
+   - Model registry with versioning
+   - Automated training pipelines
+   - Model promotion workflows
+   
+2. **SLO-Gated CI/CD** (Priority 1)
+   - P95 latency < 500ms gates
+   - Error rate < 1% checks
+   - Automated rollback triggers
+   
+3. **Monitoring & Observability** (Priority 2)
+   - Grafana dashboards
+   - Prometheus metrics
+   - Alert configuration
+
+## Services to Modify
+- ✅ orchestrator (main service)
+- ✅ celery_worker (background tasks)
+- ✅ persona_runtime (model serving)
+- ❌ IGNORE: rag_pipeline, achievement_collector, revenue
+
+## Portfolio Artifacts to Generate
+- [ ] MLflow registry screenshot with 2+ models
+- [ ] SLO gate demo video (2 min Loom)
+- [ ] Grafana dashboard showing drift detection
+- [ ] One-pager: "MLOps Architecture Decision"
+
+## Job Application Focus
+Target Roles: MLOps Engineer, Platform Engineer, SRE
+Key Technologies: MLflow, Kubernetes, Prometheus, Python
+Proof Points: Automated deployments, <1min rollback, 99.9% uptime
+
+## AI Planning Keywords
+When using AI planning, emphasize: MLflow, SLO, monitoring, latency, reliability, automation, rollback, observability
+
+## Weekly Sprint Goals
+Week 1: MLflow setup + first model registered
+Week 2: SLO gates implemented and tested
+Week 3: Monitoring dashboards complete
+Week 4: Portfolio artifacts + job applications
+EOF
+    
     # Create agent-specific task file
     cat > "$WORKTREE_DIR/AGENT_TASKS.md" << 'EOF'
 # Agent A1 - MLOps/Orchestrator Tasks
@@ -89,6 +139,56 @@ setup_agent_a2() {
     local WORKTREE_DIR="$1"
     
     echo -e "${BLUE}Setting up Agent A2 - GenAI/RAG${NC}"
+    
+    # Create AGENT_FOCUS.md for A2
+    cat > "$WORKTREE_DIR/AGENT_FOCUS.md" << 'EOF'
+# Agent A2 - GenAI/RAG Focus
+
+## Core Mission
+Optimize LLM costs by 60% through vLLM deployment and intelligent RAG pipelines.
+
+## Development Focus Areas
+1. **vLLM Deployment** (Priority 1)
+   - Deploy Llama-70B with vLLM
+   - Benchmark latency vs cost
+   - Create comparison tables
+   
+2. **RAG Pipeline** (Priority 1)
+   - Qdrant vector store integration
+   - Semantic search optimization
+   - Retrieval accuracy metrics
+   
+3. **Token Optimization** (Priority 2)
+   - Token usage tracking
+   - Smart caching strategies
+   - Cost reduction dashboard
+
+## Services to Modify
+- ✅ rag_pipeline (main RAG service)
+- ✅ vllm_service (LLM serving)
+- ✅ viral_engine (content generation)
+- ❌ IGNORE: orchestrator, achievement_collector, revenue
+
+## Portfolio Artifacts to Generate
+- [ ] vLLM benchmark chart (latency vs cost)
+- [ ] Cost comparison table (60% savings proof)
+- [ ] Token optimization dashboard
+- [ ] One-pager: "vLLM vs Hosted APIs Analysis"
+
+## Job Application Focus
+Target Roles: GenAI Engineer, LLM Specialist, AI/ML Engineer
+Key Technologies: vLLM, RAG, Qdrant, LangChain, Llama
+Proof Points: 60% cost reduction, <500ms p95, semantic accuracy
+
+## AI Planning Keywords
+When using AI planning, emphasize: vLLM, RAG, embeddings, Qdrant, token optimization, cost reduction, Llama, semantic search
+
+## Weekly Sprint Goals
+Week 1: vLLM deployment + first benchmark
+Week 2: RAG pipeline with Qdrant
+Week 3: Token optimization implemented
+Week 4: Portfolio artifacts + job applications
+EOF
     
     cat > "$WORKTREE_DIR/.agent.env" << 'EOF'
 # Agent A2 Configuration - GenAI/RAG
