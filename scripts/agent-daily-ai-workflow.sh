@@ -2,6 +2,7 @@
 
 # Enhanced AI-Powered Daily Workflow for 4-Agent Development
 # Integrates ALL existing intelligent systems
+# PRIMARY GOAL: Land high-paid remote AI role (US/EU) per AI_JOB_STRATEGY.md
 
 set -euo pipefail
 
@@ -30,6 +31,7 @@ morning_ai_routine() {
     echo "═══════════════════════════════════════════════════════"
     echo "🌅 AI-Powered Morning Routine for Agent $AGENT_ID"
     echo "📅 $(date '+%A, %B %d, %Y')"
+    echo "🎯 PRIMARY GOAL: Land $160-220k Remote AI Role"
     echo "═══════════════════════════════════════════════════════"
     
     # 1. Update and prepare branch
@@ -48,16 +50,28 @@ morning_ai_routine() {
         "$SCRIPT_DIR/workflow-automation.sh" orchestrate --agent "$AGENT_ID"
     fi
     
-    # 3. AI Epic Planning
+    # 3. AI Epic Planning with Job Strategy Focus
     if [[ -f "$SCRIPT_DIR/ai-epic-planner.sh" ]]; then
-        echo -e "\n${BLUE}[3/10]${NC} Getting AI task recommendations..."
+        echo -e "\n${BLUE}[3/10]${NC} Getting AI task recommendations (MLOps/Platform focus)..."
+        # Always consider job strategy in planning
+        JOB_CONTEXT="Focus on MLOps artifacts: MLflow tracking, SLO-gated CI, vLLM optimization, 
+        drift detection, A/B testing, cost metrics, AWS/K8s deployment, observability.
+        Reference: AI_JOB_STRATEGY.md - build proof pack items."
+        
         # Check for new requirements
         if [[ -f "$PROJECT_ROOT/.requirements/pending.txt" ]]; then
             while IFS= read -r req; do
                 "$SCRIPT_DIR/ai-epic-planner.sh" plan "$req" \
                     --agent "$AGENT_ID" \
-                    --services "$AGENT_SERVICES"
+                    --services "$AGENT_SERVICES" \
+                    --context "$JOB_CONTEXT"
             done < "$PROJECT_ROOT/.requirements/pending.txt"
+        fi
+        
+        # Weekly job strategy check
+        if [[ $(date +%u) -eq 1 ]]; then  # Monday
+            echo -e "${YELLOW}📋 Weekly Job Strategy Check:${NC}"
+            check_job_progress
         fi
     fi
     
@@ -116,6 +130,10 @@ morning_ai_routine() {
     
     # Final Summary
     show_ai_dashboard
+    
+    # Job Search Reminder
+    echo -e "\n${PURPLE}💼 Job Search Actions Today:${NC}"
+    show_job_actions
 }
 
 # ═══════════════════════════════════════════════════════
@@ -154,6 +172,9 @@ show_ai_dashboard() {
     echo "  just ai-pr                  - Create PR with AI description"
     echo "  just ai-review              - Get AI code review"
     echo "  just learn                  - Learn from patterns"
+    echo "  just mlops-artifact         - Generate MLOps proof artifact"
+    echo "  just job-apply              - Track job application"
+    echo "  just proof-pack             - Generate proof pack items"
     
     echo "═══════════════════════════════════════════════════════"
 }
@@ -242,6 +263,95 @@ ai_assist_mode() {
                 ;;
         esac
     done
+}
+
+# ═══════════════════════════════════════════════════════
+# Job Strategy Functions (AI_JOB_STRATEGY.md integration)
+# ═══════════════════════════════════════════════════════
+
+check_job_progress() {
+    echo "📊 Weekly Progress on Job Strategy Goals:"
+    
+    # Check MLflow integration
+    if [[ -f "$PROJECT_ROOT/mlflow.db" ]]; then
+        echo "  ✅ MLflow tracking active"
+    else
+        echo "  ⚠️  MLflow not configured - PRIORITY!"
+    fi
+    
+    # Check for SLO gates
+    if grep -q "slo_gate" "$PROJECT_ROOT/.github/workflows/"*.yml 2>/dev/null; then
+        echo "  ✅ SLO-gated CI configured"
+    else
+        echo "  ⚠️  No SLO gates - needed for portfolio!"
+    fi
+    
+    # Check vLLM integration
+    if grep -r "vllm" "$PROJECT_ROOT/services/" 2>/dev/null | grep -q "import"; then
+        echo "  ✅ vLLM integration present"
+    else
+        echo "  ⚠️  vLLM not integrated - cost optimization needed"
+    fi
+    
+    # Check portfolio artifacts
+    local artifacts=$(ls "$PROJECT_ROOT/.portfolio/" 2>/dev/null | wc -l)
+    echo "  📦 Portfolio artifacts: $artifacts (target: 10+)"
+    
+    # Check job applications this week
+    local apps_week=$(find "$PROJECT_ROOT/.job-tracker/" -name "*.json" -mtime -7 2>/dev/null | wc -l)
+    echo "  📮 Applications this week: $apps_week (target: 10)"
+}
+
+show_job_actions() {
+    # Daily actions based on AI_JOB_STRATEGY.md timeline
+    local day_of_week=$(date +%u)
+    
+    case $day_of_week in
+        1) # Monday
+            echo "  • Send 10 tailored applications with Proof Pack"
+            echo "  • Update portfolio README with latest metrics"
+            ;;
+        2) # Tuesday
+            echo "  • Record Loom demo if new feature complete"
+            echo "  • Post on LinkedIn about technical achievement"
+            ;;
+        3) # Wednesday
+            echo "  • Warm outreach to 5 hiring managers"
+            echo "  • Update cost/latency comparison table"
+            ;;
+        4) # Thursday
+            echo "  • Push MLflow registry updates"
+            echo "  • Generate new Grafana screenshots"
+            ;;
+        5) # Friday
+            echo "  • Weekly portfolio review"
+            echo "  • Schedule coffee chats for next week"
+            ;;
+        *)
+            echo "  • Continue building proof artifacts"
+            ;;
+    esac
+    
+    # Always show next priority artifact
+    echo -e "\n  ${YELLOW}Next Priority Artifact:${NC}"
+    suggest_next_artifact
+}
+
+suggest_next_artifact() {
+    # Based on AI_JOB_STRATEGY.md gap plan
+    if [[ ! -f "$PROJECT_ROOT/.portfolio/mlflow_lifecycle.mp4" ]]; then
+        echo "    🎥 MLflow lifecycle Loom (train→eval→promote→rollback)"
+    elif [[ ! -f "$PROJECT_ROOT/.portfolio/slo_gate_demo.mp4" ]]; then
+        echo "    🎥 SLO gate catching regression Loom"
+    elif [[ ! -f "$PROJECT_ROOT/.portfolio/cost_latency_table.md" ]]; then
+        echo "    📊 vLLM vs API cost/latency comparison table"
+    elif [[ ! -f "$PROJECT_ROOT/.portfolio/drift_detection.png" ]]; then
+        echo "    📸 Drift detection screenshot with alert"
+    elif [[ ! -f "$PROJECT_ROOT/.portfolio/ab_testing_dashboard.png" ]]; then
+        echo "    📸 A/B testing dashboard with results"
+    else
+        echo "    ✅ Core artifacts complete - focus on applications!"
+    fi
 }
 
 # ═══════════════════════════════════════════════════════

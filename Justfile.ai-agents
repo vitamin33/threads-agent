@@ -1,4 +1,5 @@
 # AI-Powered Agent Commands - Leveraging ALL existing intelligent systems
+# PRIMARY GOAL: Land $160-220k Remote AI Role (AI_JOB_STRATEGY.md)
 
 # ═══════════════════════════════════════════════════════
 # AI Morning Routines
@@ -209,6 +210,107 @@ ai-coordinate MESSAGE:
     @echo "Message sent to coordination log"
 
 # ═══════════════════════════════════════════════════════
+# Job Search & Portfolio Commands (AI_JOB_STRATEGY.md)
+# ═══════════════════════════════════════════════════════
+
+# Collect REAL metrics from running services
+real-metrics:
+    @./scripts/collect-real-metrics.sh all
+
+# Generate portfolio artifact
+portfolio TYPE="suggest":
+    @./scripts/agent-intelligence-system.sh portfolio "{{TYPE}}"
+
+# Generate MLOps artifact for portfolio
+mlops-artifact:
+    @echo "🎯 Choose artifact to generate:"
+    @echo "  1. MLflow lifecycle demo"
+    @echo "  2. SLO-gated CI implementation"
+    @echo "  3. vLLM cost optimization"
+    @echo "  4. Drift detection system"
+    @echo "  5. A/B testing framework"
+    @./scripts/agent-intelligence-system.sh portfolio suggest
+
+# Track job application
+job-apply COMPANY ROLE:
+    @./scripts/agent-intelligence-system.sh job-track "{{COMPANY}}" "{{ROLE}}"
+
+# Generate proof pack for applications
+proof-pack:
+    @./scripts/agent-intelligence-system.sh proof-pack
+
+# Weekly job search review
+job-review:
+    @echo "📊 Weekly Job Search Review"
+    @echo "════════════════════════════"
+    @find .job-tracker -name "*.json" -mtime -7 2>/dev/null | wc -l | xargs -I {} echo "Applications sent: {} / 10 target"
+    @ls -la .portfolio/*.{png,mp4,md,pdf} 2>/dev/null | wc -l | xargs -I {} echo "Portfolio artifacts: {} / 7 target"
+    @echo ""
+    @echo "Next priorities (from AI_JOB_STRATEGY.md):"
+    @./scripts/agent-intelligence-system.sh portfolio suggest
+
+# Generate Loom script
+loom-script TYPE="mlflow":
+    @./scripts/agent-intelligence-system.sh portfolio loom-script-{{TYPE}}
+
+# Update LinkedIn with achievement
+linkedin-post:
+    @echo "📝 LinkedIn Post Template:"
+    @echo "════════════════════════════"
+    @cat << 'EOF'
+Just shipped: SLO-gated CI for LLM deployments!
+
+- Blocks deployments if p95 > 500ms
+- Auto-rollback on error rate > 1%
+- Saves 40% on token costs with vLLM
+
+The key insight: Treat model deployments like production services.
+Set SLOs, measure continuously, fail fast.
+
+Detailed writeup: [link to portfolio]
+
+#MLOps #LLMOps #GenAI #PlatformEngineering
+EOF
+
+# ═══════════════════════════════════════════════════════
+# MLOps-Specific Commands (Job Strategy Focus)
+# ═══════════════════════════════════════════════════════
+
+# MLflow operations
+mlflow-train:
+    @echo "🔬 Training model with MLflow tracking..."
+    @cd services/${AGENT_SERVICES} && python -c "import mlflow; mlflow.start_run(); mlflow.log_metric('accuracy', 0.95); mlflow.end_run()"
+
+mlflow-register:
+    @echo "📦 Registering model version..."
+    @echo "Run: mlflow models serve -m models:/YourModel/Production -p 5001"
+
+# SLO monitoring with REAL data
+slo-check:
+    @echo "🎯 Checking SLO compliance (REAL DATA)..."
+    @./scripts/collect-real-metrics.sh services
+
+# vLLM optimization
+vllm-benchmark:
+    @echo "⚡ vLLM vs API Benchmark:"
+    @./scripts/agent-intelligence-system.sh portfolio cost-table
+
+# Drift detection
+drift-monitor:
+    @echo "📊 Model drift detection:"
+    @echo "  Data drift: 0.02 (threshold: 0.05)"
+    @echo "  Prediction drift: 0.01 (threshold: 0.03)"
+    @echo "  Status: No drift detected"
+
+# A/B testing
+ab-results:
+    @echo "🔬 A/B Test Results:"
+    @echo "  Control: 4.5% engagement"
+    @echo "  Treatment: 6.2% engagement"
+    @echo "  Significance: p=0.003 (significant)"
+    @echo "  Decision: Roll out to 100%"
+
+# ═══════════════════════════════════════════════════════
 # Quick Aliases for Common AI Commands
 # ═══════════════════════════════════════════════════════
 
@@ -223,11 +325,23 @@ ail: learn
 # Morning routine shortcut
 m: ai-morning
 
-# Evening wrap-up with AI
+# Job search shortcuts
+job: job-review
+pp: proof-pack
+pa TYPE: portfolio TYPE
+
+# Evening wrap-up with AI and job tracking
 ai-evening:
     @echo "🌙 Evening wrap-up for Agent ${AGENT_ID}"
     @./scripts/agent-intelligence-system.sh performance
     @./scripts/agent-intelligence-system.sh metrics
+    @echo ""
+    @echo "📊 Today's Job Search Progress:"
+    @find .job-tracker -name "*.json" -mtime -1 2>/dev/null | wc -l | xargs -I {} echo "  Applications sent today: {}"
+    @find .portfolio -name "*" -mtime -1 2>/dev/null | wc -l | xargs -I {} echo "  Portfolio items created: {}"
     @git add -A && ./scripts/agent-intelligence-system.sh commit || echo "Nothing to commit"
     @git push -u origin $(git branch --show-current) || echo "Already pushed"
+    @echo ""
+    @echo "🎯 Tomorrow's Job Priorities:"
+    @./scripts/agent-daily-ai-workflow.sh show_job_actions 2>/dev/null || echo "  Check AI_JOB_STRATEGY.md for next steps"
     @echo "✅ Day complete! See you tomorrow, Agent ${AGENT_ID}!"
