@@ -260,13 +260,25 @@ proof-pack:
 
 # Weekly job search review
 job-review:
-    @echo "📊 Weekly Job Search Review"
-    @echo "════════════════════════════"
-    @find .job-tracker -name "*.json" -mtime -7 2>/dev/null | wc -l | xargs -I {} echo "Applications sent: {} / 10 target"
-    @ls -la .portfolio/*.{png,mp4,md,pdf} 2>/dev/null | wc -l | xargs -I {} echo "Portfolio artifacts: {} / 7 target"
-    @echo ""
-    @echo "Next priorities (from AI_JOB_STRATEGY.md):"
-    @./scripts/agent-intelligence-system.sh portfolio suggest
+    @./scripts/weekly-portfolio-report.sh
+
+# Job application assistant
+job-status:
+    @./scripts/job-application-assistant.sh status
+
+job-track COMPANY ROLE:
+    @./scripts/job-application-assistant.sh track "{{COMPANY}}" "{{ROLE}}"
+
+job-suggest:
+    @./scripts/job-application-assistant.sh suggest
+
+# Agent coordination dashboard
+dashboard:
+    @./scripts/agent-coordination-dashboard.sh
+
+# Create PR with portfolio impact
+pr-portfolio TITLE:
+    @./scripts/agent-pr-helper.sh "{{TITLE}}"
 
 # Generate Loom script
 loom-script TYPE="mlflow":
