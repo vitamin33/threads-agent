@@ -344,13 +344,54 @@ This creates 4 isolated worktrees with no conflicts:
 - **No file conflicts** - Local config files never committed
 - **No merge conflicts** - Agent-specific files in .gitignore
 
-### Your 4 Parallel Agents
+### Your 4 Parallel Agents - Specialized Development Vectors
 
-```bash
-Agent A1 (MLOps)     → ../wt-a1-mlops     → orchestrator, celery_worker, persona_runtime
-Agent A2 (GenAI)     → ../wt-a2-genai     → viral_engine, rag_pipeline, vllm_service
-Agent A3 (Analytics) → ../wt-a3-analytics → achievement_collector, dashboard_api, finops
-Agent A4 (Platform)  → ../wt-a4-platform  → revenue, event_bus, threads_adaptor
+#### **Agent A1 - MLOps/Orchestrator** (`../wt-a1-mlops`)
+```yaml
+Services: orchestrator, celery_worker, persona_runtime
+Focus Areas: MLflow, SLO-gates, monitoring, performance
+Job Targets: MLOps Engineer, Platform Engineer, SRE
+Portfolio Priority:
+  - MLflow registry with 2+ model versions
+  - SLO-gated CI demo (p95 < 500ms)
+  - Grafana dashboards with drift detection
+Keywords: MLflow, Prometheus, Grafana, latency, reliability, rollback
+```
+
+#### **Agent A2 - GenAI/RAG** (`../wt-a2-genai`)
+```yaml
+Services: rag_pipeline, vllm_service, viral_engine
+Focus Areas: vLLM, RAG, embeddings, token-optimization
+Job Targets: GenAI Engineer, LLM Specialist, AI/ML Engineer
+Portfolio Priority:
+  - vLLM cost reduction (60% savings)
+  - RAG accuracy metrics
+  - Token optimization dashboard
+Keywords: vLLM, Qdrant, embeddings, Llama, semantic, cost
+```
+
+#### **Agent A3 - Analytics/Documentation** (`../wt-a3-analytics`)
+```yaml
+Services: achievement_collector, tech_doc_generator, dashboard_api
+Focus Areas: portfolio, documentation, achievements, visualization
+Job Targets: Technical Writer, Data Analyst, Developer Advocate
+Portfolio Priority:
+  - Achievement report from PRs
+  - Technical documentation
+  - Portfolio website
+Keywords: portfolio, impact, metrics, visualization, documentation
+```
+
+#### **Agent A4 - Platform/Revenue** (`../wt-a4-platform`)
+```yaml
+Services: revenue, finops_engine, event_bus, threads_adaptor
+Focus Areas: A/B-testing, revenue, cost-optimization, platform
+Job Targets: Platform Engineer, Growth Engineer, FinOps Engineer
+Portfolio Priority:
+  - A/B test results with significance
+  - Revenue dashboard ($20k MRR)
+  - FinOps cost savings (30%)
+Keywords: A/B testing, MRR, CAC, FinOps, event-driven, platform
 ```
 
 ### Working in Your Worktree
@@ -406,11 +447,30 @@ git push origin feat/a1/mlflow-integration
 gh pr create --title "[A1] MLflow integration" --label "auto-merge"
 ```
 
+### Instructions for Claude Code Sessions
+
+When starting a new Claude Code session in a worktree, tell Claude:
+
+```markdown
+I am working in Agent A1 worktree focused on MLOps.
+My services: orchestrator, celery_worker, persona_runtime
+My focus: MLflow, SLO-gates, monitoring, performance
+Ignore: rag_pipeline, achievement_collector, revenue services
+Job priority: Build MLflow demos and SLO gate artifacts for MLOps Engineer roles
+```
+
+This ensures Claude understands:
+1. Which services to work on
+2. Which to ignore completely
+3. What portfolio artifacts to prioritize
+4. Which job roles to optimize for
+
 ### Important: Local Files Never Commit
 
 These files are LOCAL ONLY (in .gitignore):
-- `AGENT_FOCUS.md` - Your responsibilities
-- `.agent.env` - Your configuration
+- `AGENT_FOCUS.md` - Your complete planning document (identity, tasks, progress)
+- `.agent.env` - Your runtime configuration
+- `.ai-context.json` - AI planning context
 - `*.local` - Any local notes
 - `.locks/` - Coordination locks
 

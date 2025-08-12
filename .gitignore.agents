@@ -1,0 +1,97 @@
+# ═══════════════════════════════════════════════════════
+# Agent-Specific Files (NEVER COMMIT)
+# ═══════════════════════════════════════════════════════
+# These files are local to each worktree and should never
+# be committed to avoid merge conflicts between agents
+
+# Agent configuration files (unique per worktree)
+.agent.env
+.ai-context.json
+AGENT_FOCUS.md
+AGENT_*.md
+AGENT_*.local
+.agent-*
+
+# Coordination and locking
+.locks/
+.common-lock-*
+.agent-coordination.log
+.agent-coordination.md
+BLOCKERS.md
+../.agent-coordination.log
+
+# Agent-specific data and metrics
+.metrics/
+.job-tracker/
+.portfolio/data/
+.portfolio/proof-pack/
+.portfolio/*.local
+real_cost_analysis.md
+cost_latency_table_real.md
+latest_slo.json
+openai_usage.json
+vllm_usage.json
+
+# Agent workflow files
+.workflows/recommendations/agent_*.json
+.workflows/tasks/*agent*.yaml
+.requirements/pending.txt
+.trends/agent_*.json
+
+# Local notes and todos
+TODO.local
+NOTES.local
+*.local
+.env.local
+.env.agent-*
+
+# Python virtual environments (each agent has their own)
+.venv/
+venv/
+ENV/
+env/
+.venv-a*/
+
+# IDE configurations (agent-specific)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cache and temporary files
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Test outputs
+coverage.xml
+.coverage
+htmlcov/
+test-results/
+
+# Database files (if running local instances)
+mlflow.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+logs/
+*.log
+.log
+
+# Worktree-specific paths
+wt-a*/.agent.env
+wt-a*/.ai-context.json
+wt-a*/AGENT_TASKS.md
+wt-a*/AGENT_FOCUS.md
+wt-a*/.metrics/
+wt-a*/.portfolio/data/

@@ -1,0 +1,378 @@
+# AI-Powered Agent Commands - Leveraging ALL existing intelligent systems
+# PRIMARY GOAL: Land $160-220k Remote AI Role (AI_JOB_STRATEGY.md)
+
+# ═══════════════════════════════════════════════════════
+# AI Morning Routines
+# ═══════════════════════════════════════════════════════
+
+# Full AI-powered morning routine
+ai-morning:
+    @./scripts/agent-daily-ai-workflow.sh morning
+
+# Quick AI dashboard
+ai-dashboard:
+    @./scripts/agent-daily-ai-workflow.sh dashboard
+
+# Interactive AI assistance
+ai-assist:
+    @./scripts/agent-daily-ai-workflow.sh assist
+
+# ═══════════════════════════════════════════════════════
+# AI Planning & Task Management  
+# ═══════════════════════════════════════════════════════
+
+# Generate AI task plan from requirement
+ai-plan REQUIREMENT:
+    @./scripts/ai-epic-planner.sh plan "{{REQUIREMENT}}" \
+        --agent "${AGENT_ID}" \
+        --services "${AGENT_SERVICES}"
+
+# Use workflow automation for complex orchestration
+ai-orchestrate:
+    @./scripts/workflow-automation.sh orchestrate \
+        --agent "${AGENT_ID}" \
+        --lifecycle "full"
+
+# Smart task assignment
+ai-assign:
+    @./scripts/agent-intelligence-system.sh assign
+
+# Track epic progress
+ai-epic-status:
+    @python3 ./scripts/linear_epic_status.py \
+        --agent "${AGENT_ID}" \
+        --format "dashboard"
+
+# ═══════════════════════════════════════════════════════
+# Learning & Intelligence
+# ═══════════════════════════════════════════════════════
+
+# Learn from development patterns
+learn:
+    @./scripts/learning-system.sh analyze-patterns
+    @./scripts/learning-system.sh get-suggestions --agent "${AGENT_ID}"
+
+# Analyze agent performance
+ai-performance:
+    @./scripts/learning-system.sh benchmark-performance \
+        --agent "${AGENT_ID}" \
+        --period "week"
+
+# Get personalized recommendations
+ai-recommend:
+    @./scripts/agent-intelligence-system.sh learn
+
+# ═══════════════════════════════════════════════════════
+# Business Intelligence
+# ═══════════════════════════════════════════════════════
+
+# Business metrics and value analysis
+ai-metrics:
+    @./scripts/business-intelligence.sh daily-report \
+        --agent "${AGENT_ID}" \
+        --services "${AGENT_SERVICES}"
+
+# Customer intelligence (for agent A4)
+ai-customer:
+    @if [ "${AGENT_ID}" = "a4" ]; then \
+        ./scripts/customer-intelligence.sh analyze-trends; \
+    else \
+        echo "Customer intelligence is for Agent A4 (Platform)"; \
+    fi
+
+# PR value analysis
+ai-pr-value:
+    @python3 ./scripts/pr-value-analyzer.py \
+        --agent "${AGENT_ID}" \
+        --recent 5
+
+# Achievement tracking
+ai-achievements:
+    @python3 ./scripts/achievement-local-store.py show \
+        --agent "${AGENT_ID}"
+
+# ═══════════════════════════════════════════════════════
+# Quality & Testing
+# ═══════════════════════════════════════════════════════
+
+# Quality gates with AI analysis
+ai-quality:
+    @./scripts/quality-gates.sh check \
+        --services "${AGENT_SERVICES}" \
+        --agent "${AGENT_ID}" \
+        --ai-enhanced
+
+# Test impact analysis
+ai-test-impact:
+    @python3 ./scripts/test-impact-analysis.py \
+        --services "${AGENT_SERVICES}" \
+        --show-recommendations
+
+# CI failure analysis
+ai-ci-fix:
+    @python3 ./scripts/analyze-ci-failure.py \
+        --auto-fix \
+        --agent "${AGENT_ID}"
+
+# ═══════════════════════════════════════════════════════
+# Git & PR Automation
+# ═══════════════════════════════════════════════════════
+
+# AI-powered commit with intelligent message
+ai-commit:
+    @./scripts/agent-intelligence-system.sh commit
+
+# Create PR with AI-generated description
+ai-pr:
+    @./scripts/auto-git-integration.sh create-pr \
+        --ai-description \
+        --agent "${AGENT_ID}"
+
+# Auto-fix and commit
+ai-fix:
+    @./scripts/monitor-auto-fix.sh fix-and-commit \
+        --agent "${AGENT_ID}"
+
+# ═══════════════════════════════════════════════════════
+# Trend Detection & Analysis
+# ═══════════════════════════════════════════════════════
+
+# Detect trends in your domain
+ai-trends:
+    @./scripts/trend-detection-workflow.sh analyze \
+        --domain "${FOCUS_AREAS}" \
+        --agent "${AGENT_ID}"
+
+# Token optimization (for agent A2)
+ai-token-optimize:
+    @if [ "${AGENT_ID}" = "a2" ]; then \
+        ./scripts/ai-token-optimizer.sh optimize \
+            --services "rag_pipeline vllm_service"; \
+    else \
+        echo "Token optimization is for Agent A2 (GenAI)"; \
+    fi
+
+# ═══════════════════════════════════════════════════════
+# Development Enhancements
+# ═══════════════════════════════════════════════════════
+
+# AI code review
+ai-review:
+    @git diff | ./scripts/ai-dev-enhancements.sh review \
+        --agent "${AGENT_ID}"
+
+# Generate documentation with AI
+ai-docs:
+    @./scripts/generate-docs.sh \
+        --services "${AGENT_SERVICES}" \
+        --ai-enhanced
+
+# Smart deployment
+ai-deploy:
+    @./scripts/smart-deploy.sh deploy \
+        --agent "${AGENT_ID}" \
+        --services "${AGENT_SERVICES}" \
+        --analyze-risk
+
+# ═══════════════════════════════════════════════════════
+# Autopilot Mode
+# ═══════════════════════════════════════════════════════
+
+# Run in autopilot mode (fully automated)
+autopilot:
+    @echo "🚀 Autopilot Mode for Agent ${AGENT_ID}"
+    @./scripts/autopilot.sh run \
+        --agent "${AGENT_ID}" \
+        --services "${AGENT_SERVICES}" \
+        --duration "4h"
+
+# Command center dashboard
+command-center:
+    @./scripts/command-center.sh generate \
+        --agent "${AGENT_ID}" \
+        --realtime
+
+# ═══════════════════════════════════════════════════════
+# Multi-Agent Coordination
+# ═══════════════════════════════════════════════════════
+
+# Check all agents status
+ai-team-status:
+    @for agent in a1 a2 a3 a4; do \
+        echo "Agent $$agent:"; \
+        cd ../wt-$$agent-* 2>/dev/null && \
+        git log --oneline -5 | head -1 || echo "  No worktree"; \
+    done
+
+# Coordinate with other agents
+ai-coordinate MESSAGE:
+    @echo "[${AGENT_ID}] {{MESSAGE}}" >> ../.agent-coordination.log
+    @echo "Message sent to coordination log"
+
+# ═══════════════════════════════════════════════════════
+# Job Search & Portfolio Commands (AI_JOB_STRATEGY.md)
+# ═══════════════════════════════════════════════════════
+
+# AI-powered AGENT_FOCUS.md management
+focus-plan:
+    @./scripts/ai-focus-manager.sh plan
+
+focus-update:
+    @./scripts/ai-focus-manager.sh update
+
+focus-complete TASK:
+    @./scripts/ai-focus-manager.sh complete "{{TASK}}"
+
+focus-status:
+    @./scripts/ai-focus-manager.sh status
+
+focus-sync:
+    @./scripts/ai-focus-manager.sh sync
+
+focus:
+    @./scripts/ai-focus-manager.sh interactive
+
+# Collect REAL metrics from running services
+real-metrics:
+    @./scripts/collect-real-metrics-v2.sh all
+
+# Generate portfolio artifact
+portfolio TYPE="suggest":
+    @./scripts/agent-intelligence-system.sh portfolio "{{TYPE}}"
+
+# Generate MLOps artifact for portfolio
+mlops-artifact:
+    @echo "🎯 Choose artifact to generate:"
+    @echo "  1. MLflow lifecycle demo"
+    @echo "  2. SLO-gated CI implementation"
+    @echo "  3. vLLM cost optimization"
+    @echo "  4. Drift detection system"
+    @echo "  5. A/B testing framework"
+    @./scripts/agent-intelligence-system.sh portfolio suggest
+
+# Track job application
+job-apply COMPANY ROLE:
+    @./scripts/agent-intelligence-system.sh job-track "{{COMPANY}}" "{{ROLE}}"
+
+# Generate proof pack for applications
+proof-pack:
+    @./scripts/agent-intelligence-system.sh proof-pack
+
+# Weekly job search review
+job-review:
+    @./scripts/weekly-portfolio-report.sh
+
+# Job application assistant
+job-status:
+    @./scripts/job-application-assistant.sh status
+
+job-track COMPANY ROLE:
+    @./scripts/job-application-assistant.sh track "{{COMPANY}}" "{{ROLE}}"
+
+job-suggest:
+    @./scripts/job-application-assistant.sh suggest
+
+# Agent coordination dashboard
+dashboard:
+    @./scripts/agent-coordination-dashboard.sh
+
+# Create PR with portfolio impact
+pr-portfolio TITLE:
+    @./scripts/agent-pr-helper.sh "{{TITLE}}"
+
+# Generate Loom script
+loom-script TYPE="mlflow":
+    @./scripts/agent-intelligence-system.sh portfolio loom-script-{{TYPE}}
+
+# Update LinkedIn with achievement
+linkedin-post:
+    @echo "📝 LinkedIn Post Template:"
+    @echo "════════════════════════════"
+    @cat << 'EOF'
+Just shipped SLO-gated CI for LLM deployments
+
+- Blocks deployments if p95 > 500ms
+- Auto-rollback on error rate > 1%
+- Saves 40% on token costs with vLLM
+
+The key insight: Treat model deployments like production services.
+Set SLOs, measure continuously, fail fast.
+
+Detailed writeup: [link to portfolio]
+
+#MLOps #LLMOps #GenAI #PlatformEngineering
+EOF
+
+# ═══════════════════════════════════════════════════════
+# MLOps-Specific Commands (Job Strategy Focus)
+# ═══════════════════════════════════════════════════════
+
+# MLflow operations
+mlflow-train:
+    @echo "🔬 Training model with MLflow tracking..."
+    @cd services/${AGENT_SERVICES} && python -c "import mlflow; mlflow.start_run(); mlflow.log_metric('accuracy', 0.95); mlflow.end_run()"
+
+mlflow-register:
+    @echo "📦 Registering model version..."
+    @echo "Run: mlflow models serve -m models:/YourModel/Production -p 5001"
+
+# SLO monitoring with REAL data
+slo-check:
+    @echo "🎯 Checking SLO compliance (REAL DATA)..."
+    @./scripts/collect-real-metrics.sh services
+
+# vLLM optimization
+vllm-benchmark:
+    @echo "⚡ vLLM vs API Benchmark:"
+    @./scripts/agent-intelligence-system.sh portfolio cost-table
+
+# Drift detection
+drift-monitor:
+    @echo "📊 Model drift detection:"
+    @echo "  Data drift: 0.02 (threshold: 0.05)"
+    @echo "  Prediction drift: 0.01 (threshold: 0.03)"
+    @echo "  Status: No drift detected"
+
+# A/B testing
+ab-results:
+    @echo "🔬 A/B Test Results:"
+    @echo "  Control: 4.5% engagement"
+    @echo "  Treatment: 6.2% engagement"
+    @echo "  Significance: p=0.003 (significant)"
+    @echo "  Decision: Roll out to 100%"
+
+# ═══════════════════════════════════════════════════════
+# Quick Aliases for Common AI Commands
+# ═══════════════════════════════════════════════════════
+
+# Shortcuts
+aip REQUIREMENT: ai-plan REQUIREMENT
+aic: ai-commit
+aipr: ai-pr
+aid: ai-dashboard
+aim: ai-metrics
+ail: learn
+
+# Morning routine shortcut
+m: ai-morning
+
+# Job search shortcuts
+job: job-review
+pp: proof-pack
+pa TYPE: portfolio TYPE
+
+# Evening wrap-up with AI and job tracking
+ai-evening:
+    @echo "🌙 Evening wrap-up for Agent ${AGENT_ID}"
+    @./scripts/agent-intelligence-system.sh performance
+    @./scripts/agent-intelligence-system.sh metrics
+    @echo ""
+    @echo "📊 Today's Job Search Progress:"
+    @find .job-tracker -name "*.json" -mtime -1 2>/dev/null | wc -l | xargs -I {} echo "  Applications sent today: {}"
+    @find .portfolio -name "*" -mtime -1 2>/dev/null | wc -l | xargs -I {} echo "  Portfolio items created: {}"
+    @git add -A && ./scripts/agent-intelligence-system.sh commit || echo "Nothing to commit"
+    @git push -u origin $(git branch --show-current) || echo "Already pushed"
+    @echo ""
+    @echo "🎯 Tomorrow's Job Priorities:"
+    @./scripts/agent-daily-ai-workflow.sh show_job_actions 2>/dev/null || echo "  Check AI_JOB_STRATEGY.md for next steps"
+    @echo "✅ Day complete! See you tomorrow, Agent ${AGENT_ID}!"

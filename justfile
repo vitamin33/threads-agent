@@ -748,3 +748,7 @@ ui-logs:
 ui-port-forward:
 	@echo "🔗 Creating port-forward for Dashboard..."
 	@kubectl port-forward -n threads-agent svc/threads-agent-dashboard 8501:80
+
+# Include agent-specific commands
+import 'Justfile.agents'
+import 'Justfile.ai-agents'
