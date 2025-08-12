@@ -89,7 +89,7 @@ class AchievementCollectorClient:
                     print("    ✅ Created via PR analysis endpoint")
                     return True
 
-        except:
+        except Exception:
             pass
         return False
 
@@ -231,7 +231,7 @@ def main():
         with urllib.request.urlopen("http://localhost:8001/health") as response:
             if response.status == 200:
                 print("✅ Achievement Collector is running")
-    except:
+    except Exception:
         print("⚠️ Achievement Collector not responding on port 8001")
         print("   Start it with: just dev-start")
         return

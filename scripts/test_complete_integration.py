@@ -342,12 +342,12 @@ class PRAnalysisIntegrationTest:
                             print_warning(
                                 f"Endpoint returned {resp.status}: {endpoint}"
                             )
-                    except:
+                    except Exception:
                         print_warning(f"Endpoint not accessible: {endpoint}")
 
                 return True
 
-        except:
+        except Exception:
             print_warning("Achievement Collector not running on port 8001")
             print_info("Start with: just dev-start")
             return False

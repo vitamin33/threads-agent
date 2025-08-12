@@ -17,6 +17,9 @@ from fastapi import BackgroundTasks, FastAPI, Response, HTTPException
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
+# Production optimizations
+from services.orchestrator.rate_limiter import SimpleRateLimiter
+
 # Configure debug logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -27,9 +30,6 @@ logger.info(f"Python version: {os.sys.version}")
 logger.info(
     f"Environment: CI={os.getenv('CI', 'false')}, GITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS', 'false')}"
 )
-
-# Production optimizations
-from services.orchestrator.rate_limiter import SimpleRateLimiter
 
 # ── shared helpers ────────────────────────────────────────────────────────────
 try:

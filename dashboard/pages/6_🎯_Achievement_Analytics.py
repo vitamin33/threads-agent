@@ -5,6 +5,14 @@ Achievement Analytics Dashboard - Comprehensive achievement tracking and analysi
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import sys
+import os
+
+# Import API client and theme
+from services.api_client import get_api_client
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.theme_config import apply_plotly_theme, inject_dark_theme_css
 
 st.set_page_config(
     page_title="Achievement Analytics - Threads Agent", page_icon="🎯", layout="wide"
@@ -12,14 +20,6 @@ st.set_page_config(
 
 st.title("🎯 Achievement Analytics")
 st.markdown("Deep insights into your achievements with full calculation transparency")
-
-# Import API client and theme
-from services.api_client import get_api_client
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.theme_config import apply_plotly_theme, inject_dark_theme_css
 
 # Inject dark theme CSS
 inject_dark_theme_css()

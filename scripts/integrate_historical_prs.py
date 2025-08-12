@@ -10,13 +10,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# Add the project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
 from services.achievement_collector.db.config import SessionLocal
 from services.achievement_collector.db.models import Achievement
 from services.achievement_collector.api.schemas import AchievementCreate
+
+# Add the project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 
 class HistoricalPRIntegrator:

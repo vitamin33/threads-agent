@@ -3,18 +3,18 @@
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
+from contextlib import contextmanager
 
 from celery import Celery, shared_task
 from sqlalchemy import and_
 
-# Create Celery app instance
-celery = Celery("performance_monitor")
-celery.config_from_object("services.common.celery_config")
-
-from contextlib import contextmanager
 from services.performance_monitor.early_kill import EarlyKillMonitor, VariantPerformance
 from services.performance_monitor.models import VariantMonitoring
 from services.performance_monitor.cache import PerformanceCache
+
+# Create Celery app instance
+celery = Celery("performance_monitor")
+celery.config_from_object("services.common.celery_config")
 
 
 # Mock implementation since ThreadsClientSync doesn't exist
