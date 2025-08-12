@@ -346,7 +346,7 @@ class ThreadsAgentAPI:
                         cleaned = re.sub(r"[^\d.-]", "", value_str)
                         if cleaned:
                             total_value += float(cleaned)
-                    except:
+                    except (ValueError, TypeError):
                         pass
 
                 # Other metrics

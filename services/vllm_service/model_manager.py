@@ -11,7 +11,6 @@ from typing import Dict, List, Any
 
 try:
     from vllm import LLM, SamplingParams
-    from vllm.utils import is_hip
 
     VLLM_AVAILABLE = True
 except ImportError:

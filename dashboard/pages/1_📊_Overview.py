@@ -9,18 +9,13 @@ from datetime import datetime, timedelta
 import httpx
 import json
 import re
-
-st.set_page_config(page_title="Overview - Threads Agent", page_icon="📊", layout="wide")
-
-st.title("📊 System Overview")
-st.markdown("Real-time view of your content automation system performance")
+import sys
+import os
 
 # Import API client and K8s monitor
 from services.api_client import get_api_client
 from services.k8s_monitor import get_k8s_monitor
 from services.realtime_client import create_realtime_dashboard_section
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.theme_config import (
@@ -28,6 +23,11 @@ from utils.theme_config import (
     inject_dark_theme_css,
     create_styled_gauge,
 )
+
+st.set_page_config(page_title="Overview - Threads Agent", page_icon="📊", layout="wide")
+
+st.title("📊 System Overview")
+st.markdown("Real-time view of your content automation system performance")
 
 # Inject dark theme CSS
 inject_dark_theme_css()
@@ -97,7 +97,6 @@ def get_real_metrics():
             "total_services": metrics.get("services_health", {}).get("total", 5),
             "avg_processing_time": avg_processing_time,
             "active_tasks": metrics.get("active_tasks", 3),
-            "completed_today": metrics.get("completed_today", today_count),
             "total_value": achievement_stats.get("total_value_generated", 0),
             "total_achievements": achievement_stats.get("total_achievements", 0),
             "completed_today": metrics.get(
@@ -113,7 +112,7 @@ def get_real_metrics():
                     ]
                 )
                 if achievements
-                else 0,
+                else today_count,
             ),
         }
     except Exception:
@@ -265,7 +264,7 @@ with tab1:
                     raise Exception("No HTTP metrics found")
             else:
                 raise Exception("Orchestrator metrics not available")
-    except:
+    except Exception:
         # Fallback to realistic API response times (not project durations!)
         hours = list(range(24))
         base_response = 45  # 45ms base response time
@@ -421,7 +420,7 @@ if achievements:
                         if match:
                             value = float(match.group(1).replace(",", ""))
                             today_value += value
-            except:
+            except (ValueError, TypeError, json.JSONDecodeError):
                 pass
 
     # Calculate average duration in hours for achievements
@@ -569,7 +568,7 @@ def get_recent_activity():
                         time_ago = f"{delta.seconds // 3600} hours ago"
                     else:
                         time_ago = f"{delta.seconds // 60} minutes ago"
-                except:
+                except (ValueError, TypeError):
                     pass
 
             event_type = "success" if a.get("impact_score", 0) > 70 else "info"

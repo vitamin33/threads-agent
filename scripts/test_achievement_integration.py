@@ -60,7 +60,7 @@ Business Impact: $43,680 portfolio value with 360% ROI
         response = urllib.request.urlopen("http://localhost:8001/health")
         if response.status == 200:
             print("✅ Achievement Collector API is running")
-    except:
+    except Exception:
         print("❌ Achievement Collector not running on port 8001")
         print("   Start with: just dev-start")
         return False

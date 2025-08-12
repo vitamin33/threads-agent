@@ -171,7 +171,7 @@ async def get_content_posts(
                 if row.quality_score and row.quality_score != "null":
                     try:
                         quality_score = float(row.quality_score)
-                    except:
+                    except (ValueError, TypeError):
                         pass
 
                 posts.append(
@@ -229,7 +229,7 @@ async def get_content_post(post_id: int):
             if result.quality_score and result.quality_score != "null":
                 try:
                     quality_score = float(result.quality_score)
-                except:
+                except (ValueError, TypeError):
                     pass
 
             return ContentItem(

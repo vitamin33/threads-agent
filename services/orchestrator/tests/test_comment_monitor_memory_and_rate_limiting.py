@@ -562,7 +562,7 @@ class TestCommentMonitorRateLimiting:
         for i in range(12):  # Exceed rate limit
             try:
                 comment_monitor.process_comments_for_post(f"rate_limit_post_{i}")
-            except:
+            except Exception:
                 pass  # Expected to fail due to rate limiting
 
         # Verify rate limiting was triggered

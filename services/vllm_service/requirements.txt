@@ -16,7 +16,7 @@ opentelemetry-instrumentation-fastapi==0.43b0
 # Utilities
 httpx==0.25.2
 aioredis==2.0.1
-python-multipart==0.0.6
+python-multipart>=0.0.7
 
 # Testing
 pytest==7.4.3

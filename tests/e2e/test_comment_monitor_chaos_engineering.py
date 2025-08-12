@@ -9,12 +9,6 @@ service outages, and other chaos scenarios to validate system resilience.
 import os
 import pytest
 import time
-
-# Skip this entire test module in CI - chaos tests require full infrastructure
-pytestmark = pytest.mark.skipif(
-    os.getenv("CI") == "true" and os.getenv("GITHUB_ACTIONS") == "true",
-    reason="Skipping chaos engineering tests in CI - requires full infrastructure setup",
-)
 import random
 import threading
 from unittest.mock import Mock
@@ -23,6 +17,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 
 from services.orchestrator.comment_monitor import CommentMonitor
+
+# Skip this entire test module in CI - chaos tests require full infrastructure
+pytestmark = pytest.mark.skipif(
+    os.getenv("CI") == "true" and os.getenv("GITHUB_ACTIONS") == "true",
+    reason="Skipping chaos engineering tests in CI - requires full infrastructure setup",
+)
 
 
 @dataclass
@@ -583,7 +583,7 @@ class TestCommentMonitorChaosEngineering:
         try:
             chaos_comment_monitor._deduplicate_comments_with_chaos(baseline_batch)
             baseline_time = (time.time() - baseline_start) * 1000
-        except:
+        except Exception:
             baseline_time = 1000  # Fallback baseline
 
         # Process during resource exhaustion

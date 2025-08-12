@@ -42,7 +42,7 @@ class CIPerformanceAnalyzer:
             )
 
             return json.loads(result.stdout)
-        except:
+        except Exception:
             return []
 
     def calculate_duration(self, run: Dict) -> Optional[float]:
@@ -52,7 +52,7 @@ class CIPerformanceAnalyzer:
             updated = datetime.fromisoformat(run["updatedAt"].replace("Z", "+00:00"))
             duration = (updated - created).total_seconds() / 60
             return round(duration, 1)
-        except:
+        except Exception:
             return None
 
     def analyze_workflow(self, workflow: str) -> Dict:

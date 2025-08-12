@@ -112,7 +112,7 @@ with tab1:
                             "Post": achievement.get("title", "Untitled"),
                         }
                     )
-                except:
+                except (ValueError, TypeError):
                     pass
 
         if timeline_data:

@@ -35,7 +35,7 @@ def calculate_stats_from_achievements():
                 cleaned = re.sub(r"[^\d.-]", "", value_str)
                 if cleaned:
                     total_value += float(cleaned)
-            except:
+            except (ValueError, TypeError):
                 pass
 
         # Sum other metrics

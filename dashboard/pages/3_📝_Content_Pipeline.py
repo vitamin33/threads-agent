@@ -9,15 +9,15 @@ import plotly.graph_objects as go
 from datetime import datetime
 import calendar
 
+# Import API client
+from services.api_client import get_api_client
+
 st.set_page_config(
     page_title="Content Pipeline - Threads Agent", page_icon="📝", layout="wide"
 )
 
 st.title("📝 Content Pipeline Management")
 st.markdown("Create, schedule, and publish content across multiple platforms")
-
-# Import API client
-from services.api_client import get_api_client
 
 api_client = get_api_client()
 
@@ -293,7 +293,7 @@ with tab1:
                 if isinstance(bv, str):
                     try:
                         bv = float(bv)
-                    except:
+                    except (ValueError, TypeError):
                         bv = 0
 
                 if bv > 50000:
@@ -319,7 +319,7 @@ with tab1:
                 if isinstance(bv, str):
                     try:
                         bv = float(bv)
-                    except:
+                    except (ValueError, TypeError):
                         bv = 0
                 platform_stats[platform]["total_value"] += bv
 
@@ -451,7 +451,7 @@ with tab3:
             if isinstance(bv, str):
                 try:
                     bv = float(bv)
-                except:
+                except (ValueError, TypeError):
                     bv = 0
 
             # Simulate views based on business value (higher value = more views)
@@ -478,7 +478,7 @@ with tab3:
                         published = f"{days_ago} days ago"
                 else:
                     published = "Recently"
-            except:
+            except (ValueError, TypeError):
                 published = "Recently"
 
             trending_data.append(
@@ -528,7 +528,7 @@ if achievements:
         if isinstance(bv, str):
             try:
                 bv = float(bv)
-            except:
+            except (ValueError, TypeError):
                 bv = 0
 
         category = achievement.get("category", "feature").lower()

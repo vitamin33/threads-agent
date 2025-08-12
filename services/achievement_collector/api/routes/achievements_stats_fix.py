@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 import json
 import re
 
+from services.achievement_collector.models import Achievement as AchievementModel
+
 
 def calculate_business_value_sum(achievements):
     """Extract and sum business values from text/JSON field"""
