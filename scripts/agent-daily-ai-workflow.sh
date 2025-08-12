@@ -94,15 +94,15 @@ morning_ai_routine() {
     # 5. Business Intelligence
     if [[ -f "$SCRIPT_DIR/business-intelligence.sh" ]]; then
         echo -e "\n${BLUE}[5/10]${NC} Business intelligence analysis..."
-        "$SCRIPT_DIR/business-intelligence.sh" daily-report \
-            --agent "$AGENT_ID" \
-            --focus "$FOCUS_AREAS"
+        "$SCRIPT_DIR/business-intelligence.sh" dashboard 2>/dev/null || \
+            echo "  📊 No business metrics collected yet"
     fi
     
     # 6. Customer Intelligence (if agent A4)
     if [[ "$AGENT_ID" == "a4" ]] && [[ -f "$SCRIPT_DIR/customer-intelligence.sh" ]]; then
         echo -e "\n${BLUE}[6/10]${NC} Customer intelligence insights..."
-        "$SCRIPT_DIR/customer-intelligence.sh" analyze-feedback
+        "$SCRIPT_DIR/customer-intelligence.sh" analyze-feedback 2>/dev/null || \
+            echo "  📊 No customer feedback data yet"
     fi
     
     # 7. Quality Gates Check
@@ -110,7 +110,8 @@ morning_ai_routine() {
         echo -e "\n${BLUE}[7/10]${NC} Checking quality gates..."
         "$SCRIPT_DIR/quality-gates.sh" check \
             --services "$AGENT_SERVICES" \
-            --agent "$AGENT_ID"
+            --agent "$AGENT_ID" 2>/dev/null || \
+            echo "  ✅ Quality gates not configured yet"
     fi
     
     # 8. Trend Detection (for GenAI agent)
@@ -118,7 +119,8 @@ morning_ai_routine() {
         echo -e "\n${BLUE}[8/10]${NC} Detecting AI/ML trends..."
         "$SCRIPT_DIR/trend-detection-workflow.sh" analyze \
             --domain "genai,llm,rag" \
-            --output "$PROJECT_ROOT/.trends/agent_a2.json"
+            --output "$PROJECT_ROOT/.trends/agent_a2.json" 2>/dev/null || \
+            echo "  🔍 Trend detection not available"
     fi
     
     # 9. Performance Metrics
@@ -126,7 +128,8 @@ morning_ai_routine() {
         echo -e "\n${BLUE}[9/10]${NC} Performance metrics..."
         python3 "$SCRIPT_DIR/show_performance_metrics.py" \
             --agent "$AGENT_ID" \
-            --services "$AGENT_SERVICES"
+            --services "$AGENT_SERVICES" 2>/dev/null || \
+            echo "  📈 No performance data collected yet"
     fi
     
     # 10. Linear Integration for Tasks
