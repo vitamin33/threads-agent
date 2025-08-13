@@ -1,0 +1,22 @@
+artifact_path: file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns/263039140064653439/models/m-08c9926dbaf4499992181bc4ef45d99f/artifacts
+flavors:
+  python_function:
+    data: model.xgb
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.xgboost
+    python_version: 3.13.3
+  xgboost:
+    code: null
+    data: model.xgb
+    model_class: xgboost.sklearn.XGBClassifier
+    model_format: xgb
+    xgb_version: 3.0.4
+mlflow_version: 3.2.0
+model_id: m-08c9926dbaf4499992181bc4ef45d99f
+model_size_bytes: 459553
+model_uuid: m-08c9926dbaf4499992181bc4ef45d99f
+prompts: null
+run_id: 8c3cad71d5334a8a9650333e9507a1e9
+utc_time_created: '2025-08-12 20:24:16.154281'

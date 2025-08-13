@@ -1,0 +1,10 @@
+artifact_location: file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns/263039140064653439/models/m-08c9926dbaf4499992181bc4ef45d99f/artifacts
+creation_timestamp: 1755030256147
+experiment_id: '263039140064653439'
+last_updated_timestamp: 1755030257203
+model_id: m-08c9926dbaf4499992181bc4ef45d99f
+model_type: null
+name: model
+source_run_id: 8c3cad71d5334a8a9650333e9507a1e9
+status: 2
+status_message: null

@@ -1,0 +1,115 @@
+{
+  "demo_metadata": {
+    "timestamp": "2025-08-12T23:24:18.212384",
+    "demo_type": "Hybrid MLflow Portfolio Demo",
+    "infrastructure": "Local Development",
+    "tracking_uri": "file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns",
+    "duration_seconds": 4.205297
+  },
+  "ml_results": {
+    "models_trained": 3,
+    "slo_compliance_rate": 1.0,
+    "best_model_accuracy": 0.915,
+    "best_model_latency": 0.00017356872558593747,
+    "detailed_results": [
+      {
+        "name": "RandomForest",
+        "run_id": "abd843a8da414b2a90b0b9ed4b884d5b",
+        "metrics": {
+          "accuracy": 0.895,
+          "precision": 0.895,
+          "recall": 0.895,
+          "f1_score": 0.895,
+          "training_time_seconds": 0.35405802726745605,
+          "avg_inference_latency_ms": 0.01829707622528076,
+          "p95_inference_latency_ms": 0.018793582916259766,
+          "p99_inference_latency_ms": 0.018975543975830077,
+          "slo_compliance_score": 1.0
+        },
+        "slo_compliant": "True",
+        "model_uri": "runs:/abd843a8da414b2a90b0b9ed4b884d5b/model"
+      },
+      {
+        "name": "XGBoost",
+        "run_id": "8c3cad71d5334a8a9650333e9507a1e9",
+        "metrics": {
+          "accuracy": 0.875,
+          "precision": 0.87505,
+          "recall": 0.875,
+          "f1_score": 0.875003125078127,
+          "training_time_seconds": 0.37738871574401855,
+          "avg_inference_latency_ms": 0.0022031068801879883,
+          "p95_inference_latency_ms": 0.0023722052574157715,
+          "p99_inference_latency_ms": 0.0024189829826354982,
+          "slo_compliance_score": 1.0
+        },
+        "slo_compliant": "True",
+        "model_uri": "runs:/8c3cad71d5334a8a9650333e9507a1e9/model"
+      },
+      {
+        "name": "LogisticRegression",
+        "run_id": "e71324548cd2454c9c98253993421f5b",
+        "metrics": {
+          "accuracy": 0.915,
+          "precision": 0.9150330132052821,
+          "recall": 0.915,
+          "f1_score": 0.9149936235653021,
+          "training_time_seconds": 0.0035572052001953125,
+          "avg_inference_latency_ms": 0.0001361370086669922,
+          "p95_inference_latency_ms": 0.00017356872558593747,
+          "p99_inference_latency_ms": 0.00017871856689453126,
+          "slo_compliance_score": 1.0
+        },
+        "slo_compliant": "True",
+        "model_uri": "runs:/e71324548cd2454c9c98253993421f5b/model"
+      }
+    ]
+  },
+  "mlops_capabilities_demonstrated": [
+    "Production ML model training",
+    "Real-time performance monitoring",
+    "SLO-based deployment gates",
+    "Model lifecycle management",
+    "Automated rollback capabilities",
+    "MLflow experiment tracking",
+    "Portfolio-ready documentation"
+  ],
+  "lifecycle_management": {
+    "lifecycle_results": {
+      "total_models_trained": 3,
+      "slo_compliant_models": 3,
+      "best_model": {
+        "name": "LogisticRegression",
+        "accuracy": 0.915,
+        "latency_p95": 0.00017356872558593747,
+        "slo_status": "COMPLIANT"
+      },
+      "promotion_decision": {
+        "can_promote": "True",
+        "promotion_stage": "PRODUCTION",
+        "reason": "SLO compliance and highest accuracy"
+      }
+    },
+    "rollback_demo": {
+      "trigger": "P95 latency spike detected (>100ms)",
+      "action": "Automatic rollback to previous stable version",
+      "rollback_time": "< 30 seconds",
+      "status": "SUCCESS"
+    }
+  },
+  "portfolio_value": {
+    "technical_skills": [
+      "MLflow experiment tracking",
+      "Production ML model training",
+      "SLO validation and monitoring",
+      "Model lifecycle automation",
+      "Performance regression detection"
+    ],
+    "business_impact": [
+      "Automated quality gates prevent bad deployments",
+      "SLO monitoring ensures production reliability",
+      "Automated rollback minimizes downtime",
+      "Model versioning enables safe iteration"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/943625501135650733/86e1b871e924404ea9e16d197a942b43/artifacts
+end_time: 1755036858486
+entry_point_name: ''
+experiment_id: '943625501135650733'
+lifecycle_stage: active
+run_id: 86e1b871e924404ea9e16d197a942b43
+run_name: demo_xgboost
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755036858450
+status: 3
+tags: []
+user_id: vitaliiserbyn

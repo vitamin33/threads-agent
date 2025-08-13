@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/943625501135650733/c4a58f977afe4e559d19b3166380558c/artifacts
+end_time: 1755039018926
+entry_point_name: ''
+experiment_id: '943625501135650733'
+lifecycle_stage: active
+run_id: c4a58f977afe4e559d19b3166380558c
+run_name: demo_logistic_regression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755039018894
+status: 3
+tags: []
+user_id: vitaliiserbyn
