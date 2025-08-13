@@ -1,0 +1,124 @@
+{{- if and .Values.vllmService.enabled .Values.vllmService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service-hpa
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "threads-agent.fullname" . }}-vllm-service
+  minReplicas: {{ .Values.vllmService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.vllmService.autoscaling.maxReplicas }}
+  metrics:
+  # CPU-based scaling for baseline load
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.vllmService.autoscaling.targetCPUUtilizationPercentage }}
+  # Memory-based scaling for inference workloads
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.vllmService.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- if .Values.vllmService.autoscaling.customMetrics.enabled }}
+  # Custom metrics for AI inference workload
+  - type: Pods
+    pods:
+      metric:
+        name: vllm_request_duration_seconds
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.vllmService.autoscaling.customMetrics.targetLatencySeconds | quote }}
+  - type: Pods
+    pods:
+      metric:
+        name: vllm_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.vllmService.autoscaling.customMetrics.targetRequestsPerSecond | quote }}
+  {{- end }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.vllmService.autoscaling.behavior.scaleUp.stabilizationWindowSeconds }}
+      policies:
+      - type: Percent
+        value: {{ .Values.vllmService.autoscaling.behavior.scaleUp.percentPolicy.value }}
+        periodSeconds: {{ .Values.vllmService.autoscaling.behavior.scaleUp.percentPolicy.periodSeconds }}
+      - type: Pods
+        value: {{ .Values.vllmService.autoscaling.behavior.scaleUp.podsPolicy.value }}
+        periodSeconds: {{ .Values.vllmService.autoscaling.behavior.scaleUp.podsPolicy.periodSeconds }}
+      selectPolicy: {{ .Values.vllmService.autoscaling.behavior.scaleUp.selectPolicy }}
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.vllmService.autoscaling.behavior.scaleDown.stabilizationWindowSeconds }}
+      policies:
+      - type: Percent
+        value: {{ .Values.vllmService.autoscaling.behavior.scaleDown.percentPolicy.value }}
+        periodSeconds: {{ .Values.vllmService.autoscaling.behavior.scaleDown.percentPolicy.periodSeconds }}
+      - type: Pods
+        value: {{ .Values.vllmService.autoscaling.behavior.scaleDown.podsPolicy.value }}
+        periodSeconds: {{ .Values.vllmService.autoscaling.behavior.scaleDown.podsPolicy.periodSeconds }}
+      selectPolicy: {{ .Values.vllmService.autoscaling.behavior.scaleDown.selectPolicy }}
+---
+{{- if .Values.vllmService.autoscaling.keda.enabled }}
+# KEDA ScaledObject for advanced AI workload-based scaling
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service-keda
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+spec:
+  scaleTargetRef:
+    name: {{ include "threads-agent.fullname" . }}-vllm-service
+  pollingInterval: {{ .Values.vllmService.autoscaling.keda.pollingInterval }}
+  cooldownPeriod: {{ .Values.vllmService.autoscaling.keda.cooldownPeriod }}
+  minReplicaCount: {{ .Values.vllmService.autoscaling.keda.minReplicaCount }}
+  maxReplicaCount: {{ .Values.vllmService.autoscaling.keda.maxReplicaCount }}
+  fallback:
+    failureThreshold: {{ .Values.vllmService.autoscaling.keda.fallback.failureThreshold }}
+    replicas: {{ .Values.vllmService.autoscaling.keda.fallback.replicas }}
+  triggers:
+  # Prometheus-based scaling on inference queue depth
+  - type: prometheus
+    metadata:
+      serverAddress: http://{{ include "threads-agent.fullname" . }}-prometheus:9090
+      metricName: vllm_queue_depth
+      threshold: {{ .Values.vllmService.autoscaling.keda.triggers.queueDepth.threshold | quote }}
+      query: sum(rate(vllm_requests_total[2m])) - sum(rate(vllm_requests_completed_total[2m]))
+  # Scale based on average response time
+  - type: prometheus
+    metadata:
+      serverAddress: http://{{ include "threads-agent.fullname" . }}-prometheus:9090
+      metricName: vllm_average_response_time
+      threshold: {{ .Values.vllmService.autoscaling.keda.triggers.responseTime.threshold | quote }}
+      query: histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m]))
+  # Scale based on cost efficiency metrics
+  - type: prometheus
+    metadata:
+      serverAddress: http://{{ include "threads-agent.fullname" . }}-prometheus:9090
+      metricName: vllm_cost_efficiency
+      threshold: {{ .Values.vllmService.autoscaling.keda.triggers.costEfficiency.threshold | quote }}
+      query: rate(vllm_cost_savings_usd[5m]) / rate(vllm_requests_total[5m])
+  {{- if .Values.vllmService.autoscaling.keda.triggers.rabbitMQ.enabled }}
+  # RabbitMQ queue-based scaling for inference requests
+  - type: rabbitmq
+    metadata:
+      protocol: auto
+      host: {{ .Values.vllmService.autoscaling.keda.triggers.rabbitMQ.host }}
+      queueName: {{ .Values.vllmService.autoscaling.keda.triggers.rabbitMQ.queueName }}
+      mode: QueueLength
+      value: {{ .Values.vllmService.autoscaling.keda.triggers.rabbitMQ.threshold | quote }}
+    authenticationRef:
+      name: {{ include "threads-agent.fullname" . }}-rabbitmq-auth
+  {{- end }}
+{{- end }}
+{{- end }}

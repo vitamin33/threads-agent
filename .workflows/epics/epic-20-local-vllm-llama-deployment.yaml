@@ -1,0 +1,134 @@
+epic_id: epic-20-local-vllm-llama-deployment
+title: "Local vLLM Deployment with Llama-3.1-8B for GenAI Portfolio"
+description: |
+  Comprehensive local vLLM deployment system using Llama-3.1-8B on MacBook M4 Max, designed 
+  specifically for GenAI Engineer portfolio demonstration. This epic transforms the existing 
+  vllm_service into a production-grade local deployment with hybrid local+cloud architecture,
+  delivering 60% cost savings vs OpenAI API while maintaining quality and performance.
+
+  Portfolio Value: This demonstrates advanced GenAI engineering skills including local LLM deployment,
+  performance optimization, cost engineering, and hybrid architecture design - all critical for
+  $150-250k GenAI Engineer roles.
+
+status: planned
+priority: high
+type: genai_portfolio
+estimated_hours: 280
+estimated_story_points: 70
+created_at: "2025-08-13"
+updated_at: "2025-08-13"
+
+business_value:
+  cost_savings: "$120,000 annually from 60% reduction in OpenAI API costs across all services"
+  performance_improvement: "75% latency reduction (50ms local vs 200ms API) improving user experience"
+  portfolio_impact: "$50,000+ salary increase potential through GenAI expertise demonstration"
+  operational_independence: "Elimination of external API dependencies for core content generation"
+  competitive_advantage: "Proprietary local LLM capability enabling custom model fine-tuning"
+
+kpi_targets:
+  cost_per_follow_dollars: 0.004  # 60% reduction from 0.01
+  local_inference_latency_ms: 50
+  openai_api_cost_reduction_percentage: 0.60
+  model_quality_retention_score: 0.95  # Maintain 95% of OpenAI quality
+  portfolio_demonstration_completeness: 1.0
+  hybrid_architecture_efficiency: 0.92
+
+portfolio_artifacts:
+  demonstrations:
+    - "Live local vLLM deployment on MacBook M4 Max"
+    - "Performance benchmarking dashboard comparing local vs cloud"
+    - "Cost optimization calculator with real savings data"
+    - "Quality evaluation metrics demonstrating parity with OpenAI"
+    - "Hybrid architecture diagram with intelligent routing"
+  
+  technical_skills_showcase:
+    - "vLLM optimization and deployment expertise"
+    - "Apple Silicon (M4 Max) optimization techniques"
+    - "Performance engineering and latency optimization"
+    - "Cost engineering and FinOps implementation"
+    - "Hybrid cloud architecture design"
+    - "MLOps monitoring and observability"
+    - "Quality assurance and A/B testing"
+
+  job_interview_demos:
+    - "Live local inference demonstration"
+    - "Performance comparison analysis"
+    - "Cost savings calculation and ROI"
+    - "Architecture decision rationale"
+    - "Scaling strategy presentation"
+
+features:
+  - "feature-20-1-local-vllm-deployment-engine"
+  - "feature-20-2-llama-model-optimization-system"
+  - "feature-20-3-performance-benchmarking-framework"
+  - "feature-20-4-cost-tracking-comparison-dashboard"
+  - "feature-20-5-quality-evaluation-testing-suite"
+  - "feature-20-6-hybrid-routing-intelligence-system"
+  - "feature-20-7-monitoring-observability-stack"
+  - "feature-20-8-portfolio-artifacts-generator"
+
+dependencies:
+  infrastructure:
+    - "MacBook M4 Max with sufficient RAM (32GB+)"
+    - "Python 3.11+ with CUDA support (Metal backend)"
+    - "Docker for containerized deployment"
+    - "Kubernetes cluster (k3d) for production simulation"
+  
+  existing_services:
+    - "orchestrator service (integration point)"
+    - "vllm_service skeleton (foundation)"
+    - "viral_engine service (consumer)"
+    - "celery_worker service (background processing)"
+    - "Prometheus/Grafana monitoring stack"
+  
+  external_resources:
+    - "Llama-3.1-8B model weights (Meta/Hugging Face)"
+    - "vLLM framework and dependencies"
+    - "Performance testing tools"
+    - "Quality evaluation datasets"
+
+technical_architecture:
+  deployment_strategy: "Local-first with cloud fallback"
+  model_serving: "vLLM with Apple Silicon optimization"
+  routing_logic: "Intelligent request distribution based on load and latency"
+  monitoring: "Full observability with Prometheus/Grafana integration"
+  quality_assurance: "Continuous A/B testing against OpenAI baseline"
+
+risk_mitigation:
+  memory_constraints: "Model quantization and memory optimization techniques"
+  performance_variance: "Comprehensive benchmarking across workload types"
+  quality_degradation: "Continuous quality monitoring with automatic fallback"
+  deployment_complexity: "Containerized deployment with automated setup"
+
+success_criteria:
+  technical:
+    - "Local vLLM deployment consistently under 50ms response time"
+    - "Quality scores within 5% of OpenAI GPT-3.5-turbo baseline"
+    - "60% cost reduction demonstrated with real usage data"
+    - "Hybrid routing system with 99.5% uptime"
+    - "Complete monitoring and alerting system operational"
+  
+  portfolio:
+    - "Live demonstration ready for job interviews"
+    - "Comprehensive documentation with architecture diagrams"
+    - "Performance data and cost savings calculations"
+    - "Quality evaluation reports with statistical significance"
+    - "Scaling strategy and roadmap documentation"
+
+timeline:
+  phase_1: "Local deployment foundation (weeks 1-2)"
+  phase_2: "Performance optimization and benchmarking (weeks 3-4)"
+  phase_3: "Quality evaluation and hybrid routing (weeks 5-6)"
+  phase_4: "Portfolio artifacts and documentation (weeks 7-8)"
+
+competitive_differentiation: |
+  This epic positions the candidate as a GenAI Engineer who understands both the technical
+  implementation details and the business impact of local LLM deployments. The combination
+  of cost engineering, performance optimization, and quality assurance demonstrates the
+  holistic skills required for senior GenAI engineering roles.
+
+roi_analysis:
+  development_investment: "$10,000 (time and compute resources)"
+  annual_cost_savings: "$120,000 (60% reduction in OpenAI costs)"
+  career_advancement_value: "$50,000+ (salary increase from demonstrated expertise)"
+  total_roi: "1,600% within first year"

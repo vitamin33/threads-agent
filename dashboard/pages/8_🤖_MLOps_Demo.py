@@ -90,29 +90,35 @@ if "demo_logs" not in st.session_state:
 def run_demo_sync():
     """Run the MLflow demo synchronously."""
     try:
-        # Change to project root directory  
+        # Change to project root directory
         project_root = Path(__file__).parent.parent.parent
         os.chdir(project_root)
 
         # Run the demo with absolute paths
         venv_path = project_root / ".venv" / "bin" / "activate"
         demo_path = project_root / "services" / "achievement_collector"
-        
+
         # Check if real logs mode is enabled
-        real_logs_mode = st.sidebar.checkbox("Real Logs Only Mode", value=False, help="Show only real operations, no simulations")
+        real_logs_mode = st.sidebar.checkbox(
+            "Real Logs Only Mode",
+            value=False,
+            help="Show only real operations, no simulations",
+        )
         real_logs_env = "REAL_LOGS_ONLY=true" if real_logs_mode else ""
-        
+
         cmd = [
             "bash",
-            "-c", 
+            "-c",
             f"source {venv_path} && cd {demo_path} && MLFLOW_TRACKING_URI=http://localhost:5001 {real_logs_env} python -m mlops.demo_script --quick-demo",
         ]
 
         # Add progress message
-        st.session_state.demo_logs.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": "🚀 Starting MLOps demo execution..."
-        })
+        st.session_state.demo_logs.append(
+            {
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": "🚀 Starting MLOps demo execution...",
+            }
+        )
 
         # Run process and capture output
         result = subprocess.run(
@@ -120,66 +126,80 @@ def run_demo_sync():
             capture_output=True,
             text=True,
             cwd=project_root,
-            timeout=60  # 60 second timeout
+            timeout=60,  # 60 second timeout
         )
 
         # Add output to logs
         if result.stdout:
-            for line in result.stdout.split('\n'):
+            for line in result.stdout.split("\n"):
                 if line.strip():
-                    st.session_state.demo_logs.append({
-                        "timestamp": datetime.now().strftime("%H:%M:%S"),
-                        "message": line.strip()
-                    })
+                    st.session_state.demo_logs.append(
+                        {
+                            "timestamp": datetime.now().strftime("%H:%M:%S"),
+                            "message": line.strip(),
+                        }
+                    )
 
         if result.stderr:
-            for line in result.stderr.split('\n'):
+            for line in result.stderr.split("\n"):
                 if line.strip():
                     # Filter out just timestamp and message, remove ERROR prefix for INFO logs
                     clean_message = line.strip()
                     if " - INFO - " in clean_message:
                         clean_message = clean_message.split(" - INFO - ", 1)[-1]
-                    st.session_state.demo_logs.append({
-                        "timestamp": datetime.now().strftime("%H:%M:%S"),
-                        "message": clean_message
-                    })
+                    st.session_state.demo_logs.append(
+                        {
+                            "timestamp": datetime.now().strftime("%H:%M:%S"),
+                            "message": clean_message,
+                        }
+                    )
 
         # Try to load results
         try:
-            output_dir = project_root / "services" / "achievement_collector" / "demo_output"
+            output_dir = (
+                project_root / "services" / "achievement_collector" / "demo_output"
+            )
             if output_dir.exists():
                 json_files = list(output_dir.glob("demo_results_*.json"))
                 if json_files:
                     latest_file = max(json_files, key=os.path.getctime)
                     with open(latest_file, "r") as f:
                         st.session_state.demo_results = json.load(f)
-                        st.session_state.demo_logs.append({
-                            "timestamp": datetime.now().strftime("%H:%M:%S"),
-                            "message": "✅ Demo completed successfully! Results loaded."
-                        })
+                        st.session_state.demo_logs.append(
+                            {
+                                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                                "message": "✅ Demo completed successfully! Results loaded.",
+                            }
+                        )
         except Exception as e:
-            st.session_state.demo_logs.append({
-                "timestamp": datetime.now().strftime("%H:%M:%S"),
-                "message": f"⚠️ Error loading results: {e}"
-            })
+            st.session_state.demo_logs.append(
+                {
+                    "timestamp": datetime.now().strftime("%H:%M:%S"),
+                    "message": f"⚠️ Error loading results: {e}",
+                }
+            )
 
         # Mark as completed
         st.session_state.demo_running = False
-        
+
         return result.returncode == 0
 
     except subprocess.TimeoutExpired:
-        st.session_state.demo_logs.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": "⚠️ Demo timed out after 60 seconds"
-        })
+        st.session_state.demo_logs.append(
+            {
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": "⚠️ Demo timed out after 60 seconds",
+            }
+        )
         st.session_state.demo_running = False
         return False
     except Exception as e:
-        st.session_state.demo_logs.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "message": f"❌ Demo execution error: {e}"
-        })
+        st.session_state.demo_logs.append(
+            {
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "message": f"❌ Demo execution error: {e}",
+            }
+        )
         st.session_state.demo_running = False
         return False
 
@@ -202,12 +222,12 @@ with col2:
         # Run demo synchronously with progress indicator
         with st.spinner("Running MLOps demo..."):
             success = run_demo_sync()
-            
+
         if success:
             st.success("✅ Demo completed successfully!")
         else:
             st.error("❌ Demo execution failed. Check logs below.")
-            
+
         st.rerun()
 
 with col3:
@@ -224,7 +244,10 @@ if st.session_state.demo_results:
         unsafe_allow_html=True,
     )
 elif st.session_state.demo_logs:
-    st.markdown('<p class="status-success">✅ Demo execution finished. Check logs below.</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="status-success">✅ Demo execution finished. Check logs below.</p>',
+        unsafe_allow_html=True,
+    )
 else:
     st.markdown("<p>⚪ Ready to run demo</p>")
 
@@ -239,7 +262,12 @@ if st.session_state.demo_results:
 
     with col1:
         # Count models from MLOps features or stages
-        models_trained = 3 if "Multi-algorithm model training" in results.get("mlops_features_demonstrated", []) else 0
+        models_trained = (
+            3
+            if "Multi-algorithm model training"
+            in results.get("mlops_features_demonstrated", [])
+            else 0
+        )
         st.metric(
             "Models Trained",
             models_trained,
@@ -253,7 +281,11 @@ if st.session_state.demo_results:
         )
 
     with col3:
-        infrastructure = "MLflow + PostgreSQL" if results.get("demo_metadata", {}).get("success", False) else "Unknown"
+        infrastructure = (
+            "MLflow + PostgreSQL"
+            if results.get("demo_metadata", {}).get("success", False)
+            else "Unknown"
+        )
         st.metric("Infrastructure", infrastructure, help="MLflow backend used")
 
     with col4:
@@ -265,8 +297,8 @@ if st.session_state.demo_results:
         st.metric(
             "SLO Compliance",
             f"{compliance_rate:.1%}",
-                help="Percentage of models meeting production SLOs",
-            )
+            help="Percentage of models meeting production SLOs",
+        )
 
     # Model Performance Chart
     if "training_results" in results:

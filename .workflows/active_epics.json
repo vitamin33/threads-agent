@@ -24,7 +24,7 @@
       },
       "features": [
         "feature-14-1-content-scheduler-database",
-        "feature-14-2-scheduling-management-api", 
+        "feature-14-2-scheduling-management-api",
         "feature-14-3-multi-platform-publishing",
         "feature-14-4-content-workflow-engine",
         "feature-14-5-analytics-dashboard",
@@ -123,9 +123,8 @@
       ]
     },
     {
-      "id": "epic-17-real-time-operations-center",
-      "title": "Real-Time Operations Center",
       "id": "mlops-004-chaos-engineering",
+      "title": "Real-Time Operations Center",
       "name": "MLOPS-004: Chaos Engineering & Reliability Testing",
       "status": "planned",
       "created": "2025-08-07T00:00:00Z"
@@ -259,13 +258,102 @@
         "Streamlit dashboard (existing)",
         "OpenAI API for analysis (existing)"
       ]
+    },
+    {
+      "id": "epic_1755034797",
+      "name": "Deployment of vLLM service and GenAI Engineer portfolio optimization",
+      "status": "planning",
+      "created": "2025-08-13T00:39:58+0300"
+    },
+    {
+      "id": "epic-20-local-vllm-llama-deployment",
+      "title": "Local vLLM Deployment with Llama-3.1-8B for GenAI Portfolio",
+      "status": "planned",
+      "priority": "high",
+      "estimated_hours": 280,
+      "estimated_story_points": 70,
+      "created_at": "2025-08-13",
+      "updated_at": "2025-08-13",
+      "business_value": {
+        "cost_savings": "$120,000 annually from 60% reduction in OpenAI API costs",
+        "performance_improvement": "75% latency reduction (50ms local vs 200ms API)",
+        "portfolio_impact": "$50,000+ salary increase potential through GenAI expertise",
+        "operational_independence": "Elimination of external API dependencies"
+      },
+      "kpi_targets": {
+        "cost_per_follow_dollars": 0.004,
+        "local_inference_latency_ms": 50,
+        "openai_api_cost_reduction_percentage": 0.60,
+        "model_quality_retention_score": 0.95,
+        "portfolio_demonstration_completeness": 1.0
+      },
+      "features": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "feature-20-2-llama-model-optimization-system",
+        "feature-20-3-performance-benchmarking-framework",
+        "feature-20-4-cost-tracking-comparison-dashboard",
+        "feature-20-5-quality-evaluation-testing-suite",
+        "feature-20-6-hybrid-routing-intelligence-system",
+        "feature-20-7-monitoring-observability-stack",
+        "feature-20-8-portfolio-artifacts-generator"
+      ],
+      "dependencies": [
+        "MacBook M4 Max hardware",
+        "vllm_service skeleton (existing)",
+        "orchestrator service (existing)",
+        "Prometheus/Grafana monitoring (existing)",
+        "Kubernetes cluster (k3d)"
+      ]
+    },
+    {
+      "id": "epic-22-multi-model-content-generation-system",
+      "title": "Multi-Model Content Generation System with MLflow & vLLM",
+      "status": "planned",
+      "priority": "critical",
+      "estimated_hours": 360,
+      "estimated_story_points": 90,
+      "created_at": "2025-08-13",
+      "updated_at": "2025-08-13",
+      "business_value": {
+        "cost_savings": "$150,000 annually from 60% reduction in API costs via local models",
+        "performance_improvement": "5x throughput increase (100+ tokens/sec vs 20 tokens/sec API)",
+        "portfolio_impact": "$75,000+ salary increase potential through multi-model expertise",
+        "technical_leadership": "Industry-leading MLOps practices with model comparison framework"
+      },
+      "kpi_targets": {
+        "cost_per_follow_dollars": 0.003,
+        "local_inference_latency_ms": 50,
+        "model_serving_throughput": 100,
+        "mlflow_experiment_count": 25,
+        "portfolio_demonstration_score": 1.0,
+        "model_quality_retention_score": 0.95,
+        "apple_silicon_utilization": 0.85,
+        "content_type_coverage": 4
+      },
+      "features": [
+        "feature-22-1-multi-model-deployment-engine",
+        "feature-22-2-mlflow-experiment-tracking-system",
+        "feature-22-3-content-generation-orchestrator",
+        "feature-22-4-apple-silicon-optimization-suite",
+        "feature-22-5-automated-benchmarking-framework",
+        "feature-22-6-cost-analysis-comparison-dashboard",
+        "feature-22-7-quality-evaluation-testing-system",
+        "feature-22-8-portfolio-artifacts-generator"
+      ],
+      "dependencies": [
+        "MacBook M4 Max hardware (36GB unified memory)",
+        "vllm_service (enhanced from epic-20)",
+        "MLflow tracking server",
+        "Apple Silicon Metal framework",
+        "HuggingFace model hub access"
+      ]
     }
   ],
   "metadata": {
-    "last_updated": "2025-01-05",
-    "total_epics": 6,
-    "total_active_features": 48,
-    "estimated_total_hours": 1540,
-    "estimated_total_story_points": 385
+    "last_updated": "2025-08-13",
+    "total_epics": 8,
+    "total_active_features": 64,
+    "estimated_total_hours": 2180,
+    "estimated_total_story_points": 545
   }
 }

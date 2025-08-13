@@ -1,0 +1,149 @@
+id: "feature-21-4-model-registry-management"
+epic_id: "epic-21-hands-on-mlflow-small-models"  
+title: "MLflow Model Registry Management"
+description: |
+  Implement comprehensive MLflow Model Registry for managing small models lifecycle.
+  Enable model versioning, staging (development/staging/production), and automated
+  model promotion based on performance criteria. Create hands-on model registry experience.
+
+type: "feature"
+status: "planned"
+priority: "high"
+phase: "phase_2_mlflow_core"
+estimated_hours: 10
+estimated_story_points: 6
+
+acceptance_criteria:
+  - "Model registry operational with all 3 small models"
+  - "Model versioning and staging system functional" 
+  - "Automated model promotion based on performance"
+  - "Model registry UI fully integrated"
+  - "Model deployment from registry working"
+
+tasks:
+  - id: "task-21-4-1"
+    title: "Set up MLflow Model Registry infrastructure"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: []
+    description: |
+      Configure MLflow Model Registry:
+      - Enable model registry in MLflow server configuration
+      - Set up model registry database schema
+      - Configure model artifact storage for registry
+      - Create initial model registry structure
+    acceptance:
+      - "Model registry accessible via MLflow UI"
+      - "Registry database schema created"
+      - "Model artifact storage configured"
+      - "Registry operations (list, get, create) functional"
+
+  - id: "task-21-4-2"
+    title: "Implement model registration automation"
+    type: "implementation"
+    estimated_hours: 3
+    dependencies: ["task-21-4-1"]
+    description: |
+      Automate model registration from vLLM service:
+      - Register models automatically on first load
+      - Create model versions with metadata (size, architecture)
+      - Tag models with performance characteristics
+      - Implement model signature and schema validation
+    acceptance:
+      - "Models automatically registered on load"
+      - "Model versions created with comprehensive metadata"
+      - "Performance tags applied based on benchmarks"
+      - "Model signatures correctly captured"
+
+  - id: "task-21-4-3"
+    title: "Implement model staging lifecycle"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: ["task-21-4-2"]
+    description: |
+      Create model staging system:
+      - Development stage for newly registered models
+      - Staging stage for models passing quality gates
+      - Production stage for best-performing models
+      - Archived stage for deprecated models
+    acceptance:
+      - "Model staging transitions working correctly"
+      - "Stage-based model access controls functional"
+      - "Staging history tracked and auditable"
+      - "Stage-specific deployment configurations"
+
+  - id: "task-21-4-4"
+    title: "Create automated model promotion system"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: ["task-21-4-3"]
+    description: |
+      Implement intelligent model promotion:
+      - Define promotion criteria (latency, quality, cost)
+      - Automatic promotion based on performance thresholds
+      - A/B testing integration for promotion validation
+      - Rollback capability for failed promotions
+    acceptance:
+      - "Promotion criteria configurable and enforced"
+      - "Automatic promotion triggers based on metrics"
+      - "A/B testing validates promotions"
+      - "Rollback system functional and tested"
+
+  - id: "task-21-4-5"
+    title: "Integrate model registry with vLLM service"
+    type: "implementation"
+    estimated_hours: 1
+    dependencies: ["task-21-4-4"]
+    description: |
+      Enable vLLM service to use models from registry:
+      - Load models by registry name and version
+      - Respect staging constraints (only load production/staging)
+      - Cache registry metadata for performance
+      - Update model switching to use registry
+    acceptance:
+      - "vLLM loads models from MLflow registry"
+      - "Staging constraints properly enforced"
+      - "Registry metadata cached efficiently"
+      - "Model switching uses registry versions"
+
+test_requirements:
+  unit_tests:
+    - "test_model_registry_setup"
+    - "test_model_registration_automation"
+    - "test_model_staging_lifecycle"
+    - "test_automated_promotion_system"
+    - "test_vllm_registry_integration"
+    
+  integration_tests:
+    - "test_end_to_end_model_lifecycle"
+    - "test_model_promotion_with_ab_testing"
+    - "test_registry_ui_functionality"
+
+monitoring_requirements:
+  prometheus_metrics:
+    - "mlflow_registry_models_total{stage}"
+    - "mlflow_model_promotions_total{from_stage, to_stage}"
+    - "mlflow_model_deployments_total{model, version, stage}"
+    - "mlflow_registry_operations_duration_seconds{operation}"
+    
+  grafana_dashboards:
+    - "Model Registry Health Dashboard"
+    - "Model Lifecycle and Promotion Tracking" 
+    - "Model Registry Performance Metrics"
+
+deployment_requirements:
+  kubernetes_updates:
+    - "Update MLflow server with registry configuration"
+    - "Add model registry persistent storage"
+    - "Configure registry access permissions"
+    
+  configuration:
+    - "MLFLOW_MODEL_REGISTRY_ENABLED=true"
+    - "MLFLOW_REGISTRY_STORE_URI=sqlite:///mlflow/registry.db"
+    - "MODEL_PROMOTION_AUTO_ENABLED=true"
+
+documentation:
+  - "Model Registry Architecture Overview"
+  - "Model Lifecycle Management Guide"
+  - "Automated Promotion Configuration"
+  - "Registry Integration Best Practices"

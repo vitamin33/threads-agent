@@ -284,16 +284,265 @@
       "status": "completed",
       "created": "2025-08-09T00:00:00Z",
       "completed": "2025-08-09T00:00:00Z"
+    },
+    {
+      "id": "feature-20-1-local-vllm-deployment-engine",
+      "title": "Local vLLM Deployment Engine",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "critical",
+      "status": "planned",
+      "estimated_hours": 40,
+      "estimated_story_points": 10,
+      "task_count": 8,
+      "dependencies": [
+        "MacBook M4 Max hardware",
+        "vLLM framework with Metal support",
+        "Llama-3.1-8B model weights"
+      ]
+    },
+    {
+      "id": "feature-20-2-llama-model-optimization-system",
+      "title": "Llama Model Optimization System",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 35,
+      "estimated_story_points": 9,
+      "task_count": 8,
+      "dependencies": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "Quantization tools and libraries"
+      ]
+    },
+    {
+      "id": "feature-20-3-performance-benchmarking-framework",
+      "title": "Performance Benchmarking Framework",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 32,
+      "estimated_story_points": 8,
+      "task_count": 8,
+      "dependencies": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "feature-20-2-llama-model-optimization-system",
+        "OpenAI API access for comparison"
+      ]
+    },
+    {
+      "id": "feature-20-4-cost-tracking-comparison-dashboard",
+      "title": "Cost Tracking & Comparison Dashboard",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 28,
+      "estimated_story_points": 7,
+      "task_count": 8,
+      "dependencies": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "feature-20-3-performance-benchmarking-framework",
+        "Existing monitoring infrastructure"
+      ]
+    },
+    {
+      "id": "feature-20-5-quality-evaluation-testing-suite",
+      "title": "Quality Evaluation & Testing Suite",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 36,
+      "estimated_story_points": 9,
+      "task_count": 8,
+      "dependencies": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "feature-20-2-llama-model-optimization-system",
+        "Quality evaluation datasets"
+      ]
+    },
+    {
+      "id": "feature-20-6-hybrid-routing-intelligence-system",
+      "title": "Hybrid Routing Intelligence System",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 42,
+      "estimated_story_points": 10,
+      "task_count": 8,
+      "dependencies": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "feature-20-3-performance-benchmarking-framework",
+        "feature-20-4-cost-tracking-comparison-dashboard",
+        "feature-20-5-quality-evaluation-testing-suite"
+      ]
+    },
+    {
+      "id": "feature-20-7-monitoring-observability-stack",
+      "title": "Monitoring & Observability Stack",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 35,
+      "estimated_story_points": 9,
+      "task_count": 8,
+      "dependencies": [
+        "feature-20-1-local-vllm-deployment-engine",
+        "feature-20-6-hybrid-routing-intelligence-system",
+        "Existing Kubernetes monitoring infrastructure"
+      ]
+    },
+    {
+      "id": "feature-20-8-portfolio-artifacts-generator",
+      "title": "Portfolio Artifacts Generator",
+      "epic_id": "epic-20-local-vllm-llama-deployment",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 30,
+      "estimated_story_points": 8,
+      "task_count": 8,
+      "dependencies": [
+        "All previous features (20-1 through 20-7)",
+        "Performance data from benchmarking",
+        "Cost data from tracking systems"
+      ]
+    },
+    {
+      "id": "feature-22-1-multi-model-deployment-engine",
+      "title": "Multi-Model Deployment Engine",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "critical",
+      "status": "planned",
+      "estimated_hours": 48,
+      "estimated_story_points": 12,
+      "task_count": 10,
+      "dependencies": [
+        "vllm_service skeleton (existing)",
+        "Apple Silicon Metal framework",
+        "vLLM framework with Metal support",
+        "HuggingFace model hub access"
+      ]
+    },
+    {
+      "id": "feature-22-2-mlflow-experiment-tracking-system",
+      "title": "MLflow Experiment Tracking System",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "critical",
+      "status": "planned",
+      "estimated_hours": 45,
+      "estimated_story_points": 11,
+      "task_count": 9,
+      "dependencies": [
+        "feature-22-1-multi-model-deployment-engine",
+        "MLflow server deployment (from Agent A1)",
+        "PostgreSQL database for MLflow backend",
+        "S3-compatible storage for artifacts"
+      ]
+    },
+    {
+      "id": "feature-22-3-content-generation-orchestrator",
+      "title": "Content Generation Orchestrator",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 42,
+      "estimated_story_points": 10,
+      "task_count": 8,
+      "dependencies": [
+        "feature-22-1-multi-model-deployment-engine",
+        "feature-22-2-mlflow-experiment-tracking-system",
+        "orchestrator service (existing)",
+        "viral_engine service (existing)"
+      ]
+    },
+    {
+      "id": "feature-22-4-apple-silicon-optimization-suite",
+      "title": "Apple Silicon Optimization Suite",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 40,
+      "estimated_story_points": 10,
+      "task_count": 8,
+      "dependencies": [
+        "feature-22-1-multi-model-deployment-engine",
+        "MacBook M4 Max hardware (36GB unified memory)",
+        "Apple Metal Performance Shaders framework",
+        "vLLM with Metal backend support"
+      ]
+    },
+    {
+      "id": "feature-22-5-automated-benchmarking-framework",
+      "title": "Automated Benchmarking Framework",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 38,
+      "estimated_story_points": 9,
+      "task_count": 8,
+      "dependencies": [
+        "feature-22-1-multi-model-deployment-engine",
+        "feature-22-2-mlflow-experiment-tracking-system",
+        "feature-22-4-apple-silicon-optimization-suite",
+        "Existing benchmarking infrastructure (benchmark.py)"
+      ]
+    },
+    {
+      "id": "feature-22-6-cost-analysis-comparison-dashboard",
+      "title": "Cost Analysis & Comparison Dashboard",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 35,
+      "estimated_story_points": 9,
+      "task_count": 7,
+      "dependencies": [
+        "feature-22-1-multi-model-deployment-engine",
+        "feature-22-5-automated-benchmarking-framework",
+        "Existing cost tracking infrastructure (cost_tracker.py)",
+        "Streamlit dashboard framework"
+      ]
+    },
+    {
+      "id": "feature-22-7-quality-evaluation-testing-system",
+      "title": "Quality Evaluation & Testing System",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 42,
+      "estimated_story_points": 10,
+      "task_count": 8,
+      "dependencies": [
+        "feature-22-1-multi-model-deployment-engine",
+        "feature-22-2-mlflow-experiment-tracking-system",
+        "Existing quality metrics (quality_metrics.py)",
+        "viral_engine service for engagement prediction"
+      ]
+    },
+    {
+      "id": "feature-22-8-portfolio-artifacts-generator",
+      "title": "Portfolio Artifacts Generator",
+      "epic_id": "epic-22-multi-model-content-generation-system",
+      "priority": "high",
+      "status": "planned",
+      "estimated_hours": 32,
+      "estimated_story_points": 8,
+      "task_count": 7,
+      "dependencies": [
+        "All previous features (22-1 through 22-7)",
+        "Performance data from benchmarking framework",
+        "Cost analysis from comparison dashboard",
+        "Quality evaluation results and comparisons"
+      ]
     }
   ],
   "metadata": {
-    "last_updated": "2025-01-05",
-    "total_features": 8,
-    "total_tasks": 100,
-    "estimated_total_hours": 408,
-    "estimated_total_story_points": 102,
+    "last_updated": "2025-08-13",
+    "total_features": 24,
+    "total_tasks": 230,
+    "estimated_total_hours": 1010,
+    "estimated_total_story_points": 251,
     "feature_breakdown": {
-      "high_priority": 6,
+      "critical_priority": 3,
+      "high_priority": 19,
       "medium_priority": 2,
       "low_priority": 0
     }

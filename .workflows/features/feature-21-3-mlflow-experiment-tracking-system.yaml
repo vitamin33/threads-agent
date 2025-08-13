@@ -1,0 +1,150 @@
+id: "feature-21-3-mlflow-experiment-tracking-system"
+epic_id: "epic-21-hands-on-mlflow-small-models"
+title: "MLflow Experiment Tracking System"
+description: |
+  Implement comprehensive MLflow experiment tracking integrated with vLLM service.
+  Track all model experiments, hyperparameters, metrics, and artifacts automatically.
+  Create hands-on experience with MLflow UI, experiment comparison, and tracking workflows.
+
+type: "feature"
+status: "planned"
+priority: "high"
+phase: "phase_2_mlflow_core" 
+estimated_hours: 12
+estimated_story_points: 8
+
+acceptance_criteria:
+  - "MLflow tracking server operational with UI access"
+  - "All model experiments automatically tracked"
+  - "Hyperparameters, metrics, and artifacts logged"
+  - "Experiment comparison functionality working"
+  - "Integration with existing vLLM service complete"
+
+tasks:
+  - id: "task-21-3-1"
+    title: "Set up MLflow tracking server and database"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: []
+    description: |
+      Configure MLflow tracking server:
+      - Set up MLflow SQLite backend for local development
+      - Configure artifact storage (local filesystem)
+      - Create Kubernetes deployment for MLflow server
+      - Expose MLflow UI via port forwarding
+    acceptance:
+      - "MLflow server accessible via web UI"
+      - "Experiment data persisted in SQLite database"
+      - "Artifact storage configured and functional"
+      - "Kubernetes deployment stable and scalable"
+
+  - id: "task-21-3-2"
+    title: "Integrate MLflow tracking with vLLM service"
+    type: "implementation"
+    estimated_hours: 3
+    dependencies: ["task-21-3-1"]
+    description: |
+      Modify vLLM service to automatically track experiments:
+      - Initialize MLflow client in model_manager.py
+      - Create experiment for each model comparison session
+      - Track model loading and switching events
+      - Log inference requests as experiment runs
+    acceptance:
+      - "vLLM service automatically creates MLflow experiments"
+      - "Model operations logged to MLflow"
+      - "Experiment runs created for inference sessions"
+      - "MLflow client integrated without service disruption"
+
+  - id: "task-21-3-3"
+    title: "Implement comprehensive parameter logging"
+    type: "implementation" 
+    estimated_hours: 2
+    dependencies: ["task-21-3-2"]
+    description: |
+      Log all relevant parameters for each experiment:
+      - Model configuration (size, architecture, quantization)
+      - Inference parameters (temperature, top_p, max_tokens)
+      - Hardware configuration (GPU, memory, optimization flags)
+      - vLLM service configuration and version info
+    acceptance:
+      - "All model hyperparameters logged to MLflow"
+      - "Infrastructure parameters captured"
+      - "Service configuration versioning tracked"
+      - "Parameter comparison enabled in MLflow UI"
+
+  - id: "task-21-3-4"
+    title: "Implement real-time metrics logging"
+    type: "implementation"
+    estimated_hours: 3
+    dependencies: ["task-21-3-3"]
+    description: |
+      Log real-time metrics from previous feature:
+      - Latency metrics (cold start, warm, per-phase)
+      - Quality metrics (coherence, relevance, fluency)
+      - Cost metrics (per-token, resource usage)
+      - Performance metrics (throughput, memory efficiency)
+    acceptance:
+      - "All metrics from feature-21-2 logged to MLflow"
+      - "Metrics updated in real-time during experiments"
+      - "Metric comparison charts available in UI"
+      - "Metric trend analysis enabled"
+
+  - id: "task-21-3-5"
+    title: "Implement artifact logging and management"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: ["task-21-3-4"]  
+    description: |
+      Log artifacts for experiment reproducibility:
+      - Model outputs and generated content samples
+      - Performance benchmark results and charts
+      - Configuration files and environment snapshots
+      - Quality evaluation reports and visualizations
+    acceptance:
+      - "Generated content samples saved as artifacts"
+      - "Performance charts automatically generated"
+      - "Environment snapshots captured"
+      - "Artifacts easily downloadable from MLflow UI"
+
+test_requirements:
+  unit_tests:
+    - "test_mlflow_server_setup"
+    - "test_vllm_mlflow_integration" 
+    - "test_parameter_logging_accuracy"
+    - "test_metrics_logging_realtime"
+    - "test_artifact_storage_retrieval"
+    
+  integration_tests:
+    - "test_end_to_end_experiment_tracking"
+    - "test_mlflow_ui_experiment_comparison"
+    - "test_experiment_reproducibility"
+
+monitoring_requirements:
+  prometheus_metrics:
+    - "mlflow_experiments_total{status}"
+    - "mlflow_runs_total{experiment, status}"  
+    - "mlflow_tracking_latency_seconds{operation}"
+    - "mlflow_artifact_size_bytes{experiment}"
+    
+  grafana_dashboards:
+    - "MLflow Experiment Tracking Health"
+    - "Experiment Creation and Success Rates"
+    - "MLflow Performance Metrics"
+
+deployment_requirements:
+  kubernetes_updates:
+    - "Add MLflow server deployment and service"
+    - "Configure persistent volume for MLflow data"
+    - "Set up MLflow UI ingress/port-forward"
+    - "Update vLLM service with MLflow environment variables"
+    
+  configuration:
+    - "MLFLOW_TRACKING_URI=http://mlflow-service:5000"
+    - "MLFLOW_ARTIFACT_ROOT=/mlflow/artifacts"
+    - "MLFLOW_EXPERIMENT_PREFIX=small-models"
+
+documentation:
+  - "MLflow Integration Architecture" 
+  - "Experiment Tracking User Guide"
+  - "MLflow UI Navigation Tutorial"
+  - "Troubleshooting MLflow Issues"

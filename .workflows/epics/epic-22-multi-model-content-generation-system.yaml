@@ -1,0 +1,211 @@
+id: "epic-22-multi-model-content-generation-system"
+title: "Multi-Model Content Generation System with MLflow & vLLM"
+description: |
+  Comprehensive multi-model content generation platform featuring 5 local models 
+  (Llama-3.1-8B, Qwen2.5-7B, Mistral-7B, Llama-3.1-3B, Phi-3.5-Mini) deployed 
+  via vLLM on Apple Silicon M4 Max. Includes MLflow experiment tracking, automated 
+  benchmarking, cost analysis, and portfolio artifact generation for GenAI roles.
+
+status: "planned"
+priority: "critical"
+estimated_hours: 360
+estimated_story_points: 90
+created_at: "2025-08-13"
+updated_at: "2025-08-13"
+
+# Agent A2 GenAI/RAG Focus Areas
+agent_focus: "a2-genai"
+specialization: "vLLM optimization, multi-model deployment, cost reduction"
+target_roles: ["GenAI Engineer", "LLM Specialist", "AI/ML Engineer"]
+
+# Business Value & Portfolio Impact
+business_value:
+  cost_savings: "$150,000 annually from 60% reduction in API costs via local models"
+  performance_improvement: "5x throughput increase (100+ tokens/sec vs 20 tokens/sec API)"
+  portfolio_impact: "$75,000+ salary increase potential through multi-model expertise"
+  technical_leadership: "Industry-leading MLOps practices with model comparison framework"
+
+# Success Metrics & KPIs
+kpi_targets:
+  cost_per_follow_dollars: 0.003  # 70% reduction from current 0.01
+  local_inference_latency_ms: 50  # Sub-50ms target for all models
+  model_serving_throughput: 100   # tokens/second aggregate
+  mlflow_experiment_count: 25     # Comprehensive experiment tracking
+  portfolio_demonstration_score: 1.0  # Complete demo-ready artifacts
+  model_quality_retention_score: 0.95 # Quality vs OpenAI baseline
+  apple_silicon_utilization: 0.85    # Memory/GPU efficiency
+  content_type_coverage: 4           # Twitter, LinkedIn, Articles, Docs
+
+# Technical Architecture
+architecture:
+  platform: "MacBook M4 Max (36GB unified memory)"
+  deployment: "vLLM with Metal backend optimization"
+  orchestration: "Kubernetes (k3d) with Helm charts"
+  experiment_tracking: "MLflow with model registry"
+  monitoring: "Prometheus + Grafana + custom dashboards"
+  caching: "Redis for response optimization"
+
+# Models & Optimization Strategy
+models:
+  primary:
+    - name: "Llama-3.1-8B-Instruct"
+      purpose: "High-quality general content generation"
+      optimization: "4-bit quantization, speculative decoding"
+      target_latency: "40ms"
+    - name: "Qwen2.5-7B-Instruct" 
+      purpose: "Technical content & code documentation"
+      optimization: "Mixed precision, tensor parallelism"
+      target_latency: "35ms"
+    - name: "Mistral-7B-Instruct-v0.3"
+      purpose: "Concise social media content"
+      optimization: "Dynamic batching, KV cache"
+      target_latency: "30ms"
+  efficiency:
+    - name: "Llama-3.1-3B-Instruct"
+      purpose: "High-speed content generation"
+      optimization: "FP16, aggressive caching"
+      target_latency: "20ms"
+    - name: "Phi-3.5-Mini-Instruct"
+      purpose: "Lightweight edge deployment"
+      optimization: "INT8 quantization, model pruning"
+      target_latency: "15ms"
+
+# Content Generation Framework
+content_types:
+  twitter_threads:
+    max_length: 280
+    optimization: "viral hook generation, engagement prediction"
+    models: ["Mistral-7B", "Llama-3.1-3B"]
+  linkedin_posts:
+    max_length: 3000
+    optimization: "professional tone, industry insights"
+    models: ["Llama-3.1-8B", "Qwen2.5-7B"]
+  technical_articles:
+    max_length: 10000
+    optimization: "code examples, technical accuracy"
+    models: ["Qwen2.5-7B", "Llama-3.1-8B"]
+  code_documentation:
+    max_length: 5000
+    optimization: "clarity, completeness, examples"
+    models: ["Qwen2.5-7B", "Phi-3.5-Mini"]
+
+# MLflow Experiment Design
+mlflow_experiments:
+  model_comparison:
+    metrics: ["latency", "throughput", "quality_score", "cost_per_token"]
+    parameters: ["temperature", "max_tokens", "optimization_level"]
+    artifacts: ["generated_samples", "performance_plots", "cost_analysis"]
+  content_quality:
+    metrics: ["readability_score", "engagement_prediction", "technical_accuracy"]
+    parameters: ["content_type", "model_name", "prompt_strategy"]
+    artifacts: ["quality_reports", "comparison_matrices", "best_practices"]
+  performance_optimization:
+    metrics: ["tokens_per_second", "memory_usage", "cpu_utilization"]
+    parameters: ["batch_size", "sequence_length", "quantization_method"]
+    artifacts: ["optimization_reports", "hardware_utilization_plots"]
+
+# Features List
+features:
+  - "feature-22-1-multi-model-deployment-engine"
+  - "feature-22-2-mlflow-experiment-tracking-system"  
+  - "feature-22-3-content-generation-orchestrator"
+  - "feature-22-4-apple-silicon-optimization-suite"
+  - "feature-22-5-automated-benchmarking-framework"
+  - "feature-22-6-cost-analysis-comparison-dashboard"
+  - "feature-22-7-quality-evaluation-testing-system"
+  - "feature-22-8-portfolio-artifacts-generator"
+
+# Implementation Dependencies
+dependencies:
+  existing_services:
+    - "vllm_service (enhanced from epic-20)"
+    - "orchestrator service"
+    - "MLflow tracking server"
+    - "Prometheus/Grafana monitoring"
+    - "Redis caching infrastructure"
+  external_requirements:
+    - "Apple Silicon Metal framework"
+    - "vLLM framework with Metal support"
+    - "HuggingFace model hub access"
+    - "MLflow server deployment"
+    - "Sufficient storage (200GB+ for models)"
+
+# Risk Assessment & Mitigation
+risks:
+  high:
+    - risk: "Memory limitations on M4 Max with multiple models"
+      mitigation: "Implement dynamic model loading/unloading"
+    - risk: "Model download and storage requirements (50GB+ total)"
+      mitigation: "Implement model caching and cleanup automation"
+  medium:
+    - risk: "vLLM Apple Silicon compatibility issues"
+      mitigation: "Fallback to CPU inference, thorough testing"
+    - risk: "Performance degradation with multiple concurrent models"
+      mitigation: "Load balancing, queue management, resource limits"
+
+# Portfolio Deliverables (Critical for GenAI Roles)
+portfolio_artifacts:
+  technical_demonstrations:
+    - "Multi-model comparison dashboard with real-time metrics"
+    - "Cost savings analysis: 60% reduction vs OpenAI API"
+    - "Performance benchmarks: <50ms latency across all models"
+    - "MLflow experiment tracking with 25+ experiments"
+  documentation:
+    - "Apple Silicon optimization guide for vLLM"
+    - "Multi-model deployment architecture documentation" 
+    - "Cost analysis methodology and results"
+    - "Content quality evaluation framework"
+  code_artifacts:
+    - "Production-ready vLLM multi-model service"
+    - "Automated model deployment scripts"
+    - "Comprehensive test suite with 95% coverage"
+    - "Monitoring and alerting configurations"
+
+# Timeline & Milestones
+timeline:
+  week_1: "Features 22-1, 22-2 (Model deployment + MLflow setup)"
+  week_2: "Features 22-3, 22-4 (Content orchestration + Apple Silicon optimization)"
+  week_3: "Features 22-5, 22-6 (Benchmarking + Cost analysis)"
+  week_4: "Features 22-7, 22-8 (Quality evaluation + Portfolio generation)"
+
+milestones:
+  - name: "Multi-Model Deployment Complete"
+    date: "2025-08-20"
+    criteria: "All 5 models serving locally with <50ms latency"
+  - name: "MLflow Integration Complete"
+    date: "2025-08-27"
+    criteria: "25+ experiments tracked with comprehensive metrics"
+  - name: "Performance Optimization Complete"
+    date: "2025-09-03"
+    criteria: "60% cost savings demonstrated vs OpenAI"
+  - name: "Portfolio Artifacts Complete"
+    date: "2025-09-10"
+    criteria: "All demo materials and documentation ready"
+
+# Success Criteria
+success_criteria:
+  technical:
+    - "Deploy 5 models locally using vLLM on Apple Silicon"
+    - "Achieve <50ms average latency for all models"
+    - "Demonstrate 60% cost savings vs OpenAI API"
+    - "Generate 4 content types with quality parity"
+    - "Track 25+ MLflow experiments with comprehensive metrics"
+  business:
+    - "Create production-ready multi-model serving platform"
+    - "Generate portfolio artifacts demonstrating GenAI expertise"
+    - "Document cost optimization methodology"
+    - "Establish benchmarking framework for future models"
+  portfolio:
+    - "Demo-ready multi-model comparison dashboard"
+    - "Comprehensive technical documentation"
+    - "Performance analysis and optimization reports"
+    - "Cost savings analysis with supporting data"
+
+# Notes for Implementation
+implementation_notes:
+  - "Build upon existing vllm_service infrastructure"
+  - "Leverage MLflow integration from Agent A1's work"
+  - "Focus on Apple Silicon optimization for competitive advantage"
+  - "Ensure all artifacts are interview/demo ready"
+  - "Prioritize cost analysis and savings demonstration"
+  - "Document everything for portfolio presentation"

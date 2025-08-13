@@ -1,0 +1,222 @@
+feature_id: feature-20-1-local-vllm-deployment-engine
+epic_id: epic-20-local-vllm-llama-deployment
+feature_name: "Local vLLM Deployment Engine"
+description: |
+  Build production-grade local vLLM deployment system optimized for MacBook M4 Max, supporting
+  Llama-3.1-8B with Apple Silicon acceleration. This feature establishes the foundation for
+  local LLM serving with containerized deployment and Kubernetes integration.
+
+priority: critical
+status: planned
+estimated_effort_hours: 40
+
+business_value: |
+  - Eliminates external API dependencies for core content generation
+  - Enables cost reduction of 60% compared to OpenAI API calls
+  - Demonstrates advanced local LLM deployment skills for GenAI Engineer roles
+  - Provides foundation for custom model fine-tuning capabilities
+  - Shows Apple Silicon optimization expertise valuable for mobile/edge AI
+
+technical_details:
+  core_components:
+    - "vLLM server with Apple Silicon Metal backend optimization"
+    - "Llama-3.1-8B model loading and memory management"
+    - "FastAPI service integration with existing orchestrator"
+    - "Docker containerization with optimized Metal acceleration"
+    - "Kubernetes deployment manifests for production simulation"
+  
+  optimization_targets:
+    - "Memory usage under 24GB for M4 Max compatibility"
+    - "Cold start time under 2 minutes"
+    - "Inference latency under 50ms for typical content generation"
+    - "Throughput of 20+ tokens/second sustained"
+    - "Model quantization support for memory efficiency"
+
+acceptance_criteria:
+  - "vLLM server starts successfully with Llama-3.1-8B on M4 Max"
+  - "OpenAI-compatible API endpoints functional and tested"
+  - "Memory usage stays within 24GB limit during inference"
+  - "Cold start completes within 120 seconds"
+  - "Inference latency consistently under 50ms"
+  - "Docker container builds and runs without errors"
+  - "Kubernetes deployment succeeds in k3d cluster"
+  - "Health checks and readiness probes working"
+
+tasks:
+  - task_id: feature-20-1-001
+    title: "Setup vLLM Environment with Apple Silicon Support"
+    description: "Configure vLLM with Metal Performance Shaders for M4 Max optimization"
+    type: implementation
+    estimated_hours: 6
+    requirements:
+      - Install vLLM with Metal backend support
+      - Configure Python environment with CUDA alternatives for Metal
+      - Setup model cache directory with sufficient storage
+      - Configure memory management for Apple Silicon
+      - Test basic vLLM functionality with small model
+    validation:
+      - vLLM imports successfully with Metal backend
+      - Memory allocation works correctly on M4 Max
+      - Basic inference test completes without errors
+      - Metal Performance Shaders acceleration active
+
+  - task_id: feature-20-1-002
+    title: "Download and Configure Llama-3.1-8B Model"
+    description: "Obtain and optimize Llama-3.1-8B model for local deployment"
+    type: implementation
+    estimated_hours: 4
+    requirements:
+      - Download Llama-3.1-8B model weights from Hugging Face
+      - Configure model quantization for memory efficiency
+      - Setup model cache and versioning system
+      - Optimize model loading for faster cold starts
+      - Validate model integrity and functionality
+    validation:
+      - Model downloads completely and passes checksum validation
+      - Quantized model loads within memory constraints
+      - Model cache system works correctly
+      - Cold start time under 2 minutes
+      - Basic inference generates coherent text
+
+  - task_id: feature-20-1-003
+    title: "Implement vLLM FastAPI Service Integration"
+    description: "Integrate vLLM server with existing FastAPI service architecture"
+    type: implementation
+    estimated_hours: 8
+    requirements:
+      - Extend existing vllm_service/main.py with local deployment
+      - Implement OpenAI-compatible endpoints using vLLM backend
+      - Add request routing between local and cloud inference
+      - Implement proper error handling and fallback mechanisms
+      - Add configuration management for deployment modes
+    validation:
+      - FastAPI service starts with vLLM backend
+      - OpenAI-compatible endpoints respond correctly
+      - Request routing logic works properly
+      - Error handling prevents service crashes
+      - Configuration switching works between modes
+
+  - task_id: feature-20-1-004
+    title: "Create Docker Container with Metal Acceleration"
+    description: "Build optimized Docker container for vLLM deployment"
+    type: implementation
+    estimated_hours: 6
+    requirements:
+      - Create Dockerfile with Apple Silicon optimization
+      - Configure Metal framework access within container
+      - Optimize image size and build time
+      - Add health check and readiness probe endpoints
+      - Configure volume mounts for model cache
+    validation:
+      - Docker image builds successfully on M4 Max
+      - Container can access Metal acceleration
+      - Health checks respond correctly
+      - Model cache persists across container restarts
+      - Image size optimized for deployment
+
+  - task_id: feature-20-1-005
+    title: "Design Kubernetes Deployment Configuration"
+    description: "Create production-ready Kubernetes manifests for local deployment"
+    type: implementation
+    estimated_hours: 4
+    requirements:
+      - Create Helm chart for vLLM service deployment
+      - Configure resource limits and requests for M4 Max
+      - Setup persistent volumes for model cache
+      - Configure service mesh integration
+      - Add monitoring and logging integration
+    validation:
+      - Helm chart deploys successfully in k3d
+      - Resource limits prevent system overload
+      - Persistent volumes work correctly
+      - Service discovery functions properly
+      - Monitoring integration active
+
+  - task_id: feature-20-1-006
+    title: "Implement Memory Management and Optimization"
+    description: "Optimize memory usage for sustained high-performance inference"
+    type: implementation
+    estimated_hours: 6
+    requirements:
+      - Implement dynamic memory allocation strategies
+      - Add memory monitoring and alerting
+      - Configure garbage collection optimization
+      - Implement model unloading for memory relief
+      - Add memory pressure detection and handling
+    validation:
+      - Memory usage stays within 24GB limit
+      - Memory leaks prevented and detected
+      - Garbage collection optimized for performance
+      - Memory pressure handling works correctly
+      - Sustained inference maintains performance
+
+  - task_id: feature-20-1-007
+    title: "Create Comprehensive Integration Tests"
+    description: "Build test suite for local vLLM deployment validation"
+    type: testing
+    estimated_hours: 4
+    requirements:
+      - Unit tests for vLLM service components
+      - Integration tests for FastAPI endpoints
+      - Performance tests for latency and throughput
+      - Memory usage tests for sustained operation
+      - End-to-end tests for complete request flow
+    validation:
+      - All unit tests pass with >95% coverage
+      - Integration tests validate API compatibility
+      - Performance tests confirm latency targets
+      - Memory tests validate sustained operation
+      - E2E tests confirm complete functionality
+
+  - task_id: feature-20-1-008
+    title: "Document Deployment and Configuration"
+    description: "Create comprehensive documentation for local deployment"
+    type: documentation
+    estimated_hours: 2
+    requirements:
+      - Installation guide for M4 Max setup
+      - Configuration reference for optimization
+      - Troubleshooting guide for common issues
+      - Performance tuning recommendations
+      - Architecture documentation with diagrams
+    validation:
+      - Documentation enables successful deployment
+      - Configuration options clearly explained
+      - Troubleshooting guide resolves common issues
+      - Performance tuning shows measurable improvements
+      - Architecture diagrams accurately represent system
+
+technologies:
+  - vLLM (Apple Silicon/Metal optimized)
+  - Llama-3.1-8B (Meta)
+  - FastAPI
+  - Docker (with Metal framework)
+  - Kubernetes/Helm
+  - Metal Performance Shaders
+  - Python 3.11+
+
+dependencies:
+  - MacBook M4 Max with 32GB+ RAM
+  - Metal Performance Shaders framework
+  - Sufficient storage for model weights (20GB+)
+  - Existing orchestrator service architecture
+  - k3d Kubernetes cluster
+
+deliverables:
+  - Production-ready vLLM service with local deployment
+  - Docker container optimized for Apple Silicon
+  - Kubernetes Helm chart for deployment
+  - Comprehensive test suite with >95% coverage
+  - Complete documentation and setup guides
+  - Performance optimization configurations
+
+portfolio_value: |
+  This feature demonstrates mastery of:
+  - Local LLM deployment and optimization
+  - Apple Silicon acceleration techniques
+  - Production containerization and orchestration
+  - Memory management and performance optimization
+  - Integration with existing microservices architecture
+  
+  Perfect for interviews at companies like OpenAI, Anthropic, Scale AI, or any company
+  building AI infrastructure and requiring GenAI engineering expertise.

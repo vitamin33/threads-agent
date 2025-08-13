@@ -1,0 +1,276 @@
+id: "feature-22-1-multi-model-deployment-engine"
+title: "Multi-Model Deployment Engine"
+epic_id: "epic-22-multi-model-content-generation-system"
+priority: "critical"
+status: "planned"
+estimated_hours: 48
+estimated_story_points: 12
+task_count: 10
+
+description: |
+  Enhanced vLLM service supporting simultaneous deployment of 5 models 
+  (Llama-3.1-8B, Qwen2.5-7B, Mistral-7B, Llama-3.1-3B, Phi-3.5-Mini) 
+  with dynamic loading, memory management, and Apple Silicon optimization.
+
+dependencies:
+  - "vllm_service skeleton (existing)"
+  - "Apple Silicon Metal framework"
+  - "vLLM framework with Metal support"
+  - "HuggingFace model hub access"
+  - "MacBook M4 Max hardware (36GB memory)"
+
+# Technical Requirements
+technical_requirements:
+  memory_management: "Dynamic model loading/unloading for 36GB limit"
+  optimization: "Apple Silicon Metal backend with FP16/INT8 quantization"
+  concurrency: "Support 3 concurrent models with queue management"
+  storage: "Model caching system with automatic cleanup"
+  monitoring: "Real-time memory and GPU utilization tracking"
+
+# Success Criteria
+success_criteria:
+  - "Deploy all 5 models successfully on Apple Silicon"
+  - "Achieve dynamic loading within 5 seconds per model"
+  - "Maintain <50ms inference latency per model"
+  - "Implement memory usage <85% of available 36GB"
+  - "Create robust error handling and fallback mechanisms"
+
+# Tasks (Test-Driven Development Approach)
+tasks:
+  - id: "task-22-1-01"
+    title: "Create comprehensive test suite for multi-model deployment"
+    type: "testing"
+    priority: "critical"
+    estimated_hours: 6
+    description: |
+      Write failing tests for all multi-model deployment scenarios:
+      - Model loading/unloading lifecycle
+      - Memory management and limits
+      - Concurrent model serving
+      - Apple Silicon optimization verification
+      - Error handling and recovery
+    acceptance_criteria:
+      - "Test all 5 model configurations"
+      - "Test memory exhaustion scenarios"
+      - "Test concurrent inference requests"
+      - "Test model switching and cleanup"
+      - "Verify Apple Silicon Metal utilization"
+    commands:
+      - "cd services/vllm_service && python -m pytest tests/test_multi_model_deployment.py -v"
+
+  - id: "task-22-1-02"
+    title: "Design multi-model configuration management system"
+    type: "architecture"
+    priority: "critical"
+    estimated_hours: 4
+    description: |
+      Create configuration system for managing multiple model deployments:
+      - Model registry with specifications
+      - Resource allocation strategies
+      - Loading priority and fallback rules
+      - Apple Silicon optimization settings
+    deliverables:
+      - "services/vllm_service/config/multi_model_config.yaml"
+      - "services/vllm_service/model_registry.py"
+      - "Configuration validation and schema"
+    verification:
+      - "Configuration loads without errors"
+      - "All 5 models defined with correct parameters"
+      - "Resource limits properly configured"
+
+  - id: "task-22-1-03"
+    title: "Implement enhanced ModelManager for multi-model support"
+    type: "implementation"
+    priority: "critical"
+    estimated_hours: 8
+    description: |
+      Extend existing model_manager.py to support multiple models:
+      - Dynamic model loading/unloading
+      - Memory-aware model management
+      - Apple Silicon Metal optimization
+      - Concurrent model serving with queue management
+    file_changes:
+      - "services/vllm_service/model_manager.py (enhance existing)"
+      - "services/vllm_service/multi_model_manager.py (new)"
+    acceptance_criteria:
+      - "Load/unload models dynamically within 5 seconds"
+      - "Track memory usage and enforce limits"
+      - "Serve multiple models concurrently"
+      - "Optimize for Apple Silicon Metal backend"
+
+  - id: "task-22-1-04"  
+    title: "Create model download and caching automation"
+    type: "implementation"
+    priority: "high"
+    estimated_hours: 5
+    description: |
+      Automated system for downloading and caching model weights:
+      - HuggingFace Hub integration
+      - Progressive download with resumption
+      - Storage optimization and cleanup
+      - Verification and integrity checks
+    deliverables:
+      - "services/vllm_service/model_downloader.py"
+      - "services/vllm_service/cache_manager.py"
+      - "Model download scripts and automation"
+    verification:
+      - "Download all 5 models successfully"
+      - "Verify model integrity"
+      - "Implement storage limit management"
+
+  - id: "task-22-1-05"
+    title: "Implement Apple Silicon Metal optimization layer"
+    type: "optimization"
+    priority: "high"
+    estimated_hours: 6
+    description: |
+      Apple Silicon specific optimizations for maximum performance:
+      - Metal backend configuration
+      - Memory mapping optimization
+      - Unified memory utilization
+      - Hardware-specific quantization
+    technical_details:
+      - "Configure vLLM Metal backend"
+      - "Optimize memory allocation patterns"
+      - "Implement FP16/INT8 quantization"
+      - "Hardware utilization monitoring"
+    acceptance_criteria:
+      - "Metal backend active and functional"
+      - "Memory utilization >80% efficiency"
+      - "Quantization reduces model size by 50%"
+
+  - id: "task-22-1-06"
+    title: "Create dynamic model switching and queue management"
+    type: "implementation"
+    priority: "high"
+    estimated_hours: 7
+    description: |
+      System for switching between models based on request requirements:
+      - Request routing and queue management
+      - Model warming and cooling strategies
+      - Load balancing across available models
+      - Graceful degradation handling
+    components:
+      - "Model router with content-type awareness"
+      - "Request queue with priority handling"
+      - "Model lifecycle management"
+      - "Circuit breaker patterns"
+    verification:
+      - "Route requests to appropriate models"
+      - "Handle queue overflow gracefully"
+      - "Switch models without dropping requests"
+
+  - id: "task-22-1-07"
+    title: "Enhance API endpoints for multi-model serving"
+    type: "implementation"
+    priority: "high"
+    estimated_hours: 5
+    description: |
+      Extend FastAPI endpoints to support multi-model operations:
+      - Model selection in request parameters
+      - Model status and health endpoints
+      - Admin endpoints for model management
+      - Real-time metrics and monitoring
+    api_endpoints:
+      - "POST /generate/{model_name} - Model-specific generation"
+      - "GET /models/status - All model status"
+      - "POST /models/{model_name}/load - Dynamic loading"
+      - "DELETE /models/{model_name} - Model unloading"
+    acceptance_criteria:
+      - "All endpoints return proper responses"
+      - "Error handling for invalid models"
+      - "Real-time status updates"
+
+  - id: "task-22-1-08"
+    title: "Implement comprehensive monitoring and metrics"
+    type: "monitoring"
+    priority: "high"
+    estimated_hours: 4
+    description: |
+      Enhanced Prometheus metrics for multi-model deployment:
+      - Per-model performance metrics
+      - Memory and GPU utilization
+      - Request routing and queue metrics
+      - Apple Silicon specific metrics
+    metrics:
+      - "model_memory_usage_bytes{model_name}"
+      - "model_inference_duration_seconds{model_name}"
+      - "model_queue_length{model_name}"
+      - "apple_silicon_utilization_ratio"
+    deliverables:
+      - "Enhanced Prometheus metrics"
+      - "Grafana dashboard configuration"
+      - "Real-time monitoring setup"
+
+  - id: "task-22-1-09"
+    title: "Create Kubernetes deployment configurations"
+    type: "devops"
+    priority: "high"
+    estimated_hours: 4
+    description: |
+      Update Helm charts for multi-model deployment:
+      - Enhanced resource allocation
+      - ConfigMap for model configurations
+      - Service mesh configuration
+      - Horizontal Pod Autoscaling
+    files:
+      - "chart/templates/vllm-multi-model-deployment.yaml"
+      - "chart/templates/vllm-configmap.yaml"
+      - "chart/values.yaml (enhance existing)"
+    verification:
+      - "Deploy successfully to k3d cluster"
+      - "All models accessible via service"
+      - "Resource limits properly enforced"
+
+  - id: "task-22-1-10"
+    title: "Integration testing and deployment verification"
+    type: "testing"
+    priority: "critical"
+    estimated_hours: 5
+    description: |
+      End-to-end testing of complete multi-model deployment:
+      - Load testing with multiple models
+      - Memory stress testing
+      - Failover and recovery testing
+      - Performance verification
+    test_scenarios:
+      - "Concurrent requests to all 5 models"
+      - "Memory exhaustion and recovery"
+      - "Model switching under load"
+      - "Apple Silicon optimization verification"
+    acceptance_criteria:
+      - "All models serve requests <50ms"
+      - "Memory usage stays <85% of 36GB"
+      - "No memory leaks during extended runs"
+      - "Graceful handling of edge cases"
+
+# Implementation Strategy
+implementation_strategy:
+  approach: "Test-Driven Development with incremental model addition"
+  order: "Infrastructure → Single model → Multi-model → Optimization → Testing"
+  validation: "Each task must pass tests before proceeding"
+  rollback: "Git commits after each working milestone"
+
+# Portfolio Documentation Requirements
+portfolio_requirements:
+  - "Architecture diagrams showing multi-model design"
+  - "Performance benchmarks for each model"
+  - "Apple Silicon optimization techniques documentation"
+  - "Cost comparison analysis vs cloud APIs"
+  - "Technical blog post on multi-model deployment"
+
+# Completion Criteria
+completion_criteria:
+  technical:
+    - "All 5 models deployed and serving requests"
+    - "Dynamic loading working within 5 seconds"
+    - "Memory management under 85% utilization"
+    - "Apple Silicon optimizations active"
+  testing:
+    - "95% test coverage on new code"
+    - "All integration tests passing"
+    - "Load testing meets performance targets"
+  documentation:
+    - "API documentation updated"
+    - "Deployment guide completed"
+    - "Troubleshooting guide created"

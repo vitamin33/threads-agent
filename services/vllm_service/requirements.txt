@@ -1,6 +1,9 @@
-# For demo purposes, we'll simulate vLLM without heavy dependencies
-# In production, this would include: vllm==0.5.5, transformers==4.44.0, torch==2.4.0
-# For interview demo, we focus on architecture and cost comparison
+# Production vLLM dependencies for Apple Silicon optimization
+# Note: Using simplified versions for development environment
+transformers>=4.30.0  # More flexible version
+torch>=2.0.0  # Compatible with current PyTorch versions
+# tokenizers==0.19.1  # Commented out due to build issues in dev
+# vllm==0.6.2  # Uncommented for production with GPU, commented for dev environment
 
 # FastAPI and async
 fastapi==0.111.*
@@ -13,10 +16,30 @@ opentelemetry-api==1.22.0
 opentelemetry-sdk==1.22.0
 opentelemetry-instrumentation-fastapi==0.43b0
 
+# Apple Silicon optimization (compatible versions)
+accelerate>=0.20.0
+bitsandbytes>=0.41.0  # For quantization, using available version
+
+# Circuit breakers and resilience
+tenacity==9.0.0
+asyncio-throttle==1.0.2
+
+# Memory management and monitoring
+psutil==6.0.0
+GPUtil==1.4.0
+
 # Utilities
 httpx==0.25.2
 aioredis==2.0.1
 python-multipart>=0.0.7
+
+# Performance Benchmarking (for portfolio demonstration)
+matplotlib==3.8.*
+seaborn==0.13.*
+pandas==2.1.*
+numpy==1.25.*
+tabulate==0.9.*
+aiohttp==3.9.*
 
 # Testing
 pytest==7.4.3
