@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns/263039140064653439/abd843a8da414b2a90b0b9ed4b884d5b/artifacts
+end_time: 1755030255752
+entry_point_name: ''
+experiment_id: '263039140064653439'
+lifecycle_stage: active
+run_id: abd843a8da414b2a90b0b9ed4b884d5b
+run_name: RandomForest_production
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755030254077
+status: 3
+tags: []
+user_id: vitaliiserbyn

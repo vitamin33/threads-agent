@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns/263039140064653439/8c3cad71d5334a8a9650333e9507a1e9/artifacts
+end_time: 1755030257204
+entry_point_name: ''
+experiment_id: '263039140064653439'
+lifecycle_stage: active
+run_id: 8c3cad71d5334a8a9650333e9507a1e9
+run_name: XGBoost_production
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755030255753
+status: 3
+tags: []
+user_id: vitaliiserbyn

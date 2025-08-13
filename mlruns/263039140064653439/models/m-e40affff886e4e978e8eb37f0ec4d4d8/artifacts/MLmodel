@@ -1,0 +1,22 @@
+artifact_path: file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns/263039140064653439/models/m-e40affff886e4e978e8eb37f0ec4d4d8/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.1
+mlflow_version: 3.2.0
+model_id: m-e40affff886e4e978e8eb37f0ec4d4d8
+model_size_bytes: 3886461
+model_uuid: m-e40affff886e4e978e8eb37f0ec4d4d8
+prompts: null
+run_id: abd843a8da414b2a90b0b9ed4b884d5b
+utc_time_created: '2025-08-12 20:24:14.498421'
