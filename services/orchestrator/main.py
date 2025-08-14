@@ -113,6 +113,24 @@ rate_limiter = SimpleRateLimiter(
 app.include_router(search_router)
 app.include_router(viral_metrics_router)
 
+# Include A/B testing router
+try:
+    from services.orchestrator.routers.ab_testing import ab_testing_router
+
+    app.include_router(ab_testing_router)
+    logger.info("A/B Testing API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"A/B testing router not available: {e}")
+
+# Include A/B testing content optimization router
+try:
+    from services.orchestrator.routers.ab_testing_content import ab_content_router
+
+    app.include_router(ab_content_router)
+    logger.info("A/B Testing Content Optimization API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"A/B testing content router not available: {e}")
+
 # Include content management router
 try:
     from services.orchestrator.content_management import router as content_router
