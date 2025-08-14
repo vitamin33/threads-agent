@@ -16,7 +16,6 @@ import pytest
 from unittest.mock import Mock, patch
 
 
-
 # Test configuration for 5 models on M4 Max (36GB unified memory)
 MULTI_MODEL_CONFIG = {
     "llama_8b": {
