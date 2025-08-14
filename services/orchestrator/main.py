@@ -131,6 +131,15 @@ try:
 except ImportError as e:
     logger.warning(f"A/B testing content router not available: {e}")
 
+# Include experiment management router
+try:
+    from services.orchestrator.routers.experiment_management import experiment_router
+
+    app.include_router(experiment_router)
+    logger.info("Experiment Management API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"Experiment management router not available: {e}")
+
 # Include content management router
 try:
     from services.orchestrator.content_management import router as content_router
