@@ -1,0 +1,296 @@
+# Multi-Model Configuration for vLLM Service
+# Optimized for MacBook M4 Max (36GB unified memory)
+# Target: 5 models with intelligent resource management
+
+version: "1.0"
+platform: "apple-silicon-m4-max"
+total_memory_gb: 36
+memory_safety_threshold: 0.85  # Use max 85% of available memory (30.6GB)
+
+# Model Registry Configuration
+models:
+  # Primary Content Generation Models
+  llama_8b:
+    name: "meta-llama/Llama-3.1-8B-Instruct"
+    display_name: "Llama 3.1 8B Instruct"
+    memory_requirements:
+      base_gb: 16.0      # Model weights in FP16
+      optimized_gb: 12.0 # With quantization + optimizations
+      minimum_gb: 10.0   # Emergency mode
+    content_types: ["general", "linkedin", "technical_articles"]
+    priority: 1
+    optimization:
+      quantization: "fp16"  # FP16 for Apple Silicon
+      backend: "metal"
+      tensor_parallel: false
+      speculative_decoding: true
+      kv_cache_dtype: "fp8"
+    performance:
+      target_latency_ms: 40
+      max_tokens_per_request: 2048
+      concurrent_requests: 3
+    
+  qwen_7b:
+    name: "Qwen/Qwen2.5-7B-Instruct"
+    display_name: "Qwen 2.5 7B Instruct"
+    memory_requirements:
+      base_gb: 14.0
+      optimized_gb: 10.0
+      minimum_gb: 8.0
+    content_types: ["technical_articles", "code_documentation", "dev_to"]
+    priority: 2
+    optimization:
+      quantization: "fp16"
+      backend: "metal"
+      tensor_parallel: false
+      mixed_precision: true
+      kv_cache_dtype: "fp8"
+    performance:
+      target_latency_ms: 35
+      max_tokens_per_request: 4096
+      concurrent_requests: 3
+
+  mistral_7b:
+    name: "mistralai/Mistral-7B-Instruct-v0.3"
+    display_name: "Mistral 7B Instruct v0.3"
+    memory_requirements:
+      base_gb: 14.0
+      optimized_gb: 10.0
+      minimum_gb: 8.0
+    content_types: ["twitter", "social_media", "hooks"]
+    priority: 3
+    optimization:
+      quantization: "fp16"
+      backend: "metal"
+      dynamic_batching: true
+      kv_cache_optimization: true
+    performance:
+      target_latency_ms: 30
+      max_tokens_per_request: 1024
+      concurrent_requests: 4
+
+  # High-Speed Models
+  llama_3b:
+    name: "meta-llama/Llama-3.1-3B-Instruct"
+    display_name: "Llama 3.1 3B Instruct"
+    memory_requirements:
+      base_gb: 6.0
+      optimized_gb: 4.0
+      minimum_gb: 3.0
+    content_types: ["twitter", "quick_responses", "speed"]
+    priority: 4
+    optimization:
+      quantization: "fp16"
+      backend: "metal"
+      aggressive_caching: true
+      batch_size_optimization: true
+    performance:
+      target_latency_ms: 20
+      max_tokens_per_request: 512
+      concurrent_requests: 8
+
+  phi_mini:
+    name: "microsoft/Phi-3.5-mini-instruct"
+    display_name: "Phi 3.5 Mini Instruct"
+    memory_requirements:
+      base_gb: 8.0
+      optimized_gb: 6.0
+      minimum_gb: 4.0
+    content_types: ["lightweight", "edge", "fallback"]
+    priority: 5
+    optimization:
+      quantization: "int8"  # More aggressive quantization
+      backend: "metal"
+      model_pruning: true
+      efficient_attention: true
+    performance:
+      target_latency_ms: 15
+      max_tokens_per_request: 1024
+      concurrent_requests: 6
+
+# Resource Management Strategy
+resource_management:
+  # Dynamic loading strategy
+  concurrent_models_limit: 3  # Max models loaded simultaneously
+  memory_monitoring_interval_seconds: 5
+  cleanup_threshold_gb: 25.0  # Start cleanup when using >25GB
+  
+  # Loading priority order (higher priority loads first)
+  loading_order:
+    - llama_8b      # High-quality general content
+    - qwen_7b       # Technical content specialist
+    - mistral_7b    # Social media specialist
+    - llama_3b      # Speed specialist
+    - phi_mini      # Lightweight fallback
+
+  # Unloading strategy when memory pressure occurs
+  unloading_order:
+    - phi_mini      # Unload least critical first
+    - llama_3b      # Then speed specialist
+    - mistral_7b    # Then social media specialist
+    - qwen_7b       # Keep technical content
+    - llama_8b      # Keep high-quality general (last to unload)
+
+# Content Type Routing Rules
+content_routing:
+  twitter:
+    primary: ["mistral_7b", "llama_3b"]
+    fallback: ["phi_mini"]
+    max_tokens: 280
+    
+  linkedin:
+    primary: ["llama_8b", "qwen_7b"]
+    fallback: ["mistral_7b"]
+    max_tokens: 3000
+    
+  technical_articles:
+    primary: ["qwen_7b", "llama_8b"]
+    fallback: ["mistral_7b"]
+    max_tokens: 10000
+    
+  code_documentation:
+    primary: ["qwen_7b"]
+    fallback: ["llama_8b", "phi_mini"]
+    max_tokens: 5000
+    
+  general:
+    primary: ["llama_8b"]
+    fallback: ["qwen_7b", "mistral_7b"]
+    max_tokens: 2048
+
+# Apple Silicon Specific Optimizations
+apple_silicon:
+  metal_backend: true
+  unified_memory_optimization: true
+  neural_engine_offload: true
+  memory_mapping_strategy: "efficient"
+  thermal_management: true
+  
+  # M4 Max specific settings
+  performance_cores: 12
+  efficiency_cores: 4
+  gpu_cores: 40
+  memory_bandwidth_gb_s: 546
+  
+  # Optimization presets
+  presets:
+    maximum_performance:
+      gpu_memory_utilization: 0.9
+      cpu_offload_layers: 0
+      quantization: "fp16"
+    
+    balanced:
+      gpu_memory_utilization: 0.8
+      cpu_offload_layers: 2
+      quantization: "fp16"
+    
+    memory_optimized:
+      gpu_memory_utilization: 0.7
+      cpu_offload_layers: 4
+      quantization: "int8"
+
+# MLflow Integration Configuration  
+mlflow_integration:
+  enabled: true
+  tracking_uri: "${MLFLOW_TRACKING_URI:-http://localhost:5000}"
+  registry_uri: "${MLFLOW_REGISTRY_URI:-http://localhost:5000}"
+  experiment_name: "vllm_multi_model_deployment"
+  
+  # Auto-logging configuration
+  auto_log:
+    models: true
+    metrics: true
+    parameters: true
+    artifacts: true
+  
+  # Metrics to track
+  metrics:
+    performance:
+      - "inference_latency_ms"
+      - "tokens_per_second"
+      - "memory_usage_gb"
+      - "gpu_utilization_percent"
+    quality:
+      - "content_quality_score"
+      - "readability_score"
+      - "engagement_prediction"
+    cost:
+      - "cost_per_token_usd"
+      - "total_cost_usd"
+      - "savings_vs_openai_percent"
+
+# Monitoring and Alerts
+monitoring:
+  prometheus:
+    enabled: true
+    port: 8091
+    metrics_prefix: "vllm_multi_model"
+  
+  alerts:
+    memory_usage_threshold: 0.85
+    latency_threshold_ms: 100
+    error_rate_threshold: 0.05
+    
+  health_checks:
+    interval_seconds: 30
+    timeout_seconds: 5
+    failure_threshold: 3
+
+# Development and Testing Configuration
+development:
+  mock_mode: false  # Set to true for testing without actual models
+  fast_startup: false  # Skip warmup for faster development
+  debug_logging: true
+  
+  # Test model (smaller for development)
+  test_model:
+    name: "microsoft/DialoGPT-small"
+    memory_gb: 1.0
+    use_for_testing: true
+
+# Error Handling and Resilience
+error_handling:
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout_seconds: 60
+    half_open_max_calls: 3
+    
+  retry_policy:
+    max_attempts: 3
+    backoff_multiplier: 2
+    max_delay_seconds: 10
+    
+  fallback_strategy:
+    enable_degraded_mode: true
+    minimum_models_required: 1
+    fallback_to_openai: false  # Keep local-only for cost savings
+
+# Security and Compliance
+security:
+  model_verification: true
+  checksum_validation: true
+  secure_model_storage: true
+  audit_logging: true
+  
+  # Access control
+  api_key_required: false  # Internal service
+  rate_limiting:
+    requests_per_minute: 1000
+    burst_limit: 100
+
+# Caching Configuration
+caching:
+  enabled: true
+  backend: "redis"
+  ttl_seconds: 3600
+  max_cache_size_gb: 2.0
+  
+  # Cache strategies
+  strategies:
+    response_caching: true
+    model_caching: true
+    embeddings_caching: true
+    
+  # Cache warming
+  warm_cache_on_startup: true
+  popular_prompts_cache: true
