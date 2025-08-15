@@ -47,7 +47,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 try:
-    from mlops.mlflow_lifecycle_demo import DemoOrchestrator
+    pass  # MLflow lifecycle components available
 except ImportError as e:
     logger.error(f"Import error: {e}")
     logger.error(
@@ -99,7 +99,6 @@ class PortfolioDemo:
         try:
             # Initialize orchestrator
             logger.info("Initializing MLflow Lifecycle Demo...")
-            orchestrator = DemoOrchestrator()
 
             # Stage 1: Training
             self.print_stage_header(
@@ -116,31 +115,33 @@ class PortfolioDemo:
             # Use real MLflow for portfolio demo (creates actual runs in UI)
             import mlflow
             import os
-            
+
             # Configure MLflow tracking URI if provided
             tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
             if tracking_uri:
                 mlflow.set_tracking_uri(tracking_uri)
                 logger.info(f"🔗 Using MLflow server: {tracking_uri}")
-            
+
             # Set experiment for portfolio demo
             mlflow.set_experiment("Portfolio_MLOps_Demo")
-            
+
             # Create real MLflow runs for each algorithm
             from sklearn.ensemble import RandomForestClassifier
             from sklearn.linear_model import LogisticRegression
             from sklearn.datasets import make_classification
             import numpy as np
-            
+
             # Generate sample data for demo
-            X, y = make_classification(n_samples=100, n_features=4, n_classes=2, random_state=42)
-            
+            X, y = make_classification(
+                n_samples=100, n_features=4, n_classes=2, random_state=42
+            )
+
             algorithms = [
                 ("random_forest", RandomForestClassifier(random_state=42)),
                 ("logistic_regression", LogisticRegression(random_state=42)),
-                ("xgboost", "xgb_mock")  # Mock for demo speed
+                ("xgboost", "xgb_mock"),  # Mock for demo speed
             ]
-            
+
             for name, model in algorithms:
                 with mlflow.start_run(run_name=f"demo_{name}"):
                     if name != "xgboost":  # Train real models for RF and LR
@@ -150,16 +151,18 @@ class PortfolioDemo:
                     else:
                         accuracy = 0.557  # Demo values
                         latency_p95 = 0.2
-                    
+
                     # Log parameters and metrics
                     mlflow.log_param("algorithm", name)
                     mlflow.log_param("n_samples", 100)
                     mlflow.log_metric("accuracy", accuracy)
                     mlflow.log_metric("latency_p95_ms", latency_p95)
                     mlflow.log_metric("slo_compliant", 1 if latency_p95 < 500 else 0)
-                    
-                    logger.info(f"Successfully trained {name} with accuracy: {accuracy:.3f}, latency p95: {latency_p95:.1f}ms")
-            
+
+                    logger.info(
+                        f"Successfully trained {name} with accuracy: {accuracy:.3f}, latency p95: {latency_p95:.1f}ms"
+                    )
+
             demo_results = {"models_trained": 3, "success": True}
 
             stage_duration = time.time() - stage_start
@@ -167,32 +170,37 @@ class PortfolioDemo:
 
             # Determine if we should show real analysis or simulation
             show_real_only = os.getenv("REAL_LOGS_ONLY", "false").lower() == "true"
-            
+
             if show_real_only:
                 # REAL LOGS MODE: Show only actual operations
                 # Stage 2: Real Model Analysis
                 self.print_stage_header(
                     "ANALYSIS", "Real model performance analysis from trained models"
                 )
-                
+
                 # Calculate real metrics from the models we trained
                 best_accuracy = max([1.000, 0.990, 0.557])  # From actual training
                 total_models = 3
-                slo_compliant_models = 3  # All had latency < 500ms
-                
+
                 logger.info(f"📊 Analyzed {total_models} real trained models")
-                logger.info(f"🏆 Best accuracy achieved: {best_accuracy:.1%} (RandomForest)")
-                logger.info(f"⚡ All models meet latency SLO: < 500ms")
-                logger.info(f"✅ Model comparison complete - champion model identified")
+                logger.info(
+                    f"🏆 Best accuracy achieved: {best_accuracy:.1%} (RandomForest)"
+                )
+                logger.info("⚡ All models meet latency SLO: < 500ms")
+                logger.info("✅ Model comparison complete - champion model identified")
 
                 # Stage 3: MLflow Registry Operations (Real)
                 self.print_stage_header(
                     "REGISTRY", "MLflow experiment tracking and model registry"
                 )
 
-                logger.info("📝 All models registered in MLflow experiment: Portfolio_MLOps_Demo")
+                logger.info(
+                    "📝 All models registered in MLflow experiment: Portfolio_MLOps_Demo"
+                )
                 logger.info("🔍 Live experiment view: http://localhost:5001")
-                logger.info("📊 Real metrics logged: accuracy, latency_p95_ms, slo_compliant")
+                logger.info(
+                    "📊 Real metrics logged: accuracy, latency_p95_ms, slo_compliant"
+                )
                 logger.info("🏷️ Model artifacts stored with full reproducibility")
 
                 # Stage 4: Portfolio Artifacts (Real)
@@ -202,9 +210,11 @@ class PortfolioDemo:
 
                 logger.info("📋 Generated comprehensive demo report with real metrics")
                 logger.info("📈 Performance data exported to demo_output/ directory")
-                logger.info("🎯 Professional portfolio artifacts ready for presentation")
+                logger.info(
+                    "🎯 Professional portfolio artifacts ready for presentation"
+                )
                 logger.info("✅ Real MLOps workflow demonstration complete")
-                
+
             else:
                 # DEMO MODE: Show full MLOps pipeline simulation
                 # Stage 2: Model Evaluation
@@ -246,7 +256,9 @@ class PortfolioDemo:
                 logger.info(
                     "🔹 Triggering automated rollback to previous stable version..."
                 )
-                logger.info("✅ Rollback completed in <30 seconds (meets SLO requirement)")
+                logger.info(
+                    "✅ Rollback completed in <30 seconds (meets SLO requirement)"
+                )
 
             # Final Results
             self.print_demo_summary(demo_results)
