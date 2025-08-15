@@ -797,9 +797,6 @@ auto-focus:
 	@./scripts/auto-update-agent-focus.sh --reload-context
 
 # Ultra-Friendly AI Development Commands (Top AI Company Practices)
-ai-commit:
-	@echo "🤖 AI-powered commit with quality gates..." && ./scripts/ai-smart-commit.sh
-
 save:
 	@echo "💾 Smart save with AI analysis..." && ./scripts/ai-smart-commit.sh
 
@@ -907,3 +904,15 @@ tdd-stop:
 # Include agent-specific commands
 import 'Justfile.agents'
 import 'Justfile.ai-agents'
+
+
+# Strict Single Author Enforcement
+enforce-author:
+	@./scripts/enforce-single-author.sh all
+
+# Complete System Activation
+activate-all:
+	@echo "🚀 Activating AI development system across all worktrees..."
+	@./scripts/enforce-single-author.sh configure
+	@echo "✅ Single author enforcement active"
+	@echo "🎯 Run in each worktree: just start"
