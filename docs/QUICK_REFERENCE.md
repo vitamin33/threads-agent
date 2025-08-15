@@ -1,23 +1,37 @@
-# ⚡ QUICK REFERENCE - Threads Agent
+# ⚡ QUICK REFERENCE - AI-Powered 4-Agent Development
 
-## 🎯 The Only Commands You Need (80/20 Rule)
+## 🎯 Ultra-Friendly Commands (NEW SYSTEM)
 
-### Daily Workflow
+### **Daily Workflow (1-word commands)**
 ```bash
-just work-day        # Morning (starts everything)
-just create-viral    # Create content (AI does everything)
-just end-day        # Evening (commits + optimizes)
+just start       # Complete AI session setup + learning
+just save        # AI-powered commit (replaces script names)
+just done        # Session complete + auto-focus update
+just finish      # Stop all processes + cleanup
 ```
 
-### Make Money
+### **4-Agent System**
 ```bash
-just make-money     # Activate autopilot business mode
-just ai-biz         # Check how much money you're making
+just a1          # → MLOps agent (MLflow, SLO gates)
+just a2          # → GenAI agent (vLLM, cost optimization)  
+just a3          # → Analytics agent (docs, portfolio)
+just a4          # → Platform agent (A/B testing, AWS)
+just agents      # View all 4 agent status dashboard
 ```
 
-### Ship Features
+### **Smart Work Assignment**
 ```bash
-just ship-it "feat: my feature"   # Test + Deploy + PR
+just mlflow      # MLflow work → Auto-switch to A1
+just vllm        # Optimization → Auto-switch to A2
+just docs        # Documentation → Auto-switch to A3
+just ab          # A/B testing → Auto-switch to A4
+```
+
+### **Legacy Business Commands (Still Available)**
+```bash
+just make-money     # Business autopilot mode
+just create-viral   # AI content generation  
+just ship-it        # Deploy + PR creation
 ```
 
 ## 🚀 Full Command Map

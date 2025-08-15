@@ -96,7 +96,7 @@ try:
     from utils.theme_config import inject_dark_theme_css
 
     inject_dark_theme_css()
-except:
+except Exception:
     pass
 
 # Main content
@@ -169,7 +169,7 @@ try:
         )
 
         # Calculate AI job strategy metrics with historical comparison
-        from datetime import datetime, timedelta
+        from datetime import datetime
 
         # Split achievements into recent (last 30 days) and older
         now = datetime.now()
