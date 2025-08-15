@@ -21,7 +21,12 @@ just align
 
 ### **Development Work (Ultra-Friendly Commands)**
 ```bash
-# Instead of long script names, use these:
+# TDD workflow (for critical features)
+just tdd "feature"       # Complete TDD cycle with AI assistance
+just test-first "auth"   # Generate failing test + implementation stub
+just tdd-watch          # Continuous testing on file changes
+
+# Regular development
 just save          # Quick AI-powered commit
 just ai            # AI-generated commit message  
 just commit        # Intelligent commit with quality gates
@@ -70,13 +75,27 @@ export AGENT_ID="a3" && just align  # Analytics focus
 export AGENT_ID="a4" && just align  # Platform focus
 ```
 
-### **Tuesday-Thursday: Focused Development**
+### **Tuesday-Thursday: Focused Development (with Smart TDD)**
 ```bash
-# Each agent works on job strategy priorities:
-# A1: MLflow + SLO-gated CI (Priority 1-2)
-# A2: vLLM cost optimization (Priority 3)  
-# A3: Portfolio + achievement documentation
-# A4: A/B testing + revenue metrics (Priority 5)
+# A1 (MLOps): MLflow + SLO-gated CI (Priority 1-2)
+just a1
+just tdd "MLflow model registry"    # TDD for critical infrastructure
+just test-first "SLO monitoring"   # Test-first for SLO gates
+
+# A2 (GenAI): vLLM cost optimization (Priority 3)
+just a2  
+just tdd "vLLM inference optimization"  # TDD for performance-critical code
+just test-first "cost calculation"      # Test business logic first
+
+# A3 (Analytics): Portfolio + achievement documentation
+just a3
+just test-gen "achievement_collector.py"  # Generate comprehensive tests
+just save                                  # Regular commits for docs
+
+# A4 (Platform): A/B testing + revenue metrics (Priority 5)
+just a4
+just tdd "A/B testing framework"     # TDD for statistical logic
+just test-first "revenue tracking"   # Test business-critical calculations
 ```
 
 ### **Friday: Integration & Portfolio**

@@ -19,6 +19,11 @@ just vllm         # → Auto-switch to A2 (GenAI) for optimization
 just docs         # → Auto-switch to A3 (Analytics) for documentation  
 just ab           # → Auto-switch to A4 (Platform) for A/B testing
 
+# TDD workflow (for critical features)
+just tdd "feature"       # Complete TDD cycle with AI assistance
+just test-first "auth"   # Generate failing test + implementation stub
+just tdd-watch          # Continuous testing on file changes
+
 # Development commands
 just save         # AI-powered commit (replaces long script names)
 just ai           # AI-generated commit message

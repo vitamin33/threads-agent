@@ -882,13 +882,13 @@ tdd FEATURE:
 test-first FEATURE:
 	@./scripts/smart-tdd.sh first "{{FEATURE}}"
 
-test-watch:
+tdd-watch:
 	@./scripts/smart-tdd.sh watch
 
 test-gen TARGET:
 	@./scripts/smart-tdd.sh generate "{{TARGET}}"
 
-test-stop:
+tdd-stop:
 	@./scripts/smart-tdd.sh stop
 
 # Include agent-specific commands
