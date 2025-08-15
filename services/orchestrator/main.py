@@ -140,6 +140,15 @@ try:
 except ImportError as e:
     logger.warning(f"Experiment management router not available: {e}")
 
+# Include portfolio API router (V1 - matches frontend expectations)
+try:
+    from services.orchestrator.routers.portfolio_v1_api import portfolio_v1_router
+
+    app.include_router(portfolio_v1_router)
+    logger.info("Portfolio V1 API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"Portfolio V1 API router not available: {e}")
+
 # Include content management router
 try:
     from services.orchestrator.content_management import router as content_router

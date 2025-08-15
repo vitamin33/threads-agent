@@ -1,0 +1,55 @@
+{
+  "projects": [
+    {
+      "id": "threads-agent-platform",
+      "name": "Threads Agent Platform",
+      "description": "AI-powered social media automation platform with LLM-driven content generation",
+      "tech_stack": ["Python", "FastAPI", "Kubernetes", "OpenAI", "MLflow", "vLLM"],
+      "achievement_ids": ["2025-08-10-mlflow-slo", "2025-08-08-vllm-cost-optimization", "2025-08-05-rag-retrieval-optimization", "2025-07-25-model-drift-detection"],
+      "metrics": {
+        "total_business_value": 96500.0,
+        "avg_impact_score": 89.8,
+        "duration_months": 6,
+        "total_commits": 36,
+        "lines_of_code": 1450
+      },
+      "status": "production",
+      "users": "10k+ monthly active users",
+      "github_repo": "https://github.com/threads-agent/platform"
+    },
+    {
+      "id": "adtech-bidding-engine",
+      "name": "AdTech Bidding Engine",
+      "description": "Real-time programmatic advertising platform with ML-driven bid optimization",
+      "tech_stack": ["Python", "Apache Kafka", "Redis", "TensorFlow", "Kubernetes", "PostgreSQL"],
+      "achievement_ids": ["2025-07-28-adtech-bidding-optimization"],
+      "metrics": {
+        "total_business_value": 42000.0,
+        "avg_impact_score": 94.0,
+        "duration_months": 4,
+        "total_commits": 18,
+        "lines_of_code": 780
+      },
+      "status": "production",
+      "users": "500M+ daily ad impressions",
+      "github_repo": "https://github.com/adtech-platform/bidding-engine"
+    },
+    {
+      "id": "mlops-infrastructure",
+      "name": "MLOps Infrastructure Suite",
+      "description": "Enterprise MLOps platform with automated deployment, monitoring, and cost optimization",
+      "tech_stack": ["Kubernetes", "Helm", "Prometheus", "Grafana", "MLflow", "Docker"],
+      "achievement_ids": ["2025-08-02-kubernetes-autoscaling"],
+      "metrics": {
+        "total_business_value": 12000.0,
+        "avg_impact_score": 86.0,
+        "duration_months": 3,
+        "total_commits": 5,
+        "lines_of_code": 210
+      },
+      "status": "production",
+      "users": "12 ML teams across organization",
+      "github_repo": "https://github.com/enterprise/mlops-suite"
+    }
+  ]
+}
