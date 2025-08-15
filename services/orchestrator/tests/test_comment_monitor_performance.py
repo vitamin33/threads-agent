@@ -118,7 +118,7 @@ class TestCommentMonitorPerformance:
                     current_memory = process.memory_info().rss / 1024 / 1024
                     peak_memory = max(peak_memory, current_memory)
                     time.sleep(0.1)  # Check every 100ms
-                except:
+                except Exception:
                     break
 
         monitor_thread = threading.Thread(target=monitor_memory, daemon=True)

@@ -9,6 +9,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import time
+import sys
+import os
+import json
+import re
 
 # Page configuration
 st.set_page_config(
@@ -88,9 +92,6 @@ with st.sidebar:
         st.rerun()
 
 # Import theme config for dark mode support
-import sys
-import os
-
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from utils.theme_config import inject_dark_theme_css
@@ -146,7 +147,7 @@ try:
                     try:
                         bv_data = json.loads(bv)
                         total_value += bv_data.get("total_value", 0)
-                    except:
+                    except (json.JSONDecodeError, KeyError):
                         pass
                 # Handle dollar sign formats
                 elif "$" in bv:
@@ -159,7 +160,7 @@ try:
                     try:
                         value = float(bv.replace(",", ""))
                         total_value += value
-                    except:
+                    except (ValueError, AttributeError):
                         pass
             elif isinstance(bv, (int, float)):
                 total_value += bv
@@ -169,8 +170,6 @@ try:
         )
 
         # Calculate AI job strategy metrics with historical comparison
-        from datetime import datetime
-
         # Split achievements into recent (last 30 days) and older
         now = datetime.now()
         recent_achievements = []
@@ -186,7 +185,7 @@ try:
                             date = datetime.fromisoformat(
                                 created_at.replace("Z", "+00:00")
                             )
-                        except:
+                        except ValueError:
                             date = datetime.strptime(
                                 created_at[:19], "%Y-%m-%dT%H:%M:%S"
                             )
@@ -197,7 +196,7 @@ try:
                         recent_achievements.append(a)
                     else:
                         older_achievements.append(a)
-                except:
+                except (ValueError, TypeError):
                     recent_achievements.append(a)  # If can't parse date, assume recent
             else:
                 recent_achievements.append(a)
@@ -481,16 +480,12 @@ with col1:
                 pass  # Skip None values
             elif isinstance(bv, str) and bv.startswith("{"):
                 try:
-                    import json
-
                     bv_data = json.loads(bv)
                     cumulative_value += bv_data.get("total_value", 0)
-                except:
+                except (json.JSONDecodeError, KeyError):
                     pass
             elif isinstance(bv, str) and "$" in bv:
                 # Handle formats like "$162,500 annual value" or "$12,526 USD/one-time"
-                import re
-
                 match = re.search(r"\$([0-9,]+)", bv)
                 if match:
                     value = int(match.group(1).replace(",", ""))
@@ -629,25 +624,21 @@ if "achievements" in locals() and achievements:
         bv = ach.get("business_value", "")
         if isinstance(bv, str) and bv.startswith("{"):
             try:
-                import json
-
                 bv_data = json.loads(bv)
                 business_values.append(bv_data.get("total_value", 0))
-            except:
+            except (json.JSONDecodeError, KeyError):
                 business_values.append(0)
         elif isinstance(bv, str) and "$" in bv:
             # Handle string formats like "$12,526 USD/one-time"
             try:
                 # Extract numeric value
-                import re
-
                 match = re.search(r"\$([0-9,]+)", bv)
                 if match:
                     value = int(match.group(1).replace(",", ""))
                     business_values.append(value)
                 else:
                     business_values.append(0)
-            except:
+            except (ValueError, AttributeError):
                 business_values.append(0)
         else:
             business_values.append(0)

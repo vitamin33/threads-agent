@@ -76,7 +76,7 @@ class RealtimeClient:
                                     "timestamp": datetime.now(),
                                 }
                             )
-                    except:
+                    except Exception:
                         pass
                     time.sleep(interval)
 

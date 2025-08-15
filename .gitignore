@@ -312,7 +312,4 @@ wt-*/.venv/
 
 # Agent-specific local files (never commit these)
 .agent-config.local
-TODO.local
-NOTES.local
-*.local
 .locks/

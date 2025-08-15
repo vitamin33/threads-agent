@@ -313,7 +313,7 @@ async def health_check():
         # Check Redis
         redis_client.ping()
         redis_healthy = True
-    except:
+    except Exception:
         redis_healthy = False
 
     return {

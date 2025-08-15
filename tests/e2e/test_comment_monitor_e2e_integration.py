@@ -9,12 +9,6 @@ to analysis, including all optimizations and performance characteristics.
 import os
 import pytest
 import time
-
-# Skip this entire test module in CI if psutil is not available
-pytestmark = pytest.mark.skipif(
-    os.getenv("CI") == "true" and os.getenv("GITHUB_ACTIONS") == "true",
-    reason="Skipping comment monitor e2e tests in CI due to psutil dependency",
-)
 from unittest.mock import Mock
 from typing import Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -24,6 +18,12 @@ import statistics
 import json
 
 from services.orchestrator.comment_monitor import CommentMonitor
+
+# Skip this entire test module in CI if psutil is not available
+pytestmark = pytest.mark.skipif(
+    os.getenv("CI") == "true" and os.getenv("GITHUB_ACTIONS") == "true",
+    reason="Skipping comment monitor e2e tests in CI due to psutil dependency",
+)
 
 
 @dataclass

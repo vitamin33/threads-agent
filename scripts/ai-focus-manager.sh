@@ -70,7 +70,7 @@ plan_next_tasks() {
         a4)
             ai_prompt="As Agent A4 (Platform), based on AI_JOB_STRATEGY.md priorities:
             - Need: A/B testing framework with statistical significance
-            - Need: Revenue tracking ($20k MRR goal)
+            - Need: Revenue tracking (\$20k MRR goal)
             - Need: FinOps cost optimization (30% reduction)
             Current progress: $current_focus
             
@@ -82,7 +82,7 @@ plan_next_tasks() {
     
     # Call AI planner if available
     if [[ -f "$SCRIPT_DIR/ai-epic-planner.sh" ]] && [[ -n "${OPENAI_API_KEY:-}" ]]; then
-        echo "$ai_prompt" | "$SCRIPT_DIR/ai-epic-planner.sh" plan --context-stdin
+        "$SCRIPT_DIR/ai-epic-planner.sh" "Generate 5 next tasks for Agent $AGENT_ID" "$ai_prompt"
     else
         # Fallback to template-based planning
         generate_template_tasks
@@ -143,8 +143,12 @@ update_progress() {
     update_portfolio_checklist
     
     # Add timestamp
-    sed -i '' "s/Last Updated:.*/Last Updated: $(date)/" AGENT_FOCUS.md 2>/dev/null || \
-        echo "---" >> AGENT_FOCUS.md && echo "Last Updated: $(date)" >> AGENT_FOCUS.md
+    if grep -q "Last Updated:" AGENT_FOCUS.md 2>/dev/null; then
+        sed -i '' "s/Last Updated:.*/Last Updated: $(date)/" AGENT_FOCUS.md 2>/dev/null
+    else
+        echo "---" >> AGENT_FOCUS.md
+        echo "Last Updated: $(date)" >> AGENT_FOCUS.md
+    fi
 }
 
 # ═══════════════════════════════════════════════════════
@@ -346,9 +350,21 @@ update_metric() {
     local metric_name="$1"
     local new_value="$2"
     
+    # Escape forward slashes in metric name for sed
+    local escaped_name=$(echo "$metric_name" | sed 's/\//\\\//g')
+    
     # Update in the Progress Tracking section
-    sed -i '' "s/$metric_name:.*/$metric_name: $new_value/" AGENT_FOCUS.md 2>/dev/null || \
-        echo "$metric_name: $new_value" >> AGENT_FOCUS.md
+    if grep -q "$metric_name:" AGENT_FOCUS.md 2>/dev/null; then
+        sed -i '' "s|$escaped_name:.*|$metric_name: $new_value|" AGENT_FOCUS.md 2>/dev/null
+    else
+        # Add to Progress Tracking section if it exists
+        if grep -q "## 📊 Progress Tracking" AGENT_FOCUS.md 2>/dev/null; then
+            sed -i '' "/## 📊 Progress Tracking/a\\
+$metric_name: $new_value" AGENT_FOCUS.md 2>/dev/null
+        else
+            echo "$metric_name: $new_value" >> AGENT_FOCUS.md
+        fi
+    fi
 }
 
 update_portfolio_checklist() {
@@ -391,10 +407,18 @@ case "${1:-help}" in
         plan_next_tasks
         ;;
     update)
-        update_progress "${2:-}"
+        if [[ $# -ge 2 ]]; then
+            update_progress "$2"
+        else
+            update_progress ""
+        fi
         ;;
     complete)
-        mark_task_complete "${2:-}"
+        if [[ $# -ge 2 ]]; then
+            mark_task_complete "$2"
+        else
+            mark_task_complete ""
+        fi
         ;;
     status)
         show_current_status

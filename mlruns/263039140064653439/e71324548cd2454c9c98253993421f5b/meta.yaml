@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a1-mlops/mlruns/263039140064653439/e71324548cd2454c9c98253993421f5b/artifacts
+end_time: 1755030258210
+entry_point_name: ''
+experiment_id: '263039140064653439'
+lifecycle_stage: active
+run_id: e71324548cd2454c9c98253993421f5b
+run_name: LogisticRegression_production
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755030257206
+status: 3
+tags: []
+user_id: vitaliiserbyn

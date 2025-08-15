@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/315433772206603996/e2f5e348e8d14943927126b6c8427fea/artifacts
+end_time: 1755036087065
+entry_point_name: ''
+experiment_id: '315433772206603996'
+lifecycle_stage: active
+run_id: e2f5e348e8d14943927126b6c8427fea
+run_name: dazzling-slug-661
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755036087045
+status: 3
+tags: []
+user_id: vitaliiserbyn

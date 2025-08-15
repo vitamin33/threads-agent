@@ -11,6 +11,7 @@ import logging
 import pytest
 
 from services.event_bus.models.base import BaseEvent
+from services.event_bus.publishers.publisher import EventPublisher
 
 logger = logging.getLogger(__name__)
 

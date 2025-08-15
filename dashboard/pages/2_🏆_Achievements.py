@@ -10,15 +10,15 @@ import json
 from typing import List, Dict, Any
 import re
 
+# Import API client
+from services.api_client import get_api_client
+
 st.set_page_config(
     page_title="Achievements - Threads Agent", page_icon="🏆", layout="wide"
 )
 
 st.title("🏆 Achievement Management")
 st.markdown("Track, analyze, and showcase your professional accomplishments")
-
-# Import API client
-from services.api_client import get_api_client
 
 api_client = get_api_client()
 
@@ -42,7 +42,7 @@ def parse_business_value(value: Any) -> float:
                 match = re.search(r"\$?([0-9,]+(?:\.[0-9]+)?)", value)
                 if match:
                     return float(match.group(1).replace(",", ""))
-    except:
+    except (ValueError, TypeError, json.JSONDecodeError):
         pass
     return 0
 
@@ -524,7 +524,7 @@ with st.form("new_achievement"):
         if metrics:
             try:
                 new_achievement["metrics_after"] = json.loads(metrics)
-            except:
+            except json.JSONDecodeError:
                 st.error("Invalid JSON format for metrics")
 
         # Call API to create achievement

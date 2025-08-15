@@ -17,6 +17,9 @@ from fastapi import BackgroundTasks, FastAPI, Response, HTTPException
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
+# Production optimizations
+from services.orchestrator.rate_limiter import SimpleRateLimiter
+
 # Configure debug logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -27,9 +30,6 @@ logger.info(f"Python version: {os.sys.version}")
 logger.info(
     f"Environment: CI={os.getenv('CI', 'false')}, GITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS', 'false')}"
 )
-
-# Production optimizations
-from services.orchestrator.rate_limiter import SimpleRateLimiter
 
 # ── shared helpers ────────────────────────────────────────────────────────────
 try:
@@ -112,6 +112,33 @@ rate_limiter = SimpleRateLimiter(
 # Include routers
 app.include_router(search_router)
 app.include_router(viral_metrics_router)
+
+# Include A/B testing router
+try:
+    from services.orchestrator.routers.ab_testing import ab_testing_router
+
+    app.include_router(ab_testing_router)
+    logger.info("A/B Testing API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"A/B testing router not available: {e}")
+
+# Include A/B testing content optimization router
+try:
+    from services.orchestrator.routers.ab_testing_content import ab_content_router
+
+    app.include_router(ab_content_router)
+    logger.info("A/B Testing Content Optimization API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"A/B testing content router not available: {e}")
+
+# Include experiment management router
+try:
+    from services.orchestrator.routers.experiment_management import experiment_router
+
+    app.include_router(experiment_router)
+    logger.info("Experiment Management API endpoints enabled")
+except ImportError as e:
+    logger.warning(f"Experiment management router not available: {e}")
 
 # Include content management router
 try:

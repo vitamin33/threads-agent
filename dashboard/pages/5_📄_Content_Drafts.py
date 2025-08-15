@@ -6,15 +6,15 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Import API client
+from services.api_client import get_api_client
+
 st.set_page_config(
     page_title="Content Drafts - Threads Agent", page_icon="📄", layout="wide"
 )
 
 st.title("📄 Content Drafts Management")
 st.markdown("View, edit, and publish your AI-generated content across platforms")
-
-# Import API client
-from services.api_client import get_api_client
 
 api_client = get_api_client()
 
