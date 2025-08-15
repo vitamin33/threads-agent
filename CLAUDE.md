@@ -200,11 +200,11 @@ Examples:
 
 **Worktree Setup (4 Parallel Claude Sessions)**:
 ```bash
-# Each agent works in separate worktree
-wt-a1-mlflow-slo    → Agent 1 (MLOps/SLO)
-wt-a2-vllm-cost     → Agent 2 (GenAI/RAG)
-wt-a3-portfolio     → Agent 3 (Achievement)
-wt-a4-ab-testing    → Agent 4 (Revenue/AB)
+# Each agent works in separate worktree with service ownership
+wt-a1-mlops         → Agent 1 (Infrastructure & Platform - 8 services)
+wt-a2-genai         → Agent 2 (AI/ML & Content - 9 services)
+wt-a3-analytics     → Agent 3 (Data & Analytics - 8 services)
+wt-a4-platform      → Agent 4 (Revenue & Business - 8 services)
 ```
 
 **Solo Dev Optimizations**:
@@ -451,12 +451,40 @@ gh pr create --title "[A1] MLflow integration" --label "auto-merge"
 
 When starting a new Claude Code session in a worktree, tell Claude:
 
+**Agent A1 - Infrastructure & Platform (8 services)**:
 ```markdown
-I am working in Agent A1 worktree focused on MLOps.
-My services: orchestrator, celery_worker, persona_runtime
-My focus: MLflow, SLO-gates, monitoring, performance
-Ignore: rag_pipeline, achievement_collector, revenue services
-Job priority: Build MLflow demos and SLO gate artifacts for MLOps Engineer roles
+I am working in Agent A1 worktree focused on Infrastructure & Platform.
+My services: orchestrator, celery_worker, common, event_bus, mlflow, mlflow_service, performance_monitor, chaos_engineering
+My focus: Platform reliability, core infrastructure, shared services, MLflow registry, SLO gates
+Ignore: rag_pipeline, viral_engine, dashboard, revenue services (other agents handle these)
+Job priority: Build platform engineering and SRE artifacts for Infrastructure Engineer roles ($170-220k)
+```
+
+**Agent A2 - AI/ML & Content (9 services)**:
+```markdown
+I am working in Agent A2 worktree focused on AI/ML & Content.
+My services: persona_runtime, rag_pipeline, vllm_service, prompt_engineering, conversation_engine, viral_engine, viral_pattern_engine, ml_autoscaling, viral_learning_flywheel
+My focus: AI/ML services, content generation, model inference, vLLM optimization, RAG processing
+Ignore: orchestrator, dashboard, revenue services (other agents handle these)
+Job priority: Build ML engineering and LLM specialist artifacts for AI Platform Engineer roles ($160-200k)
+```
+
+**Agent A3 - Data & Analytics (8 services)**:
+```markdown
+I am working in Agent A3 worktree focused on Data & Analytics.
+My services: achievement_collector, dashboard, dashboard_api, dashboard_frontend, viral_metrics, pattern_analyzer, tech_doc_generator, viral_scraper
+My focus: Data pipeline, analytics, visualization, documentation, achievement tracking
+Ignore: orchestrator, persona_runtime, revenue services (other agents handle these)
+Job priority: Build data engineering and analytics artifacts for Data Engineer roles ($160-190k)
+```
+
+**Agent A4 - Revenue & Business (8 services)**:
+```markdown
+I am working in Agent A4 worktree focused on Revenue & Business.
+My services: revenue, finops_engine, ab_testing_framework, threads_adaptor, fake_threads, viral_scraper
+My focus: Business logic, revenue optimization, cost management, A/B testing, external integrations
+Ignore: orchestrator, persona_runtime, dashboard services (other agents handle these)
+Job priority: Build growth engineering and business platform artifacts for Growth Engineer roles ($170-210k)
 ```
 
 This ensures Claude understands:
@@ -553,5 +581,3 @@ When tasks are independent, launch agents in parallel:
 
 **Repository**: https://github.com/threads-agent-stack/threads-agent
 **Last Updated**: 2025-01-25
-- dont forget to write testable clean code but not overcomplicate, use approach which best fit for               │
-│   solopreneuers, this is important

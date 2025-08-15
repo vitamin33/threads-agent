@@ -114,59 +114,67 @@ just progress
 
 ## 🎯 **AGENT-SPECIFIC FOCUS (Job Strategy Aligned)**
 
-### **A1 (MLOps Agent) - Priority Work**
-**Target Role**: Senior MLOps Engineer ($180-220k)
+### **A1 (Infrastructure & Platform Agent) - Priority Work**
+**Target Role**: Platform Engineer, SRE, Infrastructure Engineer ($170-220k)
+**Services**: orchestrator, celery_worker, common, event_bus, mlflow, mlflow_service, performance_monitor, chaos_engineering
 ```bash
 # Weekly goals aligned with gap plan items 1-2:
 export AGENT_ID="a1"
-just align  # Focus on MLflow + SLO gates
+just align  # Focus on platform reliability + MLflow + SLO gates
 
 # Daily work:
 cd ../wt-a1-mlops
-just start    # AI context for MLOps
-# Work on: MLflow registry, model versioning, SLO-gated CI
+just start    # AI context for Infrastructure & Platform
+# Work on: MLflow registry, SLO-gated CI, orchestrator optimization, shared services
+just tdd "MLflow model registry"    # TDD for critical infrastructure
 just done     # Auto-commit + focus update
 ```
 
-### **A2 (GenAI Agent) - Priority Work**  
-**Target Role**: LLM Infrastructure Engineer ($160-200k)
+### **A2 (AI/ML & Content Agent) - Priority Work**  
+**Target Role**: ML Engineer, LLM Specialist, AI Platform Engineer ($160-200k)
+**Services**: persona_runtime, rag_pipeline, vllm_service, prompt_engineering, conversation_engine, viral_engine, viral_pattern_engine, ml_autoscaling, viral_learning_flywheel
 ```bash
 # Weekly goals aligned with gap plan item 3:
 export AGENT_ID="a2" 
-just align  # Focus on vLLM optimization
+just align  # Focus on AI/ML services + vLLM optimization
 
 # Daily work:
 cd ../wt-a2-genai
-just start    # AI context for GenAI
-# Work on: vLLM performance, cost optimization, inference scaling
+just start    # AI context for AI/ML & Content
+# Work on: vLLM performance, RAG pipeline, content generation, model inference
+just tdd "vLLM inference optimization"  # TDD for performance-critical code
 just done     # Auto-commit + focus update
 ```
 
-### **A3 (Analytics Agent) - Supporting Work**
-**Target Role**: Technical Lead with Analytics ($160-180k)
+### **A3 (Data & Analytics Agent) - Supporting Work**
+**Target Role**: Data Engineer, Analytics Engineer, Technical Lead ($160-190k)
+**Services**: achievement_collector, dashboard, dashboard_api, dashboard_frontend, viral_metrics, pattern_analyzer, tech_doc_generator, viral_scraper
 ```bash
-# Weekly goals: Portfolio + documentation
+# Weekly goals: Data pipeline + analytics + documentation
 export AGENT_ID="a3"
-just align  # Focus on achievement documentation
+just align  # Focus on data pipeline and analytics
 
 # Daily work:
 cd ../wt-a3-analytics  
-just start    # AI context for analytics
-# Work on: Achievement collector, portfolio automation, documentation
+just start    # AI context for Data & Analytics
+# Work on: Dashboard development, analytics pipeline, achievement tracking, documentation
+just test-gen "achievement_collector.py"  # Generate comprehensive tests
 just done     # Auto-commit + focus update
 ```
 
-### **A4 (Platform Agent) - Priority Work**
-**Target Role**: Platform Engineer with AI focus ($170-210k)
+### **A4 (Revenue & Business Agent) - Priority Work**
+**Target Role**: Growth Engineer, Business Platform Engineer, FinOps ($170-210k)
+**Services**: revenue, finops_engine, ab_testing_framework, threads_adaptor, fake_threads, viral_scraper
 ```bash
 # Weekly goals aligned with gap plan items 4-5:
 export AGENT_ID="a4"
-just align  # Focus on A/B testing + platform
+just align  # Focus on revenue + business intelligence + A/B testing
 
 # Daily work:
 cd ../wt-a4-platform
-just start    # AI context for platform
-# Work on: A/B testing, revenue metrics, AWS/EKS deployment
+just start    # AI context for Revenue & Business
+# Work on: Revenue tracking, cost optimization, A/B testing, business intelligence
+just tdd "A/B testing framework"     # TDD for statistical logic
 just done     # Auto-commit + focus update
 ```
 
