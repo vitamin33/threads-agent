@@ -1,39 +1,74 @@
-# 🎯 DAILY PLAYBOOK - Your 80/20 Command Reference
+# 🎯 DAILY PLAYBOOK - Your 80/20 Command Reference (UPDATED)
 
 > **BOOKMARK THIS FILE!** These commands handle 80% of your daily work with 20% effort.
+> **NEW**: Ultra-friendly 1-word commands + AI acceleration + 4-agent system
 
-## 🌅 Daily Workflow (3 Commands Total)
+## 🌅 Enhanced Daily Workflow (Ultra-Simple)
 
+### **Morning (30 seconds)**
 ```bash
-# Morning - Start EVERYTHING with one command
-just work-day
-
-# Work - Create viral content with AI assistance
-just create-viral ai-jesus "trending topic"
-
-# Evening - Analyze, commit, and optimize
-just end-day
+just start        # Complete AI session setup + learning activation
+just agents       # Check all 4 agent status
 ```
 
-## 💰 Business Growth (Choose Your Mode)
-
-### 🚁 Autopilot Mode (Set & Forget)
+### **Work Session (1-word commands)**
 ```bash
-just make-money          # Literally runs everything automatically
+# Smart agent assignment
+just mlflow       # → Auto-switch to A1 (MLOps) for MLflow work
+just vllm         # → Auto-switch to A2 (GenAI) for optimization
+just docs         # → Auto-switch to A3 (Analytics) for documentation  
+just ab           # → Auto-switch to A4 (Platform) for A/B testing
+
+# TDD workflow (for critical features)
+just tdd "feature"       # Complete TDD cycle with AI assistance
+just test-first "auth"   # Generate failing test + implementation stub
+just tdd-watch          # Continuous testing on file changes
+
+# Development commands
+just save         # AI-powered commit (replaces long script names)
+just ai           # AI-generated commit message
+just quick-save   # Emergency checkpoint (bypasses quality)
 ```
 
-### 📈 Active Growth Mode
+### **Evening (30 seconds)**
 ```bash
-just grow-business       # Analyzes gaps and activates growth systems
-just ai-biz dashboard    # Monitor your path to $20k MRR
+just done         # AI commit + auto-focus update
+just finish       # Complete session + metrics tracking
 ```
 
-### 🏃 Quick Actions
+## 🤖 **NEW: AI-Powered 4-Agent Development**
+
+### **Weekly Workflow (Job Strategy Aligned)**
 ```bash
-just create-viral        # Research → Create → Test (2 hours → 5 min)
-just ship-it            # Test → Deploy → PR (45 min → 1 min)
-just analyze-money      # Complete financial analysis
-just health-check       # System status in one glance
+# Monday: Strategy alignment
+just align        # Sync all agents with AI_JOB_STRATEGY.md priorities
+just sync-all     # Update focus across all 4 agents
+
+# Tuesday-Thursday: Focused development per agent
+just mlflow       # A1: MLflow + SLO gates (Job Priority 1-2)
+just vllm         # A2: vLLM cost optimization (Job Priority 3)
+just docs         # A3: Portfolio building (Supporting)
+just ab           # A4: A/B testing + AWS (Job Priority 4-5)
+
+# Friday: Integration & progress
+just progress     # Weekly job strategy progress report
+just agents       # Final status check
+```
+
+### **Learning & Intelligence**
+```bash
+just learn-activate      # Enable AI learning tracking
+just dev-insights        # Development analytics
+just quality-all         # Quality check all agents
+just cleanup             # Clean temporary files
+```
+
+### **Legacy Business Commands (Still Available)**
+```bash
+just make-money          # Autopilot business mode
+just create-viral        # AI content generation
+just ship-it            # Deploy & PR creation
+just health-check       # System status
 ```
 
 ## 🧠 AI Business Intelligence

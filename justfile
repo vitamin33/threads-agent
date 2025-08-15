@@ -797,8 +797,6 @@ auto-focus:
 	@./scripts/auto-update-agent-focus.sh --reload-context
 
 # Ultra-Friendly AI Development Commands (Top AI Company Practices)
-ai:
-	@echo "🤖 AI-powered commit with quality gates..." && ./scripts/ai-smart-commit.sh
 
 save:
 	@echo "💾 Smart save with AI analysis..." && ./scripts/ai-smart-commit.sh
@@ -855,7 +853,20 @@ quality-all:
 learn-activate:
 	@./scripts/4-agent-turbo.sh learn
 
-# Smart work assignment
+# Smart work assignment (Service Groups)
+infra:
+	@./scripts/4-agent-turbo.sh assign infra
+
+ai:
+	@./scripts/4-agent-turbo.sh assign ai
+
+data:
+	@./scripts/4-agent-turbo.sh assign data
+
+revenue:
+	@./scripts/4-agent-turbo.sh assign revenue
+
+# Legacy specific assignments (still available)
 mlflow:
 	@./scripts/4-agent-turbo.sh assign mlflow
 
