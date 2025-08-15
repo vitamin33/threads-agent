@@ -139,33 +139,49 @@ batch_operation() {
     done
 }
 
-# QUICK-WIN 4: Smart agent assignment based on work type
+# QUICK-WIN 4: Smart agent assignment based on service groups
 smart_assign() {
     local work_type="$1"
     
     case "$work_type" in
-        "mlflow"|"model"|"registry"|"monitoring")
-            log "🎯 MLflow/monitoring work → Assigning to A1 (MLOps)"
+        # A1 - Infrastructure & Platform Services
+        "infra"|"orchestrator"|"celery"|"common"|"monitoring"|"mlflow"|"platform")
+            log "🎯 Infrastructure work → A1 (Infrastructure & Platform)"
+            log "   Services: orchestrator, celery_worker, common, performance_monitor"
             agent_switch "a1"
             ;;
-        "vllm"|"cost"|"performance"|"inference"|"gpu")
-            log "🎯 LLM optimization work → Assigning to A2 (GenAI)"
+        # A2 - AI/ML & Content Services  
+        "ai"|"ml"|"persona"|"rag"|"vllm"|"viral"|"content"|"inference")
+            log "🎯 AI/ML work → A2 (AI/ML & Content)"
+            log "   Services: persona_runtime, rag_pipeline, vllm_service, viral_engine"
             agent_switch "a2"
             ;;
-        "docs"|"portfolio"|"achievement"|"analytics")
-            log "🎯 Documentation/analytics work → Assigning to A3 (Analytics)"
+        # A3 - Data & Analytics Pipeline
+        "data"|"analytics"|"dashboard"|"metrics"|"achievements"|"docs")
+            log "🎯 Data/Analytics work → A3 (Data & Analytics)"
+            log "   Services: dashboard, viral_metrics, achievement_collector, tech_doc_generator"
             agent_switch "a3"
             ;;
-        "ab"|"testing"|"revenue"|"platform"|"aws"|"k8s")
-            log "🎯 Platform/business work → Assigning to A4 (Platform)"
+        # A4 - Revenue & Business Systems
+        "revenue"|"business"|"finops"|"ab"|"testing"|"cost")
+            log "🎯 Business/Revenue work → A4 (Revenue & Business)"
+            log "   Services: revenue, finops_engine, ab_testing_framework"
             agent_switch "a4"
             ;;
         *)
-            log "🤔 Work type '$work_type' not recognized. Available agents:"
-            echo "  a1/mlops: MLflow, monitoring, SLO gates"
-            echo "  a2/genai: vLLM, cost optimization, inference"
-            echo "  a3/analytics: docs, portfolio, achievements"
-            echo "  a4/platform: A/B testing, revenue, AWS/K8s"
+            log "🤔 Work type '$work_type' not recognized. Available service groups:"
+            echo ""
+            echo "🏗️  A1 - Infrastructure & Platform (8 services):"
+            echo "     orchestrator, celery_worker, common, event_bus, mlflow, performance_monitor"
+            echo ""
+            echo "🤖 A2 - AI/ML & Content (9 services):"
+            echo "     persona_runtime, rag_pipeline, vllm_service, viral_engine, conversation_engine"
+            echo ""
+            echo "📊 A3 - Data & Analytics (8 services):"
+            echo "     dashboard, viral_metrics, achievement_collector, tech_doc_generator"
+            echo ""
+            echo "💰 A4 - Revenue & Business (8 services):"
+            echo "     revenue, finops_engine, ab_testing_framework, threads_adaptor"
             ;;
     esac
 }
@@ -279,10 +295,10 @@ ULTRA-FAST COMMANDS:
   coordinate        Check agent coordination status
 
 AGENT SHORTCUTS:
-  a1, mlops         → MLOps agent (MLflow, SLO, monitoring)  
-  a2, genai         → GenAI agent (vLLM, cost, inference)
-  a3, analytics     → Analytics agent (docs, portfolio)
-  a4, platform      → Platform agent (A/B, revenue, AWS)
+  a1, infra         → Infrastructure & Platform (8 services: orchestrator, celery, common, monitoring)  
+  a2, ai            → AI/ML & Content (9 services: persona, rag, vllm, viral_engine)
+  a3, data          → Data & Analytics (8 services: dashboard, metrics, achievements, docs)
+  a4, revenue       → Revenue & Business (8 services: revenue, finops, a/b testing)
 
 BATCH OPERATIONS:
   batch status      → Check changes across all agents

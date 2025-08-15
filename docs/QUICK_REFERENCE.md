@@ -10,17 +10,24 @@ just done        # Session complete + auto-focus update
 just finish      # Stop all processes + cleanup
 ```
 
-### **4-Agent System**
+### **4-Agent System (Service-Based)**
 ```bash
-just a1          # → MLOps agent (MLflow, SLO gates)
-just a2          # → GenAI agent (vLLM, cost optimization)  
-just a3          # → Analytics agent (docs, portfolio)
-just a4          # → Platform agent (A/B testing, AWS)
+just a1          # → Infrastructure & Platform (8 services)
+just a2          # → AI/ML & Content (9 services)  
+just a3          # → Data & Analytics (8 services)
+just a4          # → Revenue & Business (8 services)
 just agents      # View all 4 agent status dashboard
 ```
 
-### **Smart Work Assignment**
+### **Smart Work Assignment (Service Groups)**
 ```bash
+# Service Group Assignment
+just infra       # → A1 (orchestrator, celery, common, monitoring)
+just ai          # → A2 (persona, rag, vllm, viral_engine)
+just data        # → A3 (dashboard, metrics, achievements, docs)
+just revenue     # → A4 (revenue, finops, a/b testing)
+
+# Legacy Specific Assignment (still available)
 just mlflow      # MLflow work → Auto-switch to A1
 just vllm        # Optimization → Auto-switch to A2
 just docs        # Documentation → Auto-switch to A3

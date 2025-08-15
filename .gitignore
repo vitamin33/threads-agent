@@ -313,3 +313,28 @@ wt-*/.venv/
 # Agent-specific local files (never commit these)
 .agent-config.local
 .locks/
+
+
+# ═══════════════════════════════════════════════════════
+# Agent-Specific Development Files (Conflict Prevention)  
+# ═══════════════════════════════════════════════════════
+
+# AI development artifacts (temporary)
+.ai-context.json
+.dev-insights.json
+.tdd-prompt.txt
+.test-gen-prompt.txt
+.daily-analysis.json
+.job-strategy-analysis.json
+
+# Development watchers (temporary)
+.watch-dev.sh
+.test-watch.sh
+.learning-hooks.sh
+.watch-pid
+.test-watch-pid
+
+# Agent-specific customizations (local only)
+AGENT_FOCUS.md.local
+.agent-config.local
+.agent.env.local
