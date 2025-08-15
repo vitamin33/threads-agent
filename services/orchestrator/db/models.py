@@ -520,3 +520,176 @@ class ContentAnalytics(Base):
     content_item: Mapped["ContentItem"] = relationship(
         "ContentItem", back_populates="analytics"
     )
+
+
+# ── Experiment Management Models ──────────────────────────────────────────────
+
+
+class Experiment(Base):
+    """A/B testing experiment with lifecycle management."""
+
+    __tablename__ = "experiments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(Text, unique=True, index=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # Experiment configuration
+    variant_ids: Mapped[dict[str, Any]] = mapped_column(
+        JSON
+    )  # Store as JSON for compatibility
+    traffic_allocation: Mapped[dict[str, Any]] = mapped_column(
+        JSON
+    )  # Store as JSON for compatibility
+    control_variant_id: Mapped[str] = mapped_column(Text, nullable=True)
+    target_persona: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    success_metrics: Mapped[dict[str, Any]] = mapped_column(
+        JSON
+    )  # Store as JSON for compatibility
+
+    # Experiment lifecycle
+    status: Mapped[str] = mapped_column(
+        Text, default="draft", index=True
+    )  # draft, active, paused, completed, cancelled
+    start_time: Mapped[datetime] = mapped_column(nullable=True, index=True)
+    end_time: Mapped[datetime] = mapped_column(nullable=True, index=True)
+    expected_end_time: Mapped[datetime] = mapped_column(nullable=True)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Statistical parameters
+    min_sample_size: Mapped[int] = mapped_column(Integer, nullable=True)
+    significance_level: Mapped[float] = mapped_column(Float, default=0.05)
+    minimum_detectable_effect: Mapped[float] = mapped_column(Float, default=0.05)
+
+    # Results tracking
+    total_participants: Mapped[int] = mapped_column(Integer, default=0)
+    winner_variant_id: Mapped[str] = mapped_column(Text, nullable=True)
+    improvement_percentage: Mapped[float] = mapped_column(Float, nullable=True)
+    is_statistically_significant: Mapped[bool] = mapped_column(Boolean, default=False)
+    p_value: Mapped[float] = mapped_column(Float, nullable=True)
+
+    # Metadata
+    created_by: Mapped[str] = mapped_column(Text, nullable=True)
+    experiment_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    experiment_events: Mapped[List["ExperimentEvent"]] = relationship(
+        "ExperimentEvent", back_populates="experiment", cascade="all, delete-orphan"
+    )
+
+
+class ExperimentEvent(Base):
+    """Events related to experiment lifecycle and participant interactions."""
+
+    __tablename__ = "experiment_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("experiments.experiment_id"), index=True
+    )
+
+    # Event details
+    event_type: Mapped[str] = mapped_column(
+        Text, nullable=False, index=True
+    )  # participant_assigned, impression, engagement, etc.
+    participant_id: Mapped[str] = mapped_column(
+        Text, nullable=True, index=True
+    )  # User/session ID
+    variant_id: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+
+    # Engagement data
+    action_taken: Mapped[str] = mapped_column(
+        Text, nullable=True
+    )  # like, share, comment, etc.
+    engagement_value: Mapped[float] = mapped_column(Float, nullable=True)
+
+    # Context
+    event_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(default=func.now(), index=True)
+
+    # Relationships
+    experiment: Mapped["Experiment"] = relationship(
+        "Experiment", back_populates="experiment_events"
+    )
+
+
+class ExperimentVariant(Base):
+    """Performance tracking for specific variants within experiments."""
+
+    __tablename__ = "experiment_variants"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("experiments.experiment_id"), index=True
+    )
+    variant_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("variant_performance.variant_id"), index=True
+    )
+
+    # Traffic allocation
+    allocated_traffic: Mapped[float] = mapped_column(
+        Float, nullable=False
+    )  # 0.0 to 1.0
+    actual_traffic: Mapped[float] = mapped_column(
+        Float, default=0.0
+    )  # Actual traffic received
+
+    # Performance within this experiment
+    participants: Mapped[int] = mapped_column(Integer, default=0)
+    impressions: Mapped[int] = mapped_column(Integer, default=0)
+    conversions: Mapped[int] = mapped_column(Integer, default=0)
+    conversion_rate: Mapped[float] = mapped_column(Float, default=0.0)
+
+    # Statistical data
+    confidence_lower: Mapped[float] = mapped_column(Float, nullable=True)
+    confidence_upper: Mapped[float] = mapped_column(Float, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        default=func.now(), onupdate=func.now()
+    )
+
+    @hybrid_property
+    def traffic_deviation(self) -> float:
+        """Calculate deviation from allocated traffic."""
+        return abs(self.actual_traffic - self.allocated_traffic)
+
+
+class ExperimentSegment(Base):
+    """Segmented analysis results for experiments."""
+
+    __tablename__ = "experiment_segments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("experiments.experiment_id"), index=True
+    )
+
+    # Segment definition
+    segment_name: Mapped[str] = mapped_column(Text, nullable=False, index=True)
+    segment_filter: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False
+    )  # Filter criteria
+
+    # Segment performance
+    total_participants: Mapped[int] = mapped_column(Integer, default=0)
+    variant_performance: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=True
+    )  # Performance by variant
+
+    # Statistical significance for this segment
+    is_significant: Mapped[bool] = mapped_column(Boolean, default=False)
+    p_value: Mapped[float] = mapped_column(Float, nullable=True)
+    confidence_level: Mapped[float] = mapped_column(Float, default=0.95)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        default=func.now(), onupdate=func.now()
+    )
