@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/business_mlruns/0/74645745a6134d2c8e0ea624ac5b7b9e/artifacts
+end_time: 1755267160430
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 74645745a6134d2c8e0ea624ac5b7b9e
+run_name: vaunted-bug-713
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755267160425
+status: 3
+tags: []
+user_id: vitaliiserbyn

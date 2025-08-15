@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/business_mlruns/788306403809758841/8f9918f610ef4c619bf7a61050b4ae71/artifacts
+end_time: 1755267283806
+entry_point_name: ''
+experiment_id: '788306403809758841'
+lifecycle_stage: active
+run_id: 8f9918f610ef4c619bf7a61050b4ae71
+run_name: real_performance_TinyLlama 1.1B Chat_20250815_171443
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755267283791
+status: 3
+tags: []
+user_id: vitaliiserbyn

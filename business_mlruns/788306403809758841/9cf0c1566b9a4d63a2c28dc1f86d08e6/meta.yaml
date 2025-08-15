@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/business_mlruns/788306403809758841/9cf0c1566b9a4d63a2c28dc1f86d08e6/artifacts
+end_time: 1755267283827
+entry_point_name: ''
+experiment_id: '788306403809758841'
+lifecycle_stage: active
+run_id: 9cf0c1566b9a4d63a2c28dc1f86d08e6
+run_name: comprehensive_test_BLOOM-560M_20250815_171443
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755267283824
+status: 3
+tags: []
+user_id: vitaliiserbyn

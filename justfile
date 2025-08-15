@@ -868,6 +868,29 @@ docs:
 ab:
 	@./scripts/4-agent-turbo.sh assign ab
 
+# AI System Deployment
+deploy-ai:
+	@./scripts/deploy-ai-system-to-agents.sh deploy
+
+test-ai:
+	@./scripts/deploy-ai-system-to-agents.sh test
+
+# Smart TDD Integration (AI Company Practices)
+tdd FEATURE:
+	@./scripts/smart-tdd.sh cycle "{{FEATURE}}"
+
+test-first FEATURE:
+	@./scripts/smart-tdd.sh first "{{FEATURE}}"
+
+tdd-watch:
+	@./scripts/smart-tdd.sh watch
+
+test-gen TARGET:
+	@./scripts/smart-tdd.sh generate "{{TARGET}}"
+
+tdd-stop:
+	@./scripts/smart-tdd.sh stop
+
 # Include agent-specific commands
 import 'Justfile.agents'
 import 'Justfile.ai-agents'
