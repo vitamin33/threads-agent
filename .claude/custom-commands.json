@@ -1,0 +1,49 @@
+{
+  "commands": {
+    "cleanup": {
+      "description": "Clean up project temporary files and cache",
+      "command": "just cleanup",
+      "icon": "🧹",
+      "shortcut": "cmd+shift+c"
+    },
+    "cleanup-all": {
+      "description": "Deep clean including Docker and Kubernetes",
+      "command": "just cleanup-all", 
+      "icon": "🗑️",
+      "confirm": true
+    },
+    "sync-achievements": {
+      "description": "Sync latest achievements from collector API",
+      "command": "just sync-achievements",
+      "icon": "📊"
+    },
+    "quick-test": {
+      "description": "Run unit tests quickly",
+      "command": "just unit",
+      "icon": "🧪"
+    },
+    "ship-feature": {
+      "description": "Ship feature with quality checks",
+      "command": "just check && just ship \"{{message}}\"",
+      "icon": "🚀",
+      "prompt": "Enter commit message",
+      "variable": "message"
+    },
+    "agent-merge": {
+      "description": "Merge current agent worktree to main",
+      "command": "./scripts/agent-merge.sh",
+      "icon": "🔀",
+      "confirm": true
+    },
+    "portfolio-build": {
+      "description": "Build portfolio with latest data",
+      "command": "just sync-achievements && npm run build",
+      "icon": "🏗️"
+    }
+  },
+  "aliases": {
+    "clean": "cleanup",
+    "test": "quick-test", 
+    "deploy": "ship-feature"
+  }
+}

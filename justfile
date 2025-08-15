@@ -749,6 +749,161 @@ ui-port-forward:
 	@echo "🔗 Creating port-forward for Dashboard..."
 	@kubectl port-forward -n threads-agent svc/threads-agent-dashboard 8501:80
 
+# Cleanup Commands
+cleanup:
+	@./scripts/cleanup.sh
+
+cleanup-docker:
+	@./scripts/cleanup.sh --docker
+
+cleanup-k8s:
+	@./scripts/cleanup.sh --k8s
+
+cleanup-all: cleanup-docker cleanup-k8s
+	@echo "🧹 Deep clean completed"
+
+# Portfolio Data Management  
+sync-achievements:
+	@echo "📊 Syncing achievements from collector..."
+	@curl -f "$ACHIEVEMENT_API_URL/api/v1/portfolio/generate" || echo "⚠️  Achievement API not available"
+
+# AI Development Acceleration (Top AI Companies' Practices)
+dev-context:
+	@./scripts/ai-dev-acceleration.sh context
+
+dev-watch:
+	@./scripts/ai-dev-acceleration.sh watch
+
+dev-assist task:
+	@./scripts/ai-dev-acceleration.sh assist "{{task}}"
+
+dev-quality:
+	@./scripts/ai-dev-acceleration.sh quality
+
+dev-insights:
+	@./scripts/ai-dev-acceleration.sh insights
+
+dev-boost: dev-context dev-quality dev-insights
+	@echo "🚀 AI development boost complete!"
+
+dev-stop:
+	@./scripts/ai-dev-acceleration.sh stop
+
+# Smart Agent Focus Management
+update-focus:
+	@./scripts/auto-update-agent-focus.sh
+
+auto-focus:
+	@./scripts/auto-update-agent-focus.sh --reload-context
+
+# Ultra-Friendly AI Development Commands (Top AI Company Practices)
+ai-commit:
+	@echo "🤖 AI-powered commit with quality gates..." && ./scripts/ai-smart-commit.sh
+
+save:
+	@echo "💾 Smart save with AI analysis..." && ./scripts/ai-smart-commit.sh
+
+commit:
+	@echo "📝 Intelligent commit processing..." && ./scripts/ai-smart-commit.sh
+
+# Quick-win commands for maximum productivity
+quick-save:
+	@git add . && git commit -m "WIP: $(date +'%H:%M') checkpoint [skip-ci]" && echo "✅ Quick checkpoint saved"
+
+done:
+	@echo "✅ Session complete - AI commit + focus update..." && ./scripts/ai-smart-commit.sh && just auto-focus
+
+# AI Job Strategy Integration
+align:
+	@./scripts/ai-job-strategy-sync.sh sync
+
+progress:
+	@./scripts/ai-job-strategy-sync.sh weekly
+
+# AI-Powered Development Session Commands
+start:
+	@export AGENT_ID="${AGENT_ID:-main-dev}" && just dev-boost && echo "🚀 AI development session ready!"
+
+work:
+	@export AGENT_ID="${AGENT_ID:-main-dev}" && just dev-context && just dev-watch && echo "⚡ Fast feedback active!"
+
+finish:
+	@just dev-stop && just auto-focus && echo "✅ Session complete, focus updated!"
+
+# 4-Agent Turbo System (Top AI Company Practices)
+a1:
+	@./scripts/4-agent-turbo.sh switch a1
+
+a2:
+	@./scripts/4-agent-turbo.sh switch a2
+
+a3:
+	@./scripts/4-agent-turbo.sh switch a3
+
+a4:
+	@./scripts/4-agent-turbo.sh switch a4
+
+agents:
+	@./scripts/4-agent-turbo.sh status
+
+sync-all:
+	@./scripts/4-agent-turbo.sh batch sync
+
+quality-all:
+	@./scripts/4-agent-turbo.sh batch quality
+
+learn-activate:
+	@./scripts/4-agent-turbo.sh learn
+
+# Smart work assignment (Service Groups)
+infra:
+	@./scripts/4-agent-turbo.sh assign infra
+
+ai:
+	@./scripts/4-agent-turbo.sh assign ai
+
+data:
+	@./scripts/4-agent-turbo.sh assign data
+
+revenue:
+	@./scripts/4-agent-turbo.sh assign revenue
+
+# Legacy specific assignments (still available)
+mlflow:
+	@./scripts/4-agent-turbo.sh assign mlflow
+
+vllm:
+	@./scripts/4-agent-turbo.sh assign vllm
+
+docs:
+	@./scripts/4-agent-turbo.sh assign docs
+
+ab:
+	@./scripts/4-agent-turbo.sh assign ab
+
+# AI System Deployment
+deploy-ai:
+	@./scripts/deploy-ai-system-to-agents.sh deploy
+
+test-ai:
+	@./scripts/deploy-ai-system-to-agents.sh test
+
+# Smart TDD Integration (AI Company Practices)
+tdd FEATURE:
+	@./scripts/smart-tdd.sh cycle "{{FEATURE}}"
+
+test-first FEATURE:
+	@./scripts/smart-tdd.sh first "{{FEATURE}}"
+
+tdd-watch:
+	@./scripts/smart-tdd.sh watch
+
+test-gen TARGET:
+	@./scripts/smart-tdd.sh generate "{{TARGET}}"
+
+tdd-stop:
+	@./scripts/smart-tdd.sh stop
+
 # Include agent-specific commands
 import 'Justfile.agents'
 import 'Justfile.ai-agents'
