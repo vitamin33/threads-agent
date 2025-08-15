@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/enhanced_business_mlflow/877356310361965032/4ca30019afe24d98bb2bc5f33baad144/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '877356310361965032'
+lifecycle_stage: active
+run_id: 4ca30019afe24d98bb2bc5f33baad144
+run_name: business_flan_t5_xl_20250815_194229
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755276149636
+status: 1
+tags: []
+user_id: vitaliiserbyn
