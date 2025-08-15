@@ -553,3 +553,5 @@ When tasks are independent, launch agents in parallel:
 
 **Repository**: https://github.com/threads-agent-stack/threads-agent
 **Last Updated**: 2025-01-25
+- dont forget to write testable clean code but not overcomplicate, use approach which best fit for               │
+│   solopreneuers, this is important
