@@ -875,6 +875,22 @@ deploy-ai:
 test-ai:
 	@./scripts/deploy-ai-system-to-agents.sh test
 
+# Smart TDD Integration (AI Company Practices)
+tdd FEATURE:
+	@./scripts/smart-tdd.sh cycle "{{FEATURE}}"
+
+test-first FEATURE:
+	@./scripts/smart-tdd.sh first "{{FEATURE}}"
+
+test-watch:
+	@./scripts/smart-tdd.sh watch
+
+test-gen TARGET:
+	@./scripts/smart-tdd.sh generate "{{TARGET}}"
+
+test-stop:
+	@./scripts/smart-tdd.sh stop
+
 # Include agent-specific commands
 import 'Justfile.agents'
 import 'Justfile.ai-agents'
