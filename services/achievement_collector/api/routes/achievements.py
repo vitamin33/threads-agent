@@ -160,7 +160,7 @@ async def list_achievements(
             "id": item.id,
             "title": item.title or "",
             "description": item.description or "",
-            "category": item.category or "development",
+            "category": item.category or "feature",
             "started_at": item.started_at or datetime.now(),
             "completed_at": item.completed_at or datetime.now(),
             "duration_hours": item.duration_hours or 0.0,

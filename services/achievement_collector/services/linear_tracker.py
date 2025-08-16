@@ -223,7 +223,7 @@ class LinearTracker:
         elif any(label in label_names for label in ["test", "testing"]):
             return "testing"
         else:
-            return "development"
+            return "feature"
 
     def _extract_skills(self, issue: Dict) -> List[str]:
         """Extract skills from issue metadata."""

@@ -47,7 +47,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 try:
-    pass  # MLflow lifecycle components available
+    # MLOps dependencies will be imported when needed
+    pass
 except ImportError as e:
     logger.error(f"Import error: {e}")
     logger.error(
