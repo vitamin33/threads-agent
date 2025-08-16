@@ -1,0 +1,179 @@
+name: PR AI Analysis Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  ai-pr-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install openai pydantic structlog
+          
+      - name: AI PR Analysis Preview
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import sys
+          import json
+          import os
+          sys.path.insert(0, '.')
+          
+          # Get PR data
+          pr_data = {
+              'pull_request': {
+                  'title': '''${{ github.event.pull_request.title }}''',
+                  'body': '''${{ github.event.pull_request.body }}''',
+                  'additions': ${{ github.event.pull_request.additions }},
+                  'deletions': ${{ github.event.pull_request.deletions }},
+                  'changed_files': ${{ github.event.pull_request.changed_files }},
+                  'merged': False  # Preview mode
+              },
+              'number': ${{ github.event.pull_request.number }}
+          }
+          
+          print('🤖 AI PR Analysis Preview')
+          print('=' * 50)
+          
+          # Test if this PR would generate content
+          def analyze_pr_significance(pr_data):
+              title = pr_data['pull_request']['title'].lower()
+              body = pr_data['pull_request']['body'].lower()
+              text = f'{title} {body}'
+              
+              # Business indicators
+              business_indicators = ['$', '%', 'save', 'cost', 'revenue', 'performance', 'improve']
+              business_score = sum(1 for indicator in business_indicators if indicator in text)
+              
+              # Technical indicators  
+              technical_indicators = ['feat:', 'implement', 'optimization', 'mlops', 'ai', 'pipeline']
+              technical_score = sum(1 for indicator in technical_indicators if indicator in text)
+              
+              # Size indicators
+              total_changes = pr_data['pull_request']['additions'] + pr_data['pull_request']['deletions']
+              size_score = min(3, total_changes // 100)
+              
+              # Calculate overall score
+              overall_score = (business_score * 30) + (technical_score * 25) + (size_score * 10)
+              
+              # Marketing potential
+              marketing_potential = "HIGH" if overall_score > 70 else "MEDIUM" if overall_score > 40 else "LOW"
+              
+              return {
+                  'overall_score': min(100, overall_score),
+                  'business_score': business_score,
+                  'technical_score': technical_score,
+                  'size_score': size_score,
+                  'marketing_potential': marketing_potential,
+                  'would_generate_content': overall_score > 50
+              }
+          
+          analysis = analyze_pr_significance(pr_data)
+          
+          print(f'📊 AI Analysis Results:')
+          print(f'  Overall Score: {analysis["overall_score"]}/100')
+          print(f'  Business Impact: {analysis["business_score"]}/10')
+          print(f'  Technical Depth: {analysis["technical_score"]}/10') 
+          print(f'  Change Size: {analysis["size_score"]}/10')
+          print(f'  Marketing Potential: {analysis["marketing_potential"]}')
+          print(f'  Would Generate Content: {analysis["would_generate_content"]}')
+          
+          # Improvement suggestions
+          suggestions = []
+          if analysis['business_score'] < 3:
+              suggestions.append('Add business impact metrics (cost savings, performance improvements)')
+          if analysis['technical_score'] < 3:
+              suggestions.append('Include technical implementation details and technologies used')
+          if not analysis['would_generate_content']:
+              suggestions.append('Consider highlighting achievements that demonstrate MLOps/AI expertise')
+              
+          if suggestions:
+              print('\\n💡 Improvement Suggestions:')
+              for i, suggestion in enumerate(suggestions, 1):
+                  print(f'  {i}. {suggestion}')
+          
+          # Save results for comment
+          with open('ai_analysis.json', 'w') as f:
+              json.dump({
+                  'analysis': analysis,
+                  'suggestions': suggestions,
+                  'pr_number': pr_data['number']
+              }, f)
+          EOF
+          
+      - name: Post AI Analysis Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const analysisData = JSON.parse(fs.readFileSync('ai_analysis.json', 'utf8'));
+              const analysis = analysisData.analysis;
+              const suggestions = analysisData.suggestions;
+              
+              // Create score bar visualization
+              const scoreBar = '█'.repeat(Math.floor(analysis.overall_score / 10)) + 
+                              '░'.repeat(10 - Math.floor(analysis.overall_score / 10));
+              
+              // Marketing potential emoji
+              const potentialEmoji = analysis.marketing_potential === 'HIGH' ? '🚀' : 
+                                   analysis.marketing_potential === 'MEDIUM' ? '📈' : '📊';
+              
+              const comment = `## 🤖 AI Marketing Analysis Preview
+              
+              ${potentialEmoji} **Marketing Potential: ${analysis.marketing_potential}**
+              
+              ### 📊 AI Scores
+              \`\`\`
+              Overall Score:     ${analysis.overall_score}/100 ${scoreBar}
+              Business Impact:   ${analysis.business_score}/10 ${'⭐'.repeat(Math.min(analysis.business_score, 5))}
+              Technical Depth:   ${analysis.technical_score}/10 ${'⭐'.repeat(Math.min(analysis.technical_score, 5))}
+              Change Size:       ${analysis.size_score}/10 ${'⭐'.repeat(Math.min(analysis.size_score, 5))}
+              \`\`\`
+              
+              ### 🎯 Content Generation
+              ${analysis.would_generate_content ? 
+                '✅ **Will Generate Content** - This PR will trigger automated marketing content across 6 platforms' : 
+                '❌ **No Content Generation** - This PR won\'t trigger marketing automation'}
+              
+              ${suggestions.length > 0 ? `### 💡 Improvement Suggestions
+              ${suggestions.map(s => `- ${s}`).join('\n')}
+              
+              *Improve these areas to increase marketing potential and job opportunity generation.*` : ''}
+              
+              ### 📈 Marketing Impact
+              ${analysis.would_generate_content ? 
+                'This PR will automatically generate professional content for LinkedIn, Dev.to, Medium, GitHub, Twitter, and Threads with serbyn.pro CTAs for lead generation.' :
+                'Consider highlighting technical achievements and business impact to enable automated marketing content generation.'}
+              
+              ---
+              *Powered by AI Marketing Automation System | Score updates on each commit*`;
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+            } catch (error) {
+              console.error('Error posting AI analysis comment:', error);
+            }
