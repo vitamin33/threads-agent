@@ -184,7 +184,7 @@ class GitCommitTracker:
             "docs": "documentation",
             "ci": "infrastructure",
         }
-        category = category_map.get(commit_type, "development")
+        category = category_map.get(commit_type, "feature")
 
         # Extract skills from files changed
         skills = self._extract_skills_from_files(commit["files"])

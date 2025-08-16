@@ -1,7 +1,6 @@
 """Tests for unified analytics dashboard that aggregates all platform metrics"""
 
 import pytest
-from unittest.mock import AsyncMock, Mock, patch
 from fastapi.testclient import TestClient
 
 # This will fail initially since we haven't implemented the unified dashboard yet
@@ -16,33 +15,42 @@ class TestUnifiedAnalyticsDashboard:
         """Create test client"""
         import sys
         import os
+
         # Add the parent directory to sys.path
         sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
         from main import app
+
         return TestClient(app)
 
     def test_unified_dashboard_endpoint_exists(self, client):
         """Test that unified analytics dashboard endpoint exists"""
         response = client.get("/api/analytics/unified")
-        
+
         # Should not return 404 (endpoint should exist)
         assert response.status_code != 404
 
     def test_get_unified_metrics_returns_all_platforms(self, client):
         """Test that unified metrics endpoint returns data from all platforms"""
         response = client.get("/api/analytics/unified")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Should contain metrics from all platforms
         assert "platforms" in data
         platforms = data["platforms"]
-        
-        expected_platforms = ["linkedin", "twitter", "medium", "github", "threads", "devto"]
+
+        expected_platforms = [
+            "linkedin",
+            "twitter",
+            "medium",
+            "github",
+            "threads",
+            "devto",
+        ]
         for platform in expected_platforms:
             assert platform in platforms
-            
+
         # Each platform should have metrics and conversion data
         for platform, metrics in platforms.items():
             assert "metrics" in metrics
@@ -52,17 +60,17 @@ class TestUnifiedAnalyticsDashboard:
     def test_get_conversion_summary_aggregates_all_platforms(self, client):
         """Test that conversion summary aggregates data from all platforms"""
         response = client.get("/api/analytics/conversion-summary")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Should have aggregated conversion metrics
         assert "total_serbyn_pro_visits" in data
         assert "total_job_inquiries" in data
         assert "best_converting_platform" in data
         assert "overall_conversion_rate" in data
         assert "platform_breakdown" in data
-        
+
         # Platform breakdown should show per-platform conversions
         breakdown = data["platform_breakdown"]
         assert isinstance(breakdown, dict)
@@ -74,10 +82,10 @@ class TestUnifiedAnalyticsDashboard:
     def test_get_roi_analysis_calculates_content_marketing_roi(self, client):
         """Test that ROI analysis calculates return on content marketing investment"""
         response = client.get("/api/analytics/roi-analysis")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Should calculate ROI metrics
         assert "total_content_pieces" in data
         assert "total_engagement" in data
@@ -86,7 +94,7 @@ class TestUnifiedAnalyticsDashboard:
         assert "roi_percentage" in data
         assert "cost_per_lead" in data
         assert "recommendations" in data
-        
+
         # Recommendations should be actionable
         recommendations = data["recommendations"]
         assert isinstance(recommendations, list)
@@ -95,17 +103,17 @@ class TestUnifiedAnalyticsDashboard:
     def test_get_platform_performance_ranking(self, client):
         """Test that platform performance ranking shows which platforms perform best"""
         response = client.get("/api/analytics/platform-ranking")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Should rank platforms by performance
         assert "ranking" in data
         assert "criteria" in data
-        
+
         ranking = data["ranking"]
         assert isinstance(ranking, list)
-        
+
         # Each platform should have ranking metrics
         for platform_data in ranking:
             assert "platform" in platform_data
@@ -120,22 +128,22 @@ class TestUnifiedAnalyticsDashboard:
         """Test that WebSocket provides real-time analytics updates"""
         # This test would normally use WebSocket client, but for TDD we'll test the endpoint exists
         response = client.get("/api/analytics/websocket-info")
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         # Should provide WebSocket connection info
         assert "websocket_url" in data
         assert "supported_events" in data
-        
+
         supported_events = data["supported_events"]
         expected_events = [
             "platform_metrics_update",
             "conversion_event",
             "roi_recalculation",
-            "new_lead_generated"
+            "new_lead_generated",
         ]
-        
+
         for event in expected_events:
             assert event in supported_events
 
@@ -148,20 +156,28 @@ class TestAnalyticsDataAggregation:
         """Create analytics aggregation service"""
         # This will fail until we implement it
         from dashboard_api.unified_analytics import AnalyticsAggregationService
+
         return AnalyticsAggregationService()
 
     @pytest.mark.asyncio
     async def test_collect_all_platform_metrics(self, aggregation_service):
         """Test that service can collect metrics from all platforms"""
         metrics = await aggregation_service.collect_all_platform_metrics()
-        
+
         assert isinstance(metrics, dict)
-        
+
         # Should have data from all platforms
-        expected_platforms = ["linkedin", "twitter", "medium", "github", "threads", "devto"]
+        expected_platforms = [
+            "linkedin",
+            "twitter",
+            "medium",
+            "github",
+            "threads",
+            "devto",
+        ]
         for platform in expected_platforms:
             assert platform in metrics
-            
+
             platform_data = metrics[platform]
             assert "metrics" in platform_data
             assert "conversion_data" in platform_data
@@ -173,16 +189,18 @@ class TestAnalyticsDataAggregation:
         mock_metrics = {
             "linkedin": {
                 "metrics": {"profile_views": 1000},
-                "conversion_data": {"serbyn_pro_visits": 50, "job_inquiries": 5}
+                "conversion_data": {"serbyn_pro_visits": 50, "job_inquiries": 5},
             },
             "twitter": {
                 "metrics": {"impressions": 5000},
-                "conversion_data": {"serbyn_pro_visits": 25, "job_inquiries": 2}
-            }
+                "conversion_data": {"serbyn_pro_visits": 25, "job_inquiries": 2},
+            },
         }
-        
-        conversion_summary = await aggregation_service.calculate_conversion_summary(mock_metrics)
-        
+
+        conversion_summary = await aggregation_service.calculate_conversion_summary(
+            mock_metrics
+        )
+
         assert "total_serbyn_pro_visits" in conversion_summary
         assert conversion_summary["total_serbyn_pro_visits"] == 75
         assert "total_job_inquiries" in conversion_summary
@@ -198,11 +216,11 @@ class TestAnalyticsDataAggregation:
             },
             "twitter": {
                 "conversion_data": {"job_inquiries": 2, "serbyn_pro_visits": 25}
-            }
+            },
         }
-        
+
         best_platform = await aggregation_service.identify_best_platform(mock_metrics)
-        
+
         assert best_platform == "linkedin"  # Higher job inquiries
 
 
@@ -214,6 +232,7 @@ class TestConversionTracking:
         """Create conversion tracking service"""
         # This will fail until we implement it
         from dashboard_api.unified_analytics import ConversionTracker
+
         return ConversionTracker()
 
     @pytest.mark.asyncio
@@ -224,11 +243,11 @@ class TestConversionTracking:
             "content_url": "https://linkedin.com/posts/vitaliiserbyn-post-123",
             "visitor_ip": "192.168.1.1",
             "timestamp": "2025-01-15T10:30:00Z",
-            "destination_url": "https://serbyn.pro"
+            "destination_url": "https://serbyn.pro",
         }
-        
+
         result = await conversion_tracker.track_conversion(conversion_event)
-        
+
         assert result["success"] is True
         assert "conversion_id" in result
         assert result["platform"] == "linkedin"
@@ -241,20 +260,22 @@ class TestConversionTracking:
             "source_conversion_id": "conv_123",
             "lead_type": "job_inquiry",
             "contact_method": "email",
-            "timestamp": "2025-01-15T11:00:00Z"
+            "timestamp": "2025-01-15T11:00:00Z",
         }
-        
+
         result = await conversion_tracker.track_lead_conversion(lead_event)
-        
+
         assert result["success"] is True
         assert "lead_id" in result
-        assert result["attributed_platform"] == "linkedin"  # Should link back to original source
+        assert (
+            result["attributed_platform"] == "linkedin"
+        )  # Should link back to original source
 
     @pytest.mark.asyncio
     async def test_calculate_attribution_chain(self, conversion_tracker):
         """Test calculating full attribution chain from content to lead"""
         chain = await conversion_tracker.get_attribution_chain("lead_123")
-        
+
         assert "content_source" in chain
         assert "platform" in chain
         assert "content_url" in chain

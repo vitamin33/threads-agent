@@ -240,7 +240,7 @@ def _determine_category(analysis: Dict) -> str:
             "dependency": "infrastructure",
         }
 
-        return category_map.get(primary_category, "development")
+        return category_map.get(primary_category, "feature")
 
     # Fallback: check if performance improvements
     if analysis.get("performance_metrics", {}).get("latency_changes"):
@@ -250,7 +250,7 @@ def _determine_category(analysis: Dict) -> str:
     if analysis.get("architectural_metrics", {}).get("patterns_implemented"):
         return "architecture"
 
-    return "development"
+    return "feature"
 
 
 def _extract_tags(analysis: Dict) -> List[str]:

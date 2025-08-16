@@ -47,8 +47,8 @@ ai-epic-status:
 
 # Learn from development patterns
 learn:
-    @./scripts/learning-system.sh analyze-patterns
-    @./scripts/learning-system.sh get-suggestions --agent "${AGENT_ID}"
+    @./scripts/learning-system.sh analyze
+    @./scripts/learning-system.sh suggest
 
 # Analyze agent performance
 ai-performance:
