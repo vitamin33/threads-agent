@@ -797,7 +797,7 @@ auto-focus:
 	@./scripts/auto-update-agent-focus.sh --reload-context
 
 # Ultra-Friendly AI Development Commands (Top AI Company Practices)
-ai-commit:
+ai-commit-alt:
 	@echo "🤖 AI-powered commit with quality gates..." && ./scripts/ai-smart-commit.sh
 
 save:

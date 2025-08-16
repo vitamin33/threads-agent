@@ -1,0 +1,13 @@
+# Commit message template - SINGLE AUTHOR ONLY
+# 
+# Format: <type>: <description>
+#
+# Types: feat, fix, docs, style, refactor, test, chore
+#
+# STRICT RULE: NO Claude co-author information allowed
+# - No "Co-Authored-By: Claude" lines
+# - No "Generated with Claude Code" lines  
+# - Only your authorship should appear
+#
+# Your commits should reflect YOUR work and expertise
+# for professional portfolio and career advancement

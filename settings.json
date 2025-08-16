@@ -1,0 +1,119 @@
+// .vscode/settings.json
+{
+    /* --- Python interpreter ---------------------------------- */
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+
+    /* --- Formatting & linting -------------------------------- */
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    },
+
+    /* Tell VS Code to use the in-repo binaries (no global mess) */
+    "ruff.path": [
+      "${workspaceFolder}/.venv/bin/ruff"
+    ],
+    "black.path": [
+      "${workspaceFolder}/.venv/bin/black"
+    ],
+    "isort.path": [
+      "${workspaceFolder}/.venv/bin/isort"
+    ],
+    "mypy.executable": "${workspaceFolder}/.venv/bin/mypy",
+
+    "files.associations": {
+    "justfile": "makefile",
+    "Justfile": "makefile"
+    },
+
+    /* Show Ruff problems in the PROBLEMS panel */
+    "python.linting.ruffEnabled": true,
+    "python.linting.enabled": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+      "reportMissingImports": "none"       // silence stubs you don’t have
+    },
+
+    /* --- Terminal & env -------------------------------------- */
+    "terminal.integrated.env.osx": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.linux": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+    "terminal.integrated.env.windows": {
+      "PYTHONPATH": "${workspaceFolder}"
+    },
+
+    /* --- Helm templates: silence YAML false-positives --- */
+    "yaml.validate": false,                // disable strict YAML for workspace
+    "yaml.customTags": [                   // allow Helm-style tags
+      "!Ref sequence",
+      "!Sub scalar",
+      "!GetAtt scalar",
+      "!Include scalar",
+      "!<str>"                             // generic “ignore this”
+    ],
+    "docker.dockerScout": "disabled",
+    "github-actions.validate.enabled": false,
+
+    /* --- AI Development Acceleration (Top AI Companies) ---- */
+    // Fast feedback loops (Meta AI approach)
+    "files.autoSave": "onFocusChange",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    
+    // Smart testing (DeepMind approach)
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "--tb=short",
+      "--no-header",
+      "-v",
+      "--maxfail=3"
+    ],
+    
+    // Performance optimization
+    "search.exclude": {
+      "**/.venv": true,
+      "**/node_modules": true,
+      "**/.git": true,
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.ai-context.json": false,
+      "**/.dev-insights.json": false
+    },
+    
+    // Multi-agent workflow  
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    "git.branchProtection": ["main"],
+    
+    // Agent-specific UI (changes per worktree)
+    "workbench.colorCustomizations": {
+      "titleBar.activeBackground": "#2f3f4f",
+      "titleBar.activeForeground": "#ffffff",
+      "statusBar.background": "#2f3f4f"
+    },
+    
+    // AI context awareness
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/.venv/**": true,
+      "**/__pycache__/**": true,
+      "**/.pytest_cache/**": true,
+      "**/.watch-pid": true
+    },
+    
+    // Code intelligence
+    "editor.suggest.showWords": false,
+    "editor.suggest.showSnippets": true,
+    "editor.acceptSuggestionOnEnter": "smart",
+    "editor.tabCompletion": "on"
+  }

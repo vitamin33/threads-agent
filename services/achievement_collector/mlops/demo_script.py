@@ -187,7 +187,9 @@ class PortfolioDemo:
                 logger.info(
                     f"🏆 Best accuracy achieved: {best_accuracy:.1%} (RandomForest)"
                 )
-                logger.info("⚡ All models meet latency SLO: < 500ms")
+                logger.info(
+                    f"⚡ {slo_compliant_models}/{total_models} models meet latency SLO: < 500ms"
+                )
                 logger.info("✅ Model comparison complete - champion model identified")
 
                 # Stage 3: MLflow Registry Operations (Real)
