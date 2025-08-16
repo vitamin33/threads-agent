@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/champion_rigorous_testing/201459822899444288/4205356c96074684a9e199a3d2e81e5f/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '201459822899444288'
+lifecycle_stage: active
+run_id: 4205356c96074684a9e199a3d2e81e5f
+run_name: validation_opt_2.7b_champion_20250816_193918
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755362358397
+status: 1
+tags: []
+user_id: vitaliiserbyn

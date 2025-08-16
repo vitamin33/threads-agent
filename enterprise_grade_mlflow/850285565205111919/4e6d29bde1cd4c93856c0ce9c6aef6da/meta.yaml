@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/enterprise_grade_mlflow/850285565205111919/4e6d29bde1cd4c93856c0ce9c6aef6da/artifacts
+end_time: 1755355650529
+entry_point_name: ''
+experiment_id: '850285565205111919'
+lifecycle_stage: active
+run_id: 4e6d29bde1cd4c93856c0ce9c6aef6da
+run_name: enterprise_bloom_560m_enterprise_20250816_174727
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755355647463
+status: 3
+tags: []
+user_id: vitaliiserbyn

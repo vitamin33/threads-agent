@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/enterprise_grade_mlflow/850285565205111919/48eab25f43724234abfaa86c194dfed0/artifacts
+end_time: 1755355652632
+entry_point_name: ''
+experiment_id: '850285565205111919'
+lifecycle_stage: active
+run_id: 48eab25f43724234abfaa86c194dfed0
+run_name: enterprise_tinyllama_enterprise_20250816_174730
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755355650539
+status: 3
+tags: []
+user_id: vitaliiserbyn
