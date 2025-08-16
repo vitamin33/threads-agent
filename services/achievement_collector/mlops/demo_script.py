@@ -189,7 +189,7 @@ class PortfolioDemo:
                     f"🏆 Best accuracy achieved: {best_accuracy:.1%} (RandomForest)"
                 )
                 logger.info(
-                    f"⚡ All {slo_compliant_models} models meet latency SLO: < 500ms"
+                    f"⚡ {slo_compliant_models}/{total_models} models meet latency SLO: < 500ms"
                 )
                 logger.info("✅ Model comparison complete - champion model identified")
 

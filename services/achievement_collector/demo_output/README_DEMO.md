@@ -4,9 +4,9 @@
 This demo showcases a production-ready MLOps pipeline using MLflow, demonstrating the complete model lifecycle from training to deployment with automated rollback capabilities.
 
 ## Demo Results
-- **Execution Time**: 0.2 seconds
+- **Execution Time**: 2.1 seconds
 - **Success**: True
-- **Timestamp**: 2025-08-13T01:50:35.153946
+- **Timestamp**: 2025-08-13T20:37:05.083575
 
 ## Stages Completed
 

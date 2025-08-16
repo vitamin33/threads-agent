@@ -16,3 +16,27 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
+
+  # AI Development Acceleration Hooks
+  - repo: local
+    hooks:
+      - id: ai-quality-gate
+        name: AI Quality Gate (Fast)
+        entry: ./scripts/ai-dev-acceleration.sh quality
+        language: script
+        pass_filenames: false
+        stages: [pre-push]
+        
+      - id: ai-context-update
+        name: Update AI Context
+        entry: ./scripts/ai-dev-acceleration.sh context
+        language: script
+        pass_filenames: false
+        stages: [post-commit]
+        
+      - id: smart-test
+        name: Smart Testing
+        entry: ./scripts/ai-dev-acceleration.sh test
+        language: script
+        pass_filenames: false
+        stages: [pre-commit]
