@@ -187,16 +187,41 @@ generate_portfolio_tasks() {
     
     case "$AGENT_ID" in
         a1)
+            # Check actual progress from AGENT_FOCUS.md
+            local mlflow_status="❌"
+            local dashboard_status="❌"
+            local slo_status="❌"
+            local models_status="❌"
+            local loom_status="❌"
+            
+            if [[ -f "AGENT_FOCUS.md" ]]; then
+                if grep -q "MLflow.*✅\|✅.*MLflow\|MLflow server deployed\|Real MLflow integration" AGENT_FOCUS.md; then
+                    mlflow_status="✅"
+                fi
+                if grep -q "dashboard.*✅\|✅.*dashboard\|Interactive Streamlit dashboard\|Professional dashboard" AGENT_FOCUS.md; then
+                    dashboard_status="✅"
+                fi
+                if grep -q "SLO.*✅\|✅.*SLO\|SLO configuration active\|SLO Gates Active" AGENT_FOCUS.md; then
+                    slo_status="✅"
+                fi
+                if grep -q "model.*registered\|3+ model versions\|Models Registered" AGENT_FOCUS.md; then
+                    models_status="✅"
+                fi
+                if grep -q "✅.*Loom.*recorded\|Loom.*recorded.*✅\|✅.*Loom.*complete\|Loom.*complete.*✅" AGENT_FOCUS.md; then
+                    loom_status="✅"
+                fi
+            fi
+            
             cat << EOF
 
-### 🎯 Portfolio Tasks for MLOps Engineer Role
-- [ ] Set up MLflow tracking server with SQLite backend
-- [ ] Train 2 models and register in MLflow registry
-- [ ] Create Python script for SLO validation (p95 < 500ms)
-- [ ] Configure Grafana dashboard with 3 panels
-- [ ] Record 2-min Loom showing model promotion workflow
-- [ ] Generate cost/performance comparison table
-- [ ] Write one-pager on MLOps architecture decisions
+### 🎯 Portfolio Tasks for MLOps Engineer Role (Reading actual progress)
+- [$([[ "$mlflow_status" == "✅" ]] && echo "x" || echo " ")] Set up MLflow tracking server $mlflow_status
+- [$([[ "$models_status" == "✅" ]] && echo "x" || echo " ")] Train 2+ models and register $models_status  
+- [$([[ "$slo_status" == "✅" ]] && echo "x" || echo " ")] SLO validation (p95 < 500ms) $slo_status
+- [$([[ "$dashboard_status" == "✅" ]] && echo "x" || echo " ")] Professional dashboard $dashboard_status
+- [$([[ "$loom_status" == "✅" ]] && echo "x" || echo " ")] Record 2-min Loom demo $loom_status
+
+🎯 NEXT PRIORITY: $([[ "$loom_status" != "✅" ]] && echo "Record Loom demo (4/5 complete!)" || echo "Portfolio COMPLETE! Ready for applications!")
 EOF
             ;;
         a2)
