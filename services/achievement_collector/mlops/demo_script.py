@@ -47,7 +47,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 try:
-    from mlops.mlflow_lifecycle_demo import DemoOrchestrator
+    # MLOps dependencies will be imported when needed
+    pass
 except ImportError as e:
     logger.error(f"Import error: {e}")
     logger.error(
@@ -99,7 +100,6 @@ class PortfolioDemo:
         try:
             # Initialize orchestrator
             logger.info("Initializing MLflow Lifecycle Demo...")
-            orchestrator = DemoOrchestrator()
 
             # Stage 1: Training
             self.print_stage_header(
@@ -188,7 +188,9 @@ class PortfolioDemo:
                 logger.info(
                     f"🏆 Best accuracy achieved: {best_accuracy:.1%} (RandomForest)"
                 )
-                logger.info("⚡ All models meet latency SLO: < 500ms")
+                logger.info(
+                    f"⚡ All {slo_compliant_models} models meet latency SLO: < 500ms"
+                )
                 logger.info("✅ Model comparison complete - champion model identified")
 
                 # Stage 3: MLflow Registry Operations (Real)

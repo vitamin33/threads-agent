@@ -1316,8 +1316,6 @@ class AIHiringManagerContentEngine:
         category = achievement_data.get("category", "feature")
 
         if category in self.hiring_manager_keywords:
-            relevant_keywords = self.hiring_manager_keywords[category]
-
             # Strategically inject keywords into content
             if "MLOps" not in content and "mlops" in category:
                 content = content.replace("machine learning", "MLOps machine learning")
