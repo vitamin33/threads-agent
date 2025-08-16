@@ -685,7 +685,7 @@ class AutoContentPipeline:
         elif any(word in title for word in ["ml", "model", "ai", "mlops"]):
             return "mlops"
         else:
-            return "feature"
+            return "development"
 
     def _calculate_impact_score(self, pr_data: Dict[str, Any]) -> int:
         """Calculate impact score for prioritization"""
@@ -1313,9 +1313,11 @@ class AIHiringManagerContentEngine:
     ) -> str:
         """Add keywords that AI hiring managers search for"""
 
-        category = achievement_data.get("category", "feature")
+        category = achievement_data.get("category", "development")
 
         if category in self.hiring_manager_keywords:
+            relevant_keywords = self.hiring_manager_keywords[category]
+
             # Strategically inject keywords into content
             if "MLOps" not in content and "mlops" in category:
                 content = content.replace("machine learning", "MLOps machine learning")

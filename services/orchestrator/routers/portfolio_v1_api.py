@@ -9,7 +9,7 @@ import logging
 import time
 import json
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -30,27 +30,27 @@ async def get_portfolio_achievements(
     category: Optional[str] = Query(None, description="Filter by category"),
     limit: int = Query(10, description="Number of achievements"),
     featured_only: bool = Query(False, description="Only featured achievements"),
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Get achievements in the exact format expected by portfolio frontend.
-    
+
     Expected by: temp_frontend/components/achievements-live-api.tsx
     """
     start_time = time.time()
-    
+
     try:
         # Build query filters
         where_clauses = ["portfolio_ready = true"]
-        
+
         if category:
             where_clauses.append(f"category = '{category}'")
-        
+
         if featured_only:
             where_clauses.append("impact_score >= 90")
-        
+
         where_clause = "WHERE " + " AND ".join(where_clauses)
-        
+
         # Query achievements in expected format
         sql = f"""
             SELECT 
@@ -83,9 +83,9 @@ async def get_portfolio_achievements(
             ORDER BY display_priority DESC NULLS LAST, impact_score DESC, completed_at DESC
             LIMIT {limit}
         """
-        
+
         achievements_raw = db.execute(text(sql)).fetchall()
-        
+
         # Transform to frontend format
         achievements = []
         for ach in achievements_raw:
@@ -98,25 +98,25 @@ async def get_portfolio_achievements(
                     tech_stack = []
             except:
                 tech_stack = []
-            
+
             # Parse evidence
             try:
                 evidence = json.loads(ach.evidence) if ach.evidence else {}
             except:
                 evidence = {}
-            
+
             # Format evidence for frontend
             formatted_evidence = {
                 "before_metrics": evidence.get("metrics_before", {}),
                 "after_metrics": evidence.get("metrics_after", {}),
                 "pr_number": None,
-                "repo_url": ach.source_url
+                "repo_url": ach.source_url,
             }
-            
+
             # Extract PR number from source_id or URL
             if ach.source_id and ach.source_id.isdigit():
                 formatted_evidence["pr_number"] = int(ach.source_id)
-            
+
             achievement_data = {
                 "id": ach.id,
                 "title": ach.title,
@@ -129,20 +129,26 @@ async def get_portfolio_achievements(
                 "generated_content": {
                     "summary": ach.summary or "",
                     "technical_analysis": ach.technical_analysis or "",
-                    "architecture_notes": ach.architecture_notes or ""
+                    "architecture_notes": ach.architecture_notes or "",
                 },
                 "performance_improvement": float(ach.performance_improvement_pct or 0),
                 "time_saved_hours": float(ach.time_saved_hours or 0),
-                "completed_at": ach.completed_at.isoformat() if ach.completed_at else None
+                "completed_at": ach.completed_at.isoformat()
+                if ach.completed_at
+                else None,
             }
-            
+
             achievements.append(achievement_data)
-        
+
         # Calculate meta statistics
         total_business_value = sum(ach["business_value"] for ach in achievements)
         total_time_saved = sum(ach["time_saved_hours"] for ach in achievements)
-        avg_impact = sum(ach["impact_score"] for ach in achievements) / len(achievements) if achievements else 0
-        
+        avg_impact = (
+            sum(ach["impact_score"] for ach in achievements) / len(achievements)
+            if achievements
+            else 0
+        )
+
         response_data = {
             "meta": {
                 "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -151,17 +157,17 @@ async def get_portfolio_achievements(
                 "total_time_saved_hours": total_time_saved,
                 "avg_impact_score": avg_impact,
                 "data_source": "live",
-                "note": "Real achievements from Supabase production database"
+                "note": "Real achievements from Supabase production database",
             },
-            "achievements": achievements
+            "achievements": achievements,
         }
-        
+
         # Record metrics
         duration = time.time() - start_time
         record_http_request("GET", "/api/v1/portfolio/achievements", 200, duration)
-        
+
         return JSONResponse(content=response_data)
-        
+
     except Exception as e:
         duration = time.time() - start_time
         record_http_request("GET", "/api/v1/portfolio/achievements", 500, duration)
@@ -171,15 +177,15 @@ async def get_portfolio_achievements(
 
 @portfolio_v1_router.get("/generate")
 async def generate_portfolio_data(
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db_session),
 ) -> JSONResponse:
     """
     Generate complete portfolio data for case study sync.
-    
+
     Expected by: temp_frontend/app/api/case-studies/sync/route.ts
     """
     start_time = time.time()
-    
+
     try:
         # Get all portfolio-ready achievements
         sql = """
@@ -213,9 +219,9 @@ async def generate_portfolio_data(
             WHERE portfolio_ready = true
             ORDER BY impact_score DESC
         """
-        
+
         achievements_raw = db.execute(text(sql)).fetchall()
-        
+
         # Transform to expected format
         achievements = []
         for ach in achievements_raw:
@@ -223,14 +229,18 @@ async def generate_portfolio_data(
             try:
                 tech_stack = json.loads(ach.tech_stack) if ach.tech_stack else []
                 evidence = json.loads(ach.evidence) if ach.evidence else {}
-                metrics_before = json.loads(ach.metrics_before) if ach.metrics_before else {}
-                metrics_after = json.loads(ach.metrics_after) if ach.metrics_after else {}
+                metrics_before = (
+                    json.loads(ach.metrics_before) if ach.metrics_before else {}
+                )
+                metrics_after = (
+                    json.loads(ach.metrics_after) if ach.metrics_after else {}
+                )
             except:
                 tech_stack = []
                 evidence = {}
                 metrics_before = {}
                 metrics_after = {}
-            
+
             achievement_data = {
                 "id": ach.id,
                 "title": ach.title,
@@ -242,33 +252,35 @@ async def generate_portfolio_data(
                 "evidence": {
                     "before_metrics": metrics_before,
                     "after_metrics": metrics_after,
-                    "pr_number": int(ach.source_id) if ach.source_id and ach.source_id.isdigit() else None,
-                    "repo_url": ach.source_url
+                    "pr_number": int(ach.source_id)
+                    if ach.source_id and ach.source_id.isdigit()
+                    else None,
+                    "repo_url": ach.source_url,
                 },
                 "generated_content": {
                     "summary": ach.ai_summary or "",
                     "technical_analysis": ach.ai_technical_analysis or "",
-                    "architecture_notes": ach.ai_impact_analysis or ""
-                }
+                    "architecture_notes": ach.ai_impact_analysis or "",
+                },
             }
-            
+
             achievements.append(achievement_data)
-        
+
         response_data = {
             "achievements": achievements,
             "meta": {
                 "total": len(achievements),
                 "generated_at": datetime.now(timezone.utc).isoformat(),
-                "data_source": "supabase_production"
-            }
+                "data_source": "supabase_production",
+            },
         }
-        
+
         # Record metrics
         duration = time.time() - start_time
         record_http_request("GET", "/api/v1/portfolio/generate", 200, duration)
-        
+
         return JSONResponse(content=response_data)
-        
+
     except Exception as e:
         duration = time.time() - start_time
         record_http_request("GET", "/api/v1/portfolio/generate", 500, duration)
@@ -277,12 +289,10 @@ async def generate_portfolio_data(
 
 
 @portfolio_v1_router.get("/stats")
-async def get_portfolio_stats(
-    db: Session = Depends(get_db_session)
-) -> JSONResponse:
+async def get_portfolio_stats(db: Session = Depends(get_db_session)) -> JSONResponse:
     """Get portfolio statistics for frontend display."""
     start_time = time.time()
-    
+
     try:
         # Get comprehensive stats
         stats_query = """
@@ -302,11 +312,12 @@ async def get_portfolio_stats(
                 COUNT(DISTINCT category) as categories_covered
             FROM achievements
         """
-        
+
         stats = db.execute(text(stats_query)).first()
-        
+
         # Get category breakdown
-        category_stats = db.execute(text("""
+        category_stats = db.execute(
+            text("""
             SELECT 
                 category,
                 COUNT(*) as count,
@@ -315,8 +326,9 @@ async def get_portfolio_stats(
             WHERE portfolio_ready = true
             GROUP BY category
             ORDER BY count DESC
-        """)).fetchall()
-        
+        """)
+        ).fetchall()
+
         stats_data = {
             "summary": {
                 "total_achievements": int(stats.total_achievements or 0),
@@ -325,25 +337,25 @@ async def get_portfolio_stats(
                 "avg_complexity_score": float(stats.avg_complexity or 0),
                 "total_time_saved_hours": float(stats.total_time_saved or 0),
                 "total_business_value": float(stats.total_business_value or 0),
-                "categories_covered": int(stats.categories_covered or 0)
+                "categories_covered": int(stats.categories_covered or 0),
             },
             "categories": [
                 {
                     "category": cat.category,
                     "count": int(cat.count),
-                    "avg_impact": float(cat.avg_impact or 0)
+                    "avg_impact": float(cat.avg_impact or 0),
                 }
                 for cat in category_stats
             ],
-            "generated_at": datetime.now(timezone.utc).isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         # Record metrics
         duration = time.time() - start_time
         record_http_request("GET", "/api/v1/portfolio/stats", 200, duration)
-        
+
         return JSONResponse(content=stats_data)
-        
+
     except Exception as e:
         duration = time.time() - start_time
         record_http_request("GET", "/api/v1/portfolio/stats", 500, duration)
@@ -352,19 +364,19 @@ async def get_portfolio_stats(
 
 
 @portfolio_v1_router.get("/health")
-async def portfolio_v1_health(
-    db: Session = Depends(get_db_session)
-) -> JSONResponse:
+async def portfolio_v1_health(db: Session = Depends(get_db_session)) -> JSONResponse:
     """Health check for portfolio V1 API."""
     try:
         # Test database connectivity
         test_query = db.execute(text("SELECT COUNT(*) FROM achievements")).first()
         achievement_count = int(test_query[0] or 0)
-        
+
         # Test variant performance data
-        variant_query = db.execute(text("SELECT COUNT(*) FROM variant_performance")).first()
+        variant_query = db.execute(
+            text("SELECT COUNT(*) FROM variant_performance")
+        ).first()
         variant_count = int(variant_query[0] or 0)
-        
+
         health_status = {
             "status": "healthy",
             "database_connected": True,
@@ -374,23 +386,23 @@ async def portfolio_v1_health(
             "data_source": "local_cluster_with_supabase_sync",
             "endpoints": [
                 "/api/v1/portfolio/achievements",
-                "/api/v1/portfolio/generate", 
+                "/api/v1/portfolio/generate",
                 "/api/v1/portfolio/stats",
-                "/api/v1/portfolio/health"
+                "/api/v1/portfolio/health",
             ],
             "frontend_compatibility": "next.js portfolio ready",
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         return JSONResponse(content=health_status)
-        
+
     except Exception as e:
         logger.error(f"Portfolio V1 health check failed: {e}")
         return JSONResponse(
             content={
                 "status": "unhealthy",
                 "database_connected": False,
-                "message": f"Health check failed: {str(e)}"
+                "message": f"Health check failed: {str(e)}",
             },
-            status_code=503
+            status_code=503,
         )
