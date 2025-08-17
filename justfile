@@ -170,13 +170,21 @@ e2e: e2e-prepare
 
 test-watch service="":
 	#!/usr/bin/env bash
+	source .venv/bin/activate
 	if [ "{{service}}" = "" ]; then
-		echo "👀 Watching all tests..."
-		ptw -- -m "not e2e" -v --tb=short
+		echo "👀 Watching all tests (optimized)..."
+		ptw -- -c pytest-fast.ini -m "fast or (not slow and not e2e)" -v --tb=line
 	else
 		echo "👀 Watching {{service}} tests..."
-		ptw services/{{service}}/tests/ -- -v --tb=short
+		ptw services/{{service}}/tests/ -- -c pytest-fast.ini -v --tb=line
 	fi
+
+# Fast unit tests only
+test-fast:
+	#!/usr/bin/env bash
+	echo "⚡ Running fast tests only..."
+	source .venv/bin/activate
+	PYTHONPATH=$PWD pytest -c pytest-fast.ini -m "fast or (not slow and not e2e)" --tb=line -q
 
 e2e-prepare:
 	#!/usr/bin/env bash
