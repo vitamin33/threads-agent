@@ -13,21 +13,8 @@ sys.path.insert(0, str(DEV_SYSTEM_ROOT))
 
 def main():
     try:
-        from ops.telemetry import get_daily_metrics
-        metrics = get_daily_metrics()
-        
-        print("📊 Yesterday's Development Metrics")
-        print("=" * 40)
-        print(f"Success Rate: {metrics.get('success_rate', 0):.1%}")
-        print(f"P95 Latency: {metrics.get('p95_latency_ms', 0):.0f}ms")
-        print(f"Total Cost: ${metrics.get('total_cost', 0):.2f}")
-        print(f"Top Agent: {metrics.get('top_agent', 'N/A')}")
-        print(f"Failed Calls: {metrics.get('failed_calls', 0)}")
-        
-        if metrics.get('alerts'):
-            print("\n🚨 Alerts:")
-            for alert in metrics['alerts']:
-                print(f"  - {alert}")
+        from ops.telemetry import show_metrics
+        print(show_metrics("1d"))
                 
     except ImportError:
         print("📊 Telemetry system not yet implemented")
@@ -39,6 +26,9 @@ def main():
         print("Total Cost: $3.47")
         print("Top Agent: persona_runtime")
         print("Failed Calls: 12")
+    except Exception as e:
+        print(f"❌ Error loading metrics: {e}")
+        print("🔄 Try: .dev-system/cli/dev-system init --telemetry")
 
 if __name__ == "__main__":
     main()

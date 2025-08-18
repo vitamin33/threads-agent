@@ -32,9 +32,15 @@ def init_system(args):
     
     # Initialize telemetry database
     if args.telemetry:
-        from ops.telemetry import init_telemetry_db
-        init_telemetry_db()
-        print("✅ Telemetry system initialized")
+        try:
+            from ops.telemetry import init_telemetry_db
+            init_telemetry_db()
+            print("✅ Telemetry system initialized")
+            print("🔄 Test with: just metrics-today")
+            print("📝 Generate sample data: python .dev-system/ops/example_integration.py")
+        except Exception as e:
+            print(f"❌ Telemetry initialization failed: {e}")
+            return
     
     # Initialize evaluation system  
     if args.evals:
@@ -64,11 +70,13 @@ def metrics_command(args):
     """Show metrics for specified period"""
     try:
         from ops.telemetry import show_metrics
-        metrics = show_metrics(period=args.period)
-        print(metrics)
+        print(show_metrics(period=args.period))
     except ImportError:
         print("📊 Telemetry system not yet implemented")
-        print("🔄 Coming in M1 milestone")
+        print("🔄 Run: .dev-system/cli/dev-system init --telemetry")
+    except Exception as e:
+        print(f"❌ Error loading metrics: {e}")
+        print("🔄 Try initializing: .dev-system/cli/dev-system init --telemetry")
 
 def eval_command(args):
     """Run evaluations"""
