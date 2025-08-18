@@ -37,7 +37,7 @@ def measure_function_overhead():
     plain_times = []
     for _ in range(1000):
         start = time.perf_counter()
-        result = plain_function(42, 17)
+        plain_function(42, 17)
         end = time.perf_counter()
         plain_times.append(end - start)
 

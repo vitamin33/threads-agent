@@ -86,7 +86,7 @@ def generate_sample_data(num_calls: int = 10):
         try:
             # Mix of model calls and tool calls
             if i % 3 == 0:
-                result = simulate_tool_call(
+                simulate_tool_call(
                     tool_name=random.choice(["search", "analyze", "format"]),
                     params={"param1": "value", "param2": 123},
                 )

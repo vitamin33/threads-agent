@@ -16,6 +16,15 @@ brief:
 eval-run suite="core":
 	@./.dev-system/cli/dev-system eval --suite {{suite}}
 
+eval-report period="7d":
+	@./.dev-system/cli/eval-report --period {{period}}
+
+eval-latest:
+	@./.dev-system/cli/eval-report --latest
+
+eval-gate result:
+	@./.dev-system/evals/gate.py --result {{result}} --exit-code
+
 wt-setup name focus="":
 	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
 

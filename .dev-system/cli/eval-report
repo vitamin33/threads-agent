@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""
+Evaluation Report Generator
+Shows evaluation history and trends - M2 implementation
+"""
+
+import sys
+import json
+from pathlib import Path
+from datetime import datetime, timedelta
+
+# Add dev-system to path
+DEV_SYSTEM_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(DEV_SYSTEM_ROOT))
+
+def get_recent_evaluations(days_back: int = 7) -> list:
+    """Get evaluation results from the last N days"""
+    reports_dir = DEV_SYSTEM_ROOT / "evals" / "reports"
+    
+    if not reports_dir.exists():
+        return []
+    
+    cutoff_date = datetime.now() - timedelta(days=days_back)
+    recent_results = []
+    
+    for report_file in reports_dir.glob("eval_*.json"):
+        try:
+            # Extract timestamp from filename: eval_core_20250818_174500.json
+            parts = report_file.stem.split('_')
+            if len(parts) >= 3:
+                timestamp_str = f"{parts[-2]}_{parts[-1]}"
+                file_date = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+                
+                if file_date >= cutoff_date:
+                    with open(report_file) as f:
+                        result = json.load(f)
+                        result['file_date'] = file_date.isoformat()
+                        recent_results.append(result)
+        except Exception as e:
+            print(f"⚠️  Skipping malformed report {report_file}: {e}")
+    
+    # Sort by date (most recent first)
+    recent_results.sort(key=lambda x: x['file_date'], reverse=True)
+    return recent_results
+
+def show_evaluation_trends(period: str = "7d"):
+    """Show evaluation trends and summary"""
+    days_map = {"1d": 1, "7d": 7, "30d": 30}
+    days = days_map.get(period, 7)
+    
+    evaluations = get_recent_evaluations(days)
+    
+    if not evaluations:
+        print(f"📊 No evaluation results found (last {days} days)")
+        print("🔄 Run evaluations first: just eval-run core")
+        return
+    
+    print(f"📊 Evaluation Report (Last {days} day{'s' if days > 1 else ''})")
+    print("=" * 60)
+    
+    # Summary stats
+    total_runs = len(evaluations)
+    passed_runs = sum(1 for e in evaluations if e['gate_status'] == 'PASS')
+    failed_runs = sum(1 for e in evaluations if e['gate_status'] == 'FAIL')
+    warning_runs = total_runs - passed_runs - failed_runs
+    
+    print(f"Total Runs:     {total_runs}")
+    print(f"Passed:         {passed_runs} ({passed_runs/total_runs:.1%})")
+    print(f"Failed:         {failed_runs} ({failed_runs/total_runs:.1%})")
+    print(f"Warnings:       {warning_runs} ({warning_runs/total_runs:.1%})")
+    
+    if evaluations:
+        # Trends
+        avg_score = sum(e['weighted_score'] for e in evaluations) / len(evaluations)
+        avg_latency = sum(e['avg_latency_ms'] for e in evaluations) / len(evaluations)
+        avg_cost = sum(e['total_cost_usd'] for e in evaluations) / len(evaluations)
+        
+        print(f"\nAverage Metrics:")
+        print(f"Quality Score:   {avg_score:.2f}")
+        print(f"Latency:        {avg_latency:.0f}ms")
+        print(f"Cost per Run:   ${avg_cost:.3f}")
+        
+        # Recent results (last 5)
+        print(f"\nRecent Results:")
+        for eval_result in evaluations[:5]:
+            timestamp = datetime.fromisoformat(eval_result['file_date'])
+            time_str = timestamp.strftime("%m/%d %H:%M")
+            
+            status_emoji = {
+                'PASS': '✅',
+                'FAIL': '❌', 
+                'WARNING': '⚠️'
+            }.get(eval_result['gate_status'], '❓')
+            
+            print(f"  {status_emoji} {time_str}: {eval_result['weighted_score']:.2f} "
+                  f"({eval_result['passed_tests']}/{eval_result['total_tests']} passed, "
+                  f"{eval_result['avg_latency_ms']:.0f}ms)")
+    
+    # Alerts and recommendations
+    alerts = []
+    if failed_runs > total_runs * 0.2:  # More than 20% failed
+        alerts.append(f"High failure rate: {failed_runs/total_runs:.1%}")
+    
+    if evaluations and avg_latency > 3000:
+        alerts.append(f"High average latency: {avg_latency:.0f}ms")
+        
+    if evaluations and avg_cost > 5.0:
+        alerts.append(f"High average cost: ${avg_cost:.2f}")
+    
+    if alerts:
+        print(f"\n🚨 Alerts:")
+        for alert in alerts:
+            print(f"  - {alert}")
+    
+    # Recommendations
+    if failed_runs > 0:
+        print(f"\n💡 Recommendations:")
+        print(f"  - Review failed test cases in recent reports")
+        print(f"  - Check telemetry data: just metrics-today")
+        print(f"  - Consider updating golden set if requirements changed")
+
+def show_latest_result():
+    """Show the most recent evaluation result"""
+    evaluations = get_recent_evaluations(30)  # Last 30 days
+    
+    if not evaluations:
+        print("📊 No recent evaluation results found")
+        print("🔄 Run: just eval-run core")
+        return
+    
+    latest = evaluations[0]
+    timestamp = datetime.fromisoformat(latest['file_date'])
+    
+    print(f"📊 Latest Evaluation Result")
+    print("=" * 40)
+    print(f"Suite:          {latest['suite_name']}")
+    print(f"Timestamp:      {timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Tests:          {latest['passed_tests']}/{latest['total_tests']} passed")
+    print(f"Success Rate:   {latest['success_rate']:.1%}")
+    print(f"Quality Score:  {latest['weighted_score']:.2f}")
+    print(f"Avg Latency:    {latest['avg_latency_ms']:.0f}ms")
+    print(f"Total Cost:     ${latest['total_cost_usd']:.3f}")
+    print(f"Gate Status:    {latest['gate_status']}")
+    
+    # Show failed tests if any
+    failed_tests = [t for t in latest['test_results'] if not t['success']]
+    if failed_tests:
+        print(f"\n❌ Failed Tests ({len(failed_tests)}):")
+        for test in failed_tests:
+            print(f"  - {test['test_id']}: {test.get('error', 'Unknown error')}")
+
+def main():
+    """CLI entry point"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Show evaluation reports")
+    parser.add_argument("--period", default="7d", help="Time period (1d, 7d, 30d)")
+    parser.add_argument("--latest", action="store_true", help="Show latest result only")
+    
+    args = parser.parse_args()
+    
+    if args.latest:
+        show_latest_result()
+    else:
+        show_evaluation_trends(args.period)
+
+if __name__ == "__main__":
+    main()

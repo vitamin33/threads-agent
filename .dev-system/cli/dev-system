@@ -82,11 +82,22 @@ def eval_command(args):
     """Run evaluations"""
     try:
         from evals.run import run_evaluation_suite
-        results = run_evaluation_suite(args.suite)
-        print(results)
+        result = run_evaluation_suite(args.suite)
+        
+        # Print summary
+        print(f"\n📋 Suite: {result.suite_name}")
+        print(f"🎯 Score: {result.weighted_score:.2f}")
+        print(f"⚡ Status: {result.gate_status}")
+        
+        return result.gate_status == "PASS"
+        
     except ImportError:
         print("🧪 Evaluation system not yet implemented") 
-        print("🔄 Coming in M2 milestone")
+        print("🔄 Run: .dev-system/cli/dev-system init --evals")
+        return False
+    except Exception as e:
+        print(f"❌ Evaluation failed: {e}")
+        return False
 
 def worktree_command(args):
     """Setup or manage worktrees"""
