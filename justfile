@@ -1,8 +1,29 @@
 # justfile – Command runner for threads-agent development
 # See: https://github.com/casey/just
 
-# Mega Commands (80/20 Rule)
-work-day: check-prerequisites trend-dashboard dev-dashboard ai-business-intelligence
+# 🚀 AI Agent Development System Commands
+# Unified development system for top 1% AI agent factory
+
+dev-system command *args:
+	@./.dev-system/cli/dev-system {{command}} {{args}}
+
+metrics-today:
+	@./.dev-system/cli/metrics-today
+
+brief:
+	@./.dev-system/cli/dev-system brief
+
+eval-run suite="core":
+	@./.dev-system/cli/dev-system eval --suite {{suite}}
+
+wt-setup name focus="":
+	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
+
+release strategy="canary" percentage="10":
+	@./.dev-system/cli/dev-system release --strategy {{strategy}} --percentage {{percentage}}
+
+# Mega Commands (80/20 Rule) - Enhanced with dev-system
+work-day: check-prerequisites brief trend-dashboard dev-dashboard ai-business-intelligence
 create-viral persona topic:
 	just create-viral-{{persona}} "{{topic}}"
 ship-it message:

@@ -1,0 +1,266 @@
+# Feature: Intent Scoring & Classification System
+name: "Intent Scoring & Classification System"
+epic: "epic-235-comment-intent-dm-trigger"
+type: "feature"
+priority: "high"
+estimated_effort: "medium"
+lifecycle_stage: "planning"
+
+# Detailed Description
+description: "Implement sophisticated intent scoring algorithm that converts ML predictions into actionable intent scores (0-100) and classifies comments for DM triggering. Includes confidence thresholds, user behavior analysis, and intelligent classification rules for optimal conversion targeting."
+
+# Acceptance Criteria
+acceptance_criteria: |
+  - Generate intent scores (0-100) with consistent calibration and reliability
+  - Classify comments into actionable categories (immediate_dm, nurture, ignore)
+  - Achieve <10% false positive rate for DM trigger classifications
+  - Support dynamic threshold adjustment based on performance metrics
+  - Provide detailed scoring breakdown and reasoning for each classification
+  - Handle edge cases like sarcasm, jokes, and off-topic comments
+  - Support user-level intent aggregation across multiple comments
+  - Enable A/B testing of different scoring algorithms
+
+# Technical Implementation Details
+implementation:
+  files_to_modify:
+    - "services/intent_scorer/__init__.py"
+    - "services/intent_scorer/main.py" 
+    - "services/intent_scorer/scoring_engine.py"
+    - "services/intent_scorer/classification_rules.py"
+    - "services/intent_scorer/threshold_optimizer.py"
+    - "services/intent_scorer/user_behavior_analyzer.py"
+    - "services/intent_scorer/confidence_calibrator.py"
+    - "services/orchestrator/db/alembic/versions/add_intent_scoring_tables.py"
+    - "chart/templates/intent-scorer.yaml"
+  
+  dependencies:
+    - "NumPy and SciPy for numerical scoring algorithms"
+    - "scikit-learn for classification and threshold optimization"
+    - "pandas for user behavior analysis and aggregation"
+    - "Redis for real-time scoring cache and user history"
+    - "PostgreSQL for intent scoring history and analytics"
+    - "Prometheus for scoring performance metrics"
+
+# Implementation Tasks
+tasks:
+  - name: "Intent Scoring Architecture Design"
+    type: "planning"
+    estimated_hours: 14
+    checklist:
+      - "Design intent scoring algorithm combining multiple ML signals"
+      - "Define scoring scale (0-100) with clear interpretation guidelines"
+      - "Plan classification categories and trigger thresholds"
+      - "Design confidence calibration system for score reliability"
+      - "Plan user-level intent aggregation and history tracking"
+      - "Design A/B testing framework for scoring algorithm optimization"
+      - "Plan integration with ML intent analysis engine"
+      - "Design scoring explanation system for transparency"
+    
+  - name: "Core Scoring Engine Implementation"
+    type: "development"
+    estimated_hours: 20
+    checklist:
+      - "Create intent_scorer microservice with FastAPI architecture"
+      - "Implement weighted scoring algorithm combining ML predictions"
+      - "Create intent score calibration using historical conversion data"
+      - "Implement confidence interval calculation for score reliability"
+      - "Add contextual scoring adjustments based on post and user factors"
+      - "Create real-time scoring pipeline with sub-200ms response time"
+      - "Implement scoring history tracking and user behavior integration"
+      - "Add health checks and scoring performance monitoring"
+    
+  - name: "Classification Rules Engine"
+    type: "development"
+    estimated_hours: 18
+    checklist:
+      - "Implement rule-based classification system for DM triggering"
+      - "Create dynamic threshold management with performance feedback"
+      - "Add multi-criteria decision logic (score + confidence + user history)"
+      - "Implement edge case detection (sarcasm, jokes, spam)"
+      - "Create user preference integration (opt-out, frequency limits)"
+      - "Add classification reasoning and explanation generation"
+      - "Implement A/B testing support for different rule configurations"
+      - "Create manual override system for high-value prospects"
+    
+  - name: "User Behavior Analysis"
+    type: "development"
+    estimated_hours: 22
+    checklist:
+      - "Implement user comment history analysis and intent trend tracking"
+      - "Create user engagement pattern recognition (commenting frequency, timing)"
+      - "Add social proof scoring based on follower count and engagement"
+      - "Implement user journey mapping across multiple comments and posts"
+      - "Create user intent consistency analysis for reliability scoring"
+      - "Add user conversion history integration for personalized scoring"
+      - "Implement user segment classification for targeted scoring"
+      - "Create user behavior prediction for optimal DM timing"
+    
+  - name: "Confidence Calibration System"
+    type: "development"
+    estimated_hours: 16
+    checklist:
+      - "Implement probability calibration for ML model outputs"  
+      - "Create confidence scoring based on prediction uncertainty"
+      - "Add ensemble confidence aggregation from multiple models"
+      - "Implement confidence-based threshold adjustment"
+      - "Create confidence distribution monitoring and alerting"
+      - "Add confidence explanation for scoring transparency"
+      - "Implement confidence-based A/B testing segmentation"
+      - "Create confidence decay models for aging predictions"
+    
+  - name: "Threshold Optimization Engine"
+    type: "development"
+    estimated_hours: 20
+    checklist:
+      - "Implement automated threshold optimization using conversion feedback"
+      - "Create multi-objective optimization (precision vs. recall)"
+      - "Add dynamic threshold adjustment based on business metrics"
+      - "Implement threshold A/B testing for performance comparison"
+      - "Create threshold sensitivity analysis and impact modeling"
+      - "Add seasonal and temporal threshold adjustments"
+      - "Implement threshold rollback system for performance protection"
+      - "Create threshold recommendation system for manual review"
+    
+  - name: "Database Schema and Analytics"
+    type: "development"
+    estimated_hours: 14
+    checklist:
+      - "Create intent_scores table with detailed scoring breakdown"
+      - "Design classification_decisions table for trigger tracking"
+      - "Implement user_intent_history table for behavior analysis"
+      - "Add scoring_performance table for algorithm optimization"
+      - "Create efficient indexes for real-time scoring queries"
+      - "Implement scoring analytics views for business intelligence"
+      - "Add data retention and archival policies for scoring history"
+      - "Create scoring audit trail for compliance and debugging"
+    
+  - name: "Integration with ML Analysis Engine"
+    type: "development"
+    estimated_hours: 12
+    checklist:
+      - "Create seamless integration with ML intent analysis results"
+      - "Implement real-time scoring pipeline triggered by ML predictions"
+      - "Add batch scoring for historical comment reprocessing"
+      - "Create error handling for ML analysis failures"
+      - "Implement scoring fallback when ML models are unavailable"
+      - "Add ML prediction quality validation before scoring"
+      - "Create scoring performance feedback to ML model training"
+      - "Implement versioning compatibility with different ML model versions"
+    
+  - name: "Comprehensive Testing Suite"
+    type: "testing"
+    estimated_hours: 18
+    checklist:
+      - "Unit tests for scoring algorithms and classification rules"
+      - "Integration tests with ML intent analysis engine"
+      - "Performance tests for real-time scoring requirements"
+      - "A/B testing framework validation and statistical significance"
+      - "Edge case testing for sarcasm, spam, and off-topic comments"
+      - "User behavior analysis accuracy tests with historical data"
+      - "Threshold optimization tests with simulated conversion data"
+      - "End-to-end testing for complete scoring and classification pipeline"
+    
+  - name: "API and Dashboard Development"
+    type: "development"
+    estimated_hours: 16
+    checklist:
+      - "Create FastAPI endpoints for real-time intent scoring"
+      - "Implement batch scoring API for historical analysis"
+      - "Add scoring explanation API for transparency and debugging"
+      - "Create threshold management API for business users"
+      - "Implement scoring analytics dashboard for performance monitoring"
+      - "Add user intent history API for customer service integration"
+      - "Create A/B testing configuration API for experiment management"
+      - "Add OpenAPI documentation with scoring examples and interpretation"
+    
+  - name: "Monitoring and Performance Optimization"
+    type: "optimization"
+    estimated_hours: 12
+    checklist:
+      - "Set up Prometheus metrics for scoring performance and accuracy"
+      - "Create Grafana dashboards for intent scoring monitoring"
+      - "Implement alerting for scoring accuracy degradation"
+      - "Add scoring latency and throughput monitoring"
+      - "Optimize scoring algorithms for improved performance"
+      - "Implement caching strategy for frequently scored patterns"
+      - "Add distributed scoring for high-volume processing"
+      - "Create automated performance regression detection"
+
+# Scoring Algorithm Configuration
+scoring_configuration:
+  base_scoring:
+    ml_prediction_weight: 0.6
+    sentiment_score_weight: 0.2
+    keyword_match_weight: 0.15
+    user_behavior_weight: 0.05
+  
+  classification_thresholds:
+    immediate_dm: 80
+    nurture_sequence: 60
+    monitor_only: 40
+    ignore: 20
+  
+  confidence_requirements:
+    immediate_dm: 0.8
+    nurture_sequence: 0.6
+    monitor_only: 0.4
+
+# Performance Requirements  
+performance:
+  scoring_latency: "<200ms per comment"
+  classification_accuracy: "90%+ for high-intent categories"
+  false_positive_rate: "<10% for DM triggers"
+  api_response_time: "<100ms for score retrieval"
+  concurrent_scoring: "200+ parallel scoring operations"
+  threshold_optimization: "Daily automated optimization"
+
+# Business Rules
+business_rules:
+  dm_trigger_limits:
+    - "Maximum 3 DMs per user per week"
+    - "Minimum 24-hour cooldown between DMs"
+    - "Respect user opt-out preferences"
+  
+  scoring_constraints:
+    - "Minimum comment length: 10 characters"
+    - "Maximum comment age: 48 hours for DM triggers"
+    - "Exclude comments from verified/business accounts"
+
+# Automation Configuration
+automation:
+  branch_naming: "feat/cra-235-intent-scoring"
+  pr_template: "feature"
+  quality_gates: ["lint", "test", "security", "performance"]
+  deployment: "staging"
+
+# Feature Metadata
+metadata:
+  id: "feat-235-003-intent-scoring-classification"
+  created: "2025-08-05T00:00:00+00:00"
+  assigned_to: "unassigned"
+  estimated_hours: 182
+  complexity_score: 4
+
+# Local Task Tracking
+local_tracking:
+  status: "pending"
+  labels: ["feature", "high", "medium", "scoring", "classification"]
+  created: "2025-08-05T00:00:00+00:00"
+  project_sync: true
+
+# Integration Requirements
+integration_requirements:
+  ml_analysis_integration:
+    - "Real-time scoring pipeline triggered by ML predictions"
+    - "Batch processing for historical comment analysis"
+    - "Error handling and fallbacks for ML service failures"
+  
+  user_data_integration:
+    - "User profile and behavior history access"
+    - "Conversion tracking for scoring optimization"
+    - "User preference and opt-out management"
+  
+  dm_trigger_integration:
+    - "Real-time classification results for DM triggering"
+    - "User rate limiting and preference enforcement"
+    - "Classification reasoning for DM personalization"

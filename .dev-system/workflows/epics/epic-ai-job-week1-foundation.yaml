@@ -1,0 +1,48 @@
+epic_id: ai-job-week1
+epic_name: "[AI Job] Week 1: Foundation - Service Integration & Content Pipeline"
+description: |
+  Build the foundational integration between achievement_collector and tech_doc_generator services
+  to create an automated content pipeline that showcases production AI expertise for job applications.
+  This epic focuses on connecting existing services to automatically generate portfolio content
+  and thought leadership articles from your achievements.
+status: planned
+priority: critical
+business_value: |
+  - Automates 10+ hours/week of content creation
+  - Creates consistent professional brand presence
+  - Demonstrates production-grade system integration skills
+  - Directly supports $180K-220K salary positioning
+target_completion: 2025-08-11
+features:
+  - feature_id: feat-ai-job-001
+    name: "Achievement-to-Article Integration Layer"
+    description: "Create bidirectional API integration between services"
+    priority: high
+    estimated_effort: 8
+  - feature_id: feat-ai-job-002
+    name: "Automated Content Generation Pipeline"
+    description: "Build pipeline to generate articles from achievements"
+    priority: high
+    estimated_effort: 12
+  - feature_id: feat-ai-job-003
+    name: "Company-Specific Portfolio API"
+    description: "Generate targeted portfolios for specific companies"
+    priority: high
+    estimated_effort: 10
+success_metrics:
+  - "Achievement-to-article conversion < 5 minutes"
+  - "3+ article variations per achievement"
+  - "Company-specific portfolios highlight relevant skills"
+  - "All integrations have 90%+ test coverage"
+dependencies:
+  - "Existing achievement_collector service"
+  - "Existing tech_doc_generator service"
+  - "OpenAI API access for content generation"
+tags:
+  - ai-job-search
+  - automation
+  - portfolio
+  - content-generation
+notes: |
+  This week establishes the technical foundation for automated professional branding.
+  Focus on production-grade implementation that demonstrates senior engineering skills.

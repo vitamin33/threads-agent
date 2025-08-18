@@ -1,0 +1,166 @@
+# Feature: Per-Post Cost Attribution System
+name: "Per-Post Cost Attribution System"
+epic: "epic-240-finops-cost-tracking-optimization"
+type: "feature"
+priority: "high"
+estimated_effort: "large"
+lifecycle_stage: "planning"
+
+# Detailed Description
+description: "Implement precise per-post cost attribution that tracks all costs from content generation through publication. Provides exact cost breakdown for each viral post including AI generation, processing, storage, and distribution costs with full audit trail."
+
+# Acceptance Criteria
+acceptance_criteria: |
+  - Every post has complete cost attribution from generation to publication
+  - Cost breakdown shows: AI tokens, infrastructure, processing, storage
+  - Attribution accuracy within 5% margin of actual costs
+  - Real-time cost updates as post progresses through pipeline
+  - Historical cost analysis and trending for posts
+  - API endpoints for cost queries by post ID
+
+# Technical Implementation Details
+implementation:
+  files_to_modify:
+    - "services/finops_engine/cost_attribution.py"
+    - "services/finops_engine/post_cost_calculator.py"
+    - "services/finops_engine/attribution_middleware.py"
+    - "services/orchestrator/post_lifecycle_tracker.py"
+    - "services/persona_runtime/cost_context.py"
+    - "services/celery_worker/cost_tracking_tasks.py"
+    - "services/dashboard_api/cost_endpoints.py"
+    - "services/orchestrator/db/models/post_costs.py"
+  
+  dependencies:
+    - "Post lifecycle tracking system"
+    - "Cost data collection pipeline"
+    - "PostgreSQL with JSON support"
+    - "Redis for cost calculation caching"
+    - "Celery for async cost aggregation"
+
+# Implementation Tasks
+tasks:
+  - name: "Cost Attribution Architecture Design"
+    type: "planning"
+    estimated_hours: 12
+    checklist:
+      - "Design post cost attribution data model"
+      - "Define cost tracking correlation strategy"
+      - "Plan cost aggregation and calculation pipeline"
+      - "Design API endpoints for cost queries"
+      - "Define cost breakdown categories and granularity"
+      - "Plan cost attribution audit trail"
+      - "Design cost caching strategy for performance"
+    
+  - name: "Post Lifecycle Cost Tracking"
+    type: "development"
+    estimated_hours: 24
+    checklist:
+      - "Instrument orchestrator with post cost tracking"
+      - "Add cost context to post processing pipeline"
+      - "Implement cost tracking middleware for all services"
+      - "Create post cost accumulation system"
+      - "Add cost checkpoints at each pipeline stage"
+      - "Implement cost rollback for failed posts"
+      - "Add real-time cost streaming per post"
+    
+  - name: "AI Generation Cost Attribution"
+    type: "development"
+    estimated_hours: 16
+    checklist:
+      - "Track OpenAI costs per post generation attempt"
+      - "Attribute token costs to specific post IDs"
+      - "Handle cost attribution for retries and failures"
+      - "Track costs for different AI models used"
+      - "Implement cost prediction for generation requests"
+      - "Add cost optimization hints for AI usage"
+    
+  - name: "Infrastructure Cost Allocation"
+    type: "development" 
+    estimated_hours: 20
+    checklist:
+      - "Implement CPU/memory cost allocation per post"
+      - "Track storage costs for post data and artifacts"
+      - "Allocate network and bandwidth costs"
+      - "Implement time-based infrastructure cost sharing"
+      - "Add database operation cost tracking"
+      - "Track vector database costs per post"
+    
+  - name: "Cost Aggregation and Calculation Engine"
+    type: "development"
+    estimated_hours: 18
+    checklist:
+      - "Implement real-time cost aggregation pipeline"
+      - "Create cost calculation algorithms"
+      - "Add cost breakdown by category and service"
+      - "Implement cost trending and analysis"
+      - "Create cost comparison and benchmarking"
+      - "Add cost efficiency scoring per post"
+    
+  - name: "Cost Attribution API Development"
+    type: "development"
+    estimated_hours: 14
+    checklist:
+      - "Create REST API endpoints for post cost queries"
+      - "Implement cost breakdown and analysis endpoints"
+      - "Add cost trending and historical analysis APIs"
+      - "Create cost comparison and benchmarking endpoints"
+      - "Implement cost attribution audit trail API"
+      - "Add cost optimization recommendation endpoints"
+    
+  - name: "Comprehensive Testing and Validation"
+    type: "testing"
+    estimated_hours: 16
+    checklist:
+      - "Unit tests for cost attribution algorithms"
+      - "Integration tests for end-to-end cost tracking"
+      - "Accuracy tests for cost calculation precision"
+      - "Performance tests for high-volume cost attribution"
+      - "API endpoint testing with various cost scenarios"
+      - "Cost attribution audit trail validation"
+      - "Edge case testing for cost tracking failures"
+    
+  - name: "Performance Optimization and Caching"
+    type: "optimization"
+    estimated_hours: 12
+    checklist:
+      - "Implement Redis caching for cost calculations"
+      - "Optimize database queries for cost attribution"
+      - "Add cost calculation result caching"
+      - "Implement cost data compression strategies"
+      - "Optimize API response times for cost queries"
+      - "Add cost attribution performance monitoring"
+
+# Automation Configuration
+automation:
+  branch_naming: "feat/cra-240-post-cost-attribution"
+  pr_template: "feature"
+  quality_gates: ["lint", "test", "security", "performance"]
+  deployment: "staging"
+
+# Feature Metadata
+metadata:
+  id: "feat-240-002-per-post-attribution"
+  created: "2025-08-03T12:00:00+00:00"
+  assigned_to: "unassigned"
+  estimated_hours: 132
+  complexity_score: 4
+
+# Local Task Tracking
+local_tracking:
+  status: "pending"
+  labels: ["feature", "high", "large", "finops", "attribution"]
+  created: "2025-08-03T12:00:00+00:00"
+  project_sync: true
+
+# Cost Attribution Categories
+cost_categories:
+  - name: "AI Generation"
+    components: ["OpenAI API tokens", "Model usage", "Request processing"]
+  - name: "Infrastructure"
+    components: ["CPU usage", "Memory allocation", "Storage operations"]
+  - name: "Processing"
+    components: ["Background tasks", "Data processing", "Validation"]
+  - name: "Distribution"
+    components: ["API calls", "Network bandwidth", "CDN costs"]
+  - name: "Storage"
+    components: ["Database operations", "Vector storage", "File storage"]

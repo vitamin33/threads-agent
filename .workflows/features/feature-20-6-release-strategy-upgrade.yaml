@@ -1,0 +1,121 @@
+id: feature-20-6-release-strategy-upgrade
+epic_id: epic-20-agent-factory-upgrade
+title: "Release Strategy Upgrade - Staging Per Worktree & Canary Deploys"
+description: |
+  Upgrade deployment strategy with isolated staging environments and automated canary deployments.
+  Build on existing smart-deploy foundation with agent-specific release management.
+  
+priority: medium
+estimated_hours: 18
+estimated_story_points: 4
+status: planned
+
+business_value: |
+  Reduces deployment risk and enables faster iteration with confidence.
+  Demonstrates advanced DevOps practices and release engineering for platform roles.
+
+tasks:
+  - id: release-001
+    title: "Design agent-specific staging strategy"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Create staging environment strategy for 4-agent development
+      - Isolated staging per worktree/agent
+      - Resource-efficient staging with namespace isolation
+      - Integration with existing k3d cluster setup
+    acceptance_criteria:
+      - "Staging strategy documented with resource allocation"
+      - "Namespace isolation design for k3d"
+      - "Integration plan with existing smart-deploy"
+
+  - id: release-002
+    title: "Implement agent staging environments"
+    type: implementation
+    estimated_hours: 5
+    description: |
+      Create isolated staging environments for each agent
+      - A1 staging: Infrastructure and platform services
+      - A2 staging: AI/ML and content services
+      - A3 staging: Analytics and dashboard services
+      - A4 staging: Revenue and business services
+    acceptance_criteria:
+      - "4 isolated staging environments in k3d"
+      - "Agent-specific service deployments"
+      - "just stage-a1, just stage-a2, etc. commands"
+
+  - id: release-003
+    title: "Enhance smart-deploy with canary capabilities"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Upgrade existing smart-deploy script with canary deployment
+      - Gradual traffic shifting (10% -> 50% -> 100%)
+      - Automated rollback on health check failures
+      - Integration with existing Prometheus monitoring
+    acceptance_criteria:
+      - "Canary deployment with traffic shifting"
+      - "Automated rollback on failure"
+      - "Integration with existing monitoring"
+
+  - id: release-004
+    title: "Add release validation automation"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Automated validation for releases across environments
+      - Health check validation post-deployment
+      - Integration with evaluation framework
+      - Smoke tests for critical functionality
+    acceptance_criteria:
+      - "Automated health checks post-deployment"
+      - "Integration with evaluation framework"
+      - "Smoke test suite for core functionality"
+
+  - id: release-005
+    title: "Write release strategy tests"
+    type: testing
+    estimated_hours: 2
+    description: |
+      Test release automation and canary deployments
+      - Test staging environment isolation
+      - Test canary deployment rollback scenarios
+      - Test release validation automation
+    acceptance_criteria:
+      - "Test staging environment deployment"
+      - "Test canary rollback automation"
+      - "Test release validation pipeline"
+
+  - id: release-006
+    title: "Create release management dashboard"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Add release tracking to existing monitoring
+      - Release status across all agents/environments
+      - Deployment success rates and rollback tracking
+      - Canary deployment progress visualization
+    acceptance_criteria:
+      - "Release status dashboard in Grafana"
+      - "Deployment metrics and rollback tracking"
+      - "Canary deployment progress panels"
+
+dependencies:
+  - "Existing k3d cluster and smart-deploy"
+  - "Prometheus monitoring (existing)"
+  - "Agent evaluation framework (feature-20-1)"
+  - "GitHub Actions CI (existing)"
+
+technical_requirements:
+  - "Fast staging deployment (<5 minutes)"
+  - "Automated rollback within 60 seconds"
+  - "Resource-efficient staging environments"
+  - "Integration with existing deployment tools"
+
+risks:
+  - "Staging complexity slowing development"
+  - "Resource constraints with multiple environments"
+  
+mitigations:
+  - "Lightweight staging with selective service deployment"
+  - "Resource sharing and cleanup automation"

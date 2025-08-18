@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""
+AI Agent Development System CLI
+Main entry point for the development system - replaces multiple legacy scripts
+"""
+
+import sys
+import os
+import argparse
+import yaml
+from pathlib import Path
+
+# Add dev-system to path
+DEV_SYSTEM_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(DEV_SYSTEM_ROOT))
+
+def load_config():
+    """Load development system configuration"""
+    config_path = DEV_SYSTEM_ROOT / "config" / "dev-system.yaml"
+    if config_path.exists():
+        with open(config_path) as f:
+            return yaml.safe_load(f)
+    return {}
+
+def init_system(args):
+    """Initialize the development system"""
+    print("🚀 Initializing AI Agent Development System...")
+    
+    # Create data directories
+    data_dir = DEV_SYSTEM_ROOT / "data"
+    data_dir.mkdir(exist_ok=True)
+    
+    # Initialize telemetry database
+    if args.telemetry:
+        from ops.telemetry import init_telemetry_db
+        init_telemetry_db()
+        print("✅ Telemetry system initialized")
+    
+    # Initialize evaluation system  
+    if args.evals:
+        evals_dir = DEV_SYSTEM_ROOT / "evals" / "suites"
+        evals_dir.mkdir(parents=True, exist_ok=True)
+        print("✅ Evaluation system initialized")
+        
+    # Initialize prompt registry
+    if args.prompts:
+        prompts_dir = DEV_SYSTEM_ROOT / "prompts" / "registry" 
+        prompts_dir.mkdir(parents=True, exist_ok=True)
+        print("✅ Prompt registry initialized")
+        
+    print("✅ Development system ready!")
+
+def brief_command(args):
+    """Generate morning brief"""
+    try:
+        from planner.brief import generate_morning_brief
+        brief = generate_morning_brief()
+        print(brief)
+    except ImportError:
+        print("📋 Morning brief system not yet implemented")
+        print("🔄 Coming in M5 milestone")
+        
+def metrics_command(args):
+    """Show metrics for specified period"""
+    try:
+        from ops.telemetry import show_metrics
+        metrics = show_metrics(period=args.period)
+        print(metrics)
+    except ImportError:
+        print("📊 Telemetry system not yet implemented")
+        print("🔄 Coming in M1 milestone")
+
+def eval_command(args):
+    """Run evaluations"""
+    try:
+        from evals.run import run_evaluation_suite
+        results = run_evaluation_suite(args.suite)
+        print(results)
+    except ImportError:
+        print("🧪 Evaluation system not yet implemented") 
+        print("🔄 Coming in M2 milestone")
+
+def worktree_command(args):
+    """Setup or manage worktrees"""
+    try:
+        from agents.worktree import setup_worktree
+        setup_worktree(args.name, args.focus)
+    except ImportError:
+        print("🌳 Worktree system not yet implemented")
+        print("🔄 Using legacy script: scripts/setup-4-agents.sh")
+        os.system("scripts/setup-4-agents.sh")
+
+def release_command(args):
+    """Manage releases and deployments"""
+    try:
+        from ops.release import deploy_with_strategy
+        deploy_with_strategy(args.strategy, percentage=args.percentage)
+    except ImportError:
+        print("🚀 Release system not yet implemented")
+        print("🔄 Coming in M4 milestone")
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="AI Agent Development System CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s init                    # Initialize the system
+  %(prog)s brief                   # Get morning priorities  
+  %(prog)s metrics --period 1d     # Show yesterday's metrics
+  %(prog)s eval --suite core       # Run core evaluation suite
+  %(prog)s worktree --name a1-mlops --focus infrastructure
+  %(prog)s release --strategy canary --percentage 10
+        """
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # Init command
+    init_parser = subparsers.add_parser('init', help='Initialize development system')
+    init_parser.add_argument('--telemetry', action='store_true', help='Initialize telemetry')
+    init_parser.add_argument('--evals', action='store_true', help='Initialize evaluations')
+    init_parser.add_argument('--prompts', action='store_true', help='Initialize prompt registry')
+    
+    # Brief command
+    brief_parser = subparsers.add_parser('brief', help='Generate morning brief')
+    
+    # Metrics command
+    metrics_parser = subparsers.add_parser('metrics', help='Show metrics')
+    metrics_parser.add_argument('--period', default='1d', help='Time period (1d, 7d, 30d)')
+    
+    # Eval command
+    eval_parser = subparsers.add_parser('eval', help='Run evaluations')
+    eval_parser.add_argument('--suite', default='core', help='Evaluation suite name')
+    
+    # Worktree command
+    worktree_parser = subparsers.add_parser('worktree', help='Setup worktree')
+    worktree_parser.add_argument('--name', required=True, help='Worktree name')
+    worktree_parser.add_argument('--focus', help='Development focus area')
+    
+    # Release command
+    release_parser = subparsers.add_parser('release', help='Manage releases')  
+    release_parser.add_argument('--strategy', default='canary', help='Release strategy')
+    release_parser.add_argument('--percentage', type=int, default=10, help='Canary percentage')
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        return
+        
+    # Route to appropriate command
+    if args.command == 'init':
+        init_system(args)
+    elif args.command == 'brief':
+        brief_command(args)
+    elif args.command == 'metrics':
+        metrics_command(args)
+    elif args.command == 'eval':
+        eval_command(args)
+    elif args.command == 'worktree':
+        worktree_command(args)
+    elif args.command == 'release':
+        release_command(args)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
