@@ -182,35 +182,44 @@ jobs:
               const potentialEmoji = analysis.marketing_potential === 'HIGH' ? '🚀' : 
                                    analysis.marketing_potential === 'MEDIUM' ? '📈' : '📊';
               
-              const comment = `## 🤖 AI Marketing Analysis Preview
+              const aiLabel = analysis.ai_powered ? '🤖 **AI-Powered Analysis**' : '⚠️ **Fallback Analysis** (OpenAI API unavailable)';
+            
+            const comment = `## ${aiLabel}
               
               ${potentialEmoji} **Marketing Potential: ${analysis.marketing_potential}**
               
-              ### 📊 AI Scores
+              ### 📊 ${analysis.ai_powered ? 'Real AI Scores' : 'Basic Keyword Scores'}
               \`\`\`
-              Overall Score:     ${analysis.overall_score}/100 ${scoreBar}
-              Business Impact:   ${analysis.business_score}/10 ${'⭐'.repeat(Math.min(analysis.business_score, 5))}
-              Technical Depth:   ${analysis.technical_score}/10 ${'⭐'.repeat(Math.min(analysis.technical_score, 5))}
-              Change Size:       ${analysis.size_score}/10 ${'⭐'.repeat(Math.min(analysis.size_score, 5))}
+              Overall Score:        ${analysis.overall_score}/100 ${scoreBar}
+              Business Impact:      ${analysis.business_score}/10 ${'⭐'.repeat(Math.min(analysis.business_score, 5))}
+              Technical Depth:      ${analysis.technical_score}/10 ${'⭐'.repeat(Math.min(analysis.technical_score, 5))}
+              ${analysis.ai_powered ? `Professional Positioning: ${analysis.positioning_score}/10 ${'⭐'.repeat(Math.min(analysis.positioning_score, 5))}
+              Content Potential:    ${analysis.content_score}/10 ${'⭐'.repeat(Math.min(analysis.content_score, 5))}` : ''}
               \`\`\`
               
-              ### 🎯 Content Generation
+              ### 🎯 Content Generation Decision
               ${analysis.would_generate_content ? 
-                '✅ **Will Generate Content** - This PR will trigger automated marketing content across 6 platforms' : 
+                `✅ **Will Generate Content** - This PR will trigger automated marketing content
+                📍 **Recommended Platforms**: ${analysis.recommended_platforms ? analysis.recommended_platforms.join(', ') : 'LinkedIn, Dev.to'}` : 
                 '❌ **No Content Generation** - This PR won\'t trigger marketing automation'}
               
-              ${suggestions.length > 0 ? `### 💡 Improvement Suggestions
+              ${suggestions.length > 0 ? `### 💡 ${analysis.ai_powered ? 'AI-Generated' : 'Basic'} Improvement Suggestions
               ${suggestions.map(s => `- ${s}`).join('\n')}
               
-              *Improve these areas to increase marketing potential and job opportunity generation.*` : ''}
+              *${analysis.ai_powered ? 'AI-powered recommendations' : 'Basic recommendations'} to increase marketing potential and job opportunity generation.*` : ''}
+              
+              ${analysis.ai_powered && analysis.strategy ? `### 🎯 AI Marketing Strategy
+              ${analysis.strategy.substring(0, 300)}...
+              
+              *Full AI strategy analysis available in logs*` : ''}
               
               ### 📈 Marketing Impact
               ${analysis.would_generate_content ? 
-                'This PR will automatically generate professional content for LinkedIn, Dev.to, Medium, GitHub, Twitter, and Threads with serbyn.pro CTAs for lead generation.' :
-                'Consider highlighting technical achievements and business impact to enable automated marketing content generation.'}
+                `This PR will automatically generate professional content for ${analysis.recommended_platforms ? analysis.recommended_platforms.join(', ') : 'multiple platforms'} with serbyn.pro CTAs for lead generation and job opportunity conversion.` :
+                'Consider highlighting technical achievements and business impact to enable automated marketing content generation for job opportunities.'}
               
               ---
-              *Powered by AI Marketing Automation System | Score updates on each commit*`;
+              *${analysis.ai_powered ? 'Powered by OpenAI GPT-4o-mini' : 'Basic Analysis'} | Marketing Automation System | Score updates on each commit*`;
               
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
