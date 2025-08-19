@@ -1,0 +1,79 @@
+# M7: Agent Quality Suite Template
+# Reusable template for creating agent-specific evaluation suites
+
+metadata:
+  name: "{{AGENT_NAME}}"
+  description: "Quality gates for {{AGENT_NAME}} service"
+  version: "1.0.0"
+  agent: "{{AGENT_NAME}}"
+  created: "2025-08-19"
+  
+# Default gates (can be overridden per agent)
+gates:
+  min_success_rate: 0.85
+  max_avg_latency_ms: 5000
+  max_cost_per_test: 0.20
+  max_total_cost: 5.00
+  
+# Common test patterns (reusable across agents)
+common_tests:
+  
+  # Health and basic functionality
+  health_check:
+    description: "Service health endpoint responds correctly"
+    input:
+      endpoint: "/health"
+      method: "GET"
+    expected_output:
+      status_code: 200
+      response_time_ms: 500
+    weight: 5
+    
+  metrics_endpoint:
+    description: "Prometheus metrics endpoint functional"
+    input:
+      endpoint: "/metrics"
+      method: "GET"
+    expected_output:
+      status_code: 200
+      prometheus_format: true
+    weight: 4
+    
+  # Error handling
+  invalid_request:
+    description: "Handle invalid requests gracefully"
+    input:
+      invalid_payload: true
+    expected_output:
+      error: "validation_error"
+      graceful_failure: true
+    weight: 6
+    
+  # Performance
+  load_handling:
+    description: "Handle reasonable load without degradation"
+    input:
+      concurrent_requests: 10
+    expected_output:
+      max_latency_ms: 3000
+      success_rate: 0.95
+    weight: 7
+
+# Agent-specific test categories (to be filled per agent)
+agent_specific_tests: []
+
+evaluation:
+  timeout_seconds: 30
+  retry_attempts: 2
+  parallel_execution: true
+  
+  scoring:
+    functionality: 0.4
+    performance: 0.3
+    reliability: 0.2
+    integration: 0.1
+    
+  pass_criteria:
+    min_weighted_score: 0.80
+    max_failed_tests: 3
+    max_timeout_tests: 1

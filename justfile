@@ -13,6 +13,25 @@ metrics-today:
 brief:
 	@./.dev-system/cli/dev-system brief
 
+debrief:
+	@./.dev-system/cli/dev-system debrief
+
+ice-demo:
+	@cd .dev-system && python3 planner/ice.py
+
+# M0: Safety Net Commands
+safety-check:
+	@cd .dev-system && python3 ops/safety.py --validate
+
+safety-setup:
+	@cd .dev-system && python3 ops/safety.py --setup-secrets --setup-gitignore --install-hooks
+
+rate-status:
+	@cd .dev-system && python3 ops/rate_limits.py --status
+
+rate-test:
+	@cd .dev-system && python3 ops/rate_limits.py --test
+
 eval-run suite="core":
 	@./.dev-system/cli/dev-system eval --suite {{suite}}
 
@@ -25,19 +44,45 @@ eval-latest:
 eval-gate result:
 	@./.dev-system/evals/gate.py --result {{result}} --exit-code
 
+# M7: Multi-Agent Quality Commands
+eval-all:
+	@cd .dev-system && python3 evals/multi_agent_runner.py
+
+eval-agents agents:
+	@cd .dev-system && python3 evals/multi_agent_runner.py --agents {{agents}}
+
+eval-list:
+	@cd .dev-system && python3 evals/multi_agent_runner.py --list
+
+quality-weekly days="7":
+	@cd .dev-system && python3 evals/weekly_report.py --days {{days}}
+
+quality-dashboard:
+	@echo "📊 Opening quality dashboard..." && cd .dev-system && python3 evals/weekly_report.py --days 30
+
 wt-setup name focus="":
 	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
 
-release strategy="canary" percentage="10":
-	@./.dev-system/cli/dev-system release --strategy {{strategy}} --percentage {{percentage}}
+release strategy="canary" percentage="10" environment="dev":
+	@./.dev-system/cli/dev-system release --strategy {{strategy}} --percentage {{percentage}} --environment {{environment}}
 
-# Mega Commands (80/20 Rule) - Enhanced with dev-system
-work-day: check-prerequisites brief trend-dashboard dev-dashboard ai-business-intelligence
+release-history:
+	@./.dev-system/cli/dev-system release --history
+
+release-staging:
+	@./.dev-system/cli/dev-system release --strategy staging
+
+release-direct environment="dev":
+	@echo "⚠️  WARNING: Direct deployment bypasses safety checks"
+	@./.dev-system/cli/dev-system release --strategy direct --environment {{environment}}
+
+# Mega Commands (80/20 Rule) - Enhanced with dev-system + M5 AI Planning
+work-day: check-prerequisites metrics-today brief trend-dashboard dev-dashboard ai-business-intelligence
 create-viral persona topic:
 	just create-viral-{{persona}} "{{topic}}"
 ship-it message:
 	just smart-deploy canary && just github-pr "{{message}}"
-end-day: analyze-money overnight-optimize
+end-day: debrief analyze-money overnight-optimize
 make-money: autopilot-start grow-business analyze-money
 grow-business: trend-start searxng-start
 	just competitive-analysis "AI content"

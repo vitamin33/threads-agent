@@ -79,15 +79,22 @@ def check_extraction_ready():
     return issues
 
 def main():
-    print("🔍 Verifying AI Agent Development System Structure")
-    print("=" * 60)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quiet", action="store_true", help="Quiet mode")
+    args = parser.parse_args()
+    
+    if not args.quiet:
+        print("🔍 Verifying AI Agent Development System Structure")
+        print("=" * 60)
     
     # Check directory structure
     missing_dirs = check_structure()
-    if missing_dirs:
-        print(f"❌ Missing directories: {', '.join(missing_dirs)}")
-    else:
-        print("✅ Directory structure complete")
+    if not args.quiet:
+        if missing_dirs:
+            print(f"❌ Missing directories: {', '.join(missing_dirs)}")
+        else:
+            print("✅ Directory structure complete")
     
     # Check configuration
     if check_config():

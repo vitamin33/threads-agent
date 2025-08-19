@@ -1,0 +1,122 @@
+name: M7 Multi-Agent Quality Gates
+
+# Enhanced CI workflow that tests ALL agents, not just individual services
+on:
+  pull_request:
+    paths:
+      - 'services/**'           # Any service changes
+      - '.dev-system/evals/**'  # Quality suite changes
+    branches: [ main ]
+  push:
+    paths:
+      - 'services/**'
+      - '.dev-system/evals/**'
+    branches: [ main ]
+  schedule:
+    - cron: '0 9 * * *'         # Daily at 9 AM for trend tracking
+
+# Separate from other CI workflows
+concurrency:
+  group: multi-agent-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  multi-agent-evaluation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml
+    
+    - name: Check Available Agent Suites
+      run: |
+        cd .dev-system
+        python evals/multi_agent_runner.py --list
+    
+    - name: Run Multi-Agent Quality Evaluation
+      run: |
+        cd .dev-system
+        python evals/multi_agent_runner.py
+      # Uses mock implementations in CI to avoid API costs
+      
+    - name: Generate Quality Report
+      run: |
+        cd .dev-system
+        python evals/weekly_report.py --days 1
+    
+    - name: Enforce Multi-Agent Quality Gates
+      run: |
+        cd .dev-system
+        # Custom gate enforcement for multi-agent results
+        python -c "
+        import json
+        with open('evals/reports/multi_agent_*.json') as f:
+            result = json.load(f)
+        
+        if result['overall_score'] < 0.70:
+            print('❌ Multi-agent quality too low for deployment')
+            exit(1)
+        elif result['failed_agents'] > result['total_agents'] * 0.3:
+            print('❌ Too many failing agents for deployment')
+            exit(1)
+        else:
+            print('✅ Multi-agent quality acceptable')
+        "
+    
+    - name: Upload Multi-Agent Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: multi-agent-quality-results
+        path: |
+          .dev-system/evals/reports/multi_agent_*.json
+          .dev-system/evals/reports/eval_*.json
+        retention-days: 30
+    
+    - name: Comment Quality Summary on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Find latest multi-agent report
+          const reports = fs.readdirSync('.dev-system/evals/reports/')
+            .filter(f => f.startsWith('multi_agent_'))
+            .sort()
+            .reverse();
+          
+          if (reports.length > 0) {
+            const report = JSON.parse(fs.readFileSync(`.dev-system/evals/reports/${reports[0]}`, 'utf8'));
+            
+            const comment = `## 🧪 Multi-Agent Quality Report
+            
+**Overall Score:** ${report.overall_score.toFixed(2)}/1.00
+**Agents Evaluated:** ${report.total_agents}
+**Status:** ${report.passed_agents}/${result.total_agents} agents passing
+
+### Agent Results:
+${Object.entries(report.agent_results).map(([agent, result]) => 
+  `- **${agent}**: ${result.weighted_score.toFixed(2)} (${result.gate_status})`
+).join('\n')}
+
+${report.overall_score < 0.70 ? '❌ Quality gates failing - deployment blocked' : '✅ Quality gates passing'}
+`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }
