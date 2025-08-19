@@ -268,7 +268,7 @@ class PRValueAnalyzerIntegration:
             if tag in category_mapping:
                 return category_mapping[tag]
 
-        return "development"
+        return "feature"
 
     def _extract_skills(self, analysis: Dict[str, Any]) -> List[str]:
         """Extract skills from analysis."""

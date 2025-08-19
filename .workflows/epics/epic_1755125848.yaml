@@ -1,0 +1,77 @@
+id: "epic_1755125848"
+name: "Multi-Platform Content Automation & Analytics with Agent A3 Services Integration"
+description: "Multi-Platform Content Automation & Analytics - Auto-generate MLflow case studies, SLO-gated CI tutorials, FinOps dashboards, and technical content using achievement_collector → tech_doc_generator → dashboard_api → finops_engine pipeline for publishing to all 6 platforms (Dev.to, LinkedIn, Medium, GitHub, Twitter, Threads) with comprehensive analytics collection and cross-platform performance tracking targeting AI hiring managers"
+complexity: "medium"
+created: "2025-08-14T01:57:28+0300"
+status: "planning"
+lifecycle_stage: "inception"
+ai_generated: false
+template_generated: true
+
+# Epic Analysis
+estimated_effort: "4-6 weeks"
+risk_level: "medium"
+business_value: "High impact on portfolio and job applications through targeted content categories"
+content_categories:
+  MLOps_Patterns: "MLflow Production, K8s for ML, CI/CD for Models, SLO-gated Releases"
+  FinOps_Analysis: "vLLM vs API costs, GPU optimization, Resource auto-scaling, Cost attribution"
+  GenAI_Engineering: "RAG architecture, Prompt engineering, LLM evaluation, Vector optimization"
+  Performance_Optimization: "Python ML performance, Async AI APIs, Memory management, Latency optimization"
+  Analytics_Dashboards: "Real-time ML metrics, Business value measurement, A/B testing, Executive dashboards"
+technical_approach: |
+  1. Research and architecture design
+  2. Core implementation and testing
+  3. Documentation and portfolio preparation
+  4. Deployment and monitoring setup
+
+# Features (Multi-Platform Content Automation & Analytics specific)
+features:
+  - feat_epic_1755125848_001: "MLflow Case Study Auto-Generation → All 6 Platforms Publishing (achievement_collector → tech_doc_generator)"
+  - feat_epic_1755125848_002: "SLO-gated CI Tutorial Multi-Platform Publishing + Cross-Platform Analytics (6 platforms + HackerNews + Reddit)"
+  - feat_epic_1755125848_003: "FinOps Cost Dashboard + Multi-Platform Content Performance Analytics (finops_engine → dashboard_api)"
+  - feat_epic_1755125848_004: "Company-Targeted Content Automation (Anthropic/Notion/Stripe) + Engagement Analytics Across All Platforms"
+  - feat_epic_1755125848_005: "Weekly Content Automation Pipeline for All 6 Platforms + Comprehensive Scheduling Analytics"
+  - feat_epic_1755125848_006: "Multi-Platform Analytics Collectors (LinkedIn, Twitter, Medium, GitHub, Threads) + Dev.to (existing)"
+  - feat_epic_1755125848_007: "Cross-Platform Performance Dashboard + Lead Generation & Conversion Analytics"
+  - feat_epic_1755125848_008: "Content Optimization Engine Based on Multi-Platform Analytics Data"
+
+# Milestones
+milestones:
+  - name: "Architecture Complete"
+    target_date: "2025-08-21"
+    criteria:
+      - "Technical design documented"
+      - "Dependencies identified"
+      - "Risk assessment complete"
+  
+  - name: "MVP Implementation"
+    target_date: "2025-09-04"
+    criteria:
+      - "Core functionality working"
+      - "Basic tests passing"
+      - "Integration points tested"
+  
+  - name: "Portfolio Ready"
+    target_date: "2025-09-18"
+    criteria:
+      - "Documentation complete"
+      - "Demo artifacts created"
+      - "Performance benchmarks ready"
+
+# Success Metrics
+metrics:
+  - name: "Content Generation Rate"
+    target: "3+ posts/week automated"
+    measurement: "Published articles count"
+  - name: "Platform Coverage"
+    target: "6 platforms (Dev.to, LinkedIn, Medium, GitHub, Twitter, Threads)"
+    measurement: "Publishing success rate per platform"
+  - name: "Dev.to Engagement"
+    target: ">75% engagement rate on Dev.to articles"
+    measurement: "Views, likes, comments via DevToMetricsCollector"
+  - name: "AI Hiring Manager Reach"
+    target: "10+ applications/week with custom content"
+    measurement: "LinkedIn/Dev.to targeting analytics"
+  - name: "Service Integration"
+    target: "Full pipeline working: achievement_collector → tech_doc_generator → dashboard_api → finops_engine"
+    measurement: "End-to-end automation success rate"
