@@ -149,6 +149,23 @@ class EvaluationRunner:
         except Exception as e:
             latency_ms = (time.time() - start_time) * 1000
 
+            # Check if this is an expected error (test should pass)
+            expected_output = test_case.get("expected_output", {})
+            if "error" in expected_output:
+                expected_error = expected_output["error"]
+                if expected_error in str(e):
+                    # This is an expected error - test passes!
+                    return TestResult(
+                        test_id=test_id,
+                        success=True,  # Expected error = success
+                        score=1.0,  # Full score for expected behavior
+                        latency_ms=latency_ms,
+                        cost_usd=0.0,
+                        output={"error": str(e), "expected": True},
+                        metadata={"weight": weight, "expected_error": True},
+                    )
+
+            # Unexpected error - actual failure
             return TestResult(
                 test_id=test_id,
                 success=False,
