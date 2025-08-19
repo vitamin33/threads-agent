@@ -1,0 +1,165 @@
+id: feature-20-2-telemetry-observability-system
+epic_id: epic-20-agent-factory-upgrade
+title: "Telemetry & Observability System - Track Success, Cost, and Performance"
+description: |
+  Implement comprehensive telemetry system to track AI operations success rate, token costs,
+  and performance metrics. Focus on actionable insights with 5-second dashboard load times.
+  
+priority: high
+estimated_hours: 28
+estimated_story_points: 7
+status: planned
+
+business_value: |
+  Enables $30,000+ annual cost optimization through precise tracking of AI operations.
+  Provides portfolio-worthy observability demonstrations for SRE/MLOps roles.
+
+tasks:
+  - id: telem-001
+    title: "Design telemetry data model and storage"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Create efficient telemetry schema optimized for fast queries
+      - ai_operations table (operation_type, tokens, cost, latency, success)
+      - agent_sessions table (session tracking across worktrees)
+      - performance_baselines table (historical performance data)
+    acceptance_criteria:
+      - "Telemetry database schema with proper indexing"
+      - "Migration scripts for new tables"
+      - "Data retention policy (90 days)"
+
+  - id: telem-002
+    title: "Implement async telemetry collection"
+    type: implementation
+    estimated_hours: 5
+    description: |
+      Create lightweight telemetry wrapper for AI operations
+      - Async telemetry client (no performance impact)
+      - Auto-track OpenAI API calls (tokens, cost, latency)
+      - Track learning-system.sh command patterns
+      - Session tracking for 4-agent development
+    acceptance_criteria:
+      - "TelemetryClient class with async writes"
+      - "Zero performance impact on main operations"
+      - "Auto-instrumentation of OpenAI calls"
+
+  - id: telem-003
+    title: "Write comprehensive telemetry tests"
+    type: testing
+    estimated_hours: 4
+    description: |
+      TDD approach for telemetry reliability
+      - Test telemetry data accuracy and completeness
+      - Test async collection performance
+      - Test data persistence and retrieval
+    acceptance_criteria:
+      - "test_telemetry.py with async test patterns"
+      - "Performance tests showing <1ms overhead"
+      - "Integration tests with real service calls"
+
+  - id: telem-004
+    title: "Integrate telemetry into existing services"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Add telemetry to key AI services without changing interfaces
+      - persona_runtime: track content generation metrics
+      - viral_engine: track trend detection performance
+      - achievement_collector: track analysis success rates
+    acceptance_criteria:
+      - "All AI operations automatically tracked"
+      - "No changes to existing service APIs"
+      - "Telemetry data flowing to database"
+
+  - id: telem-005
+    title: "Create 5-second performance dashboard"
+    type: implementation
+    estimated_hours: 5
+    description: |
+      Ultra-fast dashboard showing key AI operation metrics
+      - Real-time success rates by service
+      - Token cost trends and optimization opportunities
+      - Performance regression detection
+      - Agent productivity comparison
+    acceptance_criteria:
+      - "Dashboard loads in <5 seconds"
+      - "Real-time metrics with auto-refresh"
+      - "Cost optimization recommendations"
+
+  - id: telem-006
+    title: "Implement cost tracking and alerting"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Track and alert on AI operation costs
+      - Daily/weekly cost tracking by service
+      - Cost per successful operation metrics
+      - Alerts for unusual cost spikes
+      - Integration with FinOps dashboards
+    acceptance_criteria:
+      - "Cost tracking with daily summaries"
+      - "Slack/email alerts for cost anomalies"
+      - "Cost optimization suggestions"
+
+  - id: telem-007
+    title: "Add telemetry integration tests"
+    type: testing
+    estimated_hours: 3
+    description: |
+      End-to-end tests for telemetry system
+      - Test telemetry collection during real AI operations
+      - Test dashboard data accuracy
+      - Test alert system functionality
+    acceptance_criteria:
+      - "E2E tests with real service integration"
+      - "Dashboard data validation tests"
+      - "Alert system integration tests"
+
+  - id: telem-008
+    title: "Create ultra-friendly telemetry commands"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Add telemetry commands to existing justfile workflow
+      - just telemetry-status (quick status check)
+      - just cost-analysis (detailed cost breakdown)
+      - just perf-report (performance analysis)
+    acceptance_criteria:
+      - "Telemetry commands in justfile"
+      - "Commands return results in <3 seconds"
+      - "Integration with existing command patterns"
+
+  - id: telem-009
+    title: "Add telemetry to learning system integration"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Enhance existing learning-system.sh with telemetry insights
+      - Track command success correlation with telemetry data
+      - Identify patterns between development actions and AI performance
+      - Generate optimization suggestions based on telemetry
+    acceptance_criteria:
+      - "Learning system uses telemetry for insights"
+      - "Correlation analysis between dev actions and AI performance"
+      - "Enhanced suggestions with telemetry data"
+
+dependencies:
+  - "PostgreSQL database (existing)"
+  - "Learning system analytics (existing)"
+  - "Prometheus/Grafana monitoring (existing)"
+  - "OpenAI API integration (existing)"
+
+technical_requirements:
+  - "Async telemetry collection (<1ms overhead)"
+  - "Fast dashboard queries (<5 second load time)"
+  - "90-day data retention with archival"
+  - "Integration with existing monitoring stack"
+
+risks:
+  - "Telemetry overhead affecting performance"
+  - "Data privacy concerns with sensitive AI operations"
+  
+mitigations:
+  - "Async collection with performance monitoring"
+  - "PII scrubbing and data anonymization options"

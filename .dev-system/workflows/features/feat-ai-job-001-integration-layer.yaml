@@ -1,0 +1,58 @@
+feature_id: feat-ai-job-001
+feature_name: "Achievement-to-Article Integration Layer"
+description: |
+  Create a robust API integration layer between achievement_collector and tech_doc_generator
+  services to enable seamless data flow for automated content generation.
+epic_id: ai-job-week1
+priority: high
+estimated_effort: 8
+technical_requirements:
+  - "RESTful API client in tech_doc_generator to fetch achievements"
+  - "New endpoints in achievement_collector for filtered data access"
+  - "Shared data models between services"
+  - "Retry logic and circuit breaker patterns"
+  - "Comprehensive error handling and logging"
+acceptance_criteria:
+  - "Tech doc generator can fetch achievements by ID, category, or date range"
+  - "API responses include all necessary metadata for article generation"
+  - "Integration handles service failures gracefully with retries"
+  - "Response time < 200ms for single achievement fetch"
+  - "Supports batch operations for multiple achievements"
+  - "95%+ unit test coverage for integration code"
+implementation_details:
+  - file: "services/tech_doc_generator/app/clients/achievement_client.py"
+    changes: |
+      - Create AchievementClient class with async HTTP client
+      - Implement methods: get_achievement(), list_achievements(), get_by_category()
+      - Add response caching with TTL
+  - file: "services/achievement_collector/api/routes/integration.py"
+    changes: |
+      - New router with /api/v1/integration endpoints
+      - Implement filtering, pagination, and sorting
+      - Add API key authentication for service-to-service calls
+  - file: "services/common/models/achievement_article.py"
+    changes: |
+      - Create shared Pydantic models for data exchange
+      - Include validation for all required fields
+business_value: |
+  - Enables automated content pipeline reducing manual effort by 80%
+  - Demonstrates microservices integration expertise
+  - Shows production-grade API design skills valued at senior level
+success_metrics:
+  - "Zero manual intervention required for data flow"
+  - "API uptime 99.9%+"
+  - "Integration used in 100% of article generation"
+tags:
+  - api-integration
+  - microservices
+  - automation
+tasks:
+  - task_id: task-ai-job-001-1
+    title: "Create AchievementClient in tech_doc_generator"
+    effort: 3
+  - task_id: task-ai-job-001-2
+    title: "Add integration endpoints to achievement_collector"
+    effort: 3
+  - task_id: task-ai-job-001-3
+    title: "Create shared data models and tests"
+    effort: 2

@@ -1,0 +1,75 @@
+id: epic-20-agent-factory-upgrade
+title: "Top-1% Agent Factory: AI Development System Upgrade"
+description: |
+  Transform the current 4-agent AI development system into a top-1% "agent factory" level platform.
+  This epic focuses on the 20% effort that delivers 80% of the benefits: agent evaluations, 
+  telemetry, prompt governance, and productivity automation to accelerate development speed 
+  and quality while maintaining the existing ultra-friendly command interface.
+
+status: planned
+priority: critical
+estimated_hours: 160
+estimated_story_points: 40
+created_at: "2025-08-16"
+updated_at: "2025-08-16"
+
+business_value:
+  career_impact: "75% improvement in portfolio quality and AI engineering job readiness"
+  productivity_savings: "$120,000 annually from 3x faster development cycles"
+  time_efficiency: "60% reduction in debugging, rework, and failed deployments"
+  competitive_advantage: "Top-1% AI development system demonstrates advanced engineering capabilities"
+
+kpi_targets:
+  development_velocity_improvement: 3.0  # 3x faster dev cycles
+  ai_system_reliability: 0.95  # 95% success rate for AI operations
+  prompt_governance_score: 0.90  # 90% of prompts under version control
+  agent_evaluation_coverage: 0.85  # 85% of AI operations have automated evals
+  deployment_success_rate: 0.98  # 98% successful deployments
+  telemetry_coverage: 0.92  # 92% of operations tracked
+
+features:
+  - feature-20-1-agent-evaluations-framework
+  - feature-20-2-telemetry-observability-system  
+  - feature-20-3-prompt-governance-platform
+  - feature-20-4-productivity-flywheel-automation
+  - feature-20-5-dev-containers-reproducibility
+  - feature-20-6-release-strategy-upgrade
+
+dependencies:
+  - "4-agent parallel development system (existing)"
+  - "Learning system with pattern tracking (existing)" 
+  - "Ultra-friendly justfile commands (existing)"
+  - "Achievement collector with real data (existing)"
+  - "AI development acceleration scripts (existing)"
+  - "MCP servers infrastructure (existing)"
+
+technical_requirements:
+  - "Maintain existing justfile command interface"
+  - "Build on current 4-agent worktree system"
+  - "Integrate with learning-system.sh analytics"
+  - "Preserve ultra-fast development feedback loops"
+  - "Support current service architecture (33 services)"
+
+success_criteria:
+  - "Block merges on evaluation regression with automated gates"
+  - "Track tokens, latency, and cost per AI operation with 5-second dashboards"
+  - "Version control 90% of prompts with contract testing"
+  - "One-command environment spin-up in under 60 seconds"
+  - "3x improvement in development cycle time"
+  - "Demonstrate top-1% AI engineering practices in portfolio"
+
+risks_and_mitigations:
+  risks:
+    - "Adding complexity to simple workflow"
+    - "Performance overhead from telemetry"
+    - "Breaking existing ultra-friendly commands"
+  mitigations:
+    - "Maintain backward compatibility with existing commands"
+    - "Use async telemetry with minimal performance impact"
+    - "Add complexity as optional layers, not required workflow changes"
+
+implementation_approach:
+  phase_1_quick_wins: "Basic evals + simple telemetry (80/20 rule focus)"
+  phase_2_governance: "Prompt versioning + automated quality gates"
+  phase_3_excellence: "Advanced observability + productivity automation"
+  rollback_strategy: "Feature flags for all new capabilities"

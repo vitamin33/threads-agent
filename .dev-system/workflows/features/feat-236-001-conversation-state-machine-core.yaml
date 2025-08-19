@@ -1,0 +1,208 @@
+# Feature: Conversation State Machine Core Engine
+name: "Conversation State Machine Core Engine"
+epic: "epic-236-conversation-state-machine"
+type: "feature"
+priority: "critical"
+estimated_effort: "large"
+lifecycle_stage: "planning"
+
+# Detailed Description
+description: "Implement the core 7-state conversation workflow engine with intelligent transition logic, state validation, and context management. This forms the foundation of the autonomous DM automation system."
+
+# Acceptance Criteria
+acceptance_criteria: |
+  - Implement 7 distinct conversation states with clear transition rules
+  - Handle state transitions with <2% error rate in flow logic
+  - Support concurrent state management for 500+ conversations
+  - Provide state rollback and recovery mechanisms for failed transitions
+  - Implement conversation timeout and cleanup procedures
+  - Support custom state configuration and business rule injection
+  - Create comprehensive state transition logging and audit trails
+  - Integrate with Redis for high-performance state caching
+
+# Technical Implementation Details
+implementation:
+  files_to_modify:
+    - "services/conversation_engine/__init__.py"
+    - "services/conversation_engine/main.py"
+    - "services/conversation_engine/state_machine.py" 
+    - "services/conversation_engine/models.py"
+    - "services/conversation_engine/transitions.py"
+    - "services/conversation_engine/validators.py"
+    - "services/orchestrator/db/alembic/versions/add_conversation_tables.py"
+    - "chart/templates/conversation-engine.yaml"
+  
+  dependencies:
+    - "FastAPI for REST API endpoints"
+    - "Pydantic for state validation and serialization"
+    - "SQLAlchemy for PostgreSQL integration"
+    - "Redis for state caching and session management"
+    - "Celery for background state cleanup tasks"
+    - "Prometheus for state machine metrics"
+
+# Implementation Tasks
+tasks:
+  - name: "State Machine Architecture & Design"
+    type: "planning"
+    estimated_hours: 20
+    checklist:
+      - "Design 7-state conversation flow with transition rules"
+      - "Define state data structures and validation schemas"
+      - "Plan state transition logic with business rules engine"
+      - "Design error handling and recovery mechanisms"
+      - "Plan concurrent conversation management architecture"
+      - "Design state persistence and caching strategy"
+      - "Create comprehensive state machine documentation"
+      - "Plan testing strategy for complex state transitions"
+    
+  - name: "Core State Machine Implementation"
+    type: "development"
+    estimated_hours: 32
+    checklist:
+      - "Create conversation_engine microservice with FastAPI structure"
+      - "Implement ConversationState enum with 7 states"
+      - "Create StateTransition class with validation logic"
+      - "Implement StateMachine core engine with transition methods"
+      - "Add state validation and business rule enforcement"
+      - "Create conversation context management system"
+      - "Implement state rollback and error recovery mechanisms"
+      - "Add comprehensive logging for state transitions"
+    
+  - name: "State Transition Logic Engine"
+    type: "development"
+    estimated_hours: 24
+    checklist:
+      - "Implement INITIAL_CONTACT → INTEREST_QUALIFICATION transitions"
+      - "Create INTEREST_QUALIFICATION → VALUE_PROPOSITION logic"
+      - "Add VALUE_PROPOSITION → OBJECTION_HANDLING transitions"
+      - "Implement OBJECTION_HANDLING → PRICE_NEGOTIATION flow"
+      - "Create PRICE_NEGOTIATION → CLOSING_ATTEMPT transitions"
+      - "Add CLOSING_ATTEMPT → POST_PURCHASE success flow"
+      - "Implement state-specific timeout and retry logic"
+      - "Create dynamic transition rules based on conversation context"
+    
+  - name: "Conversation Context Management"
+    type: "development"
+    estimated_hours: 18
+    checklist:
+      - "Design conversation context data structure"
+      - "Implement context serialization and deserialization"
+      - "Create context update and merge mechanisms"
+      - "Add user preference tracking within context"
+      - "Implement conversation history integration"
+      - "Create context-based transition decision logic"
+      - "Add context validation and cleanup procedures"
+      - "Implement context compression for memory efficiency"
+    
+  - name: "Database Schema & Models"
+    type: "development"
+    estimated_hours: 16
+    checklist:
+      - "Create conversations table with state and metadata"
+      - "Design conversation_states table for state history tracking"
+      - "Implement conversation_contexts table for context storage"
+      - "Add efficient indexes for high-volume conversation queries"
+      - "Create database constraints for state transition validation"
+      - "Implement conversation cleanup and archival procedures"
+      - "Add foreign key relationships to users and messages"
+      - "Create database views for conversation analytics"
+    
+  - name: "Redis Integration & Caching"
+    type: "development"
+    estimated_hours: 14
+    checklist:
+      - "Implement Redis-based state caching layer"
+      - "Create conversation session management with TTL"
+      - "Add Redis key naming strategy for conversation data"
+      - "Implement cache invalidation and refresh mechanisms"
+      - "Create Redis connection pooling for high concurrency"
+      - "Add cache warming strategies for active conversations"
+      - "Implement Redis failover and error handling"
+      - "Create cache performance monitoring and metrics"
+    
+  - name: "API Endpoints & Integration"
+    type: "development"
+    estimated_hours: 16
+    checklist:
+      - "Create conversation creation endpoint for CRA-235 integration"
+      - "Implement state transition API with validation"
+      - "Add conversation status and context retrieval endpoints"
+      - "Create conversation history and analytics endpoints"
+      - "Implement conversation termination and cleanup APIs"
+      - "Add health checks and readiness probes"
+      - "Create API documentation with OpenAPI specs"
+      - "Implement API rate limiting and security measures"
+    
+  - name: "Comprehensive Testing Suite"
+    type: "testing"
+    estimated_hours: 28
+    checklist:
+      - "Unit tests for state machine core logic"
+      - "Integration tests for database and Redis operations"
+      - "State transition accuracy tests with edge cases"
+      - "Concurrent conversation handling stress tests"
+      - "Error recovery and rollback mechanism tests"
+      - "Performance tests for high-volume state operations"
+      - "End-to-end conversation flow tests"
+      - "Load tests for 500+ concurrent conversations"
+    
+  - name: "Monitoring & Performance Optimization"
+    type: "optimization"
+    estimated_hours: 12
+    checklist:
+      - "Set up Prometheus metrics for state transitions"
+      - "Create Grafana dashboards for conversation flow monitoring"
+      - "Implement alerting for state machine errors and bottlenecks"
+      - "Add performance metrics for transition latency"
+      - "Optimize database queries for conversation operations"
+      - "Implement caching optimization for frequently accessed states"
+      - "Add memory usage monitoring and optimization"
+      - "Create automated performance regression detection"
+
+# Performance Requirements
+performance:
+  state_transition_latency: "<500ms per transition"
+  concurrent_conversations: "500+ simultaneous conversations"
+  error_rate: "<2% for state transition logic"
+  cache_hit_ratio: ">95% for active conversation states"
+  memory_usage: "<1GB per worker instance"
+  database_query_time: "<100ms for state operations"
+
+# Integration Requirements
+integration_requirements:
+  cra235_integration:
+    - "Accept qualified leads from comment intent analysis"
+    - "Create initial conversation with INITIAL_CONTACT state"
+    - "Handle lead qualification data for context initialization"
+  
+  redis_requirements:
+    - "High-speed state caching with <50ms access time"
+    - "Session management with configurable TTL"
+    - "Cache invalidation and consistency mechanisms"
+  
+  database_requirements:
+    - "PostgreSQL for transactional conversation persistence"
+    - "Efficient indexing for high-volume conversation queries"
+    - "ACID compliance for state transition operations"
+
+# Automation Configuration
+automation:
+  branch_naming: "feat/cra-236-state-machine-core"
+  pr_template: "feature"
+  quality_gates: ["lint", "test", "security", "performance"]
+  deployment: "staging"
+
+# Feature Metadata
+metadata:
+  id: "feat-236-001-conversation-state-machine-core"
+  created: "2025-08-05T00:00:00+00:00"
+  assigned_to: "unassigned"
+  estimated_hours: 160
+  complexity_score: 5
+
+# Local Task Tracking
+local_tracking:
+  status: "pending"
+  labels: ["feature", "critical", "large", "state-machine", "core-engine"]
+  created: "2025-08-05T00:00:00+00:00"
+  project_sync: true

@@ -1,3 +1,12 @@
+# AI Agent Development System Data (Local Only)
+.dev-system/data/
+.dev-system/cache/
+.dev-system/**/*.db
+.dev-system/**/*.sqlite
+.dev-system/**/*.log
+.dev-system/agents/coordination.lock
+.dev-system/agents/worktree-*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

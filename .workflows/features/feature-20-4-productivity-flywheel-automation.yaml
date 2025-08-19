@@ -1,0 +1,122 @@
+id: feature-20-4-productivity-flywheel-automation
+epic_id: epic-20-agent-factory-upgrade
+title: "Productivity Flywheel Automation - Morning Brief & Evening Debrief"
+description: |
+  Automate daily development workflow with AI-powered morning briefs and evening debriefs.
+  Enhance existing learning system with predictive insights and optimization recommendations.
+  
+priority: medium
+estimated_hours: 20
+estimated_story_points: 5
+status: planned
+
+business_value: |
+  Saves 2+ hours daily through automated workflow optimization and context switching.
+  Provides portfolio demonstration of AI-powered development productivity tools.
+
+tasks:
+  - id: productivity-001
+    title: "Design productivity automation architecture"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Create framework for automated development insights
+      - Daily workflow analysis using existing learning-system.sh data
+      - AI-powered suggestion generation
+      - Integration with existing 4-agent system
+    acceptance_criteria:
+      - "Architecture design for productivity automation"
+      - "Integration plan with learning system"
+      - "Data flow design for AI insights"
+
+  - id: productivity-002
+    title: "Implement morning brief automation"
+    type: implementation
+    estimated_hours: 5
+    description: |
+      Create AI-powered morning development brief
+      - Analysis of yesterday's productivity patterns
+      - Suggested focus areas based on agent specializations
+      - Priority task recommendations from achievement data
+      - Integration with existing just work-day command
+    acceptance_criteria:
+      - "Morning brief generation using OpenAI API"
+      - "Integration with just work-day command"
+      - "Personalized recommendations by agent (A1-A4)"
+
+  - id: productivity-003
+    title: "Implement evening debrief automation"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Create AI-powered end-of-day analysis and planning
+      - Achievement summary from day's work
+      - Optimization suggestions for tomorrow
+      - Progress tracking on epics and features
+      - Integration with existing just end-day command
+    acceptance_criteria:
+      - "Evening debrief with achievement analysis"
+      - "Tomorrow's optimization suggestions"
+      - "Integration with just end-day workflow"
+
+  - id: productivity-004
+    title: "Enhance learning system with predictive insights"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Upgrade existing learning-system.sh with AI-powered predictions
+      - Predict optimal development times based on historical data
+      - Suggest agent switching based on work patterns
+      - Identify potential blockers before they occur
+    acceptance_criteria:
+      - "Predictive insights in learning system reports"
+      - "Agent switching recommendations"
+      - "Proactive blocker identification"
+
+  - id: productivity-005
+    title: "Write productivity automation tests"
+    type: testing
+    estimated_hours: 3
+    description: |
+      Test automated productivity features
+      - Mock learning system data for testing
+      - Test brief generation quality and consistency
+      - Test integration with existing workflow commands
+    acceptance_criteria:
+      - "test_productivity_automation.py with mocked data"
+      - "Brief generation quality tests"
+      - "Integration tests with justfile commands"
+
+  - id: productivity-006
+    title: "Create productivity dashboard integration"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Add productivity metrics to existing dashboard
+      - Daily productivity scores
+      - Agent efficiency comparisons
+      - Workflow optimization opportunities
+    acceptance_criteria:
+      - "Productivity panels in Grafana dashboard"
+      - "Daily productivity score calculation"
+      - "Visual workflow optimization suggestions"
+
+dependencies:
+  - "Learning system analytics (existing)"
+  - "Achievement collector data (existing)"
+  - "OpenAI API for brief generation"
+  - "Existing justfile workflow commands"
+
+technical_requirements:
+  - "Fast brief generation (<30 seconds)"
+  - "Integration with existing commands"
+  - "Reliable data from learning system"
+  - "Actionable insights and recommendations"
+
+risks:
+  - "AI briefs providing low-value generic advice"
+  - "Automation overhead disrupting existing workflow"
+  
+mitigations:
+  - "Use specific historical data for personalized insights"
+  - "Opt-in automation with existing command integration"

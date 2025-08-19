@@ -1,0 +1,140 @@
+epic_id: epic-235-comment-intent-dm-trigger
+epic_name: "Comment Intent Analysis & DM Trigger System"
+description: |
+  Implement an intelligent comment monitoring and analysis system that detects purchase intent 
+  signals in real-time and automatically triggers personalized DM conversation sequences. This 
+  system is a critical component of the DM-to-Purchase Pipeline (E5) and directly feeds into 
+  CRA-236 (conversation automation) and CRA-237 (Stripe payments).
+
+  The system analyzes comment text using ML models to score intent level (0-100), identifies 
+  high-intent users, and triggers automated DM workflows for revenue conversion. It includes 
+  comprehensive attribution tracking to measure conversion from comment to purchase.
+
+  Key technical components:
+  - Real-time comment stream monitoring and ingestion
+  - ML-powered intent analysis using sentiment and keyword models
+  - Intent scoring algorithm with confidence levels
+  - DM trigger system with personalized message templates
+  - Attribution tracking for comment-to-purchase conversion
+  - Integration with existing viral_pattern_engine and revenue service
+
+status: planned  
+priority: high
+business_value: |
+  - Enables automated revenue generation from viral content engagement
+  - Directly supports $0.01/follow cost efficiency and $20k MRR targets
+  - Provides scalable lead qualification and conversion system
+  - Reduces manual effort in identifying high-intent prospects
+  - Creates measurable attribution from content engagement to revenue
+  - Establishes foundation for advanced conversation automation (CRA-236)
+  - Enables data-driven optimization of DM conversion rates
+
+target_completion: 2025-08-20
+estimated_effort: 48
+
+features:
+  - feature_id: feat-235-001
+    name: "Real-time Comment Monitoring & Ingestion Pipeline"
+    description: "Monitor comment streams, ingest data, and prepare for intent analysis"
+    priority: high
+    estimated_effort: 12
+    
+  - feature_id: feat-235-002  
+    name: "ML-Powered Intent Analysis Engine"
+    description: "Analyze comment text using ML models to detect purchase intent signals"
+    priority: high
+    estimated_effort: 14
+    
+  - feature_id: feat-235-003
+    name: "Intent Scoring & Classification System"
+    description: "Score intent level (0-100) and classify high-intent comments for DM triggering"
+    priority: high
+    estimated_effort: 10
+    
+  - feature_id: feat-235-004
+    name: "DM Trigger & Message Template System"
+    description: "Trigger personalized DM sequences based on intent scores and user profiles"
+    priority: high
+    estimated_effort: 12
+
+success_metrics:
+  - "Process comment streams with <200ms latency per comment"
+  - "Intent analysis accuracy >85% validated against manual review"
+  - "DM trigger response time <500ms for high-intent comments"
+  - "Attribution tracking captures 100% of comment-to-purchase journeys"
+  - "System processes 1000+ comments/hour with 99% uptime"
+  - "Intent scoring false positive rate <10%"
+  - "DM conversion rate >3% for triggered conversations"
+
+dependencies:
+  - "Existing viral_pattern_engine for ML text analysis capabilities"
+  - "Revenue service for conversion tracking and attribution"
+  - "fake_threads service for comment stream simulation/testing"
+  - "PostgreSQL database with comment and intent tracking tables"
+  - "Celery worker for background processing of intent analysis"
+  - "OpenAI API for advanced intent analysis and message generation"
+
+risks:
+  - "Real-time comment stream processing may have scaling challenges"
+  - "ML model accuracy may vary across different content types"
+  - "DM rate limiting could impact trigger response times"
+  - "Privacy concerns with comment content analysis and storage"
+  - "False positive intent detection could spam users"
+
+mitigation_strategies:
+  - "Implement rate limiting and batch processing for high-volume periods"
+  - "Use ensemble ML models and confidence thresholds for better accuracy"
+  - "Build DM queue with intelligent rate limiting and user preferences"
+  - "Implement data retention policies and privacy-compliant analysis"
+  - "Add manual review workflows for high-value/uncertain intent classifications"
+
+tags:
+  - ml-intent-analysis
+  - real-time-processing
+  - dm-automation
+  - revenue-attribution
+  - comment-monitoring
+  - conversion-optimization
+
+technical_requirements:
+  database_changes:
+    - "New comment_intents table for storing analysis results"
+    - "New dm_triggers table for tracking triggered conversations"
+    - "New intent_models table for ML model versioning"
+    - "Enhanced attribution tracking in revenue tables"
+  
+  performance_targets:
+    - "Comment ingestion: <200ms per comment"
+    - "Intent analysis: <500ms per comment" 
+    - "DM trigger: <300ms from intent detection"
+    - "Batch processing: 1000+ comments/hour"
+    - "Model inference: <100ms p95"
+  
+  ml_requirements:
+    - "Intent classification model with 85%+ accuracy"
+    - "Sentiment analysis for emotional state detection"
+    - "Keyword extraction for product/service interest signals"
+    - "User behavior pattern analysis for personalization"
+    
+  integration_points:
+    - "viral_pattern_engine for ML text analysis"
+    - "revenue service for conversion attribution"
+    - "fake_threads for comment stream integration"
+    - "orchestrator for workflow coordination"
+    - "celery_worker for background processing"
+
+notes: |
+  This epic establishes the core infrastructure for automated revenue generation from content 
+  engagement. The implementation is designed in phases to enable iterative improvement:
+  
+  Phase 1: Basic comment monitoring and simple intent detection
+  Phase 2: Advanced ML analysis with confidence scoring  
+  Phase 3: Personalized DM triggers with A/B testing
+  Phase 4: Full attribution tracking and optimization
+  
+  The system leverages existing ML capabilities in viral_pattern_engine while adding 
+  specialized intent analysis models. Integration with revenue service ensures complete 
+  attribution tracking from comment engagement to purchase conversion.
+  
+  Success of this epic directly enables CRA-236 (conversation automation) and CRA-237 
+  (Stripe payment integration) by providing the qualified leads and trigger mechanisms.

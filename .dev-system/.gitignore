@@ -1,0 +1,30 @@
+# Development System Data (Local Only)
+data/
+cache/
+*.db
+*.sqlite
+*.log
+
+# Agent-specific files (prevent conflicts)
+agents/coordination.lock
+agents/worktree-*
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+
+# Build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db

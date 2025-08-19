@@ -1,0 +1,143 @@
+id: feature-20-1-agent-evaluations-framework
+epic_id: epic-20-agent-factory-upgrade
+title: "Agent Evaluations Framework - Quality Gates for AI Operations"
+description: |
+  Implement automated evaluation framework that blocks deployments on AI performance regression.
+  Focus on 80/20 quick wins: basic LLM evals for persona_runtime and viral_engine services.
+  
+priority: critical
+estimated_hours: 32
+estimated_story_points: 8
+status: planned
+
+business_value: |
+  Prevents AI regression that could cost $10,000+ in lost engagement and manual debugging.
+  Demonstrates MLOps best practices for AI engineering roles.
+
+tasks:
+  - id: eval-001
+    title: "Create basic evaluation infrastructure"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Set up evaluation framework in services/common/evaluations/
+      - Create BaseEvaluator class with standard interface
+      - Add evaluation result storage (PostgreSQL table)
+      - Implement basic CLI for running evaluations
+    acceptance_criteria:
+      - "BaseEvaluator class with evaluate() method"
+      - "evaluations table with result storage"
+      - "CLI command: just eval-run <service> <test_set>"
+
+  - id: eval-002
+    title: "Write unit tests for evaluation framework"
+    type: testing
+    estimated_hours: 3
+    description: |
+      TDD approach: write tests before implementing evaluators
+      - Test BaseEvaluator interface compliance
+      - Mock evaluation scenarios with known inputs/outputs
+      - Test result storage and retrieval
+    acceptance_criteria:
+      - "test_base_evaluator.py with 95% coverage"
+      - "Mock evaluators for testing purposes"
+      - "Tests pass before real evaluator implementation"
+
+  - id: eval-003
+    title: "Implement persona_runtime content quality evaluator"
+    type: implementation
+    estimated_hours: 6
+    description: |
+      Create evaluator for persona_runtime content generation quality
+      - Coherence score (1-10 scale using simple heuristics)
+      - Engagement prediction (based on existing high-performing content)
+      - Hook effectiveness score (using viral pattern database)
+      - Run against last 100 generated posts for baseline
+    acceptance_criteria:
+      - "PersonaContentEvaluator class with 3 metrics"
+      - "Baseline scores computed from historical data"
+      - "just eval-persona command works"
+
+  - id: eval-004
+    title: "Implement viral_engine performance evaluator"
+    type: implementation
+    estimated_hours: 5
+    description: |
+      Create evaluator for viral_engine trend detection accuracy
+      - Trend relevance score (manual labeling of 50 trends)
+      - Search result quality (keyword match vs human judgment)
+      - Content suggestion appropriateness
+    acceptance_criteria:
+      - "ViralEngineEvaluator with relevance metrics"
+      - "50 manually labeled trends for testing"
+      - "just eval-viral command works"
+
+  - id: eval-005
+    title: "Write comprehensive tests for evaluators"
+    type: testing
+    estimated_hours: 4
+    description: |
+      Integration tests for persona and viral evaluators
+      - Test with real service outputs (regression test data)
+      - Test evaluation scoring consistency
+      - Test edge cases and error handling
+    acceptance_criteria:
+      - "test_persona_evaluator.py with real data tests"
+      - "test_viral_evaluator.py with edge cases"
+      - "All tests pass in CI pipeline"
+
+  - id: eval-006
+    title: "Integrate evaluations into CI/CD pipeline"
+    type: devops
+    estimated_hours: 4
+    description: |
+      Add evaluation quality gates to deployment process
+      - Run evaluations on PR creation (GitHub Actions)
+      - Block merge if scores drop >10% from baseline
+      - Add evaluation results to PR comments
+    acceptance_criteria:
+      - ".github/workflows/ai-evaluations.yml created"
+      - "PR blocking on evaluation failure"
+      - "Evaluation scores visible in PR comments"
+
+  - id: eval-007
+    title: "Create evaluation monitoring dashboard"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Add evaluation metrics to existing Grafana dashboard
+      - Evaluation score trends over time
+      - Service-specific evaluation panels
+      - Alert on significant score drops
+    acceptance_criteria:
+      - "Grafana dashboard panels for evaluation metrics"
+      - "Prometheus metrics for evaluation scores"
+      - "Alerts configured for score degradation"
+
+  - id: eval-008
+    title: "Add ultra-friendly evaluation commands"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Integrate evaluation commands into existing justfile pattern
+      - just eval-check (run all evaluations)
+      - just eval-baseline (set new baselines)
+      - just eval-report (generate evaluation report)
+    acceptance_criteria:
+      - "Evaluation commands added to justfile"
+      - "Commands follow existing ultra-friendly pattern"
+      - "Help documentation updated"
+
+dependencies:
+  - "PostgreSQL database (existing)"
+  - "OpenAI API for evaluation LLM calls"
+  - "GitHub Actions CI (existing)"
+  - "Grafana monitoring (existing)"
+
+risks:
+  - "Evaluation overhead slowing development"
+  - "False positives blocking legitimate changes"
+  
+mitigations:
+  - "Fast evaluations (<30 seconds total)"
+  - "Emergency override: SKIP_EVALS=1 for critical fixes"

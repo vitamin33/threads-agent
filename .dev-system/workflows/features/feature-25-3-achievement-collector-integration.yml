@@ -1,0 +1,53 @@
+id: feature-25-3-achievement-collector-integration
+epic_id: epic-25-content-scheduler-service-integration
+title: "Achievement Collector Service Integration"
+description: |
+  Connect Content Scheduler with Achievement Collector to automatically source
+  high-performing achievements for content generation. Enable performance tracking
+  and feedback loops for continuous improvement.
+
+priority: high
+estimated_hours: 60
+
+acceptance_criteria:
+  - Auto-select top achievements for content
+  - Performance metrics tracking integration
+  - Achievement-based content templates
+  - Feedback loop for engagement data
+  - Company-specific achievement filtering
+  - Weekly achievement digest generation
+
+technical_tasks:
+  - task-25-3-1-achievement-client
+  - task-25-3-2-achievement-selection-algo
+  - task-25-3-3-performance-tracking-events
+  - task-25-3-4-content-template-mapping
+  - task-25-3-5-feedback-loop-implementation
+  - task-25-3-6-company-filtering-logic
+
+integration_points:
+  - GET /achievements endpoint
+  - GET /achievements/stats endpoint
+  - POST /achievements/track-usage endpoint
+  - WebSocket for real-time updates
+
+event_contracts:
+  AchievementContentRequested:
+    - schedule_id: string
+    - target_company: string
+    - platform: string
+    - content_type: string
+    
+  AchievementContentGenerated:
+    - achievement_id: integer
+    - content_id: string
+    - predicted_engagement: float
+    - target_audience: object
+
+data_flow:
+  - Achievement selection based on recency and impact
+  - Content generation using achievement context
+  - Performance tracking post-publication
+  - Feedback incorporation for future selections
+
+created_at: "2025-01-07"

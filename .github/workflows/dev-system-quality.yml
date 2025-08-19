@@ -1,0 +1,58 @@
+name: Dev-System Quality Gates
+
+# Only run when dev-system files change (not for all service changes)
+on:
+  pull_request:
+    paths:
+      - '.dev-system/**'
+    branches: [ main ]
+  push:
+    paths:
+      - '.dev-system/**'  
+    branches: [ main ]
+
+# Don't interfere with existing main-ci.yml
+concurrency:
+  group: dev-system-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dev-system-quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install minimal dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml
+    
+    - name: Check Dev-System Structure
+      run: |
+        ./.dev-system/cli/verify-structure
+    
+    - name: Run Dev-System Evaluations (Mock Mode)
+      run: |
+        cd .dev-system
+        python evals/run.py --suite core --output eval_result.json
+      # Note: Uses mock implementation, not real OpenAI calls
+    
+    - name: Enforce Dev-System Quality Gates
+      run: |
+        cd .dev-system  
+        python evals/gate.py --result eval_result.json --exit-code
+    
+    - name: Upload Evaluation Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: dev-system-evaluation-results
+        path: .dev-system/eval_result.json
+        retention-days: 30

@@ -2,8 +2,17 @@
 
 # scripts/ai-smart-commit.sh - AI-powered intelligent commit message generation
 # Part of the 4-agent parallel development workflow
+# STRICT RULE: Single author only - no Claude co-author
 
 set -euo pipefail
+
+# Enforce single author (critical for professional git history)
+STRICT_AUTHOR_NAME="Vitalii Serbyn"
+STRICT_AUTHOR_EMAIL="serbyn.vitalii@gmail.com"
+
+# Configure git for single author
+git config user.name "$STRICT_AUTHOR_NAME"
+git config user.email "$STRICT_AUTHOR_EMAIL"
 
 # Source agent environment if available
 if [[ -f .agent.env ]]; then

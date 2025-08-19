@@ -1,0 +1,71 @@
+feature_id: feat-ai-job-005
+feature_name: "AI ROI Calculator Public Tool"
+description: |
+  Create a sophisticated, public-facing AI ROI calculator that demonstrates business acumen
+  and technical expertise. The tool should use real metrics from threads-agent to show
+  concrete cost savings and efficiency gains, positioning you as a business-focused engineer.
+epic_id: ai-job-week2
+priority: high
+estimated_effort: 10
+technical_requirements:
+  - "React frontend with interactive UI"
+  - "FastAPI backend with calculation engine"
+  - "Real metrics integration from threads-agent"
+  - "Shareable report generation (PDF/link)"
+  - "SEO optimization for discoverability"
+acceptance_criteria:
+  - "Calculate ROI for 5+ AI use cases"
+  - "Interactive sliders for all input parameters"
+  - "Generate branded PDF reports"
+  - "Mobile-responsive design"
+  - "Page load time < 2 seconds"
+  - "Share functionality with unique URLs"
+implementation_details:
+  - file: "services/roi_calculator/frontend/src/Calculator.tsx"
+    changes: |
+      - Create interactive React component
+      - Implement real-time calculation updates
+      - Add visualization charts (Chart.js)
+  - file: "services/roi_calculator/backend/main.py"
+    changes: |
+      - FastAPI app with calculation endpoints
+      - ROI models for different AI scenarios
+      - PDF generation with ReportLab
+  - file: "services/roi_calculator/backend/metrics/threads_agent.py"
+    changes: |
+      - Import real metrics from production
+      - Cost comparison data ($0.01 vs $0.50)
+      - Performance benchmarks
+  - file: "services/roi_calculator/frontend/public/index.html"
+    changes: |
+      - SEO meta tags for "AI ROI Calculator"
+      - Open Graph tags for social sharing
+      - Google Analytics integration
+business_value: |
+  - Demonstrates business value understanding crucial for senior roles
+  - Creates inbound leads from calculator users
+  - Shows full-stack development capabilities
+  - Differentiates from purely technical candidates
+success_metrics:
+  - "100+ unique visitors in first month"
+  - "Average session duration > 3 minutes"
+  - "20+ PDF reports generated weekly"
+  - "Tool mentioned in 50% of interviews"
+tags:
+  - public-tool
+  - roi-demonstration
+  - full-stack
+  - lead-generation
+tasks:
+  - task_id: task-ai-job-005-1
+    title: "Build React frontend with calculator UI"
+    effort: 4
+  - task_id: task-ai-job-005-2
+    title: "Create FastAPI calculation backend"
+    effort: 3
+  - task_id: task-ai-job-005-3
+    title: "Integrate real threads-agent metrics"
+    effort: 2
+  - task_id: task-ai-job-005-4
+    title: "Add report generation and sharing"
+    effort: 1

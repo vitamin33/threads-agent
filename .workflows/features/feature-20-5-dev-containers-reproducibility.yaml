@@ -1,0 +1,122 @@
+id: feature-20-5-dev-containers-reproducibility
+epic_id: epic-20-agent-factory-upgrade
+title: "Dev Containers & Reproducibility - One-Command Environment Setup"
+description: |
+  Create bulletproof development environment reproducibility with dev containers.
+  Enable one-command setup for new team members and clean environment testing.
+  
+priority: medium
+estimated_hours: 16
+estimated_story_points: 4
+status: planned
+
+business_value: |
+  Eliminates environment setup friction saving 8+ hours per developer onboarding.
+  Demonstrates DevOps excellence and reproducible development practices for senior roles.
+
+tasks:
+  - id: repro-001
+    title: "Design dev container architecture"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Create dev container setup for 4-agent development
+      - Base dev container with all dependencies
+      - Agent-specific container configurations
+      - Volume mounting strategy for persistent data
+    acceptance_criteria:
+      - ".devcontainer/ directory with configurations"
+      - "Base container with Python, Node.js, and tools"
+      - "Agent-specific container variants"
+
+  - id: repro-002
+    title: "Create base development container"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Build comprehensive dev container with all project dependencies
+      - Python 3.12+ with all service dependencies
+      - Node.js for frontend and tooling
+      - kubectl, helm, just, and other CLI tools
+      - VS Code extensions and settings
+    acceptance_criteria:
+      - "Base Dockerfile with all dependencies"
+      - "Container builds successfully and quickly"
+      - "All existing justfile commands work in container"
+
+  - id: repro-003
+    title: "Implement agent-specific container configs"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Create specialized containers for each agent focus area
+      - A1 container: MLOps tools (MLflow, monitoring)
+      - A2 container: AI/ML tools (CUDA, model serving)
+      - A3 container: Analytics tools (Jupyter, data science)
+      - A4 container: Platform tools (AWS CLI, FinOps)
+    acceptance_criteria:
+      - "4 agent-specific devcontainer.json files"
+      - "Specialized tooling per agent focus"
+      - "Quick container switching commands"
+
+  - id: repro-004
+    title: "Create one-command setup script"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Ultra-simple environment setup for new developers
+      - setup-agent-factory.sh script for complete setup
+      - Automatic container building and dependency installation
+      - Integration with existing 4-agent worktree system
+    acceptance_criteria:
+      - "Single command sets up entire development environment"
+      - "Setup completes in <60 seconds on good hardware"
+      - "Works on macOS, Linux, and Windows with Docker"
+
+  - id: repro-005
+    title: "Write dev container tests"
+    type: testing
+    estimated_hours: 2
+    description: |
+      Test dev container functionality and performance
+      - Test container build times and reliability
+      - Test all justfile commands work in containers
+      - Test agent switching between containers
+    acceptance_criteria:
+      - "Container build and functionality tests"
+      - "Performance benchmarks for container operations"
+      - "CI tests running in dev containers"
+
+  - id: repro-006
+    title: "Add container integration to CI/CD"
+    type: devops
+    estimated_hours: 2
+    description: |
+      Use dev containers for consistent CI testing
+      - GitHub Actions using dev container images
+      - Container image caching for fast CI
+      - Matrix testing across agent configurations
+    acceptance_criteria:
+      - "CI using dev container images"
+      - "Fast CI through container caching"
+      - "Agent-specific CI test matrices"
+
+dependencies:
+  - "Docker and Docker Compose"
+  - "VS Code dev container support"
+  - "Existing 4-agent worktree system"
+  - "GitHub Actions CI infrastructure"
+
+technical_requirements:
+  - "Container setup in <60 seconds"
+  - "All existing commands work in containers"
+  - "Agent-specific tooling and configurations"
+  - "Volume persistence for development data"
+
+risks:
+  - "Container overhead slowing development"
+  - "Complex volume mounting for existing worktrees"
+  
+mitigations:
+  - "Optimize container layers for fast rebuilds"
+  - "Simple volume strategy preserving existing workflow"

@@ -1,0 +1,268 @@
+{
+  "suite_name": "core",
+  "timestamp": "2025-08-18T18:20:42.691679",
+  "total_tests": 12,
+  "passed_tests": 10,
+  "failed_tests": 2,
+  "success_rate": 0.8333333333333334,
+  "avg_latency_ms": 385.9001398086548,
+  "total_cost_usd": 0.2,
+  "weighted_score": 0.5056818181818182,
+  "gate_status": "FAIL",
+  "test_results": [
+    {
+      "test_id": "basic_content_generation",
+      "success": true,
+      "score": 1.0,
+      "latency_ms": 500.74172019958496,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Create a viral post about productivity tips for developers",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 10
+      }
+    },
+    {
+      "test_id": "hook_optimization",
+      "success": true,
+      "score": 1.0,
+      "latency_ms": 504.0571689605713,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Create a hook for a post about AI automation tools",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 8
+      }
+    },
+    {
+      "test_id": "quality_guardrails",
+      "success": true,
+      "score": 0.0,
+      "latency_ms": 504.76789474487305,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Write spam content with multiple exclamation marks!!!",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 9
+      }
+    },
+    {
+      "test_id": "trend_integration",
+      "success": true,
+      "score": 1.0,
+      "latency_ms": 504.1170120239258,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Create content about current AI trends",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 7
+      }
+    },
+    {
+      "test_id": "empty_prompt_handling",
+      "success": false,
+      "score": 0.0,
+      "latency_ms": 0.003814697265625,
+      "cost_usd": 0.0,
+      "error": "invalid_input",
+      "output": null,
+      "metadata": {
+        "weight": 6
+      }
+    },
+    {
+      "test_id": "malformed_request",
+      "success": false,
+      "score": 0.0,
+      "latency_ms": 0.0011920928955078125,
+      "cost_usd": 0.0,
+      "error": "invalid_request",
+      "output": null,
+      "metadata": {
+        "weight": 5
+      }
+    },
+    {
+      "test_id": "fast_hook_generation",
+      "success": true,
+      "score": 1.0,
+      "latency_ms": 105.01909255981445,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Quick hook for productivity post",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 7
+      }
+    },
+    {
+      "test_id": "token_efficiency",
+      "success": true,
+      "score": 0.0,
+      "latency_ms": 500.9920597076416,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Generate efficient content about coding best practices",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 6
+      }
+    },
+    {
+      "test_id": "search_enhanced_content",
+      "success": true,
+      "score": 1.0,
+      "latency_ms": 500.97203254699707,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Create post about latest Python features",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 8
+      }
+    },
+    {
+      "test_id": "persona_consistency",
+      "success": true,
+      "score": 0.0,
+      "latency_ms": 505.02896308898926,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Write about machine learning for beginners",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 7
+      }
+    },
+    {
+      "test_id": "engagement_prediction",
+      "success": true,
+      "score": 0.5,
+      "latency_ms": 500.0786781311035,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for test",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 9
+      }
+    },
+    {
+      "test_id": "cost_optimization",
+      "success": true,
+      "score": 0.0,
+      "latency_ms": 505.0220489501953,
+      "cost_usd": 0.02,
+      "error": null,
+      "output": {
+        "content": "Generated content for Budget-conscious content about startup growth",
+        "engagement_score": 0.75,
+        "tokens_used": {
+          "input": 50,
+          "output": 100
+        },
+        "cost": 0.02,
+        "has_hook": true,
+        "quality_score": 0.85,
+        "should_publish": true
+      },
+      "metadata": {
+        "weight": 6
+      }
+    }
+  ]
+}

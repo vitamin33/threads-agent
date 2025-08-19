@@ -1,8 +1,38 @@
 # justfile – Command runner for threads-agent development
 # See: https://github.com/casey/just
 
-# Mega Commands (80/20 Rule)
-work-day: check-prerequisites trend-dashboard dev-dashboard ai-business-intelligence
+# 🚀 AI Agent Development System Commands
+# Unified development system for top 1% AI agent factory
+
+dev-system command *args:
+	@./.dev-system/cli/dev-system {{command}} {{args}}
+
+metrics-today:
+	@./.dev-system/cli/metrics-today
+
+brief:
+	@./.dev-system/cli/dev-system brief
+
+eval-run suite="core":
+	@./.dev-system/cli/dev-system eval --suite {{suite}}
+
+eval-report period="7d":
+	@./.dev-system/cli/eval-report --period {{period}}
+
+eval-latest:
+	@./.dev-system/cli/eval-report --latest
+
+eval-gate result:
+	@./.dev-system/evals/gate.py --result {{result}} --exit-code
+
+wt-setup name focus="":
+	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
+
+release strategy="canary" percentage="10":
+	@./.dev-system/cli/dev-system release --strategy {{strategy}} --percentage {{percentage}}
+
+# Mega Commands (80/20 Rule) - Enhanced with dev-system
+work-day: check-prerequisites brief trend-dashboard dev-dashboard ai-business-intelligence
 create-viral persona topic:
 	just create-viral-{{persona}} "{{topic}}"
 ship-it message:
@@ -807,7 +837,6 @@ auto-focus:
 # Ultra-Friendly AI Development Commands (Top AI Company Practices)
 ai-commit-alt:
 	@echo "🤖 AI-powered commit with quality gates..." && ./scripts/ai-smart-commit.sh
-
 save:
 	@echo "💾 Smart save with AI analysis..." && ./scripts/ai-smart-commit.sh
 
@@ -915,3 +944,15 @@ tdd-stop:
 # Include agent-specific commands
 import 'Justfile.agents'
 import 'Justfile.ai-agents'
+
+
+# Strict Single Author Enforcement
+enforce-author:
+	@./scripts/enforce-single-author.sh all
+
+# Complete System Activation
+activate-all:
+	@echo "🚀 Activating AI development system across all worktrees..."
+	@./scripts/enforce-single-author.sh configure
+	@echo "✅ Single author enforcement active"
+	@echo "🎯 Run in each worktree: just start"
