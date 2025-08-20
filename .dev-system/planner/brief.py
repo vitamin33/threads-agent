@@ -215,7 +215,11 @@ class MorningBriefGenerator:
             optimization_priorities = self._get_optimization_priorities()
             priorities.extend(optimization_priorities)
         
-        # Priority 5: Development system improvements
+        # Priority 5: Knowledge hygiene issues (M6)
+        knowledge_priorities = self._get_knowledge_hygiene_priorities()
+        priorities.extend(knowledge_priorities)
+        
+        # Priority 6: Development system improvements
         system_priorities = self._get_system_improvement_priorities()
         priorities.extend(system_priorities)
         
@@ -285,6 +289,67 @@ class MorningBriefGenerator:
                 ice_score=self.calculate_ice_score(6.0, 8.0, 4.0),
                 data_source="M1 Telemetry",
                 action="Analyze expensive operations"
+            ))
+        
+        return priorities
+    
+    def _get_knowledge_hygiene_priorities(self) -> List[Priority]:
+        """Get knowledge hygiene priorities based on corpus health"""
+        priorities = []
+        
+        try:
+            # Import knowledge manager
+            import sys
+            knowledge_path = DEV_SYSTEM_ROOT / "knowledge"
+            sys.path.insert(0, str(knowledge_path))
+            
+            from knowledge_manager import KnowledgeCorpusManager
+            
+            manager = KnowledgeCorpusManager()
+            stats = manager.get_corpus_stats()
+            
+            # Check for stale sources
+            if stats['stale_sources'] > 0:
+                priorities.append(Priority(
+                    title="Update Stale Knowledge Sources",
+                    description=f"{stats['stale_sources']} sources need updating",
+                    impact=7.0, confidence=9.0, effort=3.0,
+                    ice_score=self.calculate_ice_score(7.0, 9.0, 3.0),
+                    data_source="M6 Knowledge Hygiene",
+                    action="Run: just knowledge-validate to see stale sources"
+                ))
+            
+            # Check for broken links
+            if stats['broken_links'] > 0:
+                priorities.append(Priority(
+                    title="Fix Broken Knowledge Links",
+                    description=f"{stats['broken_links']} broken links found",
+                    impact=6.0, confidence=8.0, effort=2.0,
+                    ice_score=self.calculate_ice_score(6.0, 8.0, 2.0),
+                    data_source="M6 Knowledge Hygiene",
+                    action="Run: just knowledge-validate to see broken links"
+                ))
+            
+            # Check corpus size
+            if stats['total_sources'] < 5:
+                priorities.append(Priority(
+                    title="Expand Knowledge Corpus",
+                    description=f"Only {stats['total_sources']} sources in corpus",
+                    impact=5.0, confidence=7.0, effort=4.0,
+                    ice_score=self.calculate_ice_score(5.0, 7.0, 4.0),
+                    data_source="M6 Knowledge Hygiene",
+                    action="Add more knowledge: just knowledge-add or just knowledge-ingest-url"
+                ))
+            
+        except Exception as e:
+            # Knowledge system not available
+            priorities.append(Priority(
+                title="Setup Knowledge System",
+                description="M6 Knowledge system not initialized",
+                impact=6.0, confidence=9.0, effort=2.0,
+                ice_score=self.calculate_ice_score(6.0, 9.0, 2.0),
+                data_source="M6 Knowledge Hygiene",
+                action="Run: just knowledge-setup"
             ))
         
         return priorities

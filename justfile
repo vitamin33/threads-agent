@@ -60,6 +60,50 @@ quality-weekly days="7":
 quality-dashboard:
 	@echo "📊 Opening quality dashboard..." && cd .dev-system && python3 evals/weekly_report.py --days 30
 
+# M3: Prompt Registry & Tool Contracts  
+prompt-list:
+	@cd .dev-system && python3 prompts/prompt_manager.py list
+
+prompt-list-agent agent:
+	@cd .dev-system && python3 prompts/prompt_manager.py list --agent {{agent}}
+
+prompt-test agent prompt:
+	@cd .dev-system && python3 prompts/prompt_manager.py test {{agent}} {{prompt}}
+
+prompt-test-version agent prompt version:
+	@cd .dev-system && python3 prompts/prompt_manager.py test {{agent}} {{prompt}} --version {{version}}
+
+prompt-compare agent prompt version1 version2:
+	@cd .dev-system && python3 prompts/prompt_manager.py compare {{agent}} {{prompt}} {{version1}} {{version2}}
+
+prompt-rollback agent prompt version:
+	@cd .dev-system && python3 prompts/prompt_manager.py rollback {{agent}} {{prompt}} {{version}}
+
+tool-contracts:
+	@cd .dev-system && python3 prompts/contracts/tool_contracts.py --list
+
+tool-test tool:
+	@cd .dev-system && python3 prompts/contracts/tool_contracts.py --validate {{tool}}
+
+tool-setup:
+	@cd .dev-system && python3 prompts/contracts/tool_contracts.py --create-defaults
+
+# M6: Knowledge Hygiene Commands
+knowledge-stats:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py stats
+
+knowledge-search query:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py search "{{query}}"
+
+knowledge-validate:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py validate
+
+knowledge-add title content:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py add "{{title}}" --content "{{content}}"
+
+knowledge-setup:
+	@cd .dev-system && python3 knowledge/ingest.py --create-samples
+
 wt-setup name focus="":
 	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
 
