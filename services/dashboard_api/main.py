@@ -9,6 +9,7 @@ import uvicorn
 from .variant_metrics import VariantMetricsAPI, get_db_connection  # type: ignore[import-not-found]
 from .websocket_handler import VariantDashboardWebSocket  # type: ignore[import-not-found]
 from .event_processor import DashboardEventProcessor  # type: ignore[import-not-found]
+from .thompson_sampling_visualizer import create_thompson_sampling_visualizer  # type: ignore[import-not-found]
 
 # Export get_db for tests
 get_db = get_db_connection
@@ -114,6 +115,40 @@ async def handle_performance_update(event_data: dict[str, Any]) -> dict[str, str
             event_data["variant_id"], event_data
         )
         return {"status": "processed"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Thompson Sampling Visualization Endpoints
+@app.get("/api/thompson-sampling/visualization")
+async def get_thompson_sampling_visualization(persona_id: str = None) -> dict[str, Any]:
+    """Get comprehensive Thompson Sampling algorithm visualization data."""
+    try:
+        db = next(get_db_connection())
+        visualizer = create_thompson_sampling_visualizer(db)
+        return await visualizer.get_algorithm_visualization_data(persona_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/thompson-sampling/demo")
+async def get_thompson_sampling_demo() -> dict[str, Any]:
+    """Get real-time Thompson Sampling algorithm demonstration."""
+    try:
+        db = next(get_db_connection())
+        visualizer = create_thompson_sampling_visualizer(db)
+        return await visualizer.get_real_time_sampling_demo()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/statistical-analysis/significance")
+async def get_statistical_significance_visualization() -> dict[str, Any]:
+    """Get statistical significance analysis and visualization data."""
+    try:
+        db = next(get_db_connection())
+        visualizer = create_thompson_sampling_visualizer(db)
+        return await visualizer.get_statistical_significance_visualization()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

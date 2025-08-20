@@ -5,6 +5,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { VariantTable } from './VariantTable';
 import { AlertPanel } from './AlertPanel';
+import { ThompsonSamplingViz } from './ThompsonSamplingViz';
+import { StatisticalSignificanceViz } from './StatisticalSignificanceViz';
+import { RevenueAttributionDashboard } from './RevenueAttributionDashboard';
 
 interface Variant {
   variant_id: string;
@@ -38,6 +41,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
+  const [activeView, setActiveView] = useState<'variants' | 'algorithm' | 'statistics' | 'revenue'>('variants');
 
   // Fetch initial data
   const fetchInitialData = useCallback(async () => {
@@ -158,26 +162,118 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  const renderActiveView = () => {
+    switch (activeView) {
+      case 'algorithm':
+        return <ThompsonSamplingViz />;
+      case 'statistics':
+        return <StatisticalSignificanceViz />;
+      case 'revenue':
+        return <RevenueAttributionDashboard />;
+      default:
+        return (
+          <div className="dashboard-content">
+            <div className="main-content">
+              <VariantTable variants={variants} />
+            </div>
+            <aside className="sidebar">
+              <AlertPanel alerts={alerts} />
+            </aside>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
-        <h1>Real-Time Variant Performance Dashboard</h1>
-        <div className="connection-status">
-          Connection: <span style={{ color: getConnectionStatusColor() }}>
-            {connectionStatus}
-          </span>
+        <h1>🎯 A/B Testing Command Center</h1>
+        <div className="header-controls">
+          <nav className="view-navigation">
+            <button 
+              className={`nav-button ${activeView === 'variants' ? 'active' : ''}`}
+              onClick={() => setActiveView('variants')}
+            >
+              📊 Variants
+            </button>
+            <button 
+              className={`nav-button ${activeView === 'algorithm' ? 'active' : ''}`}
+              onClick={() => setActiveView('algorithm')}
+            >
+              🎲 Algorithm
+            </button>
+            <button 
+              className={`nav-button ${activeView === 'statistics' ? 'active' : ''}`}
+              onClick={() => setActiveView('statistics')}
+            >
+              📈 Statistics
+            </button>
+            <button 
+              className={`nav-button ${activeView === 'revenue' ? 'active' : ''}`}
+              onClick={() => setActiveView('revenue')}
+            >
+              💰 Revenue
+            </button>
+          </nav>
+          <div className="connection-status">
+            Connection: <span style={{ color: getConnectionStatusColor() }}>
+              {connectionStatus}
+            </span>
+          </div>
         </div>
       </header>
       
-      <div className="dashboard-content">
-        <div className="main-content">
-          <VariantTable variants={variants} />
-        </div>
+      {renderActiveView()}
+      
+      <style jsx>{`
+        .dashboard-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px;
+          background: white;
+          border-bottom: 1px solid #dee2e6;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         
-        <aside className="sidebar">
-          <AlertPanel alerts={alerts} />
-        </aside>
-      </div>
+        .header-controls {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        
+        .view-navigation {
+          display: flex;
+          gap: 5px;
+          background: #f8f9fa;
+          padding: 5px;
+          border-radius: 8px;
+        }
+        
+        .nav-button {
+          padding: 10px 15px;
+          border: none;
+          background: transparent;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+        
+        .nav-button:hover {
+          background: #e9ecef;
+        }
+        
+        .nav-button.active {
+          background: #007bff;
+          color: white;
+        }
+        
+        .connection-status {
+          font-size: 14px;
+          font-weight: 500;
+        }
+      `}</style>
     </div>
   );
 };
