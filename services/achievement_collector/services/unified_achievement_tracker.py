@@ -124,16 +124,34 @@ class UnifiedAchievementTracker:
         body = pr_data["body"].lower()
         text = f"{title} {body}"
         
-        tech_keywords = [
+        # Enhanced tech keywords including AI-relevant frontend tools
+        tech_keywords = {
+            # Core AI/ML
             "MLflow", "Kubernetes", "Docker", "Prometheus", "Grafana", "vLLM",
             "OpenAI", "LangChain", "RAG", "Vector Database", "Qdrant",
-            "PostgreSQL", "Redis", "Celery", "FastAPI", "Python"
-        ]
+            
+            # AI-Relevant Frontend/UI
+            "Streamlit", "Gradio", "Jupyter", "Plotly", "Dash", "Panel",
+            "ML Dashboard", "Model Demo", "AI Interface", "Chat Interface",
+            
+            # Data & Infrastructure
+            "PostgreSQL", "Redis", "Celery", "FastAPI", "Python",
+            
+            # AI-Specific React/Frontend (if used for AI)
+            "React", "TypeScript", "JavaScript"  # Will need context checking
+        }
         
         found_technologies = []
         for tech in tech_keywords:
             if tech.lower() in text:
-                found_technologies.append(tech)
+                # Special handling for generic frontend tech
+                if tech in ["React", "TypeScript", "JavaScript"]:
+                    # Only count if used in AI/ML context
+                    ai_context_keywords = ["dashboard", "model", "ml", "ai", "analytics", "demo", "visualization"]
+                    if any(ai_keyword in text for ai_keyword in ai_context_keywords):
+                        found_technologies.append(f"{tech} (AI Context)")
+                else:
+                    found_technologies.append(tech)
         
         return found_technologies
     
@@ -202,16 +220,19 @@ class JobScoringEngine:
         title = achievement_data.get("title", "").lower()
         description = achievement_data.get("description", "").lower()
         
-        # MLOps Engineer scoring
-        mlops_skills = ["MLflow", "Model Deployment", "Kubernetes", "Monitoring", "SLO Monitoring"]
+        # MLOps Engineer scoring (includes AI-relevant UI tools)
+        mlops_skills = ["MLflow", "Model Deployment", "Kubernetes", "Monitoring", "SLO Monitoring", 
+                       "Streamlit", "Jupyter", "Model Dashboards", "ML Visualization"]
         mlops_score = self._calculate_skill_match_score(skills + technologies, mlops_skills)
         
-        # AI Platform Engineer scoring
-        platform_skills = ["vLLM", "Cost Optimization", "Infrastructure", "Auto-scaling", "GPU Management"]
+        # AI Platform Engineer scoring (includes AI infrastructure UI)
+        platform_skills = ["vLLM", "Cost Optimization", "Infrastructure", "Auto-scaling", "GPU Management",
+                          "Streamlit", "ML Dashboards", "Data Visualization", "Grafana", "Model Monitoring"]
         platform_score = self._calculate_skill_match_score(skills + technologies, platform_skills)
         
-        # GenAI Product Engineer scoring
-        genai_skills = ["LLM Integration", "RAG", "Prompt Engineering", "Vector Databases", "OpenAI API"]
+        # GenAI Product Engineer scoring (includes AI product UI)
+        genai_skills = ["LLM Integration", "RAG", "Prompt Engineering", "Vector Databases", "OpenAI API",
+                       "Streamlit", "Gradio", "AI Demos", "Model Interfaces", "Chat Interfaces"]
         genai_score = self._calculate_skill_match_score(skills + technologies, genai_skills)
         
         return {
@@ -239,19 +260,39 @@ class JobScoringEngine:
         """Calculate skill match score (0-100)"""
         if not required_skills:
             return 0
-            
-        matches = len([skill for skill in user_skills if skill in required_skills])
-        match_percentage = matches / len(required_skills)
+        
+        # Convert to lowercase for better matching
+        user_skills_lower = [skill.lower() for skill in user_skills]
+        required_skills_lower = [skill.lower() for skill in required_skills]
+        
+        # Count exact and partial matches
+        exact_matches = 0
+        partial_matches = 0
+        
+        for required_skill in required_skills_lower:
+            if required_skill in user_skills_lower:
+                exact_matches += 1
+            elif any(required_skill in user_skill for user_skill in user_skills_lower):
+                partial_matches += 1
+        
+        # Calculate match score
+        total_matches = exact_matches + (partial_matches * 0.5)
+        match_percentage = total_matches / len(required_skills)
         
         # Base score from skill match
         base_score = int(match_percentage * 70)  # Max 70 from skill match
         
-        # Bonus for advanced skills
-        advanced_skills = ["MLflow", "vLLM", "Kubernetes", "SLO Monitoring"]
-        advanced_matches = len([skill for skill in user_skills if skill in advanced_skills])
-        bonus = min(30, advanced_matches * 10)  # Max 30 bonus
+        # Bonus for advanced AI/ML skills
+        advanced_skills = ["mlflow", "vllm", "kubernetes", "slo monitoring", "streamlit", "gradio"]
+        advanced_matches = len([skill for skill in user_skills_lower if any(adv in skill for adv in advanced_skills)])
+        bonus = min(30, advanced_matches * 8)  # Max 30 bonus
         
-        return min(100, base_score + bonus)
+        # Extra bonus for AI-specific UI tools
+        ai_ui_skills = ["streamlit", "gradio", "jupyter", "ml dashboard", "model demo"]
+        ai_ui_matches = len([skill for skill in user_skills_lower if any(ui_skill in skill for ui_skill in ai_ui_skills)])
+        ai_ui_bonus = min(20, ai_ui_matches * 10)  # Streamlit/Gradio are valuable for AI roles
+        
+        return min(100, base_score + bonus + ai_ui_bonus)
 
 
 class PortfolioStoryGenerator:
