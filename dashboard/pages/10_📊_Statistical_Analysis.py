@@ -83,40 +83,8 @@ def fetch_statistical_data():
     except:
         pass
     
-    # Mock statistical data for demonstration
-    return {
-        "experiments": [
-            {
-                "experiment_id": "exp_001",
-                "experiment_name": "Hook Style A/B Test",
-                "sample_sizes": {"control": 1000, "treatment": 1000, "total": 2000},
-                "conversion_rates": {"control": 8.5, "treatment": 12.3, "improvement": 44.7},
-                "statistical_results": {"is_significant": True, "p_value": 0.002, "statistical_power": 0.85},
-                "visualization_data": {
-                    "effect_size": 0.038,
-                    "confidence_interval": {"difference": 0.038, "lower_bound": 0.015, "upper_bound": 0.061}
-                }
-            },
-            {
-                "experiment_id": "exp_002", 
-                "experiment_name": "Tone Optimization Test",
-                "sample_sizes": {"control": 500, "treatment": 500, "total": 1000},
-                "conversion_rates": {"control": 7.2, "treatment": 8.8, "improvement": 22.2},
-                "statistical_results": {"is_significant": False, "p_value": 0.086, "statistical_power": 0.65},
-                "visualization_data": {
-                    "effect_size": 0.016,
-                    "confidence_interval": {"difference": 0.016, "lower_bound": -0.005, "upper_bound": 0.037}
-                }
-            }
-        ],
-        "statistical_summary": {
-            "total_experiments": 2,
-            "significant_results": 1,
-            "significance_rate": 50.0,
-            "avg_effect_size": 0.027,
-            "avg_sample_size": 1500
-        }
-    }
+    # No mock data - return None if no real data available
+    return None
 
 # Fetch and display data
 stats_data = fetch_statistical_data()
@@ -126,7 +94,7 @@ st.header("📈 Key Statistical Metrics")
 
 col1, col2, col3, col4 = st.columns(4)
 
-if stats_data:
+if stats_data and stats_data.get("statistical_summary"):
     summary = stats_data.get("statistical_summary", {})
     
     with col1:
@@ -244,6 +212,25 @@ if stats_data and stats_data.get("experiments"):
     )
     
     st.plotly_chart(fig_effect, use_container_width=True)
+else:
+    # No real statistical data available
+    st.error("📊 **No Statistical Data Available**")
+    
+    st.markdown("""
+    **Statistical Analysis Framework Status:**
+    - ✅ Framework implemented and ready
+    - ✅ Statistical methods validated (p-values, confidence intervals)
+    - ✅ Hypothesis testing infrastructure complete
+    - 🔄 Awaiting real experiment data for analysis
+    
+    **Framework Capabilities:**
+    - Two-proportion z-tests for A/B testing
+    - Confidence interval calculations (multiple levels)
+    - P-value analysis with proper interpretation
+    - Effect size quantification and visualization
+    """)
+    
+    st.info("To see statistical analysis, run real A/B testing experiments and refresh this page.")
 
 # Statistical Methodology
 st.header("🔬 Statistical Methodology")

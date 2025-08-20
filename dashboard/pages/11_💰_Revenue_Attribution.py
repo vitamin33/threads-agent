@@ -82,26 +82,8 @@ def fetch_revenue_data():
     except:
         pass
     
-    # Framework demonstration data (not real revenue)
-    return {
-        "current_performance": {
-            "mrr": 0,  # No real MRR yet
-            "monthly_revenue": 0,
-            "conversion_rate": 0.0
-        },
-        "framework_capabilities": {
-            "engagement_optimization_ready": True,
-            "revenue_attribution_ready": True,
-            "cost_optimization_ready": True,
-            "statistical_analysis_ready": True
-        },
-        "implementation_metrics": {
-            "api_endpoints": 25,
-            "test_coverage": 98.6,
-            "statistical_methods": 3,
-            "automation_tests": 17
-        }
-    }
+    # No fallback data - return None if no real revenue data
+    return None
 
 def fetch_roi_data():
     """Fetch ROI analysis data."""
@@ -112,32 +94,33 @@ def fetch_roi_data():
     except:
         pass
     
-    # Framework ROI analysis (development investment)
-    return {
-        "investment_analysis": {
-            "development_cost": 15000,  # Estimated development time value
-            "implementation_time_hours": 120,
-            "test_coverage_achieved": 98.6
-        },
-        "framework_value": {
-            "api_endpoints_created": 25,
-            "automation_components": 5,
-            "statistical_methods_implemented": 3,
-            "production_readiness": "Complete"
-        },
-        "business_readiness": {
-            "engagement_optimization": "Algorithm ready",
-            "revenue_tracking": "Infrastructure ready", 
-            "cost_optimization": "Framework ready",
-            "deployment_status": "Ready for production"
-        }
-    }
+    # Return None if no real data available
+    return None
 
 # Fetch data
 revenue_data = fetch_revenue_data()
 roi_data = fetch_roi_data()
 
-# Implementation Status Overview
+# Check data availability first
+if not revenue_data and not roi_data:
+    st.error("💰 **No Revenue Data Available**")
+    st.markdown("""
+    **Revenue Attribution Framework Status:**
+    - ✅ Framework implemented and ready for integration
+    - ✅ API endpoints created for revenue tracking
+    - ✅ Business value calculation algorithms ready
+    - 🔄 Awaiting real business metrics integration
+    
+    **To Enable Revenue Attribution:**
+    1. Deploy revenue service with business metrics
+    2. Integrate with payment/subscription systems
+    3. Connect A/B testing results to revenue tracking
+    4. Enable real MRR and conversion tracking
+    
+    **Current Status**: Framework ready, awaiting business data integration
+    """)
+
+# Implementation Status Overview (always show - these are real implementation metrics)
 st.header("🎯 Implementation Status")
 
 col1, col2, col3, col4 = st.columns(4)
