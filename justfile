@@ -104,6 +104,25 @@ knowledge-add title content:
 knowledge-setup:
 	@cd .dev-system && python3 knowledge/ingest.py --create-samples
 
+# Multi-Agent Coordination Commands
+agent-status:
+	@cd .dev-system && python3 agents/coordination.py status
+
+agent-impact agent:
+	@cd .dev-system && python3 agents/coordination.py impact {{agent}}
+
+agent-deploy-sequence:
+	@cd .dev-system && python3 agents/coordination.py deploy-sequence
+
+my-services:
+	@cd .dev-system && python3 agents/worktree_config.py --my-services
+
+agent-brief:
+	@cd .dev-system && python3 agents/worktree_config.py --agent-brief
+
+my-quality:
+	@echo "🔄 Testing services for Agent ${AGENT_ID:-main}..." && cd .dev-system && python3 agents/worktree_config.py --my-services --list-only | xargs -I {} just eval-agents "{}"
+
 wt-setup name focus="":
 	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
 

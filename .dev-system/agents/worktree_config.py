@@ -85,6 +85,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--agent-brief", action="store_true", help="Show agent-specific brief")
     parser.add_argument("--my-services", action="store_true", help="Show my services")
+    parser.add_argument("--list-only", action="store_true", help="List services only (for piping)")
     parser.add_argument("--agent-id", help="Override agent ID")
     
     args = parser.parse_args()
@@ -95,9 +96,12 @@ def main():
         print(config.generate_agent_brief())
     elif args.my_services:
         services = config.get_my_services()
-        print(f"🤖 Agent {config.agent_id} Services:")
-        for service in services:
-            print(f"  • {service}")
+        if args.list_only:
+            print(' '.join(services))
+        else:
+            print(f"🤖 Agent {config.agent_id} Services:")
+            for service in services:
+                print(f"  • {service}")
     else:
         parser.print_help()
 

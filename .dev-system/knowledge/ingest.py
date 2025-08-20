@@ -89,7 +89,7 @@ class KnowledgeIngestionPipeline:
     def _extract_title(self, html_content: str, url: str) -> str:
         """Extract title from content or URL"""
         
-        # Try to find HTML title
+        # Try to find HTML title  
         import re
         title_match = re.search(r'<title>([^<]+)</title>', html_content, re.IGNORECASE)
         
