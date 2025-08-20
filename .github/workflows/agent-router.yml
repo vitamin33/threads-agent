@@ -124,20 +124,23 @@ jobs:
           # Install base test requirements
           pip install pytest pytest-xdist pytest-timeout
           
-          # Install only what the agent needs
+          # Install essential dependencies for all agents
+          pip install fastapi pydantic sqlalchemy httpx pytest-asyncio || true
+          
+          # Install only what the agent needs (with error handling)
           SERVICES="${{ steps.services.outputs.services }}"
           for service in ${SERVICES//,/ }; do
             if [ -f "services/$service/requirements.txt" ]; then
               echo "Installing requirements for $service"
-              # Install without dependencies first to avoid conflicts
-              pip install --no-deps -r "services/$service/requirements.txt" 2>/dev/null || true
-              # Then resolve dependencies
-              pip install -r "services/$service/requirements.txt" 2>/dev/null || true
+              # Use pip-tools style installation to avoid conflicts
+              pip install --no-deps $(grep -v "^#" "services/$service/requirements.txt" | head -5) 2>/dev/null || true
             fi
           done
           
-          # Install common requirements if needed
-          pip install fastapi pydantic sqlalchemy 2>/dev/null || true
+          # Install common requirements last
+          if [ -f "services/common/requirements.txt" ]; then
+            pip install --no-deps $(grep -v "^#" "services/common/requirements.txt" | head -3) 2>/dev/null || true
+          fi
       
       - name: Run agent-specific tests
         env:

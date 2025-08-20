@@ -50,5 +50,5 @@ Agent ID: $AGENT_ID
 EOF
 
 success "✨ AGENT_FOCUS.md updated with smart insights"
-warn "📈 Based: $commits_today commits, $success_rate% success rate"
+echo "📈 Based: $commits_today commits, $success_rate% success rate"
 success "🎯 Smart focus update complete!"
