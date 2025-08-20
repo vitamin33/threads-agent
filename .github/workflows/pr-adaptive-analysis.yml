@@ -1,0 +1,190 @@
+name: PR Adaptive Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  adaptive-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - name: PR Adaptive Analysis
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Step 1: Detect PR Type
+            const title = pr.title.toLowerCase();
+            const body = pr.body || '';
+            const bodyLower = body.toLowerCase();
+            
+            let prType, confidence, reasoning;
+            
+            if (['feat:', 'implement', 'mlops', 'optimization', 'performance'].some(word => title.includes(word))) {
+              prType = 'TECHNICAL_ACHIEVEMENT';
+              confidence = 0.9;
+              reasoning = 'Contains technical achievement indicators';
+            } else if (['workflow', 'ci', 'automation', 'analysis', 'tracker'].some(word => title.includes(word))) {
+              prType = 'WORKFLOW_IMPROVEMENT';
+              confidence = 0.8;
+              reasoning = 'Contains workflow improvement indicators';
+            } else if (['fix:', 'bug', 'patch', 'docs:'].some(word => title.includes(word))) {
+              prType = 'MAINTENANCE';
+              confidence = 0.8;
+              reasoning = 'Contains maintenance/fix indicators';
+            } else {
+              prType = 'TECHNICAL_ACHIEVEMENT';
+              confidence = 0.6;
+              reasoning = 'Default classification';
+            }
+            
+            console.log(`🤖 PR Type Detection: ${prType} (${Math.round(confidence * 100)}%)`);
+            
+            // Step 2: Type-Specific Analysis
+            let analysis = {};
+            
+            if (prType === 'TECHNICAL_ACHIEVEMENT') {
+              // Marketing-focused analysis
+              const businessIndicators = ['$', '%', 'save', 'cost', 'revenue', 'performance', 'mlops', 'ai'];
+              const businessScore = Math.min(10, businessIndicators.filter(indicator => bodyLower.includes(indicator)).length * 2);
+              
+              const technicalIndicators = ['implement', 'architecture', 'pipeline', 'deployment', 'monitoring'];
+              const technicalScore = Math.min(10, technicalIndicators.filter(indicator => bodyLower.includes(indicator)).length * 2);
+              
+              const mlopsIndicators = ['mlflow', 'kubernetes', 'model', 'training', 'inference', 'registry'];
+              const mlopsScore = Math.min(10, mlopsIndicators.filter(indicator => bodyLower.includes(indicator)).length * 2);
+              
+              const overallScore = Math.min(100, (businessScore * 8) + (technicalScore * 6) + (mlopsScore * 6));
+              
+              analysis = {
+                analysisType: 'TECHNICAL_ACHIEVEMENT',
+                businessImpactScore: businessScore,
+                technicalDepthScore: technicalScore,
+                mlopsRelevanceScore: mlopsScore,
+                overallMarketingScore: overallScore,
+                marketingPotential: overallScore > 70 ? 'HIGH' : overallScore > 40 ? 'MEDIUM' : 'LOW',
+                contentGenerationDecision: overallScore > 60,
+                suggestedImprovements: [
+                  businessScore < 6 ? 'Add specific business metrics ($ savings, % improvements)' : null,
+                  technicalScore < 6 ? 'Include technical implementation details' : null,
+                  mlopsScore < 6 ? 'Emphasize MLOps/AI relevance for career positioning' : null
+                ].filter(s => s !== null)
+              };
+              
+            } else if (prType === 'WORKFLOW_IMPROVEMENT') {
+              // Process-focused analysis
+              const processIndicators = ['workflow', 'automation', 'ci', 'efficiency', 'developer'];
+              const processScore = Math.min(10, processIndicators.filter(indicator => bodyLower.includes(indicator)).length * 2);
+              
+              const dxIndicators = ['experience', 'productivity', 'tooling', 'quality'];
+              const dxScore = Math.min(10, dxIndicators.filter(indicator => bodyLower.includes(indicator)).length * 2);
+              
+              const overallScore = Math.min(100, (processScore * 8) + (dxScore * 7));
+              
+              analysis = {
+                analysisType: 'WORKFLOW_IMPROVEMENT',
+                processImprovementScore: processScore,
+                developerExperienceScore: dxScore,
+                overallWorkflowScore: overallScore,
+                contentGenerationDecision: false,
+                suggestedImprovements: [
+                  processScore < 6 ? 'Quantify time savings and efficiency gains' : null,
+                  dxScore < 6 ? 'Document developer experience improvements' : null
+                ].filter(s => s !== null)
+              };
+              
+            } else {
+              // Maintenance analysis
+              analysis = {
+                analysisType: 'MAINTENANCE',
+                codeQualityScore: 6,
+                maintenanceValueScore: 5,
+                contentGenerationDecision: false,
+                suggestedImprovements: ['Document bug impact and resolution', 'Add testing improvements']
+              };
+            }
+            
+            // Step 3: Generate adaptive comment
+            let comment = '';
+            
+            if (analysis.analysisType === 'TECHNICAL_ACHIEVEMENT') {
+              const scoreBar = '█'.repeat(Math.floor(analysis.overallMarketingScore / 10)) + 
+                              '░'.repeat(10 - Math.floor(analysis.overallMarketingScore / 10));
+              const potentialEmoji = analysis.overallMarketingScore > 70 ? '🚀' : 
+                                   analysis.overallMarketingScore > 40 ? '📈' : '📊';
+              
+              comment = `## 🚀 Technical Achievement Analysis
+              
+              ${potentialEmoji} **Marketing Potential: ${analysis.marketingPotential}**
+              
+              ### 📊 Achievement Scores
+              \`\`\`
+              Overall Score:        ${analysis.overallMarketingScore}/100 ${scoreBar}
+              Business Impact:      ${analysis.businessImpactScore}/10 ${'⭐'.repeat(Math.min(analysis.businessImpactScore, 5))}
+              Technical Depth:      ${analysis.technicalDepthScore}/10 ${'⭐'.repeat(Math.min(analysis.technicalDepthScore, 5))}
+              MLOps Relevance:      ${analysis.mlopsRelevanceScore}/10 ${'⭐'.repeat(Math.min(analysis.mlopsRelevanceScore, 5))}
+              \`\`\`
+              
+              ### 🎯 Marketing Automation Decision
+              ${analysis.contentGenerationDecision ? 
+                '✅ **Will Generate Content** - This achievement will trigger automated marketing content across 6 platforms' : 
+                '❌ **No Content Generation** - Consider adding business impact and technical depth for marketing content'}`;
+                
+            } else if (analysis.analysisType === 'WORKFLOW_IMPROVEMENT') {
+              comment = `## ⚙️ Workflow Improvement Analysis
+              
+              🔧 **Focus: Development Process Optimization**
+              
+              ### 📊 Workflow Impact Scores
+              \`\`\`
+              Process Improvement:   ${analysis.processImprovementScore}/10 ${'⭐'.repeat(Math.min(analysis.processImprovementScore, 5))}
+              Developer Experience:  ${analysis.developerExperienceScore}/10 ${'⭐'.repeat(Math.min(analysis.developerExperienceScore, 5))}
+              Overall Workflow:      ${analysis.overallWorkflowScore}/100
+              \`\`\`
+              
+              ### 🎯 Workflow Benefits
+              ✅ Improved development process efficiency
+              ✅ Enhanced automation and tooling
+              
+              ### 💡 Process Optimization Suggestions
+              ${analysis.suggestedImprovements.map(s => `- ${s}`).join('\\n')}
+              
+              *This PR improves development workflow efficiency rather than generating marketing content.*`;
+              
+            } else {
+              comment = `## 🛠️ Maintenance Analysis
+              
+              ℹ️ **Focus: Code Quality & System Health**
+              
+              ### 📊 Maintenance Value
+              This PR improves code quality and system maintenance. Important for system health but not designed for marketing content generation.
+              
+              ### 💡 Documentation Suggestions
+              ${analysis.suggestedImprovements.map(s => `- ${s}`).join('\\n')}
+              
+              *Maintenance PRs focus on system health rather than marketing content generation.*`;
+            }
+            
+            // Add suggestions if present
+            if (analysis.suggestedImprovements && analysis.suggestedImprovements.length > 0 && 
+                analysis.analysisType === 'TECHNICAL_ACHIEVEMENT') {
+              comment += `\n\n### 💡 AI Optimization Suggestions\n${analysis.suggestedImprovements.map(s => `- ${s}`).join('\\n')}\n\n*Apply these to trigger automated marketing content generation for job opportunities.*`;
+            }
+            
+            comment += '\n\n---\n*Adaptive PR Analysis System | Updates on each commit*';
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+            
+            console.log(`✅ Posted ${analysis.analysisType} analysis comment`);
