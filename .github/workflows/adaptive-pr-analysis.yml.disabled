@@ -1,0 +1,396 @@
+name: Adaptive PR Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  adaptive-pr-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install openai pydantic structlog
+          
+      - name: Adaptive AI PR Analysis
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import sys
+          import json
+          import os
+          import asyncio
+          from openai import AsyncOpenAI
+          sys.path.insert(0, '.')
+          
+          # Get PR data
+          pr_data = {
+              'title': '''${{ github.event.pull_request.title }}''',
+              'body': '''${{ github.event.pull_request.body }}''',
+              'additions': ${{ github.event.pull_request.additions }},
+              'deletions': ${{ github.event.pull_request.deletions }},
+              'changed_files': ${{ github.event.pull_request.changed_files }},
+              'number': ${{ github.event.pull_request.number }}
+          }
+          
+          def detect_pr_type():
+              title = pr_data['title'].lower()
+              body = pr_data['body'].lower()
+              
+              # Simple rule-based type detection for now
+              if any(word in title for word in ['feat:', 'implement', 'mlops', 'optimization', 'performance']):
+                  return 'TECHNICAL_ACHIEVEMENT', 0.9, 'Contains technical achievement indicators'
+              elif any(word in title for word in ['workflow', 'ci', 'automation', 'analysis', 'tracker']):
+                  return 'WORKFLOW_IMPROVEMENT', 0.8, 'Contains workflow improvement indicators'
+              elif any(word in title for word in ['fix:', 'bug', 'patch', 'docs:']):
+                  return 'MAINTENANCE', 0.8, 'Contains maintenance/fix indicators'
+              else:
+                  return 'TECHNICAL_ACHIEVEMENT', 0.6, 'Default classification'
+          
+          def adaptive_pr_analysis():
+              pr_type, confidence, reasoning = detect_pr_type()
+              
+              print(f'🤖 PR Type Detection:')
+              print(f'  Type: {pr_type}')
+              print(f'  Confidence: {confidence:.1%}')
+              print(f'  Reasoning: {reasoning}')
+              
+              # Step 2: Run Type-Specific Analysis
+              if pr_type == 'TECHNICAL_ACHIEVEMENT':
+                  return await analyze_technical_achievement()
+              elif pr_type == 'WORKFLOW_IMPROVEMENT':
+                  return await analyze_workflow_improvement()
+              elif pr_type == 'BUSINESS_FEATURE':
+                  return await analyze_business_feature()
+              elif pr_type == 'INFRASTRUCTURE':
+                  return await analyze_infrastructure()
+              else:  # MAINTENANCE
+                  return await analyze_maintenance()
+          
+          async def analyze_technical_achievement():
+              """Marketing-focused analysis for technical achievements"""
+              client = AsyncOpenAI()
+              
+              prompt = f"""
+              Analyze this technical achievement PR for marketing and career positioning potential.
+              
+              Title: {pr_data['title']}
+              Description: {pr_data['body']}
+              
+              Evaluate for MLOps/AI career positioning and content marketing potential:
+              
+              Provide JSON response:
+              {{
+                  "business_impact_score": <0-10 based on cost savings, performance, scale>,
+                  "technical_depth_score": <0-10 based on complexity, innovation, architecture>,
+                  "mlops_relevance_score": <0-10 based on MLOps/AI platform relevance>,
+                  "marketing_content_score": <0-10 based on viral/engaging content potential>,
+                  "overall_marketing_score": <0-100>,
+                  "content_generation_decision": <true/false>,
+                  "suggested_improvements": ["<specific improvements for marketing content>"],
+                  "recommended_platforms": ["<best platforms for this content>"],
+                  "content_angle": "<best marketing angle for this achievement>"
+              }}
+              """
+              
+              try:
+                  response = await client.chat.completions.create(
+                      model="gpt-4o-mini",
+                      messages=[{"role": "user", "content": prompt}],
+                      temperature=0.3
+                  )
+                  result = json.loads(response.choices[0].message.content)
+                  result['analysis_type'] = 'TECHNICAL_ACHIEVEMENT'
+                  result['ai_powered'] = True
+                  return result
+              except Exception as e:
+                  return fallback_technical_analysis()
+          
+          async def analyze_workflow_improvement():
+              """Process-focused analysis for workflow improvements"""
+              client = AsyncOpenAI()
+              
+              prompt = f"""
+              Analyze this workflow improvement PR for development efficiency and process optimization.
+              
+              Title: {pr_data['title']}
+              Description: {pr_data['body']}
+              
+              Evaluate for development workflow optimization:
+              
+              Provide JSON response:
+              {{
+                  "process_improvement_score": <0-10 based on workflow efficiency gains>,
+                  "developer_experience_score": <0-10 based on DX improvements>,
+                  "automation_value_score": <0-10 based on automation benefits>,
+                  "team_productivity_score": <0-10 based on team productivity impact>,
+                  "overall_workflow_score": <0-100>,
+                  "content_generation_decision": false,
+                  "suggested_improvements": ["<specific improvements for workflow optimization>"],
+                  "workflow_benefits": ["<key benefits this workflow provides>"],
+                  "next_optimization_opportunities": ["<future workflow improvements>"]
+              }}
+              """
+              
+              try:
+                  response = await client.chat.completions.create(
+                      model="gpt-4o-mini",
+                      messages=[{"role": "user", "content": prompt}],
+                      temperature=0.3
+                  )
+                  result = json.loads(response.choices[0].message.content)
+                  result['analysis_type'] = 'WORKFLOW_IMPROVEMENT'
+                  result['ai_powered'] = True
+                  return result
+              except Exception as e:
+                  return fallback_workflow_analysis()
+          
+          async def analyze_business_feature():
+              """Business-focused analysis for user-facing features"""
+              client = AsyncOpenAI()
+              
+              prompt = f"""
+              Analyze this business feature PR for customer impact and revenue potential.
+              
+              Title: {pr_data['title']}
+              Description: {pr_data['body']}
+              
+              Evaluate for business and customer impact:
+              
+              Provide JSON response:
+              {{
+                  "customer_impact_score": <0-10 based on user experience improvements>,
+                  "revenue_potential_score": <0-10 based on revenue generation potential>,
+                  "market_relevance_score": <0-10 based on market demand>,
+                  "competitive_advantage_score": <0-10 based on competitive positioning>,
+                  "overall_business_score": <0-100>,
+                  "content_generation_decision": <true/false based on customer appeal>,
+                  "suggested_improvements": ["<improvements for customer impact>"],
+                  "business_case_recommendations": ["<how to strengthen business case>"]
+              }}
+              """
+              
+              try:
+                  response = await client.chat.completions.create(
+                      model="gpt-4o-mini",
+                      messages=[{"role": "user", "content": prompt}],
+                      temperature=0.3
+                  )
+                  result = json.loads(response.choices[0].message.content)
+                  result['analysis_type'] = 'BUSINESS_FEATURE'
+                  result['ai_powered'] = True
+                  return result
+              except Exception as e:
+                  return fallback_business_analysis()
+          
+          async def analyze_infrastructure():
+              """Infrastructure-focused analysis for DevOps and deployment changes"""
+              return {
+                  'analysis_type': 'INFRASTRUCTURE',
+                  'infrastructure_score': 70,
+                  'reliability_score': 75,
+                  'scalability_score': 65,
+                  'content_generation_decision': False,
+                  'suggested_improvements': ['Add deployment impact metrics', 'Include reliability improvements'],
+                  'ai_powered': False
+              }
+          
+          async def analyze_maintenance():
+              """Maintenance-focused analysis for bug fixes and refactoring"""
+              return {
+                  'analysis_type': 'MAINTENANCE', 
+                  'code_quality_score': 60,
+                  'maintenance_value_score': 55,
+                  'content_generation_decision': False,
+                  'suggested_improvements': ['Document bug impact and resolution', 'Add testing improvements'],
+                  'ai_powered': False
+              }
+          
+          def fallback_technical_analysis():
+              return {
+                  'analysis_type': 'TECHNICAL_ACHIEVEMENT',
+                  'business_impact_score': 5,
+                  'technical_depth_score': 5,
+                  'mlops_relevance_score': 5,
+                  'marketing_content_score': 5,
+                  'overall_marketing_score': 50,
+                  'content_generation_decision': False,
+                  'suggested_improvements': ['Add business metrics', 'Include technical details'],
+                  'ai_powered': False
+              }
+          
+          def fallback_workflow_analysis():
+              return {
+                  'analysis_type': 'WORKFLOW_IMPROVEMENT',
+                  'process_improvement_score': 6,
+                  'developer_experience_score': 7,
+                  'automation_value_score': 6,
+                  'overall_workflow_score': 65,
+                  'content_generation_decision': False,
+                  'suggested_improvements': ['Quantify developer time savings', 'Add automation benefits'],
+                  'ai_powered': False
+              }
+          
+          def fallback_business_analysis():
+              return {
+                  'analysis_type': 'BUSINESS_FEATURE',
+                  'customer_impact_score': 6,
+                  'revenue_potential_score': 5,
+                  'overall_business_score': 55,
+                  'content_generation_decision': False,
+                  'suggested_improvements': ['Add customer impact metrics', 'Include revenue projections'],
+                  'ai_powered': False
+              }
+          
+          # Run adaptive analysis
+          try:
+              analysis_result = asyncio.run(adaptive_pr_analysis())
+          except Exception as e:
+              print(f'Error in adaptive analysis: {e}')
+              analysis_result = fallback_workflow_analysis()
+          
+          # Save results for comment
+          with open('adaptive_analysis.json', 'w') as f:
+              json.dump({
+                  'analysis': analysis_result,
+                  'pr_number': pr_data['number']
+              }, f)
+          EOF
+          
+      - name: Post Adaptive Analysis Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const analysisData = JSON.parse(fs.readFileSync('adaptive_analysis.json', 'utf8'));
+              const analysis = analysisData.analysis;
+              
+              // Adaptive comment based on PR type
+              let comment = '';
+              
+              if (analysis.analysis_type === 'TECHNICAL_ACHIEVEMENT') {
+                // Marketing-focused analysis for technical achievements
+                const scoreBar = '█'.repeat(Math.floor(analysis.overall_marketing_score / 10)) + 
+                                '░'.repeat(10 - Math.floor(analysis.overall_marketing_score / 10));
+                
+                const potentialEmoji = analysis.overall_marketing_score > 70 ? '🚀' : 
+                                     analysis.overall_marketing_score > 40 ? '📈' : '📊';
+                
+                comment = `## 🚀 Technical Achievement Analysis
+                
+                ${potentialEmoji} **Marketing Potential: ${analysis.overall_marketing_score > 70 ? 'HIGH' : analysis.overall_marketing_score > 40 ? 'MEDIUM' : 'LOW'}**
+                
+                ### 📊 AI Marketing Scores
+                \`\`\`
+                Overall Score:        ${analysis.overall_marketing_score}/100 ${scoreBar}
+                Business Impact:      ${analysis.business_impact_score}/10 ${'⭐'.repeat(Math.min(analysis.business_impact_score, 5))}
+                Technical Depth:      ${analysis.technical_depth_score}/10 ${'⭐'.repeat(Math.min(analysis.technical_depth_score, 5))}
+                MLOps Relevance:      ${analysis.mlops_relevance_score}/10 ${'⭐'.repeat(Math.min(analysis.mlops_relevance_score, 5))}
+                Content Potential:    ${analysis.marketing_content_score}/10 ${'⭐'.repeat(Math.min(analysis.marketing_content_score, 5))}
+                \`\`\`
+                
+                ### 🎯 Marketing Automation Decision
+                ${analysis.content_generation_decision ? 
+                  `✅ **Will Generate Content** - This achievement will trigger automated marketing content
+                  📍 **Platforms**: ${analysis.recommended_platforms ? analysis.recommended_platforms.join(', ') : 'LinkedIn, Dev.to, Medium'}
+                  🎨 **Content Angle**: ${analysis.content_angle || 'Technical achievement showcase'}` : 
+                  '❌ **No Content Generation** - Consider adding business impact and technical depth'}
+                
+                ${analysis.suggested_improvements && analysis.suggested_improvements.length > 0 ? `### 💡 AI Marketing Optimization Suggestions
+                ${analysis.suggested_improvements.map(s => `- ${s}`).join('\n')}
+                
+                *Apply these to trigger automated marketing content generation for job opportunities.*` : ''}`;
+                
+              } else if (analysis.analysis_type === 'WORKFLOW_IMPROVEMENT') {
+                // Process-focused analysis for workflow improvements
+                comment = `## ⚙️ Workflow Improvement Analysis
+                
+                🔧 **Focus: Development Process Optimization**
+                
+                ### 📊 Workflow Impact Scores
+                \`\`\`
+                Process Improvement:   ${analysis.process_improvement_score}/10 ${'⭐'.repeat(Math.min(analysis.process_improvement_score, 5))}
+                Developer Experience:  ${analysis.developer_experience_score}/10 ${'⭐'.repeat(Math.min(analysis.developer_experience_score, 5))}
+                Automation Value:      ${analysis.automation_value_score}/10 ${'⭐'.repeat(Math.min(analysis.automation_value_score, 5))}
+                Team Productivity:     ${analysis.team_productivity_score || 6}/10 ${'⭐'.repeat(Math.min(analysis.team_productivity_score || 6, 5))}
+                \`\`\`
+                
+                ### 🎯 Workflow Benefits
+                ${analysis.workflow_benefits ? analysis.workflow_benefits.map(b => `✅ ${b}`).join('\n') : '✅ Improved development process efficiency'}
+                
+                ### 💡 Process Optimization Suggestions
+                ${analysis.suggested_improvements ? analysis.suggested_improvements.map(s => `- ${s}`).join('\n') : '- Document time savings and efficiency gains'}
+                
+                ### 🔄 Next Optimization Opportunities
+                ${analysis.next_optimization_opportunities ? analysis.next_optimization_opportunities.map(o => `- ${o}`).join('\n') : '- Consider automating additional manual processes'}
+                
+                *This PR improves development workflow efficiency rather than generating marketing content.*`;
+                
+              } else if (analysis.analysis_type === 'BUSINESS_FEATURE') {
+                // Business-focused analysis for customer-facing features
+                comment = `## 💼 Business Feature Analysis
+                
+                💰 **Focus: Customer Impact & Revenue Generation**
+                
+                ### 📊 Business Impact Scores
+                \`\`\`
+                Customer Impact:      ${analysis.customer_impact_score}/10 ${'⭐'.repeat(Math.min(analysis.customer_impact_score, 5))}
+                Revenue Potential:    ${analysis.revenue_potential_score}/10 ${'⭐'.repeat(Math.min(analysis.revenue_potential_score, 5))}
+                Market Relevance:     ${analysis.market_relevance_score}/10 ${'⭐'.repeat(Math.min(analysis.market_relevance_score, 5))}
+                Competitive Edge:     ${analysis.competitive_advantage_score}/10 ${'⭐'.repeat(Math.min(analysis.competitive_advantage_score, 5))}
+                \`\`\`
+                
+                ### 🎯 Business Value
+                ${analysis.content_generation_decision ? 
+                  '✅ **High Business Value** - This feature could generate customer-focused marketing content' : 
+                  '📊 **Standard Business Feature** - Focus on customer impact documentation'}
+                
+                ### 💡 Business Case Recommendations
+                ${analysis.business_case_recommendations ? analysis.business_case_recommendations.map(r => `- ${r}`).join('\n') : '- Add customer impact metrics and testimonials'}`;
+                
+              } else {
+                // Simple analysis for infrastructure/maintenance
+                comment = `## 🛠️ ${analysis.analysis_type.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} Analysis
+                
+                ℹ️ **Focus: Code Quality & System Maintenance**
+                
+                ### 📊 Maintenance Value
+                This PR improves code quality and system maintenance. While important for system health, it's not designed for marketing content generation.
+                
+                ### 💡 Documentation Suggestions
+                - Consider documenting the improvement benefits
+                - Add testing coverage information if applicable
+                - Include any performance or reliability gains
+                
+                *Maintenance PRs focus on system health rather than marketing content generation.*`;
+              }
+              
+              comment += `\n\n---\n*${analysis.ai_powered ? 'Powered by OpenAI GPT-4o-mini' : 'Basic Analysis'} | Adaptive PR Analysis System*`;
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+            } catch (error) {
+              console.error('Error posting adaptive analysis comment:', error);
+            }

@@ -191,12 +191,21 @@ BODY_MODEL          # Default: gpt-3.5-turbo-0125
 **Branch Naming for Parallel Development**:
 ```
 <type>/<area>/<feature>__<agent>
-Examples:
-- feat/mlops/mlflow-slo-gates__a1
-- feat/genai/vllm-optimize__a2
-- fix/achieve/portfolio-bug__a3
-- perf/revenue/ab-testing__a4
+Types aligned with PR Analysis:
+- feat/mlops/mlflow-slo-gates__a1      # Technical Achievement (marketing content)
+- feat/genai/vllm-optimize__a2         # Technical Achievement (marketing content)
+- fix/achieve/portfolio-bug__a3        # Maintenance (no marketing content)
+- perf/revenue/ab-testing__a4          # Technical Achievement (marketing content)
+- workflow/ci/analysis-automation__a3  # Workflow Improvement (no marketing content)
+- infra/k8s/monitoring-setup__a1       # Infrastructure (no marketing content)
+- docs/api/endpoint-documentation__a3  # Maintenance (no marketing content)
 ```
+
+**PR Type Detection Rules:**
+- 🚀 **Technical Achievement**: feat/, perf/, implement, mlops, optimization → Marketing content
+- ⚙️ **Workflow Improvement**: workflow/, ci/, automation, analysis → Process optimization  
+- 🛠️ **Maintenance**: fix/, docs/, bug, patch → Code quality
+- 🏗️ **Infrastructure**: infra/, deploy, monitoring → System health
 
 **Worktree Setup (4 Parallel Claude Sessions)**:
 ```bash
