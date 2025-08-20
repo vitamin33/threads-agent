@@ -48,59 +48,27 @@ jobs:
               'number': ${{ github.event.pull_request.number }}
           }
           
-          async def adaptive_pr_analysis():
-              client = AsyncOpenAI()
+          def detect_pr_type():
+              title = pr_data['title'].lower()
+              body = pr_data['body'].lower()
               
-              # Step 1: Detect PR Type with AI
-              type_detection_prompt = f"""
-              Analyze this Pull Request and determine its primary type and focus.
+              # Simple rule-based type detection for now
+              if any(word in title for word in ['feat:', 'implement', 'mlops', 'optimization', 'performance']):
+                  return 'TECHNICAL_ACHIEVEMENT', 0.9, 'Contains technical achievement indicators'
+              elif any(word in title for word in ['workflow', 'ci', 'automation', 'analysis', 'tracker']):
+                  return 'WORKFLOW_IMPROVEMENT', 0.8, 'Contains workflow improvement indicators'
+              elif any(word in title for word in ['fix:', 'bug', 'patch', 'docs:']):
+                  return 'MAINTENANCE', 0.8, 'Contains maintenance/fix indicators'
+              else:
+                  return 'TECHNICAL_ACHIEVEMENT', 0.6, 'Default classification'
+          
+          def adaptive_pr_analysis():
+              pr_type, confidence, reasoning = detect_pr_type()
               
-              Title: {pr_data['title']}
-              Description: {pr_data['body']}
-              Changes: +{pr_data['additions']} -{pr_data['deletions']} lines, {pr_data['changed_files']} files
-              
-              Classify this PR into one of these categories:
-              1. TECHNICAL_ACHIEVEMENT: New features, MLOps implementations, performance optimizations, architecture improvements
-              2. WORKFLOW_IMPROVEMENT: CI/CD, tooling, processes, automation workflows
-              3. BUSINESS_FEATURE: User-facing features, revenue generation, customer impact
-              4. INFRASTRUCTURE: DevOps, deployment, monitoring, infrastructure changes
-              5. MAINTENANCE: Bug fixes, dependency updates, refactoring, documentation
-              
-              Provide JSON response:
-              {{
-                  "pr_type": "<category>",
-                  "confidence": <0.0-1.0>,
-                  "reasoning": "<why this classification>",
-                  "analysis_focus": "<what type of analysis this PR needs>"
-              }}
-              """
-              
-              try:
-                  type_response = await client.chat.completions.create(
-                      model="gpt-4o-mini",
-                      messages=[{"role": "user", "content": type_detection_prompt}],
-                      temperature=0.2
-                  )
-                  
-                  pr_type_result = json.loads(type_response.choices[0].message.content)
-                  pr_type = pr_type_result['pr_type']
-                  
-                  print(f'🤖 AI PR Type Detection:')
-                  print(f'  Type: {pr_type}')
-                  print(f'  Confidence: {pr_type_result["confidence"]:.1%}')
-                  print(f'  Reasoning: {pr_type_result["reasoning"][:100]}...')
-                  
-              except Exception as e:
-                  print(f'⚠️  AI type detection failed: {e}')
-                  # Fallback type detection
-                  if any(word in pr_data['title'].lower() for word in ['feat:', 'implement', 'mlops', 'optimization']):
-                      pr_type = 'TECHNICAL_ACHIEVEMENT'
-                  elif any(word in pr_data['title'].lower() for word in ['workflow', 'ci', 'automation']):
-                      pr_type = 'WORKFLOW_IMPROVEMENT'
-                  else:
-                      pr_type = 'MAINTENANCE'
-                  
-                  pr_type_result = {'pr_type': pr_type, 'confidence': 0.7, 'reasoning': 'Fallback classification'}
+              print(f'🤖 PR Type Detection:')
+              print(f'  Type: {pr_type}')
+              print(f'  Confidence: {confidence:.1%}')
+              print(f'  Reasoning: {reasoning}')
               
               # Step 2: Run Type-Specific Analysis
               if pr_type == 'TECHNICAL_ACHIEVEMENT':
@@ -291,7 +259,7 @@ jobs:
           
           # Run adaptive analysis
           try:
-              analysis_result = await adaptive_pr_analysis()
+              analysis_result = asyncio.run(adaptive_pr_analysis())
           except Exception as e:
               print(f'Error in adaptive analysis: {e}')
               analysis_result = fallback_workflow_analysis()

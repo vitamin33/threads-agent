@@ -1,0 +1,148 @@
+name: Simple Adaptive PR Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  simple-adaptive-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Simple Adaptive Analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import json
+          
+          # Get PR data
+          title = '''${{ github.event.pull_request.title }}'''
+          body = '''${{ github.event.pull_request.body }}'''
+          additions = ${{ github.event.pull_request.additions }}
+          deletions = ${{ github.event.pull_request.deletions }}
+          changed_files = ${{ github.event.pull_request.changed_files }}
+          
+          print('🤖 Simple Adaptive PR Analysis')
+          print('=' * 50)
+          
+          # Step 1: Detect PR Type
+          title_lower = title.lower()
+          body_lower = body.lower()
+          
+          if any(word in title_lower for word in ['feat:', 'implement', 'mlops', 'optimization', 'performance']):
+              pr_type = 'TECHNICAL_ACHIEVEMENT'
+              confidence = 0.9
+              reasoning = 'Contains technical achievement indicators'
+          elif any(word in title_lower for word in ['workflow', 'ci', 'automation', 'analysis', 'tracker']):
+              pr_type = 'WORKFLOW_IMPROVEMENT' 
+              confidence = 0.8
+              reasoning = 'Contains workflow improvement indicators'
+          elif any(word in title_lower for word in ['fix:', 'bug', 'patch', 'docs:']):
+              pr_type = 'MAINTENANCE'
+              confidence = 0.8
+              reasoning = 'Contains maintenance/fix indicators'
+          else:
+              pr_type = 'TECHNICAL_ACHIEVEMENT'
+              confidence = 0.6
+              reasoning = 'Default classification'
+          
+          print(f'📊 PR Type Detection:')
+          print(f'  Type: {pr_type}')
+          print(f'  Confidence: {confidence:.1%}')
+          print(f'  Reasoning: {reasoning}')
+          
+          # Step 2: Type-Specific Analysis
+          if pr_type == 'TECHNICAL_ACHIEVEMENT':
+              # Marketing-focused analysis
+              business_indicators = ['$', '%', 'save', 'cost', 'revenue', 'performance', 'mlops', 'ai']
+              business_score = min(10, sum(2 for indicator in business_indicators if indicator in body_lower))
+              
+              technical_indicators = ['implement', 'architecture', 'pipeline', 'deployment', 'monitoring']
+              technical_score = min(10, sum(2 for indicator in technical_indicators if indicator in body_lower))
+              
+              mlops_indicators = ['mlflow', 'kubernetes', 'model', 'training', 'inference', 'registry']
+              mlops_score = min(10, sum(2 for indicator in mlops_indicators if indicator in body_lower))
+              
+              overall_score = min(100, (business_score * 8) + (technical_score * 6) + (mlops_score * 6))
+              
+              analysis = {
+                  'analysis_type': 'TECHNICAL_ACHIEVEMENT',
+                  'business_impact_score': business_score,
+                  'technical_depth_score': technical_score,
+                  'mlops_relevance_score': mlops_score,
+                  'overall_marketing_score': overall_score,
+                  'marketing_potential': 'HIGH' if overall_score > 70 else 'MEDIUM' if overall_score > 40 else 'LOW',
+                  'content_generation_decision': overall_score > 60,
+                  'suggested_improvements': [
+                      'Add specific business metrics ($ savings, % improvements)' if business_score < 6 else None,
+                      'Include technical implementation details' if technical_score < 6 else None,
+                      'Emphasize MLOps/AI relevance for career positioning' if mlops_score < 6 else None
+                  ]
+              }
+              
+          elif pr_type == 'WORKFLOW_IMPROVEMENT':
+              # Process-focused analysis
+              process_indicators = ['workflow', 'automation', 'ci', 'efficiency', 'developer']
+              process_score = min(10, sum(2 for indicator in process_indicators if indicator in body_lower))
+              
+              dx_indicators = ['experience', 'productivity', 'tooling', 'quality']
+              dx_score = min(10, sum(2 for indicator in dx_indicators if indicator in body_lower))
+              
+              overall_score = min(100, (process_score * 8) + (dx_score * 7))
+              
+              analysis = {
+                  'analysis_type': 'WORKFLOW_IMPROVEMENT',
+                  'process_improvement_score': process_score,
+                  'developer_experience_score': dx_score,
+                  'overall_workflow_score': overall_score,
+                  'content_generation_decision': False,  # Workflow PRs don't generate marketing content
+                  'suggested_improvements': [
+                      'Quantify time savings and efficiency gains' if process_score < 6 else None,
+                      'Document developer experience improvements' if dx_score < 6 else None
+                  ]
+              }
+              
+          else:  # MAINTENANCE
+              analysis = {
+                  'analysis_type': 'MAINTENANCE',
+                  'code_quality_score': 6,
+                  'maintenance_value_score': 5,
+                  'content_generation_decision': False,
+                  'suggested_improvements': ['Document bug impact and resolution', 'Add testing improvements']
+              }
+          
+          # Remove None values from suggestions
+          if 'suggested_improvements' in analysis:
+              analysis['suggested_improvements'] = [s for s in analysis['suggested_improvements'] if s is not None]
+          
+          print(f'\\n📊 Analysis Results:')
+          print(f'  Analysis Type: {analysis["analysis_type"]}')
+          if 'overall_marketing_score' in analysis:
+              print(f'  Overall Score: {analysis["overall_marketing_score"]}/100')
+          elif 'overall_workflow_score' in analysis:
+              print(f'  Overall Score: {analysis["overall_workflow_score"]}/100')
+          print(f'  Content Generation: {analysis["content_generation_decision"]}')
+          
+          # Save results
+          with open('adaptive_analysis.json', 'w') as f:
+              json.dump({
+                  'analysis': analysis,
+                  'pr_type': pr_type,
+                  'confidence': confidence,
+                  'reasoning': reasoning
+              }, f)
+          
+          # Run simple analysis
+          try:
+              analysis_result = adaptive_pr_analysis()
+          except Exception as e:
+              print(f'Error in analysis: {e}')
+              analysis_result = fallback_workflow_analysis()
