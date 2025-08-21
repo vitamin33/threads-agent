@@ -3,6 +3,7 @@ M4: Release Path with Canary/Rollback System
 Safe deployment automation with percentage-based canary and automatic rollback
 """
 
+import os
 import time
 import json
 import subprocess
@@ -257,7 +258,7 @@ class ReleaseManager:
             'status': 'staging',
             'environment': staging_env,
             'message': f'Successfully deployed to {staging_env}',
-            'staging_url': f'https://{staging_env}.threads-agent.com',
+            'staging_url': f'https://{staging_env}.{os.getenv("PROJECT_DOMAIN", "threads-agent.com")}',
             'next_action': 'Validate staging, then promote to production'
         }
     
@@ -273,7 +274,7 @@ class ReleaseManager:
             'environment': environment,
             'canary_percentage': percentage,
             'message': f'Canary deployed with {percentage}% traffic',
-            'canary_url': f'https://canary-{environment}.threads-agent.com',
+            'canary_url': f'https://canary-{environment}.{os.getenv("PROJECT_DOMAIN", "threads-agent.com")}',
             'monitoring_duration': self.config.metrics_window,
             'next_action': f'Monitor for {self.config.metrics_window}s, auto-rollback if error rate > {self.config.rollback_threshold:.1%}'
         }
@@ -436,8 +437,8 @@ class ReleaseManager:
 class K8sReleaseManager:
     """Kubernetes-specific release management"""
     
-    def __init__(self, namespace: str = "threads-agent"):
-        self.namespace = namespace
+    def __init__(self, namespace: str = None):
+        self.namespace = namespace or os.getenv("K8S_NAMESPACE", "threads-agent")
     
     def helm_deploy_canary(self, chart_path: str, percentage: int) -> Dict[str, Any]:
         """Deploy using Helm with canary configuration"""

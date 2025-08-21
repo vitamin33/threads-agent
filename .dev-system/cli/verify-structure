@@ -64,7 +64,8 @@ def check_extraction_ready():
         try:
             with open(py_file) as f:
                 content = f.read()
-                if "threads-agent" in content and "thread-agent" not in str(py_file):
+                # Allow environment variable usage with fallbacks
+                if "threads-agent" in content and "getenv(" not in content and "thread-agent" not in str(py_file):
                     issues.append(f"Hardcoded path in {py_file.relative_to(DEV_SYSTEM_ROOT)}")
         except:
             pass

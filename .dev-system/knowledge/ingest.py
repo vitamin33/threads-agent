@@ -3,6 +3,7 @@ M6: Knowledge Ingestion and Validation Pipeline
 Automated ingestion of knowledge sources with quality validation
 """
 
+import os
 import sys
 import requests
 import time
@@ -233,13 +234,14 @@ def create_sample_knowledge():
     - Quality gates for production
     """
     
-    # Sample threads-agent knowledge
-    threads_knowledge = """
-    # Threads-Agent Development Guide
+    # Sample project knowledge (configurable)
+    project_name = os.getenv("PROJECT_NAME", "threads-agent")
+    project_knowledge = f"""
+    # {project_name.title()} Development Guide
     
     ## Architecture
     
-    The threads-agent system consists of:
+    The {project_name} system consists of:
     - Orchestrator: API coordination and task routing
     - Persona Runtime: LangGraph-based content generation
     - Viral Engine: Engagement prediction and optimization
@@ -270,8 +272,8 @@ def create_sample_knowledge():
             'tags': ['ai', 'best_practices', 'prompt_engineering']
         },
         {
-            'title': 'Threads-Agent Development Guide', 
-            'content': threads_knowledge,
+            'title': f'{project_name.title()} Development Guide', 
+            'content': project_knowledge,
             'source_type': 'documentation',
             'tags': ['threads_agent', 'architecture', 'development']
         }
