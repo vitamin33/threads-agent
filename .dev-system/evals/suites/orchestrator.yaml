@@ -1,0 +1,125 @@
+# M7: Orchestrator Quality Suite  
+# API coordination, task management, and service orchestration
+
+metadata:
+  name: "orchestrator"
+  description: "Quality gates for orchestrator service - API coordination and task routing"
+  version: "1.0.0"
+  agent: "orchestrator"
+  created: "2025-08-19"
+  
+gates:
+  min_success_rate: 0.90        # High reliability required for coordination
+  max_avg_latency_ms: 2000      # API should be fast
+  max_cost_per_test: 0.05       # Low cost for API tests
+  max_total_cost: 1.00
+  
+test_cases:
+  
+  # Core API functionality
+  - id: "task_creation_api"
+    description: "POST /task creates and queues tasks correctly"
+    input:
+      method: "POST"
+      endpoint: "/task"
+      payload:
+        persona: "tech_influencer"
+        prompt: "Create content about Python best practices"
+    expected_output:
+      status_code: 200
+      has_task_id: true
+      queued_successfully: true
+    weight: 10
+    
+  - id: "task_status_api"
+    description: "GET /task/{id} returns accurate status"
+    input:
+      method: "GET"
+      endpoint: "/task/test123"
+    expected_output:
+      status_code: 200
+      has_status_field: true
+      valid_status_values: ["pending", "processing", "completed"]
+    weight: 8
+    
+  # Search integration
+  - id: "search_trends_api"
+    description: "POST /search/trends returns trending topics"
+    input:
+      method: "POST"
+      endpoint: "/search/trends"
+      payload:
+        query: "AI automation"
+        limit: 10
+    expected_output:
+      status_code: 200
+      has_trends: true
+      trend_count: 10
+    weight: 8
+    
+  # Performance under load
+  - id: "concurrent_request_handling"
+    description: "Handle multiple concurrent requests"
+    input:
+      concurrent_requests: 20
+      request_type: "task_creation"
+    expected_output:
+      all_requests_succeed: true
+      max_response_time_ms: 3000
+      no_timeouts: true
+    weight: 9
+    
+  # Error handling
+  - id: "invalid_payload_handling"
+    description: "Return proper errors for invalid requests"
+    input:
+      method: "POST"
+      endpoint: "/task"
+      payload:
+        invalid_field: "bad_data"
+    expected_output:
+      status_code: 400
+      error_type: "validation_error"
+      helpful_message: true
+    weight: 7
+    
+  # Health monitoring
+  - id: "health_check_accuracy"
+    description: "Health endpoint reflects actual service state"
+    input:
+      method: "GET"
+      endpoint: "/health"
+    expected_output:
+      status_code: 200
+      checks_database: true
+      checks_celery: true
+      overall_healthy: true
+    weight: 6
+    
+  # Rate limiting protection
+  - id: "rate_limiting_protection"
+    description: "Protect against API abuse"
+    input:
+      requests_per_minute: 100
+      same_client: true
+    expected_output:
+      rate_limit_triggered: true
+      proper_error_response: true
+      logs_abuse_attempt: true
+    weight: 7
+
+evaluation:
+  timeout_seconds: 30
+  retry_attempts: 2
+  parallel_execution: true
+  
+  scoring:
+    api_functionality: 0.4
+    performance: 0.3
+    error_handling: 0.2
+    monitoring: 0.1
+    
+  pass_criteria:
+    min_weighted_score: 0.80
+    max_failed_tests: 2
+    max_timeout_tests: 1

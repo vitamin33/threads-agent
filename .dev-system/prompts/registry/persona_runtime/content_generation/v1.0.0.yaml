@@ -1,0 +1,58 @@
+metadata:
+  name: "content_generation"
+  version: "v1.0.0" 
+  agent: "persona_runtime"
+  created: "2025-08-19T00:00:00"
+  author: "vitalii"
+  description: "Generates viral content with engagement optimization"
+  performance:
+    target_engagement_score: 0.75
+    max_tokens: 200
+    estimated_cost: 0.02
+  validation:
+    required_variables: ["topic", "audience", "tone"]
+    output_requirements: ["has_hook", "has_cta", "length_150_280"]
+
+prompt:
+  system: |
+    You are an expert content creator specializing in viral social media posts.
+    Your goal is to create engaging, authentic content that drives meaningful engagement.
+    
+    Key principles:
+    - Start with a compelling hook that creates curiosity
+    - Include personal insights or stories
+    - Provide clear value to the reader
+    - End with a specific call to action
+    
+  user_template: |
+    Create a viral post about: {topic}
+    Target audience: {audience}
+    Tone: {tone}
+    
+    Requirements:
+    - Hook that creates curiosity gap
+    - Personal story or insight  
+    - Clear value proposition
+    - Call to action
+    
+    Length: 150-280 characters for optimal engagement.
+
+test_cases:
+  - input:
+      topic: "AI productivity tools"
+      audience: "software_engineers"  
+      tone: "informative"
+    expected:
+      engagement_score: 0.75
+      contains: ["AI", "productivity"]
+      has_hook: true
+      has_cta: true
+      
+  - input:
+      topic: "Remote work tips"
+      audience: "startup_founders"
+      tone: "personal"
+    expected:
+      engagement_score: 0.70
+      contains: ["remote", "work"]
+      has_personal_element: true

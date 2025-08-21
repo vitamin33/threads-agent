@@ -1,0 +1,130 @@
+# M7: Viral Engine Quality Suite
+# Content optimization, engagement prediction, and viral coefficient calculation
+
+metadata:
+  name: "viral_engine"
+  description: "Quality gates for viral_engine service - content optimization and engagement"
+  version: "1.0.0"
+  agent: "viral_engine"
+  created: "2025-08-19"
+  
+gates:
+  min_success_rate: 0.85
+  max_avg_latency_ms: 4000      # Content analysis can be slower
+  max_cost_per_test: 0.30       # Higher cost for content analysis
+  max_total_cost: 6.00
+  
+test_cases:
+  
+  # Engagement prediction accuracy
+  - id: "engagement_prediction_accuracy"
+    description: "Predict engagement rates for various content types"
+    input:
+      content: "BREAKING: 90% of developers waste 3 hours daily. Here's the shocking fix that doubled my productivity: Stop optimizing code users never see."
+      content_type: "viral_hook"
+    expected_output:
+      engagement_score: 0.7
+      confidence_level: 0.8
+      viral_indicators: ["BREAKING", "shocking", "doubled"]
+      should_publish: true
+    weight: 10
+    
+  - id: "low_quality_content_rejection"
+    description: "Reject low-quality or spammy content"
+    input:
+      content: "Buy my course!!! Amazing results!!! Click here now!!!"
+      content_type: "promotional"
+    expected_output:
+      engagement_score: 0.2
+      should_publish: false
+      rejection_reason: "excessive_promotion"
+    weight: 9
+    
+  # Hook optimization
+  - id: "hook_optimization_quality"
+    description: "Generate compelling hooks for content"
+    input:
+      topic: "AI automation tools for developers"
+      target_audience: "software_engineers"
+      style: "curiosity_gap"
+    expected_output:
+      has_hook: true
+      hook_length: 150
+      engagement_indicators: 3
+      readability_score: 0.7
+    weight: 8
+    
+  # Performance requirements
+  - id: "batch_processing_efficiency"
+    description: "Process multiple content pieces efficiently"
+    input:
+      content_batch: 5
+      content_type: "mixed"
+    expected_output:
+      max_total_time_ms: 8000
+      all_processed: true
+      consistent_quality: true
+    weight: 7
+    
+  # Viral coefficient calculation
+  - id: "viral_coefficient_accuracy"
+    description: "Calculate viral coefficients accurately"
+    input:
+      content: "The one productivity habit that changed my career: I stopped saying 'yes' to everything. Here's my 3-step framework:"
+      historical_data: true
+    expected_output:
+      viral_coefficient: 0.6
+      calculation_method: "engagement_based"
+      confidence: 0.8
+    weight: 8
+    
+  # Quality gate integration
+  - id: "quality_gate_enforcement"
+    description: "Enforce quality thresholds correctly"
+    input:
+      content: "Generic content without engagement hooks"
+      threshold: 0.6
+    expected_output:
+      quality_score: 0.4
+      passes_gate: false
+      improvement_suggestions: 3
+    weight: 7
+    
+  # Error handling
+  - id: "malformed_content_handling"
+    description: "Handle malformed or empty content gracefully"
+    input:
+      content: ""
+      content_type: null
+    expected_output:
+      error: "invalid_content"
+      graceful_failure: true
+    weight: 6
+    
+  # Integration with other services
+  - id: "persona_runtime_integration"
+    description: "Integrate correctly with persona_runtime output"
+    input:
+      persona_output: "Generated content from persona_runtime"
+      enhancement_request: "optimize_for_engagement"
+    expected_output:
+      enhanced_content: true
+      improvement_score: 0.3
+      maintains_persona_voice: true
+    weight: 7
+
+evaluation:
+  timeout_seconds: 45
+  retry_attempts: 2
+  parallel_execution: false  # Content analysis should be sequential
+  
+  scoring:
+    accuracy: 0.4         # Prediction accuracy
+    performance: 0.3      # Speed of analysis
+    quality: 0.2          # Output quality
+    reliability: 0.1      # Error handling
+    
+  pass_criteria:
+    min_weighted_score: 0.75  # Slightly lower due to ML uncertainty
+    max_failed_tests: 2
+    max_timeout_tests: 1

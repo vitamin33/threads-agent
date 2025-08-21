@@ -9,6 +9,7 @@ import os
 import argparse
 import yaml
 from pathlib import Path
+from datetime import datetime
 
 # Add dev-system to path
 DEV_SYSTEM_ROOT = Path(__file__).parent.parent
@@ -64,7 +65,23 @@ def brief_command(args):
         print(brief)
     except ImportError:
         print("📋 Morning brief system not yet implemented")
-        print("🔄 Coming in M5 milestone")
+        print("🔄 Run: .dev-system/cli/dev-system init --planning")
+    except Exception as e:
+        print(f"❌ Error generating brief: {e}")
+        print("🔄 Try: .dev-system/cli/dev-system init --planning")
+
+def debrief_command(args):
+    """Generate evening debrief"""
+    try:
+        from planner.debrief import generate_evening_debrief
+        debrief = generate_evening_debrief()
+        print(debrief)
+    except ImportError:
+        print("🌙 Evening debrief system not yet implemented")
+        print("🔄 Run: .dev-system/cli/dev-system init --planning")
+    except Exception as e:
+        print(f"❌ Error generating debrief: {e}")
+        print("🔄 Try: .dev-system/cli/dev-system init --planning")
         
 def metrics_command(args):
     """Show metrics for specified period"""
@@ -112,11 +129,50 @@ def worktree_command(args):
 def release_command(args):
     """Manage releases and deployments"""
     try:
-        from ops.release import deploy_with_strategy
-        deploy_with_strategy(args.strategy, percentage=args.percentage)
+        from ops.release import ReleaseManager, deploy_with_strategy
+        
+        if args.history:
+            # Show release history
+            manager = ReleaseManager()
+            history = manager.get_release_history()
+            
+            print("📋 Recent Release History:")
+            for release in history[-5:]:
+                status_emoji = {
+                    'deployed': '✅',
+                    'rolled_back': '🔄', 
+                    'failed': '❌',
+                    'canary': '🐦',
+                    'staging': '🏗️'
+                }.get(release['result']['status'], '❓')
+                
+                duration = release['duration_seconds']
+                timestamp = datetime.fromtimestamp(release['start_time']).strftime('%m/%d %H:%M')
+                print(f"  {status_emoji} {timestamp}: {release['strategy']} -> {release['result']['status']} ({duration:.1f}s)")
+            
+            rollback_rate = manager.get_rollback_rate(7)
+            print(f"\n📊 7-day rollback rate: {rollback_rate:.1%}")
+            return True
+        
+        # Perform deployment
+        result = deploy_with_strategy(args.strategy, percentage=args.percentage, environment=args.environment)
+        
+        # Print summary
+        print(f"\n📋 Release Status: {result['status']}")
+        print(f"💬 {result['message']}")
+        
+        if 'next_action' in result:
+            print(f"🎯 Next: {result['next_action']}")
+            
+        return result['status'] not in ['failed', 'rolled_back']
+        
     except ImportError:
         print("🚀 Release system not yet implemented")
-        print("🔄 Coming in M4 milestone")
+        print("🔄 Run: .dev-system/cli/dev-system init --release")
+        return False
+    except Exception as e:
+        print(f"❌ Release failed: {e}")
+        return False
 
 def main():
     parser = argparse.ArgumentParser(
@@ -144,6 +200,9 @@ Examples:
     # Brief command
     brief_parser = subparsers.add_parser('brief', help='Generate morning brief')
     
+    # Debrief command
+    debrief_parser = subparsers.add_parser('debrief', help='Generate evening debrief')
+    
     # Metrics command
     metrics_parser = subparsers.add_parser('metrics', help='Show metrics')
     metrics_parser.add_argument('--period', default='1d', help='Time period (1d, 7d, 30d)')
@@ -161,6 +220,8 @@ Examples:
     release_parser = subparsers.add_parser('release', help='Manage releases')  
     release_parser.add_argument('--strategy', default='canary', help='Release strategy')
     release_parser.add_argument('--percentage', type=int, default=10, help='Canary percentage')
+    release_parser.add_argument('--environment', default='dev', help='Target environment')
+    release_parser.add_argument('--history', action='store_true', help='Show release history')
     
     args = parser.parse_args()
     
@@ -173,6 +234,8 @@ Examples:
         init_system(args)
     elif args.command == 'brief':
         brief_command(args)
+    elif args.command == 'debrief':
+        debrief_command(args)
     elif args.command == 'metrics':
         metrics_command(args)
     elif args.command == 'eval':

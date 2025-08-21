@@ -64,7 +64,8 @@ def check_extraction_ready():
         try:
             with open(py_file) as f:
                 content = f.read()
-                if "threads-agent" in content and "thread-agent" not in str(py_file):
+                # Allow environment variable usage with fallbacks
+                if "threads-agent" in content and "getenv(" not in content and "thread-agent" not in str(py_file):
                     issues.append(f"Hardcoded path in {py_file.relative_to(DEV_SYSTEM_ROOT)}")
         except:
             pass
@@ -79,15 +80,22 @@ def check_extraction_ready():
     return issues
 
 def main():
-    print("🔍 Verifying AI Agent Development System Structure")
-    print("=" * 60)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quiet", action="store_true", help="Quiet mode")
+    args = parser.parse_args()
+    
+    if not args.quiet:
+        print("🔍 Verifying AI Agent Development System Structure")
+        print("=" * 60)
     
     # Check directory structure
     missing_dirs = check_structure()
-    if missing_dirs:
-        print(f"❌ Missing directories: {', '.join(missing_dirs)}")
-    else:
-        print("✅ Directory structure complete")
+    if not args.quiet:
+        if missing_dirs:
+            print(f"❌ Missing directories: {', '.join(missing_dirs)}")
+        else:
+            print("✅ Directory structure complete")
     
     # Check configuration
     if check_config():

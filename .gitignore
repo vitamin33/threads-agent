@@ -347,3 +347,11 @@ wt-*/.venv/
 AGENT_FOCUS.md.local
 .agent-config.local
 .agent.env.local
+
+
+# Dev-System Safety (M0)
+.dev-system/config/secrets.env
+.dev-system/data/*.db
+.dev-system/data/*.log
+*.backup
+secrets.env
