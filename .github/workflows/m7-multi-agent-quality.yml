@@ -103,7 +103,7 @@ jobs:
             
 **Overall Score:** ${report.overall_score.toFixed(2)}/1.00
 **Agents Evaluated:** ${report.total_agents}
-**Status:** ${report.passed_agents}/${result.total_agents} agents passing
+**Status:** ${report.passed_agents}/${report.total_agents} agents passing
 
 ### Agent Results:
 ${Object.entries(report.agent_results).map(([agent, result]) => 
