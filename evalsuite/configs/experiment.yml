@@ -4,29 +4,48 @@ output_dir: outputs
 stacks: ["mlx", "llamacpp", "mps"]
 
 models:
-  - id: qwen2.5-7b-instruct
-    hf_model: Qwen/Qwen2.5-7B-Instruct
-    stack: mps
-    license: apache-2.0
-    gated: false
-    
-  - id: mistral-7b-instruct-v0.3
-    hf_model: mistralai/Mistral-7B-Instruct-v0.3
-    stack: mps
-    license: apache-2.0
-    gated: false
-    
-  - id: phi-3.5-instruct
-    hf_model: microsoft/Phi-3.5-mini-instruct
-    stack: mps
-    license: mit
-    gated: false
-    
+  # Locally Available Models (Verified in cache)
   - id: opt-2.7b
     hf_model: facebook/opt-2.7b
     stack: mps
     license: mit
     gated: false
+    notes: "Previous champion: 8.40±0.78/10"
+    
+  - id: bloom-560m
+    hf_model: bigscience/bloom-560m
+    stack: mps
+    license: bigscience-bloom-rail-1.0
+    gated: false
+    notes: "Previous runner-up: 7.70±0.59/10"
+    
+  - id: gpt-neo-1.3b
+    hf_model: EleutherAI/gpt-neo-1.3B
+    stack: mps
+    license: mit
+    gated: false
+    notes: "GPT-Neo architecture, mid-size"
+    
+  - id: tinyllama-1.1b-chat
+    hf_model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+    stack: mps
+    license: apache-2.0
+    gated: false
+    notes: "Optimized chat model, efficient"
+    
+  - id: bloom-3b
+    hf_model: bigscience/bloom-3b
+    stack: mps
+    license: bigscience-bloom-rail-1.0
+    gated: false
+    notes: "Larger BLOOM variant"
+    
+  # - id: nemotron-nano-9b
+  #   hf_model: nvidia/NVIDIA-Nemotron-Nano-9B-v2
+  #   stack: mps
+  #   license: nvidia-open-model-license
+  #   gated: false
+  #   notes: "Enterprise-grade, requires mamba-ssm package"
 
 sampling:
   temperature: 0.2

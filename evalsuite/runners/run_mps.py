@@ -29,7 +29,7 @@ class MPSModelRunner:
             print(f"📦 Loading {self.model_id} with MPS optimization...")
             
             # Load tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(self.hf_model)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.hf_model, trust_remote_code=True)
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
@@ -38,7 +38,8 @@ class MPSModelRunner:
                 self.hf_model,
                 torch_dtype=torch.float16 if self.device == "mps" else torch.float32,
                 device_map=self.device if self.device != "cpu" else None,
-                low_cpu_mem_usage=True
+                low_cpu_mem_usage=True,
+                trust_remote_code=True  # Allow custom code for enterprise models
             )
             
             if self.device != "cpu":
