@@ -95,7 +95,9 @@ def run_command(args):
         
         # Filter models for stack
         stack_models = [m for m in config["models"] if m.get("stack") == args.stack]
-        if args.models != "all":
+        if args.models == "modern":
+            stack_models = [m for m in stack_models if m.get("priority") == "modern"]
+        elif args.models != "all":
             model_ids = args.models.split(",")
             stack_models = [m for m in stack_models if m["id"] in model_ids]
         
@@ -300,9 +302,11 @@ def main():
     judge_parser.add_argument("--models", default="all")
     judge_parser.add_argument("--tasks", default="all")
     judge_parser.add_argument("--seeds", type=int, default=3)
+    judge_parser.add_argument("--allow_ties", action="store_true", help="Allow tie judgments")
     
     # Rank command
     rank_parser = subparsers.add_parser("rank", help="Calculate Elo rankings")
+    rank_parser.add_argument("--out", default="report/leaderboard.json", help="Output file for rankings")
     
     # Performance command
     perf_parser = subparsers.add_parser("perf", help="Measure performance")

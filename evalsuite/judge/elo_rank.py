@@ -8,7 +8,8 @@ with 1,000 bootstrap resamples for 95% confidence intervals.
 
 import random
 import statistics
-from typing import Dict, List, Any, Tuple
+import math
+from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass
 from collections import defaultdict
 import numpy as np

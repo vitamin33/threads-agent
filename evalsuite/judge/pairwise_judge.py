@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Pairwise Judge - LLM-as-Judge with Deterministic Formatting
+Pairwise Judge - LLM-as-Judge for Model Comparison
 
-Implements pairwise comparison using OpenAI or Claude
-with deterministic JSON formatting and comprehensive retry logic.
+Implements robust pairwise comparison using LLM-as-judge with:
+- Retry logic for failed API calls
+- JSON format validation
+- Tie handling
+- Comprehensive error logging
 """
 
 import json
