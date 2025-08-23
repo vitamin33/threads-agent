@@ -54,13 +54,13 @@ class MLXModelRunner:
             # MLX generation
             from mlx_lm import generate
             
+            # MLX generate only supports basic parameters
             response = generate(
                 self.model,
                 self.tokenizer, 
                 prompt=prompt,
                 max_tokens=sampling_params.get("max_new_tokens", 128),
-                temp=sampling_params.get("temperature", 0.2),
-                top_p=sampling_params.get("top_p", 0.9)
+                verbose=False
             )
             
             # Extract generated content

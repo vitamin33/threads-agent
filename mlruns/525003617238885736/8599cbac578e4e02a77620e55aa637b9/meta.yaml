@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/8599cbac578e4e02a77620e55aa637b9/artifacts
+end_time: 1755977341743
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: 8599cbac578e4e02a77620e55aa637b9
+run_name: olmo-7b-instruct_mlx_generation_20250823_222704
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755977224154
+status: 3
+tags: []
+user_id: vitaliiserbyn
