@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/949dbe82219449c088806f532616b7ed/artifacts
+end_time: 1756031847111
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: 949dbe82219449c088806f532616b7ed
+run_name: mistral-7b-instruct-v0.3_mlx_generation_20250824_133555
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756031755206
+status: 3
+tags: []
+user_id: vitaliiserbyn

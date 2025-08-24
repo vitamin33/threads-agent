@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/f507dd6f3dff4deb9b23fa4145ae048d/artifacts
+end_time: 1756026943565
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: f507dd6f3dff4deb9b23fa4145ae048d
+run_name: yi-1.5-6b-chat_llamacpp_generation_20250824_121543
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756026943544
+status: 3
+tags: []
+user_id: vitaliiserbyn
