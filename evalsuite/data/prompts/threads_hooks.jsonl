@@ -1,0 +1,20 @@
+{"task": "threads_hooks", "prompt": "Write an attention-grabbing opening hook for a thread about the future of AI in workplace automation.", "category": "ai_workplace", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a compelling hook for a thread discussing why 90% of startups fail and what successful founders do differently.", "category": "entrepreneurship", "expected_length": "1-2 sentences"}  
+{"task": "threads_hooks", "prompt": "Write a hook for a thread about the hidden costs of remote work that companies don't talk about.", "category": "remote_work", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create an engaging opening for a thread about cryptocurrency adoption in traditional finance.", "category": "fintech", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write a hook for a thread discussing the psychology behind successful habit formation.", "category": "productivity", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a compelling hook for a thread about the rise of AI-generated content and its impact on creativity.", "category": "ai_creativity", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write an attention-grabbing hook for a thread about sustainable investing and ESG criteria.", "category": "investing", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a hook for a thread discussing the future of electric vehicles and charging infrastructure.", "category": "automotive", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write a compelling hook for a thread about the gig economy and the changing nature of employment.", "category": "employment", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create an engaging hook for a thread about the mental health challenges of high-achieving professionals.", "category": "mental_health", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write a hook for a thread discussing the impact of social media algorithms on information consumption.", "category": "social_media", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a compelling hook for a thread about the future of education and personalized learning.", "category": "education", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write an attention-grabbing hook for a thread about the ethics of data collection in consumer apps.", "category": "privacy", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a hook for a thread discussing the rise of subscription business models across industries.", "category": "business_models", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write a compelling hook for a thread about the impact of climate change on global supply chains.", "category": "supply_chain", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create an engaging hook for a thread about the future of space technology and commercial space travel.", "category": "space_tech", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write a hook for a thread discussing the role of blockchain beyond cryptocurrency.", "category": "blockchain", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a compelling hook for a thread about the changing landscape of cybersecurity threats.", "category": "cybersecurity", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Write an attention-grabbing hook for a thread about the future of retail and e-commerce innovation.", "category": "retail", "expected_length": "1-2 sentences"}
+{"task": "threads_hooks", "prompt": "Create a hook for a thread discussing the impact of artificial intelligence on creative industries.", "category": "ai_creative", "expected_length": "1-2 sentences"}
