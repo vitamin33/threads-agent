@@ -1,0 +1,81 @@
+# AI Agent Development System Configuration
+# This file configures the core development system behavior
+
+system:
+  name: "threads-agent-dev-system"
+  version: "1.0.0"
+  extraction_ready: true
+
+# Telemetry Configuration (M1)
+telemetry:
+  enabled: true
+  sink_type: "sqlite"  # sqlite, csv, postgresql
+  database_path: ".dev-system/data/telemetry.db"
+  retention_days: 90
+  metrics:
+    - "model_calls"
+    - "tool_calls" 
+    - "latency"
+    - "tokens"
+    - "cost"
+    - "errors"
+
+# Evaluation Configuration (M2)
+evaluations:
+  enabled: true
+  suites_dir: ".dev-system/evals/suites"
+  reports_dir: ".dev-system/evals/reports"
+  gates:
+    min_success_rate: 0.85
+    max_cost_per_success: 2.0
+    max_p95_latency_ms: 5000
+  
+# Planning Configuration (M5)  
+planning:
+  enabled: true
+  brief_template: "morning_brief_v1"
+  debrief_template: "evening_debrief_v1" 
+  ice_weights:
+    impact: 0.5
+    confidence: 0.3
+    effort: 0.2
+  context_window_days: 7
+
+# Release Configuration (M4)
+release:
+  enabled: true
+  default_strategy: "canary"
+  canary_percentage: 10
+  rollback_threshold: 0.15  # 15% error rate
+  staging_suffix: "-staging"
+  
+# Prompt Management (M3)
+prompts:
+  registry_dir: ".dev-system/prompts/registry"
+  versioning: true
+  testing: true
+  backup_on_change: true
+
+# Knowledge Management (M6)  
+knowledge:
+  corpus_dir: ".dev-system/knowledge/corpus"
+  max_document_age_days: 30
+  embedding_model: "text-embedding-3-small"
+  chunk_size: 1000
+  chunk_overlap: 200
+
+# Agent Coordination
+agents:
+  max_parallel: 4
+  worktree_prefix: "wt-"
+  coordination_file: ".dev-system/agents/coordination.lock"
+  
+# Dashboard (M9)
+dashboard:
+  enabled: true
+  refresh_interval_seconds: 30
+  metrics_history_days: 30
+  alert_thresholds:
+    error_rate: 0.05
+    latency_p95_ms: 3000
+    cost_increase_percent: 20

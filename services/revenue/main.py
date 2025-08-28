@@ -17,6 +17,7 @@ from services.revenue.analytics import RevenueAnalytics
 from services.revenue.db.models import Base
 from services.revenue.lead_capture import LeadCapture
 from services.revenue.stripe_integration import RevenueManager
+from services.revenue.ab_testing_revenue_optimizer import create_revenue_optimizer
 
 
 # Pydantic models for API
@@ -319,6 +320,49 @@ async def export_leads(
     """Export lead data"""
     lead_capture = LeadCapture(db)
     return lead_capture.export_leads(converted_only)
+
+
+# A/B Testing Revenue Optimization Endpoints
+@app.get("/revenue/dashboard")
+async def get_revenue_dashboard(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Get comprehensive revenue dashboard with A/B testing integration"""
+    optimizer = create_revenue_optimizer(db)
+    return await optimizer.get_revenue_dashboard_data()
+
+
+@app.get("/revenue/ab-testing-roi")
+async def get_ab_testing_roi(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Get ROI analysis of A/B testing implementation"""
+    optimizer = create_revenue_optimizer(db)
+    return await optimizer.get_ab_testing_roi_analysis()
+
+
+@app.get("/revenue/optimization-recommendations")
+async def get_optimization_recommendations(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Get AI-powered revenue optimization recommendations"""
+    optimizer = create_revenue_optimizer(db)
+    return await optimizer.get_revenue_optimization_recommendations()
+
+
+@app.post("/revenue/track-ab-conversion")
+async def track_ab_conversion(
+    variant_id: str, 
+    conversion_value: float,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Track revenue conversion from A/B test variant"""
+    optimizer = create_revenue_optimizer(db)
+    success = await optimizer.track_revenue_event_from_ab_test(variant_id, conversion_value)
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to track conversion")
+    
+    return {
+        "success": True,
+        "variant_id": variant_id,
+        "conversion_value": conversion_value,
+        "message": "A/B test conversion tracked successfully"
+    }
 
 
 # Error handling

@@ -1,0 +1,164 @@
+id: feature-20-3-prompt-governance-platform
+epic_id: epic-20-agent-factory-upgrade
+title: "Prompt Governance Platform - Version Control and Contract Testing"
+description: |
+  Implement prompt versioning, A/B testing, and contract testing to ensure AI consistency.
+  Focus on 80/20 quick wins: version control for high-impact prompts with automated testing.
+  
+priority: high
+estimated_hours: 24
+estimated_story_points: 6
+status: planned
+
+business_value: |
+  Prevents prompt regression costing $15,000+ in lost content quality.
+  Demonstrates advanced AI engineering practices for senior roles.
+
+tasks:
+  - id: prompt-001
+    title: "Design prompt versioning system"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Create prompt version control system with Git-like semantics
+      - prompts/ directory with versioned prompt files
+      - Prompt metadata (version, performance metrics, A/B test results)
+      - Semantic versioning for breaking/non-breaking changes
+    acceptance_criteria:
+      - "prompts/ directory with structured organization"
+      - "Prompt metadata schema with version tracking"
+      - "Semantic versioning guidelines documented"
+
+  - id: prompt-002
+    title: "Implement prompt registry and loader"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Create prompt management system integrated with existing services
+      - PromptRegistry class for centralized prompt management
+      - Dynamic prompt loading with version specification
+      - Fallback mechanisms for prompt loading failures
+    acceptance_criteria:
+      - "PromptRegistry with version-aware loading"
+      - "Integration with persona_runtime and viral_engine"
+      - "Graceful fallback for missing prompt versions"
+
+  - id: prompt-003
+    title: "Write prompt registry unit tests"
+    type: testing
+    estimated_hours: 3
+    description: |
+      TDD approach for prompt management reliability
+      - Test prompt versioning and loading logic
+      - Test fallback mechanisms
+      - Test integration with existing AI services
+    acceptance_criteria:
+      - "test_prompt_registry.py with 95% coverage"
+      - "Mock prompt scenarios for testing"
+      - "Tests for all error conditions"
+
+  - id: prompt-004
+    title: "Migrate existing prompts to version control"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Extract and version control existing high-impact prompts
+      - persona_runtime content generation prompts
+      - viral_engine trend analysis prompts
+      - achievement_collector analysis prompts
+      - Establish baseline performance for each prompt
+    acceptance_criteria:
+      - "20+ production prompts under version control"
+      - "Baseline performance metrics established"
+      - "Services updated to use PromptRegistry"
+
+  - id: prompt-005
+    title: "Implement prompt contract testing"
+    type: implementation
+    estimated_hours: 4
+    description: |
+      Create automated testing for prompt behavior consistency
+      - Contract tests with expected input/output patterns
+      - Regression testing for prompt modifications
+      - Performance benchmarks for prompt execution
+    acceptance_criteria:
+      - "Contract tests for all major prompts"
+      - "Automated regression testing on prompt changes"
+      - "Performance benchmarks with SLA enforcement"
+
+  - id: prompt-006
+    title: "Add prompt A/B testing framework"
+    type: implementation
+    estimated_hours: 3
+    description: |
+      Enable A/B testing for prompt optimization
+      - Simple A/B test configuration (90/10 splits)
+      - Statistical significance testing
+      - Automated winner selection based on metrics
+    acceptance_criteria:
+      - "A/B test framework with configuration"
+      - "Statistical significance calculations"
+      - "Automated promotion of winning prompts"
+
+  - id: prompt-007
+    title: "Write comprehensive prompt testing"
+    type: testing
+    estimated_hours: 3
+    description: |
+      Integration tests for prompt governance system
+      - Test prompt versioning in real service scenarios
+      - Test A/B testing framework functionality
+      - Test contract testing with actual AI calls
+    acceptance_criteria:
+      - "Integration tests with real AI service calls"
+      - "A/B testing validation tests"
+      - "Contract testing with actual OpenAI responses"
+
+  - id: prompt-008
+    title: "Create ultra-friendly prompt commands"
+    type: implementation
+    estimated_hours: 2
+    description: |
+      Add prompt management to existing justfile workflow
+      - just prompt-test (run contract tests)
+      - just prompt-version (create new prompt version)
+      - just prompt-ab (start A/B test)
+      - just prompt-status (show prompt health)
+    acceptance_criteria:
+      - "Prompt commands integrated into justfile"
+      - "Commands follow existing ultra-friendly pattern"
+      - "Help documentation for prompt workflow"
+
+  - id: prompt-009
+    title: "Add prompt governance to CI/CD"
+    type: devops
+    estimated_hours: 2
+    description: |
+      Integrate prompt testing into deployment pipeline
+      - Run contract tests on prompt changes
+      - Block deployment on contract test failures
+      - Automated prompt performance monitoring
+    acceptance_criteria:
+      - "GitHub Actions workflow for prompt testing"
+      - "PR blocking on contract test failures"
+      - "Automated prompt performance alerts"
+
+dependencies:
+  - "OpenAI API for prompt testing"
+  - "GitHub Actions CI (existing)"
+  - "PostgreSQL for A/B test results"
+  - "Existing AI services (persona_runtime, viral_engine)"
+
+technical_requirements:
+  - "Fast contract tests (<60 seconds total)"
+  - "Version-aware prompt loading"
+  - "Statistical significance for A/B tests"
+  - "Integration with existing service architecture"
+
+risks:
+  - "Prompt versioning complexity slowing development"
+  - "A/B testing adding operational overhead"
+  
+mitigations:
+  - "Simple semantic versioning with clear guidelines"
+  - "Opt-in A/B testing for high-impact prompts only"

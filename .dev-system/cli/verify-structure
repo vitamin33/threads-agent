@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""
+Development System Structure Verification
+Verifies the dev-system is properly set up and extraction-ready
+"""
+
+import sys
+from pathlib import Path
+import yaml
+
+DEV_SYSTEM_ROOT = Path(__file__).parent.parent
+
+def check_structure():
+    """Verify directory structure exists"""
+    required_dirs = [
+        "config", "ops", "evals/suites", "prompts/registry", 
+        "planner", "knowledge/corpus", "agents", "dashboard",
+        "cli", "workflows", "scripts"
+    ]
+    
+    missing = []
+    for dir_path in required_dirs:
+        full_path = DEV_SYSTEM_ROOT / dir_path
+        if not full_path.exists():
+            missing.append(dir_path)
+    
+    return missing
+
+def check_config():
+    """Verify configuration files exist"""
+    config_file = DEV_SYSTEM_ROOT / "config" / "dev-system.yaml"
+    if not config_file.exists():
+        return False
+        
+    try:
+        with open(config_file) as f:
+            config = yaml.safe_load(f)
+        return "system" in config and "telemetry" in config
+    except:
+        return False
+
+def check_cli():
+    """Verify CLI tools are executable"""
+    cli_tools = ["dev-system", "metrics-today", "verify-structure"]
+    cli_dir = DEV_SYSTEM_ROOT / "cli"
+    
+    missing = []
+    for tool in cli_tools:
+        tool_path = cli_dir / tool
+        if not tool_path.exists():
+            missing.append(tool)
+        elif not tool_path.stat().st_mode & 0o111:
+            missing.append(f"{tool} (not executable)")
+    
+    return missing
+
+def check_extraction_ready():
+    """Verify extraction readiness"""
+    issues = []
+    
+    # Check for hardcoded paths
+    py_files = list(DEV_SYSTEM_ROOT.rglob("*.py"))
+    for py_file in py_files:
+        try:
+            with open(py_file) as f:
+                content = f.read()
+                # Allow environment variable usage with fallbacks
+                if "threads-agent" in content and "getenv(" not in content and "thread-agent" not in str(py_file):
+                    issues.append(f"Hardcoded path in {py_file.relative_to(DEV_SYSTEM_ROOT)}")
+        except:
+            pass
+    
+    # Check documentation exists
+    required_docs = ["README.md", "EXTRACTION_GUIDE.md"]
+    for doc in required_docs:
+        doc_path = DEV_SYSTEM_ROOT / doc
+        if not doc_path.exists():
+            issues.append(f"Missing documentation: {doc}")
+    
+    return issues
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quiet", action="store_true", help="Quiet mode")
+    args = parser.parse_args()
+    
+    if not args.quiet:
+        print("🔍 Verifying AI Agent Development System Structure")
+        print("=" * 60)
+    
+    # Check directory structure
+    missing_dirs = check_structure()
+    if not args.quiet:
+        if missing_dirs:
+            print(f"❌ Missing directories: {', '.join(missing_dirs)}")
+        else:
+            print("✅ Directory structure complete")
+    
+    # Check configuration
+    if check_config():
+        print("✅ Configuration file valid")
+    else:
+        print("❌ Configuration file missing or invalid")
+    
+    # Check CLI tools
+    missing_cli = check_cli()
+    if missing_cli:
+        print(f"❌ CLI issues: {', '.join(missing_cli)}")
+    else:
+        print("✅ CLI tools ready")
+    
+    # Check extraction readiness
+    extraction_issues = check_extraction_ready()
+    if extraction_issues:
+        print("⚠️  Extraction issues:")
+        for issue in extraction_issues:
+            print(f"   - {issue}")
+    else:
+        print("✅ Extraction ready")
+    
+    print()
+    
+    # Summary
+    total_issues = len(missing_dirs) + (not check_config()) + len(missing_cli) + len(extraction_issues)
+    
+    if total_issues == 0:
+        print("🎉 Development system is properly structured and extraction-ready!")
+        print("📋 Ready to implement milestones M1-M9")
+        print()
+        print("Next steps:")
+        print("  just dev-system init --telemetry  # Start with M1")
+        print("  just metrics-today                # Test telemetry")
+        print("  just brief                        # Test planning")
+    else:
+        print(f"⚠️  Found {total_issues} issues to resolve before milestone implementation")
+    
+    return total_issues
+
+if __name__ == "__main__":
+    sys.exit(main())

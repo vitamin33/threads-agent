@@ -1,13 +1,151 @@
 # justfile – Command runner for threads-agent development
 # See: https://github.com/casey/just
 
-# Mega Commands (80/20 Rule)
-work-day: check-prerequisites trend-dashboard dev-dashboard ai-business-intelligence
+# 🚀 AI Agent Development System Commands
+# Unified development system for top 1% AI agent factory
+
+dev-system command *args:
+	@./.dev-system/cli/dev-system {{command}} {{args}}
+
+metrics-today:
+	@./.dev-system/cli/metrics-today
+
+brief:
+	@./.dev-system/cli/dev-system brief
+
+debrief:
+	@./.dev-system/cli/dev-system debrief
+
+ice-demo:
+	@cd .dev-system && python3 planner/ice.py
+
+# M0: Safety Net Commands
+safety-check:
+	@cd .dev-system && python3 ops/safety.py --validate
+
+safety-setup:
+	@cd .dev-system && python3 ops/safety.py --setup-secrets --setup-gitignore --install-hooks
+
+rate-status:
+	@cd .dev-system && python3 ops/rate_limits.py --status
+
+rate-test:
+	@cd .dev-system && python3 ops/rate_limits.py --test
+
+eval-run suite="core":
+	@./.dev-system/cli/dev-system eval --suite {{suite}}
+
+eval-report period="7d":
+	@./.dev-system/cli/eval-report --period {{period}}
+
+eval-latest:
+	@./.dev-system/cli/eval-report --latest
+
+eval-gate result:
+	@./.dev-system/evals/gate.py --result {{result}} --exit-code
+
+# M7: Multi-Agent Quality Commands
+eval-all:
+	@cd .dev-system && python3 evals/multi_agent_runner.py
+
+eval-agents agents:
+	@cd .dev-system && python3 evals/multi_agent_runner.py --agents {{agents}}
+
+eval-list:
+	@cd .dev-system && python3 evals/multi_agent_runner.py --list
+
+quality-weekly days="7":
+	@cd .dev-system && python3 evals/weekly_report.py --days {{days}}
+
+quality-dashboard:
+	@echo "📊 Opening quality dashboard..." && cd .dev-system && python3 evals/weekly_report.py --days 30
+
+# M3: Prompt Registry & Tool Contracts  
+prompt-list:
+	@cd .dev-system && python3 prompts/prompt_manager.py list
+
+prompt-list-agent agent:
+	@cd .dev-system && python3 prompts/prompt_manager.py list --agent {{agent}}
+
+prompt-test agent prompt:
+	@cd .dev-system && python3 prompts/prompt_manager.py test {{agent}} {{prompt}}
+
+prompt-test-version agent prompt version:
+	@cd .dev-system && python3 prompts/prompt_manager.py test {{agent}} {{prompt}} --version {{version}}
+
+prompt-compare agent prompt version1 version2:
+	@cd .dev-system && python3 prompts/prompt_manager.py compare {{agent}} {{prompt}} {{version1}} {{version2}}
+
+prompt-rollback agent prompt version:
+	@cd .dev-system && python3 prompts/prompt_manager.py rollback {{agent}} {{prompt}} {{version}}
+
+tool-contracts:
+	@cd .dev-system && python3 prompts/contracts/tool_contracts.py --list
+
+tool-test tool:
+	@cd .dev-system && python3 prompts/contracts/tool_contracts.py --validate {{tool}}
+
+tool-setup:
+	@cd .dev-system && python3 prompts/contracts/tool_contracts.py --create-defaults
+
+# M6: Knowledge Hygiene Commands
+knowledge-stats:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py stats
+
+knowledge-search query:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py search "{{query}}"
+
+knowledge-validate:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py validate
+
+knowledge-add title content:
+	@cd .dev-system && python3 knowledge/knowledge_manager.py add "{{title}}" --content "{{content}}"
+
+knowledge-setup:
+	@cd .dev-system && python3 knowledge/ingest.py --create-samples
+
+# Multi-Agent Coordination Commands
+agent-status:
+	@cd .dev-system && python3 agents/coordination.py status
+
+agent-impact agent:
+	@cd .dev-system && python3 agents/coordination.py impact {{agent}}
+
+agent-deploy-sequence:
+	@cd .dev-system && python3 agents/coordination.py deploy-sequence
+
+my-services:
+	@cd .dev-system && python3 agents/worktree_config.py --my-services
+
+agent-brief:
+	@cd .dev-system && python3 agents/worktree_config.py --agent-brief
+
+my-quality:
+	@echo "🔄 Testing services for Agent ${AGENT_ID:-main}..." && cd .dev-system && python3 agents/worktree_config.py --my-services --list-only | xargs -I {} just eval-agents "{}"
+
+wt-setup name focus="":
+	@./.dev-system/cli/dev-system worktree --name {{name}} --focus "{{focus}}"
+
+release strategy="canary" percentage="10" environment="dev":
+	@./.dev-system/cli/dev-system release --strategy {{strategy}} --percentage {{percentage}} --environment {{environment}}
+
+release-history:
+	@./.dev-system/cli/dev-system release --history
+
+release-staging:
+	@./.dev-system/cli/dev-system release --strategy staging
+
+release-direct environment="dev":
+	@echo "⚠️  WARNING: Direct deployment bypasses safety checks"
+	@./.dev-system/cli/dev-system release --strategy direct --environment {{environment}}
+
+# Mega Commands (80/20 Rule) - Enhanced with dev-system + M5 AI Planning
+work-day: check-prerequisites metrics-today brief trend-dashboard dev-dashboard ai-business-intelligence
 create-viral persona topic:
 	just create-viral-{{persona}} "{{topic}}"
 ship-it message:
 	just smart-deploy canary && just github-pr "{{message}}"
-end-day: analyze-money overnight-optimize
+end-day: debrief analyze-money overnight-optimize
 make-money: autopilot-start grow-business analyze-money
 grow-business: trend-start searxng-start
 	just competitive-analysis "AI content"
@@ -170,13 +308,21 @@ e2e: e2e-prepare
 
 test-watch service="":
 	#!/usr/bin/env bash
+	source .venv/bin/activate
 	if [ "{{service}}" = "" ]; then
-		echo "👀 Watching all tests..."
-		ptw -- -m "not e2e" -v --tb=short
+		echo "👀 Watching all tests (optimized)..."
+		ptw -- -c pytest-fast.ini -m "fast or (not slow and not e2e)" -v --tb=line
 	else
 		echo "👀 Watching {{service}} tests..."
-		ptw services/{{service}}/tests/ -- -v --tb=short
+		ptw services/{{service}}/tests/ -- -c pytest-fast.ini -v --tb=line
 	fi
+
+# Fast unit tests only
+test-fast:
+	#!/usr/bin/env bash
+	echo "⚡ Running fast tests only..."
+	source .venv/bin/activate
+	PYTHONPATH=$PWD pytest -c pytest-fast.ini -m "fast or (not slow and not e2e)" --tb=line -q
 
 e2e-prepare:
 	#!/usr/bin/env bash
@@ -797,7 +943,8 @@ auto-focus:
 	@./scripts/auto-update-agent-focus.sh --reload-context
 
 # Ultra-Friendly AI Development Commands (Top AI Company Practices)
-
+ai:
+	@echo "🤖 AI-powered commit with quality gates..." && ./scripts/ai-smart-commit.sh
 save:
 	@echo "💾 Smart save with AI analysis..." && ./scripts/ai-smart-commit.sh
 
@@ -853,20 +1000,7 @@ quality-all:
 learn-activate:
 	@./scripts/4-agent-turbo.sh learn
 
-# Smart work assignment (Service Groups)
-infra:
-	@./scripts/4-agent-turbo.sh assign infra
-
-ai:
-	@./scripts/4-agent-turbo.sh assign ai
-
-data:
-	@./scripts/4-agent-turbo.sh assign data
-
-revenue:
-	@./scripts/4-agent-turbo.sh assign revenue
-
-# Legacy specific assignments (still available)
+# Smart work assignment
 mlflow:
 	@./scripts/4-agent-turbo.sh assign mlflow
 
@@ -905,3 +1039,15 @@ tdd-stop:
 # Include agent-specific commands
 import 'Justfile.agents'
 import 'Justfile.ai-agents'
+
+
+# Strict Single Author Enforcement
+enforce-author:
+	@./scripts/enforce-single-author.sh all
+
+# Complete System Activation
+activate-all:
+	@echo "🚀 Activating AI development system across all worktrees..."
+	@./scripts/enforce-single-author.sh configure
+	@echo "✅ Single author enforcement active"
+	@echo "🎯 Run in each worktree: just start"

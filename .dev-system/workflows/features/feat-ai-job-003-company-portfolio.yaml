@@ -1,0 +1,70 @@
+feature_id: feat-ai-job-003
+feature_name: "Company-Specific Portfolio API"
+description: |
+  Create an intelligent API that generates customized portfolios targeting specific companies
+  by analyzing their tech stack, challenges, and culture. Each portfolio emphasizes relevant
+  achievements and demonstrates problem-solving abilities aligned with company needs.
+epic_id: ai-job-week1
+priority: high
+estimated_effort: 10
+technical_requirements:
+  - "Company profile system with tech stack and pain points"
+  - "Achievement filtering and ranking algorithm"
+  - "Dynamic portfolio generation with custom emphasis"
+  - "Multi-format export (PDF, JSON, HTML)"
+  - "Caching system for generated portfolios"
+acceptance_criteria:
+  - "Generate targeted portfolio in < 10 seconds"
+  - "Portfolios highlight company-relevant achievements"
+  - "Include ROI calculations specific to company's industry"
+  - "Support for top target companies (Notion, Jasper, Anthropic)"
+  - "A/B testing capability for portfolio variations"
+  - "Mobile-responsive HTML output"
+implementation_details:
+  - file: "services/achievement_collector/api/routes/company_portfolio.py"
+    changes: |
+      - Create new router with /portfolio/company/{company_name}
+      - Implement CompanyPortfolioGenerator class
+      - Add endpoints for portfolio customization
+  - file: "services/achievement_collector/services/company_analyzer.py"
+    changes: |
+      - Create CompanyProfile model and analyzer
+      - Implement tech stack matching algorithm
+      - Add pain point to achievement mapping
+  - file: "services/achievement_collector/data/company_profiles.yaml"
+    changes: |
+      - Define profiles for target companies
+      - Include tech stack, values, and known challenges
+      - Add keywords and cultural markers
+  - file: "services/achievement_collector/templates/company_portfolio/"
+    changes: |
+      - Create responsive HTML templates
+      - Add company-specific sections
+      - Include interactive elements
+business_value: |
+  - Increases interview conversion rate by 40%+
+  - Demonstrates business acumen and research skills
+  - Shows ability to align technical skills with business needs
+  - Supports premium $180K-220K positioning
+success_metrics:
+  - "Portfolio views > 50 per application"
+  - "Interview callback rate > 20%"
+  - "Time on portfolio page > 3 minutes"
+  - "Custom portfolios for 10+ target companies"
+tags:
+  - portfolio-generation
+  - personalization
+  - job-targeting
+tasks:
+  - task_id: task-ai-job-003-1
+    title: "Build company profile system"
+    effort: 3
+  - task_id: task-ai-job-003-2
+    title: "Create portfolio customization algorithm"
+    effort: 3
+  - task_id: task-ai-job-003-3
+    title: "Develop responsive portfolio templates"
+    effort: 2
+  - task_id: task-ai-job-003-4
+    title: "Implement caching and export system"
+    effort: 2

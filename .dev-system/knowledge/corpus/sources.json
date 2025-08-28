@@ -1,0 +1,52 @@
+[
+  {
+    "id": "12219e80",
+    "title": "AI Development Best Practices",
+    "content": "\n    # AI Development Best Practices\n    \n    ## Prompt Engineering\n    \n    Effective prompt engineering requires:\n    1. Clear, specific instructions\n    2. Examples of desired output\n    3. Context and constraints\n    4. Iterative refinement based on results\n    \n    ## Model Selection\n    \n    Choose models based on:\n    - Task complexity (GPT-3.5 for simple, GPT-4 for complex)\n    - Cost considerations ($0.002/1K tokens for GPT-3.5)\n    - Latency requirements (GPT-3.5 faster)\n    - Quality requirements (GPT-4 higher quality)\n    \n    ## Safety Considerations\n    \n    Always implement:\n    - Rate limiting to prevent abuse\n    - Content filtering for safety\n    - Cost monitoring and alerts\n    - Quality gates for production\n    ",
+    "source_url": null,
+    "source_type": "documentation",
+    "created_at": "2025-08-20T11:53:16.200123",
+    "updated_at": "2025-08-20T11:53:16.200123",
+    "last_validated": "2025-08-20T11:54:28.540296",
+    "validity_score": 1.0,
+    "tags": [
+      "ai",
+      "best_practices",
+      "prompt_engineering"
+    ],
+    "chunk_count": 1,
+    "broken_links": []
+  },
+  {
+    "id": "bbb46d58",
+    "title": "Threads-Agent Development Guide",
+    "content": "\n    # Threads-Agent Development Guide\n    \n    ## Architecture\n    \n    The threads-agent system consists of:\n    - Orchestrator: API coordination and task routing\n    - Persona Runtime: LangGraph-based content generation\n    - Viral Engine: Engagement prediction and optimization\n    - Celery Worker: Background task processing\n    \n    ## Development Workflow\n    \n    1. Use k3d for local Kubernetes development\n    2. Run `just dev-start` to bootstrap environment\n    3. Deploy with `just deploy-dev` \n    4. Monitor with `just logs`\n    5. Test with `just e2e`\n    \n    ## Performance Targets\n    \n    - Content generation: < 30s end-to-end\n    - Engagement prediction: < 5s\n    - API response time: < 2s\n    - Cost per post: < $0.05\n    ",
+    "source_url": null,
+    "source_type": "documentation",
+    "created_at": "2025-08-20T11:53:16.200422",
+    "updated_at": "2025-08-20T11:53:16.200422",
+    "last_validated": "2025-08-20T11:54:28.540302",
+    "validity_score": 1.0,
+    "tags": [
+      "threads_agent",
+      "architecture",
+      "development"
+    ],
+    "chunk_count": 1,
+    "broken_links": []
+  },
+  {
+    "id": "e0426966",
+    "title": "Broken Link Test",
+    "content": "This source has a broken link for testing",
+    "source_url": null,
+    "source_type": "manual",
+    "created_at": "2025-08-20T11:56:32.818677",
+    "updated_at": "2025-08-20T11:56:32.818678",
+    "last_validated": "2025-08-20T11:56:32.818679",
+    "validity_score": 1.0,
+    "tags": [],
+    "chunk_count": 1,
+    "broken_links": []
+  }
+]

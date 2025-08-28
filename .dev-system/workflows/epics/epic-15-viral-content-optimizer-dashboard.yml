@@ -1,0 +1,78 @@
+id: epic-15-viral-content-optimizer-dashboard
+title: "Viral Content Optimizer Dashboard"
+description: |
+  Advanced AI-powered viral content optimization dashboard that provides real-time hook optimization,
+  engagement prediction, content quality gates, and pattern analytics. This system integrates with
+  the existing viral_engine service to provide data-driven insights for maximizing content virality
+  and engagement rates, directly supporting the 6%+ engagement KPI target.
+
+  Key capabilities include:
+  - Hook Optimization Tool with A/B testing and performance prediction
+  - AI-powered Engagement Predictor using historical data and ML models
+  - Automated Content Quality Gate with multi-criteria scoring
+  - Pattern Analytics Dashboard for viral content insights
+  - Real-time performance monitoring and optimization recommendations
+
+status: planned
+priority: high
+estimated_hours: 280
+estimated_story_points: 70
+
+business_value:
+  engagement_impact: "35% improvement in engagement through AI-optimized hooks and content"
+  cost_savings: "$75,000 annually from reduced low-performing content creation"
+  time_efficiency: "60% reduction in content optimization manual work"
+  revenue_potential: "$150,000 additional MRR from higher engagement conversion"
+
+kpi_targets:
+  posts_engagement_rate: 9.2  # Target 9.2%+ engagement through optimization
+  cost_per_follow_dollars: 0.006  # Reduce to $0.006/follow through better targeting
+  revenue_projection_monthly: 30000  # Target $30k MRR from optimized content
+  content_optimization_efficiency: 0.92  # 92% content passing quality gates
+  hook_performance_improvement: 0.35  # 35% improvement in hook engagement
+
+features:
+  - feature-15-1-hook-optimization-engine
+  - feature-15-2-engagement-prediction-system
+  - feature-15-3-content-quality-gate-automation
+  - feature-15-4-pattern-analytics-dashboard
+  - feature-15-5-viral-coefficient-calculator
+  - feature-15-6-real-time-optimization-recommendations
+  - feature-15-7-a-b-testing-framework
+  - feature-15-8-competitor-analysis-integration
+
+dependencies:
+  - viral_engine service (existing)
+  - orchestrator service (existing)
+  - Streamlit dashboard (existing)
+  - PostgreSQL database (existing)
+  - Qdrant vector database (existing)
+  - OpenAI API integration (existing)
+
+technical_architecture:
+  - extends: viral_engine service
+  - ui_framework: Streamlit
+  - ml_models: scikit-learn + OpenAI embeddings
+  - caching_strategy: Redis + session state
+  - monitoring: Prometheus + Grafana
+  - testing_coverage: 95%+
+
+integration_points:
+  viral_engine: "Hook optimization and pattern analysis"
+  orchestrator: "Content pipeline coordination"
+  dashboard: "New optimization pages and widgets"
+  qdrant: "Content similarity and pattern matching"
+  achievement_collector: "Performance tracking and feedback loop"
+
+api_endpoints:
+  - "/optimize-hook" (POST) - Hook optimization with alternatives
+  - "/predict/engagement" (POST) - Engagement prediction for content
+  - "/quality-gate/evaluate" (POST) - Content quality evaluation
+  - "/patterns" (GET) - Viral pattern analysis
+  - "/pattern-performance" (GET) - Pattern performance metrics
+  - "/viral-coefficient/calculate" (POST) - Viral coefficient calculation
+  - "/optimization/recommendations" (GET) - Real-time optimization suggestions
+  - "/ab-test/create" (POST) - Create A/B test for content variations
+
+created_at: "2025-01-05"
+updated_at: "2025-01-05"

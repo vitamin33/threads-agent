@@ -1,0 +1,71 @@
+feature_id: feat-ai-job-006
+feature_name: "Content Performance Analytics"
+description: |
+  Build a comprehensive analytics system to track content performance across platforms,
+  correlate with job search outcomes, and optimize future content generation. The system
+  should provide actionable insights for improving content effectiveness.
+epic_id: ai-job-week2
+priority: high
+estimated_effort: 8
+technical_requirements:
+  - "Multi-platform analytics aggregation"
+  - "Custom event tracking for job-related actions"
+  - "Real-time dashboard with Grafana"
+  - "Machine learning for performance prediction"
+  - "A/B testing framework for content"
+acceptance_criteria:
+  - "Track views, engagement, and conversions across platforms"
+  - "Correlate content with recruiter contacts"
+  - "Real-time dashboard updates"
+  - "Predictive scoring for new content"
+  - "Weekly automated insights report"
+  - "Export data for external analysis"
+implementation_details:
+  - file: "services/analytics/content_tracker.py"
+    changes: |
+      - Create ContentAnalytics service
+      - Implement multi-platform API integration
+      - Add custom event tracking
+  - file: "services/analytics/ml/engagement_predictor.py"
+    changes: |
+      - Build ML model for engagement prediction
+      - Feature extraction from content
+      - Continuous learning from results
+  - file: "monitoring/grafana/dashboards/content-performance.json"
+    changes: |
+      - Create comprehensive dashboard
+      - Add job search funnel visualization
+      - Include platform comparison charts
+  - file: "services/analytics/reports/weekly_insights.py"
+    changes: |
+      - Automated insight generation
+      - Trend analysis and recommendations
+      - Performance anomaly detection
+business_value: |
+  - Data-driven content strategy increases effectiveness by 40%
+  - Identifies high-converting content patterns
+  - Demonstrates data analytics skills for MLOps roles
+  - Optimizes time investment in content creation
+success_metrics:
+  - "Track 100% of published content"
+  - "Identify top 3 performing content types"
+  - "Improve average engagement by 30%"
+  - "Reduce time to first recruiter contact by 50%"
+tags:
+  - analytics
+  - performance-tracking
+  - data-driven
+  - optimization
+tasks:
+  - task_id: task-ai-job-006-1
+    title: "Build content tracking infrastructure"
+    effort: 3
+  - task_id: task-ai-job-006-2
+    title: "Create ML engagement predictor"
+    effort: 2
+  - task_id: task-ai-job-006-3
+    title: "Design Grafana dashboards"
+    effort: 2
+  - task_id: task-ai-job-006-4
+    title: "Implement automated reporting"
+    effort: 1

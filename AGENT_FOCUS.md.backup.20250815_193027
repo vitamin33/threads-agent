@@ -1,0 +1,60 @@
+# Agent MLOps (a1) Focus Areas
+
+## Current Sprint Goals (Job Strategy Aligned)
+- Implement AI development acceleration system
+- Focus on MLOps specialization for US remote AI roles
+- Integrate learning system with development workflows
+- Build portfolio evidence for $160-220k positions
+
+## Agent Specialization
+**MLOps Agent (a1)**
+ echo "- MLOps: MLflow registry, SLO-gated CI, monitoring
+- Target Role: Senior MLOps Engineer ($180-220k)
+- Priority: Gap plan items 1-2 (MLflow + SLO gates)" ;;
+    "a2") echo "- GenAI: vLLM optimization, cost reduction, inference scaling  
+- Target Role: LLM Infrastructure Engineer ($160-200k)
+- Priority: Gap plan item 3 (vLLM cost/latency)" ;;
+    "a3") echo "- Analytics: Portfolio automation, achievement documentation
+- Target Role: Technical Lead with Analytics ($160-180k)  
+- Priority: Portfolio building and documentation" ;;
+    "a4") echo "- Platform: A/B testing, revenue metrics, AWS/K8s deployment
+- Target Role: Platform Engineer with AI focus ($170-210k)
+- Priority: Gap plan items 4-5 (A/B testing + AWS)" ;;
+esac)
+
+## Current Priorities
+1. **Job Strategy Focus**: Work on highest-priority gap plan items
+2. **AI Acceleration**: Use enhanced development tools daily
+3. **Quality Gates**: Maintain high code quality standards
+4. **Learning Integration**: Track patterns for continuous improvement
+
+## Success Criteria
+- Deliver job-strategy-aligned features
+- Maintain >95% development success rate
+- Document achievements with business metrics
+- Demonstrate expertise for target role
+
+## Current Context (Auto-Updated Daily)
+### Today's Goals
+- Focus on MLOps specialization work
+- Use AI acceleration tools for productivity
+- Maintain quality standards
+
+### Current Issues/Blockers
+- Code quality improvements needed
+- Learning system integration
+
+### Next Session Priorities
+1. Focus on gap plan priorities for MLOps
+2. Use enhanced development workflow
+3. Track achievements for portfolio
+
+## Technologies in Use
+- Python 3.13, FastAPI, Celery
+- Kubernetes, k3d, Helm
+- AI tools: OpenAI API, Claude Code
+- Learning system: custom analytics
+- Agent: MLOps (a1) specialization
+
+---
+*Auto-updated by smart focus system for MLOps agent*

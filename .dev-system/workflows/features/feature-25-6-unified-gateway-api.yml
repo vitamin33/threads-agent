@@ -1,0 +1,60 @@
+id: feature-25-6-unified-gateway-api
+epic_id: epic-25-content-scheduler-service-integration
+title: "Unified Gateway API Layer"
+description: |
+  Create a unified API gateway that provides a single entry point for all
+  Content Scheduler operations while orchestrating calls to multiple services.
+  Includes GraphQL support for flexible querying.
+
+priority: high
+estimated_hours: 70
+
+acceptance_criteria:
+  - Single API endpoint for all operations
+  - GraphQL schema for flexible queries
+  - Service orchestration logic
+  - Request/response transformation
+  - Rate limiting and throttling
+  - API versioning support
+
+technical_tasks:
+  - task-25-6-1-gateway-architecture
+  - task-25-6-2-graphql-schema-design
+  - task-25-6-3-service-orchestration
+  - task-25-6-4-transformation-layer
+  - task-25-6-5-rate-limiting
+  - task-25-6-6-api-versioning
+
+api_operations:
+  CreateContentPipeline:
+    description: "Orchestrate full content creation"
+    services: ["achievement_collector", "viral_engine", "pattern_analyzer"]
+    
+  OptimizeContent:
+    description: "Multi-service content optimization"
+    services: ["viral_engine", "pattern_analyzer", "rag_pipeline"]
+    
+  ScheduleWithIntelligence:
+    description: "AI-powered scheduling"
+    services: ["pattern_analyzer", "viral_engine"]
+
+graphql_schema: |
+  type Query {
+    contentPipeline(id: ID!): ContentPipeline
+    upcomingContent(days: Int): [ScheduledContent]
+    contentPerformance(timeframe: String): PerformanceMetrics
+  }
+  
+  type Mutation {
+    createContentPipeline(input: PipelineInput!): ContentPipeline
+    optimizeContent(id: ID!): OptimizationResult
+    scheduleContent(input: ScheduleInput!): ScheduledContent
+  }
+
+performance_requirements:
+  - < 100ms latency for queries
+  - < 500ms for complex mutations
+  - 99.9% availability
+  - Horizontal scaling support
+
+created_at: "2025-01-07"

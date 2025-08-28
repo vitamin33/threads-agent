@@ -1,0 +1,180 @@
+# M2: Core Golden Set Evaluation Suite
+# High-value test cases for flagship persona_runtime agent
+# These tests represent critical functionality that must never regress
+
+metadata:
+  name: "core"
+  description: "Core golden set for persona_runtime agent"
+  version: "1.0.0"
+  agent: "persona_runtime"
+  created: "2025-08-18"
+  
+# Quality gates and thresholds
+gates:
+  min_success_rate: 0.85        # 85% of tests must pass
+  max_avg_latency_ms: 5000      # Average latency < 5s
+  max_cost_per_test: 0.50       # Cost < $0.50 per test
+  max_total_cost: 10.00         # Total suite cost < $10
+  
+# Test cases representing critical persona_runtime functionality
+test_cases:
+  
+  # Basic content generation
+  - id: "basic_content_generation"
+    description: "Generate basic viral content with hook and body"
+    input:
+      prompt: "Create a viral post about productivity tips for developers"
+      persona: "tech_influencer"
+      max_tokens: 200
+    expected_output:
+      contains: ["productivity", "developers"]
+      min_length: 50
+      max_length: 280
+      has_hook: true
+      engagement_score: 0.6
+    weight: 10
+    
+  - id: "hook_optimization"
+    description: "Generate compelling hooks for content"
+    input:
+      prompt: "Create a hook for a post about AI automation tools"
+      type: "hook_generation"
+      max_tokens: 50
+    expected_output:
+      contains: ["AI", "automation"]
+      min_length: 10
+      max_length: 100
+      is_question: true
+    weight: 8
+    
+  # Content quality validation
+  - id: "quality_guardrails"
+    description: "Reject low-quality or inappropriate content"
+    input:
+      prompt: "Write spam content with multiple exclamation marks!!!"
+      persona: "tech_influencer"
+    expected_output:
+      rejected: true
+      reason: "quality_violation"
+    weight: 9
+    
+  - id: "trend_integration"
+    description: "Incorporate trending topics into content"
+    input:
+      prompt: "Create content about current AI trends"
+      persona: "ai_expert"
+      include_trends: true
+    expected_output:
+      contains: ["AI", "trend"]
+      engagement_score: 0.7
+      has_trending_keywords: true
+    weight: 7
+    
+  # Error handling and edge cases  
+  - id: "empty_prompt_handling"
+    description: "Handle empty or invalid prompts gracefully"
+    input:
+      prompt: ""
+      persona: "tech_influencer"
+    expected_output:
+      error: "invalid_input"
+      error_type: "ValidationError"
+    weight: 6
+    
+  - id: "malformed_request"
+    description: "Handle malformed requests without crashing"
+    input:
+      invalid_field: "this should be ignored"
+      persona: null
+    expected_output:
+      error: "invalid_request"
+      graceful_failure: true
+    weight: 5
+    
+  # Performance requirements
+  - id: "fast_hook_generation"
+    description: "Generate hooks within latency SLA"
+    input:
+      prompt: "Quick hook for productivity post"
+      type: "hook_generation"
+    expected_output:
+      max_latency_ms: 3000
+      min_length: 10
+    weight: 7
+    
+  - id: "token_efficiency"
+    description: "Efficient token usage for content generation"
+    input:
+      prompt: "Generate efficient content about coding best practices"
+      persona: "tech_influencer"
+      max_tokens: 150
+    expected_output:
+      max_input_tokens: 200
+      max_output_tokens: 150
+      token_efficiency: 0.8  # Output tokens / input tokens
+    weight: 6
+    
+  # Integration scenarios
+  - id: "search_enhanced_content"
+    description: "Generate content enhanced with search results"
+    input:
+      prompt: "Create post about latest Python features"
+      persona: "python_expert"
+      use_search: true
+    expected_output:
+      contains: ["Python"]
+      has_recent_info: true
+      engagement_score: 0.7
+    weight: 8
+    
+  - id: "persona_consistency"
+    description: "Maintain persona voice and style consistency"
+    input:
+      prompt: "Write about machine learning for beginners"
+      persona: "ai_educator"
+    expected_output:
+      voice_match: "educational"
+      complexity_level: "beginner"
+      has_explanation: true
+    weight: 7
+
+  # Business logic validation
+  - id: "engagement_prediction"
+    description: "Predict content engagement accurately"
+    input:
+      content: "BREAKING: 90% of developers waste 3 hours daily on this mistake. Here's the shocking fix that took me from $50k to $200k: Stop optimizing code that users will never see. Focus on these 3 user-facing features instead. What's your biggest time-waster?"
+    expected_output:
+      engagement_score: 0.8
+      should_publish: true
+      viral_indicators: ["BREAKING", "shocking", "mistake"]
+    weight: 9
+    
+  - id: "cost_optimization"
+    description: "Generate content within budget constraints"
+    input:
+      prompt: "Budget-conscious content about startup growth"
+      max_cost: 0.05
+      persona: "startup_founder"
+    expected_output:
+      actual_cost: 0.05
+      quality_maintained: true
+    weight: 6
+
+# Evaluation configuration
+evaluation:
+  timeout_seconds: 30
+  retry_attempts: 2
+  parallel_execution: false  # Run sequentially for stability
+  
+  # Scoring weights
+  scoring:
+    functionality: 0.4    # Does it work correctly?
+    performance: 0.3      # Is it fast enough?
+    quality: 0.2          # Is output high quality?
+    cost: 0.1            # Is it cost-efficient?
+    
+  # Pass/fail criteria
+  pass_criteria:
+    min_weighted_score: 0.85
+    max_failed_tests: 2
+    max_timeout_tests: 1

@@ -315,7 +315,7 @@ class GitHubPRTracker:
         elif "testing" in labels:
             return "testing"
 
-        return "development"
+        return "feature"
 
     def _calculate_pr_impact_score(self, pr_data: Dict[str, Any]) -> float:
         """Calculate impact score based on PR metrics."""

@@ -1,0 +1,53 @@
+metadata:
+  name: "engagement_prediction"
+  version: "v1.0.0"
+  agent: "viral_engine"
+  created: "2025-08-19T00:00:00"
+  author: "vitalii"
+  description: "Predicts engagement score for content pieces"
+  performance:
+    target_accuracy: 0.80
+    max_tokens: 100
+    estimated_cost: 0.01
+  validation:
+    required_variables: ["content"]
+    output_requirements: ["engagement_score", "confidence", "viral_indicators"]
+
+prompt:
+  system: |
+    You are an expert at predicting social media engagement.
+    Analyze content and predict its viral potential based on proven patterns.
+    
+    Consider these viral indicators:
+    - Curiosity gaps and hooks
+    - Emotional triggers
+    - Personal stories
+    - Controversy or strong opinions
+    - Clear value propositions
+    - Social proof elements
+    
+  user_template: |
+    Analyze this content for viral potential: {content}
+    
+    Provide:
+    1. Engagement score (0.0-1.0)
+    2. Confidence in prediction (0.0-1.0)  
+    3. Viral indicators found
+    4. Improvement suggestions
+    
+    Format as JSON.
+
+test_cases:
+  - input:
+      content: "BREAKING: 90% of developers waste 3 hours daily on this mistake. Here's the shocking fix: Stop optimizing code users never see."
+    expected:
+      engagement_score: 0.85
+      viral_indicators: ["BREAKING", "shocking", "mistake"]
+      confidence: 0.9
+      
+  - input:
+      content: "Today I fixed a bug. It was in the database query."
+    expected:
+      engagement_score: 0.2
+      viral_indicators: []
+      confidence: 0.8

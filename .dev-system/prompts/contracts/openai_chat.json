@@ -1,0 +1,45 @@
+{
+  "name": "openai_chat",
+  "description": "OpenAI chat completion API contract",
+  "input_schema": {
+    "required": ["model", "messages"],
+    "optional": ["temperature", "max_tokens"],
+    "properties": {
+      "model": {
+        "type": "string",
+        "enum": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"]
+      },
+      "messages": {
+        "type": "array"
+      },
+      "temperature": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 2
+      },
+      "max_tokens": {
+        "type": "integer", 
+        "minimum": 1,
+        "maximum": 4000
+      }
+    }
+  },
+  "output_schema": {
+    "required": ["choices", "usage"],
+    "properties": {
+      "choices": {"type": "array"},
+      "usage": {"type": "object"},
+      "id": {"type": "string"},
+      "model": {"type": "string"}
+    }
+  },
+  "performance_requirements": {
+    "max_latency_ms": 30000,
+    "max_cost_per_1k_tokens": 0.002
+  },
+  "error_handling": {
+    "expected_errors": ["rate_limit", "invalid_request", "context_length_exceeded"],
+    "retry_strategy": "exponential_backoff",
+    "max_retries": 3
+  }
+}

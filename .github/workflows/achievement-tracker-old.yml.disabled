@@ -1,0 +1,474 @@
+name: Achievement Tracker
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]  # Only track main branch PRs
+
+jobs:
+  track-achievement:
+    # Only run when a PR is merged - this is the only time we have PR data
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for analysis
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          
+      - name: Install dependencies
+        run: |
+          # Install all requirements to avoid import errors
+          pip install -r services/achievement_collector/requirements.txt
+          pip install -r services/common/requirements.txt || true
+          pip install PyGithub alembic sqlalchemy psycopg2-binary
+          
+      - name: Validate Environment
+        run: |
+          # Check Python path
+          echo "Python path: $PYTHONPATH"
+          echo "Working directory: $(pwd)"
+          
+          # Verify imports work
+          python -c "import sys; sys.path.insert(0, '.'); print('✅ Python imports test passed')" || exit 1
+
+      - name: Collect PR Metrics
+        id: pr_metrics
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const metrics = {
+              pr_number: pr.number,
+              title: pr.title ? pr.title.replace(/"/g, '\\"') : '',
+              body: pr.body ? pr.body.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/"/g, '\\"') : '',
+              additions: pr.additions,
+              deletions: pr.deletions,
+              changed_files: pr.changed_files,
+              commits: pr.commits,
+              review_comments: pr.review_comments,
+              merged_at: pr.merged_at,
+              merge_time_hours: (new Date(pr.merged_at) - new Date(pr.created_at)) / (1000 * 60 * 60),
+              labels: pr.labels.map(l => l.name),
+              reviewers: [],
+              author: pr.user.login
+            };
+            
+            // Get review details
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            metrics.reviewers = [...new Set(reviews.data.map(r => r.user.login))];
+            metrics.review_count = reviews.data.length;
+            
+            // Get files changed for skill extraction
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            metrics.files = files.data.map(f => ({
+              filename: f.filename,
+              additions: f.additions,
+              deletions: f.deletions,
+              changes: f.changes
+            }));
+            
+            core.setOutput('metrics', JSON.stringify(metrics));
+
+      - name: Collect Performance Metrics
+        id: perf_metrics
+        run: |
+          # Extract test execution time from pytest results if available
+          if [ -f "test-results.xml" ]; then
+            TEST_TIME=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('test-results.xml'); root = tree.getroot(); print(root.get('time', '0'))")
+            echo "test_execution_time=${TEST_TIME}" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extract code coverage if available
+          if [ -f "coverage.xml" ]; then
+            COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(root.get('line-rate', '0'))")
+            echo "code_coverage=${COVERAGE}" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extract build time from GitHub Actions
+          echo "build_time=${{ github.run_number }}" >> $GITHUB_OUTPUT
+          echo "workflow_duration=$GITHUB_RUN_DURATION" >> $GITHUB_OUTPUT
+
+      - name: Collect Business Metrics
+        id: business_metrics
+        run: |
+          # Extract business impact from PR description
+          python3 << 'EOF'
+          import re
+          import json
+          import os
+          
+          pr_body = '''${{ github.event.pull_request.body }}'''
+          
+          # Look for business metrics in PR description
+          metrics = {
+              'has_performance_improvement': bool(re.search(r'performance|speed|optimization|faster', pr_body, re.I)),
+              'has_cost_reduction': bool(re.search(r'cost|reduce|save|efficient', pr_body, re.I)),
+              'has_user_impact': bool(re.search(r'user|customer|client|experience', pr_body, re.I)),
+              'has_revenue_impact': bool(re.search(r'revenue|monetization|conversion|sales', pr_body, re.I)),
+              'has_security_improvement': bool(re.search(r'security|vulnerability|CVE|patch', pr_body, re.I)),
+              'estimated_impact': 'high' if any([
+                  'breaking change' in pr_body.lower(),
+                  'major feature' in pr_body.lower(),
+                  'critical' in pr_body.lower()
+              ]) else 'medium'
+          }
+          
+          # Extract KPIs mentioned
+          kpi_patterns = {
+              'engagement_rate': r'engagement.*?(\d+\.?\d*)\s*%',
+              'cost_per_follow': r'cost.*?follow.*?\$(\d+\.?\d*)',
+              'mrr_impact': r'MRR.*?\$(\d+k?)',
+              'latency_improvement': r'latency.*?(\d+\.?\d*)\s*(ms|seconds?)',
+              'error_rate': r'error.*?rate.*?(\d+\.?\d*)\s*%'
+          }
+          
+          for kpi, pattern in kpi_patterns.items():
+              match = re.search(pattern, pr_body, re.I)
+              if match:
+                  metrics[kpi] = match.group(1)
+          
+          with open('business_metrics.json', 'w') as f:
+              json.dump(metrics, f)
+          EOF
+          
+          if [ -f "business_metrics.json" ]; then
+            BUSINESS_METRICS=$(cat business_metrics.json)
+            echo "metrics=${BUSINESS_METRICS}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract Planning Metrics
+        id: planning_metrics  
+        run: |
+          # Check if PR was linked to Linear issues
+          python3 << 'EOF'
+          import re
+          import json
+          
+          pr_body = '''${{ github.event.pull_request.body }}'''
+          pr_title = '''${{ github.event.pull_request.title }}'''
+          
+          # Extract Linear issue IDs
+          linear_pattern = r'[A-Z]{2,}-\d+'
+          linear_issues = re.findall(linear_pattern, pr_body + ' ' + pr_title)
+          
+          # Extract epic information
+          epic_pattern = r'[Ee]pic[:\s]+([^\n]+)'
+          epic_match = re.search(epic_pattern, pr_body)
+          epic = epic_match.group(1).strip() if epic_match else None
+          
+          # Extract sprint/iteration
+          sprint_pattern = r'[Ss]print[:\s]+(\d+)'
+          sprint_match = re.search(sprint_pattern, pr_body)
+          sprint = sprint_match.group(1) if sprint_match else None
+          
+          planning_metrics = {
+              'linear_issues': list(set(linear_issues)),
+              'epic': epic,
+              'sprint': sprint,
+              'has_planning_context': bool(linear_issues or epic or sprint)
+          }
+          
+          with open('planning_metrics.json', 'w') as f:
+              json.dump(planning_metrics, f)
+          EOF
+          
+          PLANNING_METRICS=$(cat planning_metrics.json)
+          echo "metrics=${PLANNING_METRICS}" >> $GITHUB_OUTPUT
+
+      - name: Apply Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.ACHIEVEMENT_DB_URL }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          # Set Python path for imports
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+          cd services/achievement_collector
+          
+          # Run alembic migrations with proper path
+          python -m alembic upgrade head || echo "Migration already applied or DB not configured"
+        continue-on-error: true
+
+      - name: Create Achievement
+        env:
+          DATABASE_URL: ${{ secrets.ACHIEVEMENT_DB_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import sys
+          import json
+          import asyncio
+          import time
+          from datetime import datetime
+          
+          # Add project to path
+          sys.path.insert(0, os.getcwd())
+          
+          # Validate imports before proceeding
+          try:
+              from services.achievement_collector.services.github_pr_tracker import GitHubPRTracker
+              from services.achievement_collector.db.config import get_db, engine
+              from services.achievement_collector.db.models import Base, Achievement
+              from services.achievement_collector.api.schemas import AchievementCreate
+              from services.achievement_collector.api.routes.achievements import create_achievement_sync
+              print("✅ All imports successful")
+          except ImportError as e:
+              print(f"❌ Import error: {e}")
+              print(f"   Python path: {sys.path}")
+              print(f"   Working directory: {os.getcwd()}")
+              sys.exit(1)
+          
+          async def create_ci_achievement():
+              # Initialize database
+              Base.metadata.create_all(bind=engine)
+              
+              # Parse collected metrics with debugging
+              pr_metrics_raw = '''${{ steps.pr_metrics.outputs.metrics }}'''
+              business_metrics_raw = '''${{ steps.business_metrics.outputs.metrics }}'''
+              planning_metrics_raw = '''${{ steps.planning_metrics.outputs.metrics }}'''
+              
+              print(f"🔍 Debug - Event name: ${{ github.event_name }}")
+              print(f"🔍 Debug - PR metrics raw length: {len(pr_metrics_raw)}")
+              print(f"🔍 Debug - Business metrics raw length: {len(business_metrics_raw)}")
+              print(f"🔍 Debug - Planning metrics raw length: {len(planning_metrics_raw)}")
+              
+              # Handle empty metrics gracefully
+              try:
+                  pr_metrics = json.loads(pr_metrics_raw) if pr_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse PR metrics: {e}")
+                  pr_metrics = {}
+                  
+              try:
+                  business_metrics = json.loads(business_metrics_raw) if business_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse business metrics: {e}")
+                  business_metrics = {}
+                  
+              try:
+                  planning_metrics = json.loads(planning_metrics_raw) if planning_metrics_raw.strip() else {}
+              except json.JSONDecodeError as e:
+                  print(f"⚠️  Failed to parse planning metrics: {e}")
+                  planning_metrics = {}
+              
+              # Exit early if no PR metrics
+              if not pr_metrics:
+                  print("⚠️  No PR metrics available, skipping achievement creation")
+                  print("    This is expected for workflow_run events from non-PR workflows")
+                  return
+              
+              # Performance metrics
+              perf_data = {
+                  'test_execution_time': '${{ steps.perf_metrics.outputs.test_execution_time }}',
+                  'code_coverage': '${{ steps.perf_metrics.outputs.code_coverage }}',
+                  'build_time': '${{ steps.perf_metrics.outputs.build_time }}'
+              }
+              
+              # Create comprehensive metrics
+              comprehensive_metrics = {
+                  **pr_metrics,
+                  'performance': perf_data,
+                  'business': business_metrics,
+                  'planning': planning_metrics,
+                  'ci_run_id': '${{ github.run_id }}',
+                  'ci_run_number': '${{ github.run_number }}',
+                  'workflow': '${{ github.workflow }}',
+                  'commit_sha': '${{ github.sha }}'
+              }
+              
+              # Import AI analyzer for business value extraction
+              from services.achievement_collector.services.ai_analyzer import AIAnalyzer
+              
+              # Calculate enhanced impact score
+              base_score = 50
+              
+              # Size impact
+              total_changes = pr_metrics.get('additions', 0) + pr_metrics.get('deletions', 0)
+              if total_changes >= 500:
+                  base_score += 20
+              elif total_changes >= 200:
+                  base_score += 10
+              elif total_changes >= 50:
+                  base_score += 5
+                  
+              # Review impact
+              if pr_metrics.get('review_count', 0) >= 3:
+                  base_score += 10
+              elif pr_metrics.get('review_count', 0) >= 1:
+                  base_score += 5
+                  
+              # Business impact
+              if business_metrics.get('has_revenue_impact'):
+                  base_score += 15
+              if business_metrics.get('has_user_impact'):
+                  base_score += 10
+              if business_metrics.get('has_security_improvement'):
+                  base_score += 10
+              if business_metrics.get('has_performance_improvement'):
+                  base_score += 5
+                  
+              # Planning context
+              if planning_metrics.get('has_planning_context'):
+                  base_score += 5
+                  
+              impact_score = min(base_score, 100)
+              
+              # Extract skills from files and context
+              tracker = GitHubPRTracker()
+              skills = tracker._extract_skills_from_pr(pr_metrics)
+              
+              # Add CI/CD skills
+              skills.extend(['CI/CD', 'GitHub Actions', 'Automated Testing'])
+              
+              # Create achievement
+              achievement_data = AchievementCreate(
+                  title=f"Shipped: {pr_metrics['title']}",
+                  category=tracker._determine_category_from_pr(pr_metrics),
+                  description=f"{pr_metrics.get('body', '')}\\n\\nDelivered via PR #{pr_metrics['pr_number']} with {pr_metrics['review_count']} reviews.",
+                  started_at=datetime.now(),
+                  completed_at=datetime.now(),
+                  source_type="github_pr",
+                  source_id=f"PR-{pr_metrics['pr_number']}",
+                  tags=pr_metrics.get('labels', []) + ['ci-tracked'],
+                  skills_demonstrated=list(set(skills))[:15],
+                  metrics_after=comprehensive_metrics,
+                  impact_score=impact_score,
+                  complexity_score=tracker._calculate_complexity_score(pr_metrics),
+                  portfolio_ready=impact_score >= 70
+              )
+              
+              # Metadata to be set separately
+              metadata = {
+                  'github_run_url': '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+                  'pr_url': pr_metrics.get('url', ''),
+                  'collected_by': 'github-actions'
+              }
+              
+              # Save to database
+              db = next(get_db())
+              try:
+                  # Check if already exists
+                  existing = db.query(Achievement).filter_by(
+                      source_type="github_pr",
+                      source_id=f"PR-{pr_metrics['pr_number']}"
+                  ).first()
+                  
+                  if not existing:
+                      # Retry logic for database operations
+                      max_retries = 3
+                      for attempt in range(max_retries):
+                          try:
+                              achievement = create_achievement_sync(db, achievement_data)
+                              # Set metadata separately since it's not in the schema
+                              achievement.metadata_json = metadata
+                              db.commit()
+                              db.refresh(achievement)
+                              break
+                          except Exception as e:
+                              if attempt == max_retries - 1:
+                                  raise
+                              print(f"⚠️  Database operation failed (attempt {attempt + 1}/{max_retries}): {e}")
+                              db.rollback()
+                              time.sleep(2)
+                      
+                      # Extract business value using AI if available
+                      if os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'test':
+                          try:
+                              analyzer = AIAnalyzer()
+                              
+                              # First check if business_value field can handle large JSON
+                              # If the column is still VARCHAR(255), truncate or store in metadata
+                              updated = await analyzer.update_achievement_business_value(db, achievement)
+                              
+                              if updated:
+                                  # Safely get business value, handling both string and None
+                                  business_value = achievement.business_value
+                                  if business_value and len(str(business_value)) > 255:
+                                      print(f"   💰 Business Value: {str(business_value)[:100]}... (truncated)")
+                                  else:
+                                      print(f"   💰 Business Value: {business_value}")
+                                      
+                              # Commit changes if successful
+                              db.commit()
+                              
+                          except Exception as e:
+                              print(f"   ⚠️  Could not extract business value: {e}")
+                              # Rollback any pending changes
+                              db.rollback()
+                              # Continue without business value - don't fail the whole workflow
+                      
+                      print(f"✅ Created achievement: {achievement.title}")
+                      print(f"   Impact Score: {achievement.impact_score}")
+                      print(f"   Skills: {', '.join(achievement.skills_demonstrated[:5])}")
+                      print(f"   Metadata: {bool(achievement.metadata_json)}")
+                  else:
+                      print(f"ℹ️  Achievement already exists for PR #{pr_metrics['pr_number']}")
+              finally:
+                  db.close()
+          
+          # Run the async function
+          asyncio.run(create_ci_achievement())
+          EOF
+
+      - name: Post Achievement Summary
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              // Get PR data directly from context instead of relying on output parsing
+              const pr = context.payload.pull_request;
+              
+              if (!pr) {
+                console.log('No PR data available in context');
+                return;
+              }
+              
+              const comment = `## 🏆 Achievement Tracked!
+              
+              Your PR has been automatically tracked as an achievement with the following metrics:
+              - **Changes**: +${pr.additions || 0} -${pr.deletions || 0}
+              - **Files**: ${pr.changed_files || 0}
+              - **Reviews**: ${pr.review_comments || 0}
+              - **Build Status**: ✅ Passed
+              
+              This achievement has been added to your portfolio and can be exported to LinkedIn or other platforms.`;
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+              console.log('Successfully posted achievement summary comment');
+            } catch (e) {
+              console.error('Could not post summary comment:', e);
+              console.error('Error details:', e.message);
+            }

@@ -1,0 +1,249 @@
+id: feature-14-2-scheduling-management-api
+title: "Scheduling Management REST API"
+description: |
+  Comprehensive REST API for content scheduling management with support for CRUD operations,
+  bulk operations, real-time status updates, timezone handling, retry mechanisms, and
+  platform-specific configurations. Includes WebSocket/SSE support for real-time updates.
+
+epic_id: epic-14-content-scheduler-pipeline
+priority: high
+status: planned
+estimated_hours: 56
+estimated_story_points: 14
+
+api_endpoints:
+  content_management:
+    - "POST /api/v1/content" # Create new content item
+    - "GET /api/v1/content" # List content with filtering/pagination
+    - "GET /api/v1/content/{id}" # Get specific content item
+    - "PUT /api/v1/content/{id}" # Update content item
+    - "DELETE /api/v1/content/{id}" # Delete content item
+    - "POST /api/v1/content/bulk" # Bulk create content items
+    - "PUT /api/v1/content/bulk" # Bulk update content items
+    - "POST /api/v1/content/{id}/duplicate" # Duplicate content item
+
+  scheduling:
+    - "POST /api/v1/schedules" # Create schedule for content
+    - "GET /api/v1/schedules" # List schedules with filtering
+    - "GET /api/v1/schedules/{id}" # Get specific schedule
+    - "PUT /api/v1/schedules/{id}" # Update schedule
+    - "DELETE /api/v1/schedules/{id}" # Cancel/delete schedule
+    - "POST /api/v1/schedules/{id}/reschedule" # Reschedule content
+    - "POST /api/v1/schedules/bulk" # Bulk schedule operations
+    - "GET /api/v1/schedules/calendar" # Calendar view of schedules
+
+  templates:
+    - "POST /api/v1/templates" # Create content template
+    - "GET /api/v1/templates" # List templates with filtering
+    - "GET /api/v1/templates/{id}" # Get specific template
+    - "PUT /api/v1/templates/{id}" # Update template
+    - "DELETE /api/v1/templates/{id}" # Delete template
+    - "POST /api/v1/templates/{id}/use" # Create content from template
+
+  analytics:
+    - "GET /api/v1/analytics/content/{id}" # Content performance analytics
+    - "GET /api/v1/analytics/summary" # Overall performance summary
+    - "GET /api/v1/analytics/trends" # Performance trends over time
+    - "GET /api/v1/analytics/platforms" # Platform comparison analytics
+    - "POST /api/v1/analytics/export" # Export analytics data
+
+  workflows:
+    - "POST /api/v1/workflows" # Create publishing workflow
+    - "GET /api/v1/workflows" # List workflows
+    - "GET /api/v1/workflows/{id}" # Get specific workflow
+    - "PUT /api/v1/workflows/{id}" # Update workflow
+    - "POST /api/v1/workflows/{id}/execute" # Execute workflow
+    - "GET /api/v1/workflows/executions" # List workflow executions
+    - "POST /api/v1/workflows/executions/{id}/approve" # Approve workflow step
+
+  real_time:
+    - "GET /api/v1/events/stream" # SSE endpoint for real-time updates
+    - "WS /api/v1/events/websocket" # WebSocket for real-time updates
+    - "GET /api/v1/status/publishing" # Real-time publishing status
+
+request_response_models:
+  ContentItemRequest:
+    - title: str
+    - content: str
+    - summary: Optional[str]
+    - content_type: ContentType
+    - platform_configs: Dict[str, Any]
+    - tags: List[str]
+    - scheduled_for: Optional[datetime]
+    - expires_at: Optional[datetime]
+
+  ScheduleRequest:
+    - content_item_id: int
+    - platform_id: str
+    - scheduled_time: datetime
+    - timezone: str
+    - retry_strategy: RetryStrategy
+    - metadata: Optional[Dict[str, Any]]
+
+  BulkScheduleRequest:
+    - schedules: List[ScheduleRequest]
+    - batch_options: BatchOptions
+
+  CalendarViewRequest:
+    - start_date: date
+    - end_date: date
+    - platforms: Optional[List[str]]
+    - status_filter: Optional[List[str]]
+    - timezone: str
+
+tasks:
+  - id: task-14-2-1
+    title: "Design API endpoint specifications"
+    description: "Create comprehensive OpenAPI specification for all endpoints"
+    type: design
+    estimated_hours: 4
+    acceptance_criteria:
+      - "Complete OpenAPI 3.0 specification"
+      - "Request/response models defined"
+      - "Error handling specifications"
+      - "Authentication requirements documented"
+
+  - id: task-14-2-2
+    title: "Implement content management endpoints"
+    description: "Create FastAPI endpoints for content CRUD operations"
+    type: implementation
+    estimated_hours: 8
+    acceptance_criteria:
+      - "All content endpoints implemented"
+      - "Proper validation and error handling"
+      - "Pagination and filtering support"
+      - "Bulk operations working"
+
+  - id: task-14-2-3
+    title: "Implement scheduling endpoints"
+    description: "Create scheduling management API endpoints"
+    type: implementation
+    estimated_hours: 10
+    acceptance_criteria:
+      - "Schedule CRUD operations complete"
+      - "Timezone handling implemented"
+      - "Calendar view endpoint working"
+      - "Bulk scheduling operations"
+
+  - id: task-14-2-4
+    title: "Implement template management endpoints"
+    description: "Create template management API endpoints"
+    type: implementation
+    estimated_hours: 6
+    acceptance_criteria:
+      - "Template CRUD operations complete"
+      - "Variable substitution working"
+      - "Template usage tracking"
+      - "Performance analytics integration"
+
+  - id: task-14-2-5
+    title: "Implement analytics endpoints"
+    description: "Create comprehensive analytics API endpoints"
+    type: implementation
+    estimated_hours: 8
+    acceptance_criteria:
+      - "Performance analytics working"
+      - "Trend analysis endpoints"
+      - "Export functionality complete"
+      - "Real-time metrics integration"
+
+  - id: task-14-2-6
+    title: "Implement workflow endpoints"
+    description: "Create publishing workflow management endpoints"
+    type: implementation
+    estimated_hours: 8
+    acceptance_criteria:
+      - "Workflow CRUD operations complete"
+      - "Execution tracking working"
+      - "Approval system implemented"
+      - "Step execution logging"
+
+  - id: task-14-2-7
+    title: "Implement real-time endpoints"
+    description: "Create SSE and WebSocket endpoints for real-time updates"
+    type: implementation
+    estimated_hours: 6
+    acceptance_criteria:
+      - "SSE endpoint for status updates"
+      - "WebSocket connection management"
+      - "Real-time publishing status"
+      - "Connection health monitoring"
+
+  - id: task-14-2-8
+    title: "Add request validation and error handling"
+    description: "Implement comprehensive validation and error handling"
+    type: implementation
+    estimated_hours: 4
+    acceptance_criteria:
+      - "Pydantic model validation"
+      - "Custom error handlers"
+      - "Proper HTTP status codes"
+      - "Error logging and monitoring"
+
+  - id: task-14-2-9
+    title: "Implement API security and authentication"
+    description: "Add security layers and authentication to API endpoints"
+    type: implementation
+    estimated_hours: 6
+    acceptance_criteria:
+      - "JWT authentication implemented"
+      - "Role-based access control"
+      - "Rate limiting configured"
+      - "Security headers added"
+
+  - id: task-14-2-10
+    title: "Create comprehensive unit tests"
+    description: "Test all API endpoints with various scenarios"
+    type: testing
+    estimated_hours: 8
+    acceptance_criteria:
+      - "All endpoints tested"
+      - "Edge cases covered"
+      - "Error scenarios tested"
+      - "Performance tests included"
+
+  - id: task-14-2-11
+    title: "Create integration tests"
+    description: "Test API integration with database and external services"
+    type: testing
+    estimated_hours: 6
+    acceptance_criteria:
+      - "Database integration tested"
+      - "External service mocking"
+      - "End-to-end scenarios covered"
+      - "Real-time feature testing"
+
+  - id: task-14-2-12
+    title: "Create API documentation"
+    description: "Generate comprehensive API documentation"
+    type: documentation
+    estimated_hours: 3
+    acceptance_criteria:
+      - "Interactive API documentation"
+      - "Usage examples provided"
+      - "Integration guides created"
+      - "Error handling documentation"
+
+  - id: task-14-2-13
+    title: "Setup Prometheus metrics"
+    description: "Implement monitoring and metrics for API endpoints"
+    type: implementation
+    estimated_hours: 3
+    acceptance_criteria:
+      - "Request/response metrics"
+      - "Performance monitoring"
+      - "Error rate tracking"
+      - "Custom business metrics"
+
+dependencies:
+  - feature-14-1-content-scheduler-database
+  - FastAPI framework (existing)
+  - PostgreSQL database (existing)
+  - Authentication system
+  - Redis for caching
+
+integration_points:
+  - orchestrator service (coordination)
+  - celery_worker (async processing)
+  - achievement_collector (content sources)
+  - viral_engine (quality scoring)

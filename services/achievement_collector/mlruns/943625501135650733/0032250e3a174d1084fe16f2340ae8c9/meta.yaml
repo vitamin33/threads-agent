@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/943625501135650733/0032250e3a174d1084fe16f2340ae8c9/artifacts
+end_time: 1755106624980
+entry_point_name: ''
+experiment_id: '943625501135650733'
+lifecycle_stage: active
+run_id: 0032250e3a174d1084fe16f2340ae8c9
+run_name: demo_random_forest
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755106624907
+status: 3
+tags: []
+user_id: vitaliiserbyn

@@ -1,0 +1,29 @@
+{
+  "date": "20250819",
+  "timestamp": "2025-08-19T17:29:43.364680",
+  "productivity_score": 99.9,
+  "performance": {
+    "telemetry": {
+      "success_rate": 0.9982569721115537,
+      "p95_latency_ms": 12.516975402832031,
+      "total_cost": 0.0038724000000000002,
+      "top_agent": "perf_test",
+      "failed_calls": 7,
+      "alerts": [],
+      "period_days": 1
+    },
+    "git_activity": {
+      "commits": 6,
+      "lines_added": 509,
+      "lines_deleted": 317,
+      "net_lines": 192
+    }
+  },
+  "insights_count": 4,
+  "insights": [
+    "\ud83c\udf89 Excellent success rate (99.8%) - workflow is stable",
+    "\ud83d\ude80 Great performance (13ms) - system is responsive",
+    "\ud83d\udca1 Efficient token usage ($0.00) - good cost control",
+    "\ud83d\udd25 High activity (6 commits) - productive day"
+  ]
+}
