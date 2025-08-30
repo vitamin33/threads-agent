@@ -1,49 +1,42 @@
-# Production vLLM dependencies for Apple Silicon optimization
-# Note: Using simplified versions for development environment
-transformers>=4.30.0  # More flexible version
-torch>=2.0.0  # Compatible with current PyTorch versions
-# tokenizers==0.19.1  # Commented out due to build issues in dev
-# vllm==0.6.2  # Uncommented for production with GPU, commented for dev environment
+# CI-compatible vLLM service dependencies
+# Optimized for both CI and production environments
+
+# Core dependencies (CI-safe versions)
+transformers>=4.30.0,<5.0.0
+torch>=2.0.0,<3.0.0
+# Note: vLLM and hardware-specific packages excluded from CI builds
 
 # FastAPI and async
-fastapi==0.111.*
-uvicorn==0.30.*
-pydantic>=2.7.0,<3.0.0
+fastapi>=0.100.0,<0.120.0
+uvicorn>=0.20.0,<0.35.0
+pydantic>=2.0.0,<3.0.0
 
 # Monitoring and metrics
-prometheus-client==0.19.0
-opentelemetry-api==1.22.0
-opentelemetry-sdk==1.22.0
-opentelemetry-instrumentation-fastapi==0.43b0
-
-# Apple Silicon optimization (compatible versions)
-accelerate>=0.20.0
-bitsandbytes>=0.41.0  # For quantization, using available version
+prometheus-client>=0.15.0,<1.0.0
+opentelemetry-api>=1.20.0,<2.0.0
+opentelemetry-sdk>=1.20.0,<2.0.0
 
 # Circuit breakers and resilience
-tenacity==9.0.0
-asyncio-throttle==1.0.2
+tenacity>=8.0.0,<10.0.0
 
-# Memory management and monitoring
-psutil==6.0.0
-GPUtil==1.4.0
+# Memory management and monitoring (CI-compatible)
+psutil>=5.9.0,<7.0.0
 
-# Utilities
-httpx==0.25.2
-aioredis==2.0.1
-python-multipart>=0.0.7
-
-# Performance Benchmarking (for portfolio demonstration)
-matplotlib==3.8.*
-seaborn==0.13.*
-pandas==2.1.*
-numpy==1.25.*
-tabulate==0.9.*
-aiohttp==3.9.*
+# Essential utilities
+httpx>=0.24.0,<0.28.0
+python-multipart>=0.0.6
 
 # Configuration management
-pyyaml==6.0.1
+pyyaml>=6.0.0,<7.0.0
 
-# Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
+# Testing framework
+pytest>=7.0.0,<8.0.0
+pytest-asyncio>=0.20.0,<1.0.0
+
+# Data processing (lighter versions for CI)
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+
+# Note: Hardware-specific packages like bitsandbytes, accelerate, GPUtil
+# are excluded to prevent CI build failures on Linux runners.
+# These should be installed separately in production environments.
