@@ -1,0 +1,156 @@
+{
+  "test_session": "20250815_151921",
+  "platform": "apple-silicon-m4-max",
+  "environment": {
+    "platform": {
+      "system": "Darwin",
+      "machine": "arm64",
+      "processor": "arm",
+      "platform": "macOS-15.5-arm64-arm-64bit-Mach-O"
+    },
+    "memory": {
+      "total_gb": 36.0,
+      "available_gb": 9.25225830078125,
+      "used_gb": 12.424072265625,
+      "percent_used": 74.3
+    },
+    "apple_silicon": {
+      "detected": true,
+      "mps_available": true,
+      "torch_version": "2.8.0"
+    }
+  },
+  "model_tests": [
+    {
+      "model_name": "gpt2",
+      "display_name": "GPT-2 (1.5B)",
+      "estimated_size_gb": 3.0,
+      "test_timestamp": 1755260361.8182669,
+      "success": true,
+      "download_time_seconds": 20.951672077178955,
+      "memory_usage": {
+        "rss_gb": 0.59783935546875,
+        "vms_gb": 395.9273376464844,
+        "percent": 1.660707261827257
+      },
+      "device": "mps",
+      "dtype": "torch.float16",
+      "inference_results": [
+        {
+          "prompt": "Write a professional LinkedIn post about AI deployment:",
+          "response": "\"I have a few questions: What is the difference between the open source and proprietary approach to AI deployment? I think there are few in-depth technical questions and I think the open source approach is more suited to getting the job done.\"",
+          "inference_time_ms": 5358.254909515381,
+          "tokens_generated": 42,
+          "device": "mps",
+          "timestamp": 1755260389.3238652
+        },
+        {
+          "prompt": "Create a Twitter thread about cost optimization:",
+          "response": "https://twitter.com/TIMELock\n\nIf you're just starting out, this is an excellent way to get started.\n\nStep 1: Create an account\n\nCreate a Twitter account.\n\nStep 2:",
+          "inference_time_ms": 829.2949199676514,
+          "tokens_generated": 25,
+          "device": "mps",
+          "timestamp": 1755260390.153172
+        },
+        {
+          "prompt": "Explain Apple Silicon benefits for ML:",
+          "response": "The new Apple Watch 3's design was clearly designed for technology-oriented applications, but it is also designed for smart wearables.\n\nThe new Apple Watch 3 smartwatch is a massive improvement over the original Apple Watch 2, which was a great",
+          "inference_time_ms": 507.76124000549316,
+          "tokens_generated": 40,
+          "device": "mps",
+          "timestamp": 1755260390.660945
+        }
+      ],
+      "performance_metrics": {
+        "average_latency_ms": 2231.7703564961753,
+        "total_tokens_generated": 107,
+        "tokens_per_second": 15.981333636253893,
+        "total_inference_time_seconds": 6.695311069488525,
+        "target_50ms_met": false
+      }
+    },
+    {
+      "model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+      "display_name": "TinyLlama 1.1B Chat",
+      "estimated_size_gb": 2.2,
+      "test_timestamp": 1755260390.6626801,
+      "success": true,
+      "download_time_seconds": 27.457413911819458,
+      "memory_usage": {
+        "rss_gb": 0.3389434814453125,
+        "vms_gb": 399.10060119628906,
+        "percent": 0.9415520562065972
+      },
+      "device": "mps",
+      "dtype": "torch.float16",
+      "inference_results": [
+        {
+          "prompt": "Write a professional LinkedIn post about AI deployment:",
+          "response": "Title: \"AI Deployment: Revolutionizing Industries and Improving Business Performance\"\n\nDescription:\n\n\"The world of business has undergone a radical transformation in recent years, and artificial intelligence (AI) has been",
+          "inference_time_ms": 2025.2158641815186,
+          "tokens_generated": 28,
+          "device": "mps",
+          "timestamp": 1755260420.145674
+        },
+        {
+          "prompt": "Create a Twitter thread about cost optimization:",
+          "response": "1. Use hashtags like #costoptimization #costreduction #costcutting #costeffectiveness #costsaving #costreducing #costreductionstrategies #costsavings #costmanagement #cost",
+          "inference_time_ms": 923.382043838501,
+          "tokens_generated": 14,
+          "device": "mps",
+          "timestamp": 1755260421.06907
+        },
+        {
+          "prompt": "Explain Apple Silicon benefits for ML:",
+          "response": "Apple Silicon is a new way to develop, test, and deploy ML models. It is a significant improvement in performance, thanks to the use of Rosetta 2 technology. Rosetta 2 is a new architecture that enables the",
+          "inference_time_ms": 1140.974998474121,
+          "tokens_generated": 37,
+          "device": "mps",
+          "timestamp": 1755260422.2100549
+        }
+      ],
+      "performance_metrics": {
+        "average_latency_ms": 1363.1909688313801,
+        "total_tokens_generated": 79,
+        "tokens_per_second": 19.31742062222438,
+        "total_inference_time_seconds": 4.089572906494141,
+        "target_50ms_met": false
+      }
+    }
+  ],
+  "performance_summary": {
+    "models_tested": 2,
+    "best_latency_ms": 1363.1909688313801,
+    "average_latency_ms": 1797.4806626637778,
+    "best_throughput_tps": 19.31742062222438,
+    "average_throughput_tps": 17.649377129239134,
+    "mps_backend_used": true,
+    "target_50ms_achieved": false
+  },
+  "cost_analysis": {
+    "base_model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "real_performance_data": {
+      "latency_ms": 1363.1909688313801,
+      "tokens_per_second": 19.31742062222438,
+      "device": "mps"
+    },
+    "local_costs": {
+      "power_watts": 30,
+      "electricity_rate_per_kwh": 0.15,
+      "cost_per_hour": 0.0045,
+      "cost_per_inference": 1.703988711039225e-06
+    },
+    "openai_costs": {
+      "cost_per_1k_tokens": 0.002,
+      "avg_tokens_per_request": 75,
+      "cost_per_inference": 0.00015
+    },
+    "savings_analysis": {
+      "savings_per_request": 0.00014829601128896075,
+      "savings_percent": 98.86400752597385,
+      "annual_local_cost": 0.6219558795293171,
+      "annual_openai_cost": 54.75,
+      "annual_savings": 54.12804412047068
+    }
+  }
+}

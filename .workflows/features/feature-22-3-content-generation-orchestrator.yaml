@@ -1,0 +1,351 @@
+id: "feature-22-3-content-generation-orchestrator"
+title: "Content Generation Orchestrator"
+epic_id: "epic-22-multi-model-content-generation-system"
+priority: "high"
+status: "planned"
+estimated_hours: 42
+estimated_story_points: 10
+task_count: 8
+
+description: |
+  Intelligent content generation orchestrator that routes requests to optimal models
+  based on content type, quality requirements, and performance constraints. Supports
+  Twitter threads, LinkedIn posts, technical articles, and code documentation with
+  content-aware model selection and quality optimization.
+
+dependencies:
+  - "feature-22-1-multi-model-deployment-engine"
+  - "feature-22-2-mlflow-experiment-tracking-system"
+  - "orchestrator service (existing)"
+  - "viral_engine service (existing)"
+  - "content quality evaluation framework"
+
+# Technical Requirements
+technical_requirements:
+  content_types: ["twitter_threads", "linkedin_posts", "technical_articles", "code_documentation"]
+  model_routing: "Intelligent model selection based on content requirements"
+  quality_control: "Real-time quality evaluation and optimization"
+  performance: "Sub-50ms routing decisions with load balancing"
+  scalability: "Handle 100+ concurrent content generation requests"
+
+# Content Generation Framework
+content_framework:
+  twitter_threads:
+    max_length: 280
+    optimal_models: ["Mistral-7B-Instruct-v0.3", "Llama-3.1-3B-Instruct"]
+    optimization_goals: ["viral_potential", "engagement_rate", "conciseness"]
+    quality_metrics: ["hook_strength", "thread_coherence", "call_to_action"]
+  
+  linkedin_posts:
+    max_length: 3000
+    optimal_models: ["Llama-3.1-8B-Instruct", "Qwen2.5-7B-Instruct"]
+    optimization_goals: ["professional_tone", "industry_insights", "networking_value"]
+    quality_metrics: ["professional_score", "insight_depth", "engagement_potential"]
+  
+  technical_articles:
+    max_length: 10000
+    optimal_models: ["Qwen2.5-7B-Instruct", "Llama-3.1-8B-Instruct"]
+    optimization_goals: ["technical_accuracy", "code_examples", "clarity"]
+    quality_metrics: ["technical_depth", "code_quality", "tutorial_value"]
+  
+  code_documentation:
+    max_length: 5000
+    optimal_models: ["Qwen2.5-7B-Instruct", "Phi-3.5-Mini-Instruct"]
+    optimization_goals: ["clarity", "completeness", "examples"]
+    quality_metrics: ["documentation_completeness", "example_quality", "readability"]
+
+# Success Criteria
+success_criteria:
+  - "Intelligent routing to optimal models for each content type"
+  - "Quality scores >90% for all content types"
+  - "Processing time <2 seconds end-to-end"
+  - "Support for 100+ concurrent generation requests"
+  - "Automated quality improvement feedback loops"
+
+# Tasks (Test-Driven Development Approach)
+tasks:
+  - id: "task-22-3-01"
+    title: "Create content orchestrator test suite"
+    type: "testing"
+    priority: "critical"
+    estimated_hours: 6
+    description: |
+      Comprehensive test suite for content generation orchestration:
+      - Content type routing and model selection
+      - Quality evaluation and optimization
+      - Load balancing and performance testing
+      - Error handling and fallback scenarios
+    test_scenarios:
+      - "Route each content type to optimal models"
+      - "Quality evaluation for generated content"
+      - "Load testing with concurrent requests"
+      - "Fallback when preferred models unavailable"
+      - "Integration with MLflow experiment tracking"
+    commands:
+      - "cd services/vllm_service && python -m pytest tests/test_content_orchestrator.py -v"
+
+  - id: "task-22-3-02"
+    title: "Design intelligent model routing system"
+    type: "architecture"
+    priority: "critical"
+    estimated_hours: 5
+    description: |
+      Design system for intelligent model selection based on content requirements:
+      - Content type classification and analysis
+      - Model capability mapping and scoring
+      - Dynamic routing based on current performance
+      - Load balancing and resource optimization
+    components:
+      - "Content analyzer for type detection"
+      - "Model capability matrix"
+      - "Routing decision engine"
+      - "Load balancer with health checks"
+    deliverables:
+      - "services/vllm_service/content_router.py"
+      - "Model capability configuration"
+      - "Routing algorithm documentation"
+    verification:
+      - "Correct model selection for each content type"
+      - "Load balancing distributes requests evenly"
+      - "Routing decisions made <10ms"
+
+  - id: "task-22-3-03"
+    title: "Implement content-aware model selection engine"
+    type: "implementation"
+    priority: "critical"
+    estimated_hours: 7
+    description: |
+      Intelligent model selection based on content analysis and requirements:
+      - Content type detection and classification
+      - Model performance prediction for content type
+      - Dynamic model selection with real-time optimization
+      - Fallback strategies for model unavailability
+    features:
+      - "NLP-based content type classification"
+      - "Model performance prediction"
+      - "Real-time model health monitoring"
+      - "Intelligent fallback and retry logic"
+    file_changes:
+      - "services/vllm_service/model_selector.py (new)"
+      - "services/vllm_service/content_classifier.py (new)"
+      - "services/vllm_service/routing_engine.py (new)"
+    acceptance_criteria:
+      - "95% accuracy in content type classification"
+      - "Optimal model selection for performance"
+      - "Graceful handling of model failures"
+      - "Sub-50ms routing decisions"
+
+  - id: "task-22-3-04"
+    title: "Create quality evaluation and optimization system"
+    type: "implementation"
+    priority: "high"
+    estimated_hours: 6
+    description: |
+      Real-time quality evaluation with feedback-driven optimization:
+      - Content quality scoring algorithms
+      - Real-time quality assessment during generation
+      - Automatic quality improvement suggestions
+      - Quality trend tracking and analysis
+    quality_dimensions:
+      - "Readability and clarity scores"
+      - "Engagement potential prediction"
+      - "Technical accuracy validation"
+      - "Brand voice and tone consistency"
+    components:
+      - "Quality evaluator with multiple metrics"
+      - "Real-time scoring during generation"
+      - "Quality improvement recommendation engine"
+      - "Historical quality trend analysis"
+    deliverables:
+      - "services/vllm_service/quality_optimizer.py"
+      - "Quality metrics configuration"
+      - "Improvement recommendation system"
+    verification:
+      - "Quality scores correlate with human evaluation"
+      - "Real-time scoring <100ms"
+      - "Improvement suggestions are actionable"
+
+  - id: "task-22-3-05"
+    title: "Implement multi-model load balancing and orchestration"
+    type: "implementation"
+    priority: "high"
+    estimated_hours: 6
+    description: |
+      Advanced load balancing for optimal resource utilization:
+      - Dynamic load distribution across available models
+      - Queue management with priority handling
+      - Resource-aware scheduling and optimization
+      - Circuit breaker patterns for resilience
+    features:
+      - "Weighted round-robin with performance feedback"
+      - "Priority queue for time-sensitive requests"
+      - "Resource utilization monitoring"
+      - "Automatic circuit breaker activation"
+    technical_implementation:
+      - "Load balancer with health check integration"
+      - "Queue management with Redis backing"
+      - "Performance-based weight adjustment"
+      - "Circuit breaker with exponential backoff"
+    acceptance_criteria:
+      - "Even load distribution across healthy models"
+      - "Priority requests processed first"
+      - "Circuit breakers prevent cascade failures"
+      - "Resource utilization stays <85%"
+
+  - id: "task-22-3-06"
+    title: "Create content generation pipeline orchestration"
+    type: "implementation"
+    priority: "high"
+    estimated_hours: 5
+    description: |
+      End-to-end pipeline for content generation with quality control:
+      - Multi-stage generation pipeline
+      - Quality gates with automatic retries
+      - Content optimization and enhancement
+      - Final quality validation and approval
+    pipeline_stages:
+      - "Content analysis and model selection"
+      - "Initial generation with chosen model"
+      - "Quality evaluation and scoring"
+      - "Enhancement and optimization (if needed)"
+      - "Final validation and delivery"
+    components:
+      - "Pipeline orchestrator with stage management"
+      - "Quality gates with configurable thresholds"
+      - "Content enhancement using multiple models"
+      - "Approval workflow for quality assurance"
+    deliverables:
+      - "services/vllm_service/generation_pipeline.py"
+      - "Pipeline configuration and stages"
+      - "Quality gate definitions"
+    verification:
+      - "Pipeline completes successfully for all content types"
+      - "Quality gates prevent low-quality output"
+      - "Enhancement improves content quality measurably"
+
+  - id: "task-22-3-07"
+    title: "Integrate with existing orchestrator and viral engine services"
+    type: "integration"
+    priority: "high"
+    estimated_hours: 4
+    description: |
+      Seamless integration with existing services for unified content workflow:
+      - API integration with orchestrator service
+      - Data flow integration with viral_engine
+      - Shared quality metrics and evaluation
+      - Consistent logging and monitoring
+    integration_points:
+      - "REST API endpoints for orchestrator service"
+      - "Shared data models and schemas"
+      - "Unified quality evaluation framework"
+      - "Consistent Prometheus metrics"
+    file_changes:
+      - "services/orchestrator/routes/content_generation.py (enhance)"
+      - "services/vllm_service/api_integration.py (new)"
+      - "Shared data models for content requests"
+    acceptance_criteria:
+      - "Orchestrator can route to multi-model system"
+      - "Viral engine can evaluate multi-model outputs"
+      - "Consistent quality metrics across services"
+      - "Unified monitoring and alerting"
+
+  - id: "task-22-3-08"
+    title: "Performance optimization and monitoring implementation"
+    type: "optimization"
+    priority: "medium"
+    estimated_hours: 3
+    description: |
+      Performance optimization for high-throughput content generation:
+      - Response caching and optimization
+      - Batch processing for similar requests
+      - Memory and resource optimization
+      - Advanced monitoring and alerting
+    optimization_areas:
+      - "Intelligent response caching"
+      - "Request batching and parallelization"
+      - "Memory pool management"
+      - "Performance monitoring and tuning"
+    monitoring_metrics:
+      - "End-to-end generation latency"
+      - "Model utilization and efficiency"
+      - "Quality score distributions"
+      - "Cost per generation by content type"
+    deliverables:
+      - "Performance optimization configurations"
+      - "Enhanced Prometheus metrics"
+      - "Grafana dashboard for content generation"
+    verification:
+      - "Sub-2 second end-to-end generation"
+      - "Efficient resource utilization"
+      - "Comprehensive monitoring coverage"
+
+# Content Type Optimization Strategies
+optimization_strategies:
+  twitter_threads:
+    model_selection: "Prefer fast models (Mistral-7B, Llama-3.1-3B)"
+    quality_focus: "Hook strength, virality potential, engagement"
+    optimization: "Temperature=0.8, max_tokens=280, focus_on_hooks"
+  
+  linkedin_posts:
+    model_selection: "Prefer quality models (Llama-3.1-8B, Qwen2.5-7B)"
+    quality_focus: "Professional tone, industry insights, networking value"
+    optimization: "Temperature=0.6, max_tokens=3000, professional_tone"
+  
+  technical_articles:
+    model_selection: "Prefer technical models (Qwen2.5-7B, Llama-3.1-8B)"
+    quality_focus: "Technical accuracy, code examples, tutorial value"
+    optimization: "Temperature=0.4, max_tokens=10000, technical_focus"
+  
+  code_documentation:
+    model_selection: "Prefer efficient models (Qwen2.5-7B, Phi-3.5-Mini)"
+    quality_focus: "Clarity, completeness, practical examples"
+    optimization: "Temperature=0.3, max_tokens=5000, documentation_style"
+
+# API Design
+api_endpoints:
+  - endpoint: "POST /generate/intelligent"
+    description: "Intelligent content generation with automatic model selection"
+    parameters: ["content_type", "requirements", "quality_threshold"]
+    response: "Generated content with quality metrics and model used"
+  
+  - endpoint: "POST /generate/compare"
+    description: "Generate content with multiple models for comparison"
+    parameters: ["content_type", "models", "comparison_criteria"]
+    response: "Multiple outputs with comparative analysis"
+  
+  - endpoint: "GET /models/recommendations"
+    description: "Get model recommendations for specific content type"
+    parameters: ["content_type", "requirements", "constraints"]
+    response: "Ranked model recommendations with reasoning"
+
+# Portfolio Integration
+portfolio_integration:
+  demo_scenarios:
+    - "Live content generation with model selection explanation"
+    - "Quality comparison across different models"
+    - "Performance optimization demonstration"
+    - "Cost efficiency analysis per content type"
+  
+  technical_showcases:
+    - "Intelligent routing algorithm visualization"
+    - "Quality evaluation framework demonstration"
+    - "Load balancing and orchestration system"
+    - "Integration with existing microservices"
+
+# Completion Criteria
+completion_criteria:
+  technical:
+    - "Intelligent routing functional for all content types"
+    - "Quality evaluation system operational"
+    - "Load balancing distributing requests optimally"
+    - "Integration with existing services complete"
+  performance:
+    - "Sub-2 second end-to-end generation time"
+    - "95% accuracy in model selection"
+    - "Quality scores >90% for all content types"
+    - "Support for 100+ concurrent requests"
+  portfolio:
+    - "Demo-ready content generation showcase"
+    - "Documentation of intelligent routing system"
+    - "Performance benchmarks and comparisons"
+    - "Integration architecture documentation"

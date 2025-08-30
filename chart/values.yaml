@@ -70,6 +70,242 @@ ragPipeline:
     limits:
       cpu: 2000m
       memory: 3Gi
+
+# ───────── vLLM Service Configuration ─────────
+vllmService:
+  enabled: false                          # turn ON in dev/prod values for GenAI portfolio
+  replicaCount: 1
+  
+  image:
+    repository: ghcr.io/threads-agent-stack/vllm-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8090
+    metricsPort: 8090
+  
+  # Model configuration for Apple Silicon optimization
+  model:
+    name: "meta-llama/Llama-3.1-8B-Instruct"
+    cacheDir: "/app/model-cache"
+    tensorParallelSize: 1
+    gpuMemoryUtilization: 0.9
+    huggingfaceToken: ""                  # Set in secrets for private models
+    customModelKey: ""                    # Custom model authentication
+    config: |
+      {
+        "max_model_len": 8192,
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 512
+      }
+  
+  # Performance optimization settings
+  performance:
+    disableLogStats: "true"
+    maxNumSeqs: 256
+    maxNumBatchedTokens: 8192
+  
+  # Apple Silicon specific optimizations
+  appleSilicon:
+    forceCpu: "true"
+    mpsHighWatermarkRatio: "0.7"
+    mallocArenaMax: "4"
+    pythonMalloc: "malloc"
+  
+  # Resource configuration optimized for LLM inference
+  resources:
+    requests:
+      cpu: 1000m                          # Baseline for model inference
+      memory: 4Gi                         # Minimum for 8B model
+    limits:
+      cpu: 4000m                          # Allow burst for heavy loads
+      memory: 8Gi                         # Maximum for model + cache
+  
+  # Node affinity for Apple Silicon optimization
+  nodeAffinity:
+    enabled: true
+    requiredNodeSelectorTerms: []         # No hard requirements for k3d compatibility
+  
+  # Horizontal Pod Autoscaling
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3                        # Conservative for local development
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    
+    # Custom metrics for AI workload scaling
+    customMetrics:
+      enabled: true
+      targetLatencySeconds: "0.05"        # 50ms target
+      targetRequestsPerSecond: "10"
+    
+    # Scaling behavior for inference workloads
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 60    # Quick response to load
+        percentPolicy:
+          value: 100
+          periodSeconds: 15
+        podsPolicy:
+          value: 1
+          periodSeconds: 15
+        selectPolicy: Max
+      scaleDown:
+        stabilizationWindowSeconds: 300   # Slow scale down to prevent thrashing
+        percentPolicy:
+          value: 50
+          periodSeconds: 60
+        podsPolicy:
+          value: 1
+          periodSeconds: 60
+        selectPolicy: Min
+    
+    # KEDA advanced autoscaling
+    keda:
+      enabled: false                      # Enable for production workloads
+      pollingInterval: 30
+      cooldownPeriod: 300
+      minReplicaCount: 1
+      maxReplicaCount: 5
+      
+      fallback:
+        failureThreshold: 3
+        replicas: 2
+      
+      triggers:
+        queueDepth:
+          threshold: "5"
+        responseTime:
+          threshold: "0.1"                # 100ms threshold
+        costEfficiency:
+          threshold: "0.3"                # 30% cost savings
+        rabbitMQ:
+          enabled: false
+          host: "amqp://user:pass@rabbitmq:5672/"
+          queueName: "vllm_inference_queue"
+          threshold: "10"
+  
+  # Health check configuration
+  livenessProbe:
+    initialDelaySeconds: 120              # Allow time for model loading
+    periodSeconds: 30
+    timeoutSeconds: 10
+    successThreshold: 1
+    failureThreshold: 3
+  
+  readinessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  
+  startupProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 30                  # Allow up to 5 minutes for startup
+  
+  # Update strategy for rolling deployments
+  updateStrategy:
+    type: RollingUpdate
+    maxSurge: 1
+    maxUnavailable: 0                     # Ensure zero downtime
+  
+  # Persistence for model cache and logs
+  persistence:
+    modelCache:
+      enabled: true
+      size: 10Gi                          # Sufficient for Llama 8B model
+      accessMode: ReadWriteOnce
+      storageClass: ""                    # Use default storage class
+    logs:
+      enabled: false                      # Enable for debugging
+      size: 1Gi
+      accessMode: ReadWriteOnce
+      storageClass: ""
+  
+  # Redis integration for caching
+  redis:
+    database: 2                           # Separate database for vLLM cache
+  
+  # Monitoring and observability
+  monitoring:
+    enabled: true
+    latencyTargetMs: 50                   # <50ms performance target
+    costSavingsTargetPercent: 60          # 60% cost savings target
+    scrapeInterval: "30s"
+    scrapeTimeout: "10s"
+    
+    # Alert configuration
+    alerting:
+      evaluationInterval: "30s"
+      
+      latencyAlert:
+        duration: "2m"
+      costAlert:
+        duration: "5m"
+      downAlert:
+        duration: "1m"
+      errorAlert:
+        duration: "2m"
+      memoryAlert:
+        duration: "3m"
+      cacheAlert:
+        duration: "5m"
+      
+      # Thresholds
+      errorRateThreshold: 0.05            # 5% error rate
+      memoryThreshold: 0.85               # 85% memory usage
+      cacheMissThreshold: 0.3             # 30% cache miss rate
+  
+  # Security configuration
+  security:
+    enabled: true
+    
+    # Service account
+    serviceAccount:
+      automount: true
+      annotations: {}
+    
+    # Network policies
+    networkPolicy:
+      enabled: false                      # Enable for production
+    
+    # Pod security policy
+    podSecurityPolicy:
+      enabled: false                      # Enable for production
+  
+  # Security contexts
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
+    capabilities:
+      drop:
+      - ALL
+  
+  # Additional volumes and volume mounts
+  volumes: []
+  volumeMounts: []
+  
+  # Node selector and tolerations
+  nodeSelector: {}
+  tolerations: []
+  
+  # Image pull secrets
+  imagePullSecrets: []
   
   autoscaling:
     enabled: true

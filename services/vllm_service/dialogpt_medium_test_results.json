@@ -1,0 +1,81 @@
+{
+  "model_name": "microsoft/DialoGPT-medium",
+  "display_name": "DialoGPT Medium (1.5B)",
+  "test_timestamp": 1755265950.662724,
+  "business_focus": "social_media_content_generation",
+  "success": true,
+  "load_time_seconds": 13.507497787475586,
+  "memory_usage_gb": 0.4116668701171875,
+  "device": "mps",
+  "content_results": [
+    {
+      "prompt_type": "twitter",
+      "prompt": "Write a Twitter thread about AI cost optimization for startups:",
+      "generated_content": "how to run into this problem. C",
+      "inference_time_ms": 906.1429500579834,
+      "tokens_generated": 7,
+      "content_quality_score": 3.0,
+      "device": "mps"
+    },
+    {
+      "prompt_type": "linkedin",
+      "prompt": "Create a LinkedIn post about Apple Silicon for ML engineers:",
+      "generated_content": "",
+      "inference_time_ms": 11.663198471069336,
+      "tokens_generated": 0,
+      "content_quality_score": 3.0,
+      "device": "mps"
+    },
+    {
+      "prompt_type": "social",
+      "prompt": "Draft a professional response to 'What's your AI strategy?':",
+      "generated_content": "P",
+      "inference_time_ms": 333.68802070617676,
+      "tokens_generated": 1,
+      "content_quality_score": 3.0,
+      "device": "mps"
+    },
+    {
+      "prompt_type": "social",
+      "prompt": "Explain vLLM benefits for local deployment:",
+      "generated_content": "Networking, virtualization, and or some other benefits, but I don't think that was covered.",
+      "inference_time_ms": 442.716121673584,
+      "tokens_generated": 14,
+      "content_quality_score": 5.0,
+      "device": "mps"
+    },
+    {
+      "prompt_type": "technical",
+      "prompt": "Write a dev.to article intro about model optimization:",
+      "generated_content": "Xcode 7.0. 10.5",
+      "inference_time_ms": 124.5567798614502,
+      "tokens_generated": 3,
+      "content_quality_score": 3.0,
+      "device": "mps"
+    },
+    {
+      "prompt_type": "dev_article",
+      "prompt": "Create documentation for Apple Silicon ML setup:",
+      "generated_content": "Microsoft Excel WebApps",
+      "inference_time_ms": 182.8470230102539,
+      "tokens_generated": 3,
+      "content_quality_score": 3.0,
+      "device": "mps"
+    }
+  ],
+  "business_metrics": {
+    "average_latency_ms": 333.6023489634196,
+    "average_content_quality": 3.3333333333333335,
+    "tokens_per_second": 13.98871045472878,
+    "social_media_performance": {
+      "test_count": 4,
+      "avg_latency_ms": 423.55257272720337,
+      "avg_quality": 3.5
+    },
+    "technical_content_performance": {
+      "test_count": 2,
+      "avg_latency_ms": 153.70190143585205,
+      "avg_quality": 3.0
+    }
+  }
+}

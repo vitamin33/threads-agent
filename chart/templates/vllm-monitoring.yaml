@@ -1,0 +1,289 @@
+{{- if and .Values.vllmService.enabled .Values.vllmService.monitoring.enabled }}
+# ServiceMonitor for Prometheus scraping
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      {{- include "threads-agent.selectorLabels" . | nindent 6 }}
+      component: vllm-service
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: {{ .Values.vllmService.monitoring.scrapeInterval }}
+    scrapeTimeout: {{ .Values.vllmService.monitoring.scrapeTimeout }}
+    honorLabels: true
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: instance
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: component
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: kubernetes_namespace
+---
+# PrometheusRule for vLLM-specific alerts
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service-alerts
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+    release: prometheus
+spec:
+  groups:
+  - name: vllm-service-performance
+    interval: {{ .Values.vllmService.monitoring.alerting.evaluationInterval }}
+    rules:
+    # Critical: Latency target not met
+    - alert: VLLMLatencyTargetMissed
+      expr: |
+        (
+          histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m])) > {{ .Values.vllmService.monitoring.latencyTargetMs | float64 | div 1000 }}
+        ) and (
+          rate(vllm_requests_total[5m]) > 0.1
+        )
+      for: {{ .Values.vllmService.monitoring.alerting.latencyAlert.duration }}
+      labels:
+        severity: critical
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM service latency exceeds target"
+        description: "vLLM service 95th percentile latency is {{ "{{ $value | humanizeDuration }}" }}, exceeding target of {{ .Values.vllmService.monitoring.latencyTargetMs }}ms"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMLatencyTroubleshooting"
+    
+    # Warning: Cost savings below target
+    - alert: VLLMCostSavingsLow
+      expr: |
+        (
+          sum(rate(vllm_cost_savings_usd[10m])) / sum(rate(vllm_requests_total[10m])) * 100
+        ) < {{ .Values.vllmService.monitoring.costSavingsTargetPercent }}
+      for: {{ .Values.vllmService.monitoring.alerting.costAlert.duration }}
+      labels:
+        severity: warning
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM cost savings below target"
+        description: "vLLM cost savings are {{ "{{ $value | humanizePercentage }}" }}, below target of {{ .Values.vllmService.monitoring.costSavingsTargetPercent }}%"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMCostOptimization"
+    
+    # Critical: Service down
+    - alert: VLLMServiceDown
+      expr: up{job="vllm-service"} == 0
+      for: {{ .Values.vllmService.monitoring.alerting.downAlert.duration }}
+      labels:
+        severity: critical
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM service is down"
+        description: "vLLM service has been down for more than {{ .Values.vllmService.monitoring.alerting.downAlert.duration }}"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMServiceRecovery"
+    
+    # Warning: High error rate
+    - alert: VLLMHighErrorRate
+      expr: |
+        (
+          sum(rate(vllm_requests_total{status="error"}[5m])) / 
+          sum(rate(vllm_requests_total[5m]))
+        ) > {{ .Values.vllmService.monitoring.alerting.errorRateThreshold }}
+      for: {{ .Values.vllmService.monitoring.alerting.errorAlert.duration }}
+      labels:
+        severity: warning
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM service high error rate"
+        description: "vLLM service error rate is {{ "{{ $value | humanizePercentage }}" }}, above threshold of {{ .Values.vllmService.monitoring.alerting.errorRateThreshold | mul 100 }}%"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMErrorDebugging"
+    
+    # Warning: Circuit breaker triggered
+    - alert: VLLMCircuitBreakerOpen
+      expr: increase(vllm_circuit_breaker_open_total[5m]) > 0
+      for: 1m
+      labels:
+        severity: warning
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM circuit breaker activated"
+        description: "vLLM circuit breaker has been triggered {{ "{{ $value }}" }} times in the last 5 minutes"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMCircuitBreaker"
+    
+    # Info: Apple Silicon optimization active
+    - alert: VLLMAppleSiliconOptimization
+      expr: rate(vllm_apple_silicon_requests_total[5m]) > 0
+      for: 5m
+      labels:
+        severity: info
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM Apple Silicon optimization active"
+        description: "vLLM is successfully using Apple Silicon optimizations with {{ "{{ $value }}" }} requests/sec"
+    
+  - name: vllm-service-capacity
+    interval: {{ .Values.vllmService.monitoring.alerting.evaluationInterval }}
+    rules:
+    # Warning: High memory usage
+    - alert: VLLMHighMemoryUsage
+      expr: |
+        (
+          container_memory_working_set_bytes{pod=~".*vllm-service.*"} / 
+          container_spec_memory_limit_bytes{pod=~".*vllm-service.*"}
+        ) > {{ .Values.vllmService.monitoring.alerting.memoryThreshold }}
+      for: {{ .Values.vllmService.monitoring.alerting.memoryAlert.duration }}
+      labels:
+        severity: warning
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM service high memory usage"
+        description: "vLLM service memory usage is {{ "{{ $value | humanizePercentage }}" }}, above threshold of {{ .Values.vllmService.monitoring.alerting.memoryThreshold | mul 100 }}%"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMMemoryOptimization"
+    
+    # Warning: Model cache miss rate high
+    - alert: VLLMHighCacheMissRate
+      expr: |
+        (
+          1 - (
+            sum(rate(vllm_cache_hits_total[10m])) / 
+            sum(rate(vllm_requests_total[10m]))
+          )
+        ) > {{ .Values.vllmService.monitoring.alerting.cacheMissThreshold }}
+      for: {{ .Values.vllmService.monitoring.alerting.cacheAlert.duration }}
+      labels:
+        severity: warning
+        service: vllm-service
+        tier: ai-inference
+      annotations:
+        summary: "vLLM high cache miss rate"
+        description: "vLLM cache miss rate is {{ "{{ $value | humanizePercentage }}" }}, above threshold of {{ .Values.vllmService.monitoring.alerting.cacheMissThreshold | mul 100 }}%"
+        runbook_url: "https://github.com/threads-agent-stack/threads-agent/wiki/VLLMCacheOptimization"
+---
+# ConfigMap for Grafana dashboard
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-dashboard
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+    grafana_dashboard: "true"
+data:
+  vllm-performance-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "vLLM Service Performance Dashboard",
+        "tags": ["vllm", "ai", "performance", "genai"],
+        "style": "dark",
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Latency Performance",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(vllm_request_duration_seconds_bucket[5m])) * 1000",
+                "legendFormat": "95th Percentile (ms)"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 30},
+                    {"color": "red", "value": 50}
+                  ]
+                },
+                "unit": "ms"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Cost Savings",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(vllm_cost_savings_usd[10m])) / sum(rate(vllm_requests_total[10m])) * 100",
+                "legendFormat": "Savings %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": null},
+                    {"color": "yellow", "value": 30},
+                    {"color": "green", "value": 60}
+                  ]
+                },
+                "unit": "percent"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(vllm_requests_total[2m])",
+                "legendFormat": "{{ "{{status}}" }}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Token Throughput",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(vllm_tokens_generated_total[2m])",
+                "legendFormat": "Tokens/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 5,
+            "title": "Apple Silicon Optimization",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(vllm_apple_silicon_requests_total[5m])",
+                "legendFormat": "Optimized Requests/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ]
+      }
+    }
+{{- end }}

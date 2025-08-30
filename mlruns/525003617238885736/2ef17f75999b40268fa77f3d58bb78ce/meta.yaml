@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/2ef17f75999b40268fa77f3d58bb78ce/artifacts
+end_time: 1756330027552
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: 2ef17f75999b40268fa77f3d58bb78ce
+run_name: gemma-2-9b-it_mlx_generation_20250828_001715
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756329435175
+status: 3
+tags: []
+user_id: vitaliiserbyn

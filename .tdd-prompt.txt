@@ -1,0 +1,18 @@
+Context: Agent a2 working on threads-agent
+Feature: vLLM cost optimization
+Current files: ./demo_monitoring.py ./tests/unit/test_emotion_performance.py ./tests/unit/test_emotion_ml_models.py ./tests/unit/test_openai_wrapper.py ./tests/unit/test_emotion_concurrency.py 
+Recent work: facb04a feat: REAL Apple Silicon Performance Testing - Genuine M4 Max Deployment Results
+dadd9cb feat: Solopreneur-Focused Real Model Deployment - Portfolio Ready Implementation
+
+Generate TDD implementation:
+1. Write failing test that describes the expected behavior
+2. Minimal implementation to make test pass
+3. Refactor for clean code
+
+Focus on:
+- Business logic and AI components (skip simple CRUD)
+- Integration points and API contracts
+- Performance-critical paths
+- Error handling and edge cases
+
+Follow existing test patterns in codebase.

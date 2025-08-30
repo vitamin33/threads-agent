@@ -329,7 +329,11 @@ show_current_status() {
     # Show metrics
     echo ""
     echo "Metrics:"
-    sed -n '/## 📊 Progress Tracking/,/^```$/p' AGENT_FOCUS.md | grep -v '^```$' | tail -n +2
+    if grep -q "## 📊 Progress Tracking" AGENT_FOCUS.md 2>/dev/null; then
+        sed -n '/## 📊 Progress Tracking/,/^```$/p' AGENT_FOCUS.md | grep -v '^```$' | tail -n +2
+    else
+        echo "No metrics tracking section found in AGENT_FOCUS.md"
+    fi
 }
 
 # ═══════════════════════════════════════════════════════

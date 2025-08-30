@@ -1,0 +1,147 @@
+id: "feature-21-1-small-model-integration"
+epic_id: "epic-21-hands-on-mlflow-small-models"
+title: "Small Model Integration with vLLM Service"
+description: |
+  Integrate TinyLlama-1.1B (~2GB), Phi-3.5-mini (~7GB), and Llama-3.2-3B (~6GB) models
+  with existing vLLM service. Enable model switching and comparison with real measurements.
+  Quick setup phase focusing on getting models loaded and basic inference working.
+
+type: "feature"
+status: "planned" 
+priority: "critical"
+phase: "phase_1_quick_setup"
+estimated_hours: 8
+estimated_story_points: 5
+
+acceptance_criteria:
+  - "All 3 small models can be loaded in vLLM service"
+  - "Model switching API endpoint operational"
+  - "Basic inference working for each model"
+  - "Memory usage tracking per model"
+  - "Model loading time measurements"
+
+tasks:
+  - id: "task-21-1-1"
+    title: "Add small model configurations to vLLM service"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: []
+    description: |
+      Update services/vllm_service/model_manager.py to support small models:
+      - TinyLlama-1.1B-Chat-v1.0: microsoft/DialoGPT-small fallback
+      - Phi-3.5-mini-instruct: microsoft/Phi-3-mini-4k-instruct  
+      - Llama-3.2-3B-Instruct: meta-llama/Llama-3.2-3B-Instruct
+    acceptance:
+      - "Model configurations added to ModelManager"
+      - "Model metadata includes size, parameters, expected performance"
+      - "Unit tests pass for model configuration loading"
+
+  - id: "task-21-1-2" 
+    title: "Implement model download and caching system"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: ["task-21-1-1"]
+    description: |
+      Create robust model download with caching:
+      - Check local cache before download
+      - Implement download progress tracking
+      - Handle network failures with retry logic
+      - Verify model integrity after download
+    acceptance:
+      - "Models download automatically on first use"
+      - "Download progress visible in logs"
+      - "Retry logic handles network failures"
+      - "Model integrity verification implemented"
+
+  - id: "task-21-1-3"
+    title: "Add model switching API endpoint"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: ["task-21-1-2"]
+    description: |
+      Add /v1/models/switch endpoint to vLLM service:
+      - POST /v1/models/switch {"model_id": "tinyllama-1.1b"}
+      - Unload current model gracefully
+      - Load new model with memory optimization
+      - Return model switch status and metrics
+    acceptance:
+      - "Model switching endpoint functional"
+      - "Graceful model unloading prevents memory leaks"
+      - "Switch status includes timing and memory metrics"
+      - "Error handling for invalid model IDs"
+
+  - id: "task-21-1-4"
+    title: "Implement memory usage tracking per model"
+    type: "implementation"
+    estimated_hours: 1
+    dependencies: ["task-21-1-3"]
+    description: |
+      Add memory tracking to ModelManager:
+      - Track GPU memory usage per model
+      - Monitor RAM consumption during loading
+      - Calculate memory efficiency metrics
+      - Export memory metrics to Prometheus
+    acceptance:
+      - "Memory tracking works for each model"
+      - "Prometheus metrics include memory usage"
+      - "Memory efficiency calculations accurate"
+      - "Memory leak detection functional"
+
+  - id: "task-21-1-5"
+    title: "Create model comparison utility endpoints"
+    type: "implementation"
+    estimated_hours: 1
+    dependencies: ["task-21-1-4"]
+    description: |
+      Add utility endpoints for model comparison:
+      - GET /v1/models/list - List available models with specs
+      - GET /v1/models/current - Current model info and stats
+      - GET /v1/models/compare - Side-by-side model comparison
+    acceptance:
+      - "Model listing endpoint returns accurate info"
+      - "Current model endpoint shows real-time stats"
+      - "Compare endpoint enables side-by-side analysis"
+      - "All endpoints include performance metrics"
+
+test_requirements:
+  unit_tests:
+    - "test_small_model_configurations"
+    - "test_model_download_and_caching"
+    - "test_model_switching_endpoint"
+    - "test_memory_tracking_accuracy"
+    - "test_comparison_utility_endpoints"
+    
+  integration_tests:
+    - "test_e2e_model_switching"
+    - "test_model_loading_performance" 
+    - "test_memory_usage_under_load"
+    - "test_model_comparison_accuracy"
+
+monitoring_requirements:
+  prometheus_metrics:
+    - "vllm_model_load_duration_seconds{model}"
+    - "vllm_model_memory_usage_bytes{model, type}"
+    - "vllm_model_switch_total{from_model, to_model}"
+    - "vllm_model_download_status{model, status}"
+    
+  grafana_dashboards:
+    - "Small Models Performance Comparison"
+    - "Model Memory Usage Tracking"
+    - "Model Loading and Switching Metrics"
+
+deployment_requirements:
+  kubernetes_updates:
+    - "Increase memory limits for multiple models"
+    - "Add model storage volume mounts"
+    - "Update health check for model readiness"
+    
+  configuration:
+    - "Add VLLM_SMALL_MODELS_ENABLED=true"
+    - "Set VLLM_MODEL_CACHE_DIR=/models/cache"
+    - "Configure VLLM_DEFAULT_SMALL_MODEL=tinyllama-1.1b"
+
+documentation:
+  - "Small Models Integration Guide"
+  - "Model Switching API Documentation" 
+  - "Memory Usage Optimization Tips"
+  - "Troubleshooting Model Loading Issues"

@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/enhanced_business_mlflow/877356310361965032/255ed93d44624a7da6059ed44be258da/artifacts
+end_time: 1755274492462
+entry_point_name: ''
+experiment_id: '877356310361965032'
+lifecycle_stage: active
+run_id: 255ed93d44624a7da6059ed44be258da
+run_name: enhanced_TinyLlama-1.1B_20250815_191432
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755274472396
+status: 3
+tags: []
+user_id: vitaliiserbyn

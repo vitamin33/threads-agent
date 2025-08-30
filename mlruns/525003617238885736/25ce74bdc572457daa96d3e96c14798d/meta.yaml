@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/25ce74bdc572457daa96d3e96c14798d/artifacts
+end_time: 1756026861038
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: 25ce74bdc572457daa96d3e96c14798d
+run_name: phi-3.5-instruct_llamacpp_generation_20250824_121420
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756026861014
+status: 3
+tags: []
+user_id: vitaliiserbyn

@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/unified_model_comparison/520432245793831702/65c1228bd54546ce854bdd696b30b169/artifacts
+end_time: 1755271996518
+entry_point_name: ''
+experiment_id: '520432245793831702'
+lifecycle_stage: active
+run_id: 65c1228bd54546ce854bdd696b30b169
+run_name: unified_test_TinyLlama-1.1B_20250815_183253
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755271973537
+status: 3
+tags: []
+user_id: vitaliiserbyn

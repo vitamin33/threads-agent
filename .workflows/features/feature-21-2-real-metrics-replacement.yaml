@@ -1,0 +1,132 @@
+id: "feature-21-2-real-metrics-replacement"
+epic_id: "epic-21-hands-on-mlflow-small-models"
+title: "Real Metrics Replacement System"
+description: |
+  Replace all simulated/theoretical metrics with real measurements from small models.
+  Implement comprehensive measurement collection for latency, quality, cost, and performance.
+  Create baseline measurements that can be used for comparison and optimization.
+
+type: "feature"
+status: "planned"
+priority: "critical" 
+phase: "phase_1_quick_setup"
+estimated_hours: 7
+estimated_story_points: 5
+
+acceptance_criteria:
+  - "All simulated metrics replaced with real measurements"
+  - "Latency measurements accurate to sub-millisecond precision"
+  - "Quality scoring based on actual model outputs"
+  - "Cost calculations using real resource usage"
+  - "Performance baselines established for all models"
+
+tasks:
+  - id: "task-21-2-1"
+    title: "Implement high-precision latency measurement"
+    type: "implementation"
+    estimated_hours: 2
+    dependencies: []
+    description: |
+      Replace simulated latency with real measurements:
+      - Use high-resolution timing (time.perf_counter())
+      - Measure different phases: loading, preprocessing, inference, postprocessing
+      - Track first-token latency vs total completion time
+      - Implement warmup detection and cold-start measurement
+    acceptance:
+      - "Sub-millisecond precision latency measurement"
+      - "Separate timing for each inference phase"
+      - "Cold start vs warmed-up model detection"
+      - "Latency percentiles (p50, p95, p99) calculation"
+
+  - id: "task-21-2-2"
+    title: "Create real-time quality evaluation system"
+    type: "implementation"  
+    estimated_hours: 2
+    dependencies: ["task-21-2-1"]
+    description: |
+      Implement actual quality scoring using multiple metrics:
+      - Coherence score using sentence transformers
+      - Relevance scoring against input prompts
+      - Grammar and fluency detection
+      - Social media engagement prediction scoring
+    acceptance:
+      - "Quality metrics calculated from actual outputs"
+      - "Multiple quality dimensions measured"
+      - "Quality scores normalized 0-1 scale"
+      - "Quality baseline established per model"
+
+  - id: "task-21-2-3"
+    title: "Implement resource-based cost calculation"
+    type: "implementation"
+    estimated_hours: 1.5
+    dependencies: ["task-21-2-2"]
+    description: |
+      Calculate real costs based on resource usage:
+      - GPU utilization during inference
+      - Memory consumption per token generated
+      - Energy usage estimation on Apple Silicon
+      - Amortized model loading costs
+    acceptance:
+      - "Cost calculations based on actual resource usage"
+      - "Per-token cost calculation accurate"
+      - "Energy usage estimation implemented"
+      - "Cost comparison baseline established"
+
+  - id: "task-21-2-4" 
+    title: "Create performance benchmark suite"
+    type: "implementation"
+    estimated_hours: 1.5
+    dependencies: ["task-21-2-3"]
+    description: |
+      Implement comprehensive performance testing:
+      - Throughput measurement (tokens/second)
+      - Concurrent request handling
+      - Memory efficiency under load
+      - Stability testing over extended periods
+    acceptance:
+      - "Throughput measurements across different loads"
+      - "Concurrent processing performance tracked"
+      - "Memory efficiency metrics calculated"
+      - "Stability baseline established"
+
+test_requirements:
+  unit_tests:
+    - "test_latency_measurement_precision"
+    - "test_quality_evaluation_accuracy" 
+    - "test_cost_calculation_correctness"
+    - "test_performance_benchmark_reliability"
+    
+  integration_tests:
+    - "test_end_to_end_metrics_collection"
+    - "test_metrics_accuracy_validation"
+    - "test_baseline_establishment"
+
+monitoring_requirements:
+  prometheus_metrics:
+    - "vllm_inference_latency_seconds{model, phase}"
+    - "vllm_quality_score{model, dimension}"
+    - "vllm_cost_per_token_usd{model}"
+    - "vllm_throughput_tokens_per_second{model}"
+    - "vllm_memory_efficiency_ratio{model}"
+    
+  grafana_dashboards:
+    - "Real Metrics vs Previous Simulated"
+    - "Model Performance Comparison"
+    - "Cost Efficiency Analysis"
+
+deployment_requirements:
+  kubernetes_updates:
+    - "Add metrics collection sidecar"
+    - "Configure Prometheus scraping intervals"
+    - "Set up metrics retention policies"
+    
+  configuration:
+    - "ENABLE_REAL_METRICS=true"
+    - "METRICS_COLLECTION_INTERVAL=1s"
+    - "QUALITY_EVALUATION_ENABLED=true"
+
+documentation:
+  - "Real Metrics Implementation Guide"
+  - "Quality Evaluation Methodology"
+  - "Cost Calculation Documentation"
+  - "Performance Baseline Interpretation"

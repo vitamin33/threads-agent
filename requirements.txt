@@ -1,23 +1,65 @@
-# requirements.txt
-fastapi~=0.111           # tiny health stub
-uvicorn[standard]~=0.29  # ASGI server
-pydantic>=2.7.0          # data models (FastAPI peer) - v2 for compatibility
-pydantic-settings>=2.0.0 # Settings management
-requests>=2.31           # already used by linear_mark_done.py
-celery~=5.4
-kombu~=5.3
-cachetools>=5.3.0        # LRU cache for viral_engine
-scikit-learn>=1.3.0      # ML for engagement predictor
-numpy>=1.24.0           # Numerical computations
-nltk>=3.8.1             # Natural language processing
+# Threads Agent Requirements
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.4.2
+pydantic-settings>=2.0.3
+python-multipart>=0.0.6
+httpx>=0.25.1
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+redis>=5.0.1
+openai>=1.3.5
+langchain>=0.0.335
+langchain-openai>=0.0.2
+langchain-community>=0.0.6
+prometheus-client>=0.19.0
+psutil>=5.9.6
+python-dotenv>=1.0.0
+celery>=5.3.4
+watchdog>=3.0.0
+sqlalchemy>=2.0.23
+alembic>=1.12.1
+asyncpg>=0.29.0
+qdrant-client>=1.6.9
+sentence-transformers>=2.2.2
+pandas>=2.1.3
+numpy>=1.25.2
+scikit-learn>=1.3.2
+matplotlib>=3.8.2
+seaborn>=0.13.0
+tenacity>=8.2.3
+asyncio-throttle>=1.0.2
+vllm>=0.2.2
+torch>=2.1.1
+transformers>=4.35.2
 
-# Revenue service dependencies
-stripe>=7.12.0           # Stripe payment processing
-email-validator>=2.1.1   # Email validation for lead capture
-psycopg2-binary>=2.9.9   # PostgreSQL adapter
-alembic>=1.13.1          # Database migrations
+# Apple Silicon Local LM Evaluation Suite Requirements
+
+# Core ML libraries
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
 
 # MLflow experiment tracking
-mlflow>=2.9.0            # Experiment tracking for LLM calls
-psutil>=5.9.0            # System and process monitoring for performance tests
-redis>=5.0.0             # Redis client for caching in fine-tuning pipeline
+mlflow>=2.0.0
+scipy>=1.10.0
+
+# Performance monitoring
+psutil>=5.9.0
+numpy>=1.24.0
+
+# API clients for judging
+openai>=1.0.0
+anthropic>=0.3.0
+
+# Data processing
+pandas>=2.0.0
+pyyaml>=6.0.0
+
+# Optional: MLX for Apple Silicon
+# mlx-lm>=0.1.0  # Uncomment if available
+
+# Development
+pytest>=7.0.0
+black>=23.0.0
+mypy>=1.0.0

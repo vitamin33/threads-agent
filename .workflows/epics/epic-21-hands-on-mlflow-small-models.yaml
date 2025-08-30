@@ -1,0 +1,205 @@
+id: "epic-21-hands-on-mlflow-small-models"
+title: "Hands-On MLflow Experience with Small Model Comparison Framework"
+description: |
+  Transform theoretical MLflow implementation into hands-on, measured system using small models (TinyLlama-1.1B, Phi-3.5-mini, Llama-3.2-3B).
+  Replace simulated metrics with real measurements, implement comprehensive model comparison framework,
+  and create A/B testing pipeline for social media optimization. Focus on practical MLflow experience
+  for GenAI Engineer portfolio demonstration.
+
+type: "epic"
+status: "planned"
+priority: "critical"
+target_date: "2025-08-20"
+estimated_hours: 400
+estimated_story_points: 100
+
+business_value:
+  portfolio_impact: "$75,000+ salary increase potential through hands-on MLflow expertise demonstration"
+  cost_optimization: "$45,000 annually from optimized model selection and fine-tuning efficiency"
+  learning_acceleration: "200% improvement in MLflow competency through real measurements vs theory"
+  practical_skills: "Complete MLflow model registry, experiment tracking, and A/B testing experience"
+
+kpi_targets:
+  model_comparison_accuracy: 0.95
+  mlflow_experiment_tracking_completeness: 1.0
+  cost_per_inference_optimization: 0.30
+  social_media_quality_improvement: 0.25
+  a_b_testing_statistical_significance: 0.95
+  fine_tuning_performance_gain: 0.20
+
+success_metrics:
+  - metric: "real_vs_simulated_metrics_replacement"
+    target: "100%"
+  - metric: "model_comparison_framework_completeness"
+    target: "100%"
+  - metric: "mlflow_hands_on_experience_score" 
+    target: "95%"
+  - metric: "portfolio_demonstration_readiness"
+    target: "100%"
+
+breakdown_strategy:
+  max_feature_size: "medium"
+  parallel_features: 4
+  dependency_management: "sequential_phases"
+  implementation_approach: "incremental_value"
+
+# Phase 1: Foundation (Hours 1-15) - Quick Setup for Basic Comparison
+phase_1_quick_setup:
+  timeline: "40-60 minutes"
+  goal: "Basic model comparison with real metrics"
+  features:
+    - "feature-21-1-small-model-integration"
+    - "feature-21-2-real-metrics-replacement"
+
+# Phase 2: MLflow Integration (Hours 16-100) - Core Hands-On Experience  
+phase_2_mlflow_core:
+  timeline: "4-6 hours"
+  goal: "Complete MLflow model registry and experiment tracking"
+  features:
+    - "feature-21-3-mlflow-experiment-tracking-system"
+    - "feature-21-4-model-registry-management"
+
+# Phase 3: Advanced Comparison (Hours 101-200) - Comprehensive Analysis
+phase_3_advanced_analysis:
+  timeline: "8-12 hours"
+  goal: "Advanced model comparison and optimization"
+  features:
+    - "feature-21-5-performance-benchmarking-suite"
+    - "feature-21-6-social-media-optimization-testing"
+
+# Phase 4: Production Features (Hours 201-320) - A/B Testing & Fine-Tuning
+phase_4_production:
+  timeline: "12-16 hours"
+  goal: "Production-ready A/B testing and fine-tuning"
+  features:
+    - "feature-21-7-ab-testing-framework"
+    - "feature-21-8-automated-fine-tuning-pipeline"
+
+# Phase 5: Portfolio & Documentation (Hours 321-400) - Demonstration Ready
+phase_5_portfolio:
+  timeline: "6-8 hours"
+  goal: "Portfolio artifacts and comprehensive documentation"
+  features:
+    - "feature-21-9-mlflow-dashboard-integration"
+    - "feature-21-10-portfolio-documentation-generator"
+
+features:
+  - "feature-21-1-small-model-integration"
+  - "feature-21-2-real-metrics-replacement"
+  - "feature-21-3-mlflow-experiment-tracking-system"
+  - "feature-21-4-model-registry-management"
+  - "feature-21-5-performance-benchmarking-suite"
+  - "feature-21-6-social-media-optimization-testing"
+  - "feature-21-7-ab-testing-framework"
+  - "feature-21-8-automated-fine-tuning-pipeline"
+  - "feature-21-9-mlflow-dashboard-integration"
+  - "feature-21-10-portfolio-documentation-generator"
+
+milestones:
+  - name: "Quick Model Comparison Ready"
+    date: "2025-08-14"
+    features: ["feature-21-1", "feature-21-2"]
+    success_criteria: "TinyLlama and Phi-3.5-mini running with real latency/quality metrics"
+    
+  - name: "MLflow Core Experience Complete"
+    date: "2025-08-15"
+    features: ["feature-21-3", "feature-21-4"]
+    success_criteria: "Model registry with 3+ models, experiment tracking operational"
+    
+  - name: "Advanced Analysis Framework Ready"
+    date: "2025-08-17"
+    features: ["feature-21-5", "feature-21-6"]
+    success_criteria: "Comprehensive benchmarking, social media quality testing complete"
+    
+  - name: "Production A/B Testing Operational"
+    date: "2025-08-19"
+    features: ["feature-21-7", "feature-21-8"]
+    success_criteria: "Statistical A/B testing, automated fine-tuning working"
+    
+  - name: "Portfolio Demonstration Ready"
+    date: "2025-08-20"
+    features: ["feature-21-9", "feature-21-10"]
+    success_criteria: "Complete MLflow dashboard, portfolio artifacts generated"
+
+dependencies:
+  technical:
+    - "services/vllm_service (existing) - Foundation for model serving"
+    - "services/common/mlflow_tracking.py (existing) - MLflow infrastructure"
+    - "services/orchestrator (existing) - API coordination"
+    - "k3d Kubernetes cluster (existing) - Deployment platform"
+    - "Prometheus/Grafana (existing) - Metrics collection"
+    
+  hardware_requirements:
+    - "MacBook M4 Max - Required for efficient small model inference"
+    - "32GB+ RAM - For loading multiple models simultaneously"
+    - "Storage: ~20GB - For model downloads and MLflow artifacts"
+    
+  external_services:
+    - "Hugging Face Hub - Model downloads"
+    - "MLflow Tracking Server - Experiment storage"
+    - "Optional: WandB integration - Enhanced experiment visualization"
+
+risk_analysis:
+  high_risks:
+    - risk: "Model download/loading failures"
+      mitigation: "Implement download retry logic, fallback models"
+      impact: "Delays in Phase 1"
+      
+    - risk: "Memory constraints with multiple models"
+      mitigation: "Implement model unloading, sequential comparison"
+      impact: "Performance reduction"
+      
+  medium_risks:
+    - risk: "MLflow server configuration issues"
+      mitigation: "Use local SQLite backend, Docker fallback"
+      impact: "Phase 2 delays"
+      
+    - risk: "Statistical significance challenges in A/B testing"
+      mitigation: "Use synthetic data generation, longer test periods"
+      impact: "Phase 4 accuracy"
+
+learning_objectives:
+  mlflow_expertise:
+    - "Model registry management (versioning, staging, production)"
+    - "Experiment tracking with parameters, metrics, artifacts"
+    - "Model comparison and selection workflows"
+    - "Integration with existing services and infrastructure"
+    
+  genai_engineering:
+    - "Small model optimization and deployment"
+    - "Quality evaluation methodologies"
+    - "Cost-performance tradeoff analysis"
+    - "Fine-tuning pipeline automation"
+    
+  production_skills:
+    - "A/B testing with statistical validation"
+    - "Automated model evaluation and promotion"
+    - "Performance monitoring and alerting"
+    - "Documentation and portfolio presentation"
+
+portfolio_artifacts:
+  demonstrations:
+    - "Live MLflow UI showing 3+ model experiments"
+    - "Grafana dashboard with real performance metrics"
+    - "Social media post generation comparison results"
+    - "A/B testing results with statistical significance"
+    
+  documentation:
+    - "Model comparison methodology and results"
+    - "MLflow integration architecture diagrams"
+    - "Performance optimization case studies"
+    - "Fine-tuning pipeline documentation"
+    
+  code_examples:
+    - "MLflow experiment tracking implementation"
+    - "Model registry automation scripts"
+    - "Quality evaluation framework"
+    - "A/B testing statistical analysis"
+
+automation:
+  tracking: "mlflow"
+  reporting: "daily"
+  notifications: ["slack", "dashboard"]
+  ci_cd_integration: true
+  automated_testing: true
+  performance_monitoring: true

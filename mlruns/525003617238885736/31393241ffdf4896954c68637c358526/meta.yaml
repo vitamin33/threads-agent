@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/31393241ffdf4896954c68637c358526/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: 31393241ffdf4896954c68637c358526
+run_name: opt-2.7b_mps_generation_20250822_184842
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755877723079
+status: 1
+tags: []
+user_id: vitaliiserbyn

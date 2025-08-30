@@ -1,0 +1,255 @@
+{{- if and .Values.vllmService.enabled .Values.vllmService.security.enabled }}
+# ServiceAccount for vLLM service
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+  {{- with .Values.vllmService.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+automountServiceAccountToken: {{ .Values.vllmService.serviceAccount.automount }}
+---
+# Role for vLLM service operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+rules:
+# Read access to own pods for health checking
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+  resourceNames: []
+# Read access to configmaps for configuration
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list"]
+  resourceNames: 
+  - {{ include "threads-agent.fullname" . }}-vllm-config
+# Read access to secrets for model authentication
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+  resourceNames:
+  - {{ include "threads-agent.fullname" . }}-openai-secret
+  - {{ include "threads-agent.fullname" . }}-vllm-model-secret
+# Access to metrics endpoints
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["get", "list"]
+---
+# RoleBinding for vLLM service
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+subjects:
+- kind: ServiceAccount
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  namespace: {{ .Release.Namespace }}
+---
+{{- if .Values.vllmService.security.networkPolicy.enabled }}
+# NetworkPolicy for vLLM service security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "threads-agent.selectorLabels" . | nindent 6 }}
+      component: vllm-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from orchestrator service
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "threads-agent.selectorLabels" . | nindent 10 }}
+          component: orchestrator
+    ports:
+    - protocol: TCP
+      port: 8090
+  # Allow traffic from rag-pipeline service
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "threads-agent.selectorLabels" . | nindent 10 }}
+          component: rag-pipeline
+    ports:
+    - protocol: TCP
+      port: 8090
+  # Allow traffic from Prometheus for metrics scraping
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "threads-agent.selectorLabels" . | nindent 10 }}
+          component: prometheus
+    ports:
+    - protocol: TCP
+      port: 8090
+  # Allow traffic from Grafana for health checks
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "threads-agent.selectorLabels" . | nindent 10 }}
+          component: grafana
+    ports:
+    - protocol: TCP
+      port: 8090
+  # Allow traffic from ingress controller
+  {{- if .Values.vllmService.ingress.enabled }}
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8090
+  {{- end }}
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow access to PostgreSQL database
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "threads-agent.selectorLabels" . | nindent 10 }}
+          component: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Redis cache
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "threads-agent.selectorLabels" . | nindent 10 }}
+          component: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow access to external model repositories (HuggingFace, etc.)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+  # Allow access to OpenAI API for fallback
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}
+---
+{{- if .Values.vllmService.security.podSecurityPolicy.enabled }}
+# PodSecurityPolicy for vLLM service
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+  readOnlyRootFilesystem: false
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+---
+# ClusterRole for PodSecurityPolicy usage
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-psp
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs: ['use']
+  resourceNames:
+  - {{ include "threads-agent.fullname" . }}-vllm-service
+---
+# ClusterRoleBinding for PodSecurityPolicy
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-psp
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+roleRef:
+  kind: ClusterRole
+  name: {{ include "threads-agent.fullname" . }}-vllm-psp
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: {{ include "threads-agent.fullname" . }}-vllm-service
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+---
+# Secret for model authentication and configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "threads-agent.fullname" . }}-vllm-model-secret
+  labels:
+    {{- include "threads-agent.labels" . | nindent 4 }}
+    component: vllm-service
+type: Opaque
+data:
+  {{- if .Values.vllmService.model.huggingfaceToken }}
+  huggingface-token: {{ .Values.vllmService.model.huggingfaceToken | b64enc }}
+  {{- end }}
+  {{- if .Values.vllmService.model.customModelKey }}
+  custom-model-key: {{ .Values.vllmService.model.customModelKey | b64enc }}
+  {{- end }}
+  # Configuration for model optimization
+  model-config: {{ .Values.vllmService.model.config | toJson | b64enc }}
+{{- end }}

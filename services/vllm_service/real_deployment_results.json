@@ -1,0 +1,17 @@
+{
+  "environment": {
+    "platform": "Darwin arm64",
+    "apple_silicon": true,
+    "memory_gb": 36.0,
+    "dependencies": {
+      "torch": "2.8.0",
+      "mps_available": true,
+      "transformers": "4.55.0",
+      "huggingface_hub": "0.34.4"
+    }
+  },
+  "download": {
+    "success": false,
+    "error": "401 Client Error. (Request ID: Root=1-689f1d63-7a3686830b9aae9320b98183;52729eea-3dc4-44ef-9de5-9562732e4771)\n\nRepository Not Found for url: https://huggingface.co/api/models/meta-llama/Llama-3.1-3B-Instruct/revision/main.\nPlease make sure you specified the correct `repo_id` and `repo_type`.\nIf you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication\nInvalid username or password."
+  }
+}

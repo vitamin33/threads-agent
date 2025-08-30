@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/business_mlruns/788306403809758841/452d2e069cd140568751f34a95788766/artifacts
+end_time: 1755267283824
+entry_point_name: ''
+experiment_id: '788306403809758841'
+lifecycle_stage: active
+run_id: 452d2e069cd140568751f34a95788766
+run_name: real_performance_DialoGPT Medium (1.5B)_20250815_171443
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755267283807
+status: 3
+tags: []
+user_id: vitaliiserbyn

@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/business_mlruns/788306403809758841/52edf070669f442aab85c2892455faf9/artifacts
+end_time: 1755267283835
+entry_point_name: ''
+experiment_id: '788306403809758841'
+lifecycle_stage: active
+run_id: 52edf070669f442aab85c2892455faf9
+run_name: business_model_selection_summary
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755267283831
+status: 3
+tags: []
+user_id: vitaliiserbyn

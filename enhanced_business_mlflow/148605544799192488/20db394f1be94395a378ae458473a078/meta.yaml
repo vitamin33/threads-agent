@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/enhanced_business_mlflow/148605544799192488/20db394f1be94395a378ae458473a078/artifacts
+end_time: 1755696826875
+entry_point_name: ''
+experiment_id: '148605544799192488'
+lifecycle_stage: active
+run_id: 20db394f1be94395a378ae458473a078
+run_name: ollama_mistral_vs_champion_20250820_163312
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755696792240
+status: 3
+tags: []
+user_id: vitaliiserbyn

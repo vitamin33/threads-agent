@@ -1,23 +1,42 @@
-# For demo purposes, we'll simulate vLLM without heavy dependencies
-# In production, this would include: vllm==0.5.5, transformers==4.44.0, torch==2.4.0
-# For interview demo, we focus on architecture and cost comparison
+# CI-compatible vLLM service dependencies
+# Optimized for both CI and production environments
+
+# Core dependencies (CI-safe versions)
+transformers>=4.30.0,<5.0.0
+torch>=2.0.0,<3.0.0
+# Note: vLLM and hardware-specific packages excluded from CI builds
 
 # FastAPI and async
-fastapi==0.111.*
-uvicorn==0.30.*
-pydantic>=2.7.0,<3.0.0
+fastapi>=0.100.0,<0.120.0
+uvicorn>=0.20.0,<0.35.0
+pydantic>=2.0.0,<3.0.0
 
 # Monitoring and metrics
-prometheus-client==0.19.0
-opentelemetry-api==1.22.0
-opentelemetry-sdk==1.22.0
-opentelemetry-instrumentation-fastapi==0.43b0
+prometheus-client>=0.15.0,<1.0.0
+opentelemetry-api>=1.20.0,<2.0.0
+opentelemetry-sdk>=1.20.0,<2.0.0
 
-# Utilities
-httpx==0.25.2
-aioredis==2.0.1
-python-multipart>=0.0.7
+# Circuit breakers and resilience
+tenacity>=8.0.0,<10.0.0
 
-# Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
+# Memory management and monitoring (CI-compatible)
+psutil>=5.9.0,<7.0.0
+
+# Essential utilities
+httpx>=0.24.0,<0.28.0
+python-multipart>=0.0.6
+
+# Configuration management
+pyyaml>=6.0.0,<7.0.0
+
+# Testing framework
+pytest>=7.0.0,<8.0.0
+pytest-asyncio>=0.20.0,<1.0.0
+
+# Data processing (lighter versions for CI)
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+
+# Note: Hardware-specific packages like bitsandbytes, accelerate, GPUtil
+# are excluded to prevent CI build failures on Linux runners.
+# These should be installed separately in production environments.

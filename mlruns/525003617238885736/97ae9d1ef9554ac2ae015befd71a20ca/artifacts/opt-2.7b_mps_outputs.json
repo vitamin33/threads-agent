@@ -1,0 +1,124 @@
+{
+  "linkedin_smoke": [
+    {
+      "content": "The post should include the following:\n\nA brief description of the AI technology you are using\n\nA list of the benefits you have seen from using AI\n\nA list of the challenges you have seen from using AI\n\nA list of the steps you are taking to address these challenges\n\nA list of the steps you are taking to address these challenges\n\nA list of the steps you are taking to address these challenges\n\nA list of the steps you are taking to address these challenges\n\nA list of the steps you are taking to address these challenges\n\nA list of the steps you are taking to",
+      "prompt": "Write a LinkedIn post about how AI is transforming modern business operations and improving efficiency.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 17
+    },
+    {
+      "content": "The post should include a link to your LinkedIn profile.\n\nThe post should be no more than 300 words.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile",
+      "prompt": "Write a LinkedIn post about how AI is transforming modern business operations and improving efficiency.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 23
+    },
+    {
+      "content": "The post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn profile.\n\nThe post should include a link to your LinkedIn",
+      "prompt": "Write a LinkedIn post about how AI is transforming modern business operations and improving efficiency.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 42
+    },
+    {
+      "content": "This is a great opportunity to showcase your expertise and build your brand.\n\nYou will be working with a team of experts to create a compelling LinkedIn post that will be shared on LinkedIn, Twitter, and Facebook.\n\nYou will be working with a team of experts to create a compelling LinkedIn post that will be shared on LinkedIn, Twitter, and Facebook.\n\nYou will be working with a team of experts to create a compelling LinkedIn post that will be shared on LinkedIn, Twitter, and Facebook.\n\nYou will be working with a team of experts to create a compelling LinkedIn post that will be shared on LinkedIn, Twitter",
+      "prompt": "Create a professional LinkedIn post discussing the future of remote work and how technology enables distributed teams to collaborate effectively.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 17
+    },
+    {
+      "content": "This is a great opportunity to showcase your expertise and show how you can help your clients.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou can also use this opportunity to highlight your skills and experience.\n\nYou",
+      "prompt": "Create a professional LinkedIn post discussing the future of remote work and how technology enables distributed teams to collaborate effectively.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 23
+    },
+    {
+      "content": "What is a LinkedIn post?\n\nA LinkedIn post is a professional profile that you can create and share on LinkedIn. LinkedIn posts are a great way to share your expertise and connect with others.\n\nLinkedIn posts are a great way to share your expertise and connect with others.\n\nLinkedIn posts are a great way to share your expertise and connect with others.\n\nLinkedIn posts are a great way to share your expertise and connect with others.\n\nLinkedIn posts are a great way to share your expertise and connect with others.\n\nLinkedIn posts are a great way to share your expertise and connect with others.",
+      "prompt": "Create a professional LinkedIn post discussing the future of remote work and how technology enables distributed teams to collaborate effectively.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 42
+    },
+    {
+      "content": "The post will be shared on LinkedIn\u2019s homepage and will be seen by over 200 million people.\n\nThe post will be shared on LinkedIn\u2019s homepage and will be seen by over 200 million people.\n\nThe post will be shared on LinkedIn\u2019s homepage and will be seen by over 200 million people.\n\nThe post will be shared on LinkedIn\u2019s homepage and will be seen by over 200 million people.\n\nThe post will be shared on LinkedIn\u2019s homepage and will be seen by over 200 million people.\n\nThe post will be shared on LinkedIn\u2019s homepage",
+      "prompt": "Draft a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 17
+    },
+    {
+      "content": "2. Create a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\n3. Create a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\n4. Create a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\n5. Create a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\n6. Create a LinkedIn post about the importance of continuous learning in the",
+      "prompt": "Draft a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 23
+    },
+    {
+      "content": "Create a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\nCreate a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\nCreate a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\nCreate a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.\n\nCreate a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging",
+      "prompt": "Draft a LinkedIn post about the importance of continuous learning in the tech industry and how professionals can stay ahead of emerging trends.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 42
+    },
+    {
+      "content": "Create a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.\n\nCreate a LinkedIn post about how to use LinkedIn to build your network.",
+      "prompt": "Write a LinkedIn post about sustainable business practices and how companies can balance profitability with environmental responsibility.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 17
+    },
+    {
+      "content": "Write a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the importance of diversity in the workplace.\n\nWrite a LinkedIn post about the",
+      "prompt": "Write a LinkedIn post about sustainable business practices and how companies can balance profitability with environmental responsibility.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 23
+    },
+    {
+      "content": "This is a great way to get your name out there and to show your commitment to the environment.\n\n2. Write a blog post about how you\u2019re using social media to promote your business.\n\nThis is a great way to get your name out there and to show your commitment to the environment.\n\n3. Write a blog post about how you\u2019re using social media to promote your business.\n\nThis is a great way to get your name out there and to show your commitment to the environment.\n\n4. Write a blog post about how you\u2019re using social media to",
+      "prompt": "Write a LinkedIn post about sustainable business practices and how companies can balance profitability with environmental responsibility.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 42
+    },
+    {
+      "content": "This post will be published on LinkedIn on Thursday, November 8, 2018.\n\nThe world is changing at a rapid pace. The pace of change is accelerating, and the world is becoming increasingly complex.\n\nThe pace of change is accelerating, and the world is becoming increasingly complex.\n\nThe pace of change is accelerating, and the world is becoming increasingly complex.\n\nThe pace of change is accelerating, and the world is becoming increasingly complex.\n\nThe pace of change is accelerating, and the world is becoming increasingly complex.\n\nThe pace of change is accelerating, and the world is becoming increasingly complex.",
+      "prompt": "Create a LinkedIn post discussing the role of data analytics in modern decision-making and how businesses can leverage insights for competitive advantage.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 17
+    },
+    {
+      "content": "The post should include a link to your LinkedIn profile and a link to your resume.\n\nThe post should be no more than 500 words.\n\nThe post should include a link to your LinkedIn profile and a link to your resume.\n\nThe post should be no more than 500 words.\n\nThe post should include a link to your LinkedIn profile and a link to your resume.\n\nThe post should be no more than 500 words.\n\nThe post should include a link to your LinkedIn profile and a link to your resume.\n\nThe post should be no more than 500 words.\n\nThe post",
+      "prompt": "Create a LinkedIn post discussing the role of data analytics in modern decision-making and how businesses can leverage insights for competitive advantage.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 23
+    },
+    {
+      "content": "What is LinkedIn?\n\nLinkedIn is a professional social network that connects people with similar interests and skills. It is a great way to build your network and find new opportunities.\n\nHow to create a LinkedIn post\n\n1. Click on the \u201cCreate a post\u201d button on the top right of the LinkedIn page.\n\n2. Choose a title and a description for your post.\n\n3. Choose a photo and a link to your LinkedIn profile.\n\n4. Add a link to your LinkedIn profile in the \u201cBio\u201d section.\n\n5. Add a link to your LinkedIn",
+      "prompt": "Create a LinkedIn post discussing the role of data analytics in modern decision-making and how businesses can leverage insights for competitive advantage.",
+      "device": "mps",
+      "stack": "mps",
+      "model_id": "opt-2.7b",
+      "seed": 42
+    }
+  ]
+}

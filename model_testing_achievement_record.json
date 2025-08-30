@@ -1,0 +1,152 @@
+{
+  "title": "Enterprise-Grade Language Model Evaluation System with Apple Silicon Optimization",
+  "description": "Designed and implemented comprehensive language model evaluation framework with statistical rigor, testing 6+ models on Apple Silicon M4 Max, achieving 98.6% cost optimization through local deployment with MLflow experiment tracking.",
+  "category": "architecture",
+  "started_at": "2025-08-13T00:00:00",
+  "completed_at": "2025-08-19T17:20:18.730115",
+  "duration_hours": 161.34,
+  "impact_score": 95.0,
+  "complexity_score": 90.0,
+  "time_saved_hours": 40.0,
+  "performance_improvement_pct": 98.6,
+  "business_value": {
+    "cost_optimization": {
+      "annual_savings_usd": 54.13,
+      "cost_reduction_percent": 98.6,
+      "local_vs_api_cost_per_request": {
+        "local": 1.7e-06,
+        "openai_api": 0.00015,
+        "savings_per_request": 0.0001483
+      }
+    },
+    "technical_achievements": {
+      "models_evaluated": 6,
+      "quality_leader_identified": "OPT-2.7B",
+      "validated_quality": "8.40 \u00b1 0.78/10",
+      "statistical_confidence": "95%",
+      "apple_silicon_optimization": "MPS backend validated"
+    },
+    "methodology_value": {
+      "enterprise_grade_framework": true,
+      "statistical_rigor": "confidence_intervals_significance_testing",
+      "sample_size_improvement": "3x increase (5 \u2192 15 prompts)",
+      "mlflow_professional_tracking": "40+ experiments"
+    },
+    "portfolio_impact": {
+      "interview_ready_expertise": true,
+      "measurable_technical_achievements": true,
+      "statistical_methodology_demonstration": true,
+      "apple_silicon_specialization": true
+    }
+  },
+  "source_type": "manual",
+  "source_id": "model_testing_project_2025",
+  "technologies": [
+    "PyTorch 2.8.0",
+    "HuggingFace Transformers 4.55.0",
+    "MLflow 3.2.0",
+    "Apple Silicon MPS",
+    "Statistical Analysis",
+    "Python Performance Monitoring"
+  ],
+  "files_created": [
+    "services/vllm_service/model_registry.py",
+    "services/vllm_service/multi_model_manager.py",
+    "services/vllm_service/model_downloader.py",
+    "services/vllm_service/cache_manager.py",
+    "services/common/model_registry/ (unified architecture)",
+    "docs/model-testing/ (comprehensive documentation)"
+  ],
+  "metrics_tracked": [
+    "inference_latency_ms",
+    "memory_usage_gb",
+    "quality_score_with_confidence_intervals",
+    "cost_savings_percent",
+    "apple_silicon_optimization_metrics",
+    "statistical_validation_metrics"
+  ],
+  "skills_demonstrated": [
+    "Language Model Evaluation",
+    "Apple Silicon Optimization",
+    "Statistical Analysis and Validation",
+    "MLflow MLOps Implementation",
+    "Performance Engineering",
+    "Cost Optimization Analysis",
+    "Multi-Model Architecture Design",
+    "Enterprise-Grade Methodology",
+    "Hardware-Specific Acceleration",
+    "Business Impact Assessment"
+  ],
+  "tags": [
+    "machine-learning",
+    "apple-silicon",
+    "model-evaluation",
+    "cost-optimization",
+    "mlflow",
+    "statistical-analysis",
+    "performance-engineering",
+    "enterprise-methodology"
+  ],
+  "ai_summary": "Implemented comprehensive language model evaluation system with enterprise-grade statistical rigor on Apple Silicon M4 Max. Achieved 98.6% cost optimization through local deployment while maintaining 8.40/10 enterprise content quality. Demonstrates advanced MLOps methodology, Apple Silicon optimization expertise, and statistical validation suitable for senior AI/ML engineering roles.",
+  "ai_impact_analysis": "High business impact through cost optimization (98.6% savings), technical leadership in Apple Silicon ML deployment, and creation of reusable enterprise-grade evaluation methodology. Portfolio value includes professional MLflow tracking, statistical rigor demonstration, and measurable performance optimization.",
+  "ai_technical_analysis": "Technical excellence demonstrated through multi-model architecture design, Apple Silicon MPS optimization, statistical validation with confidence intervals, and professional MLOps implementation. Created production-ready framework suitable for enterprise ML teams.",
+  "portfolio_ready": true,
+  "portfolio_section": "technical_leadership",
+  "display_priority": 95,
+  "detailed_results": {
+    "models_tested": {
+      "OPT-2.7B": {
+        "quality": "8.40 \u00b1 0.78/10",
+        "latency_ms": 1588,
+        "memory_gb": "~5GB",
+        "status": "quality_leader"
+      },
+      "BLOOM-560M": {
+        "quality": "7.70 \u00b1 0.59/10",
+        "latency_ms": 2031,
+        "memory_gb": 0.6,
+        "status": "reliable_alternative"
+      },
+      "TinyLlama-1.1B": {
+        "quality": "5.20 \u00b1 0.10/10",
+        "latency_ms": 1541,
+        "memory_gb": 0.3,
+        "status": "baseline"
+      },
+      "DialoGPT-Medium": {
+        "quality": "1.8/10",
+        "latency_ms": 107,
+        "memory_gb": 0.9,
+        "status": "speed_champion"
+      }
+    },
+    "testing_methodology": {
+      "sample_size_per_model": 15,
+      "statistical_confidence": "95%",
+      "quality_dimensions": 4,
+      "total_experiments": "40+",
+      "mlflow_tracking": "comprehensive"
+    },
+    "apple_silicon_optimization": {
+      "mps_backend_validated": true,
+      "memory_efficiency": "10+ models on 36GB",
+      "fp16_optimization": true,
+      "performance_measurement": "sub_2_second_inference"
+    },
+    "cost_analysis": {
+      "methodology": "real_electricity_usage_vs_api",
+      "m4_max_power_watts": 35,
+      "cost_per_request_local": 1.7e-06,
+      "cost_per_request_openai": 0.00015,
+      "annual_savings_1000_req_day": 54.13
+    }
+  },
+  "interview_highlights": [
+    "Enterprise-grade model evaluation with statistical rigor",
+    "Apple Silicon M4 Max optimization with MPS acceleration",
+    "98.6% cost optimization with measured business impact",
+    "Statistical validation using confidence intervals",
+    "Professional MLflow experiment tracking implementation",
+    "Multi-model architecture with memory constraint management"
+  ]
+}

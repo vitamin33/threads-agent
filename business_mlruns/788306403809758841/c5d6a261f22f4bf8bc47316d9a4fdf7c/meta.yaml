@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/business_mlruns/788306403809758841/c5d6a261f22f4bf8bc47316d9a4fdf7c/artifacts
+end_time: 1755267283831
+entry_point_name: ''
+experiment_id: '788306403809758841'
+lifecycle_stage: active
+run_id: c5d6a261f22f4bf8bc47316d9a4fdf7c
+run_name: comprehensive_test_GPT-Neo-1.3B_20250815_171443
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755267283828
+status: 3
+tags: []
+user_id: vitaliiserbyn

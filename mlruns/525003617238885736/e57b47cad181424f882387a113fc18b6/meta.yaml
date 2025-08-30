@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/e57b47cad181424f882387a113fc18b6/artifacts
+end_time: 1756035051564
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: e57b47cad181424f882387a113fc18b6
+run_name: qwen2.5-7b-instruct_mlx_generation_20250824_142749
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1756034869347
+status: 3
+tags: []
+user_id: vitaliiserbyn

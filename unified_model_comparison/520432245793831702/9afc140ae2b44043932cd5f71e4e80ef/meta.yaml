@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/unified_model_comparison/520432245793831702/9afc140ae2b44043932cd5f71e4e80ef/artifacts
+end_time: 1755271953511
+entry_point_name: ''
+experiment_id: '520432245793831702'
+lifecycle_stage: active
+run_id: 9afc140ae2b44043932cd5f71e4e80ef
+run_name: unified_test_BLOOM-560M_20250815_183231
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755271951352
+status: 3
+tags: []
+user_id: vitaliiserbyn

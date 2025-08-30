@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/vitaliiserbyn/development/wt-a2-genai/mlruns/525003617238885736/16551727ac2942a3bbb797924d8b3799/artifacts
+end_time: 1755966052873
+entry_point_name: ''
+experiment_id: '525003617238885736'
+lifecycle_stage: active
+run_id: 16551727ac2942a3bbb797924d8b3799
+run_name: bloom-560m-demo_mps_generation_20250823_192049
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755966049968
+status: 3
+tags: []
+user_id: vitaliiserbyn

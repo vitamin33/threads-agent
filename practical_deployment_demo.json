@@ -1,0 +1,21 @@
+{
+  "optimization": {
+    "success": false,
+    "error": "No module named 'torch'"
+  },
+  "model_tests": [
+    {
+      "model_name": "gpt2",
+      "success": false,
+      "error": "No module named 'transformers'"
+    },
+    {
+      "model_name": "microsoft/DialoGPT-small",
+      "success": false,
+      "error": "No module named 'transformers'"
+    }
+  ],
+  "portfolio_demo": {
+    "success": false
+  }
+}
