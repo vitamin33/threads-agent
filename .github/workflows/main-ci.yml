@@ -42,14 +42,14 @@ jobs:
       - name: Lint & Format Check
         run: |
           echo "🧹 Running linters..."
-          ruff check . || true  # Non-blocking for now
-          black --check . || true
-          isort --check-only . || true
+          ruff check . || echo "⚠️ Ruff found issues (non-blocking)"
+          black --check . || echo "⚠️ Black formatting issues (non-blocking)"
+          isort --check-only . || echo "⚠️ Import sorting issues (non-blocking)"
           
       - name: Type Checking
         run: |
           echo "🔍 Running type checks..."
-          mypy . --ignore-missing-imports || true  # Non-blocking
+          mypy . --ignore-missing-imports || echo "⚠️ Type checking issues (non-blocking)"
 
   # ============================================
   # Python tests (parallel execution)
@@ -83,7 +83,7 @@ jobs:
         run: |
           if [ -d "services/${{ matrix.service }}/tests" ]; then
             echo "🧪 Testing ${{ matrix.service }}..."
-            pytest services/${{ matrix.service }}/tests -v --tb=short || true
+            pytest services/${{ matrix.service }}/tests -v --tb=short || echo "⚠️ Tests failed for ${{ matrix.service }} (non-blocking)"
           else
             echo "⚠️ No tests found for ${{ matrix.service }}"
           fi
